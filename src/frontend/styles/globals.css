@@ -1,0 +1,162 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-50: #EDF7FF;
+  --primary-100: #DBEEFF;
+  --primary-200: #B7DDFF;
+  --primary-300: #8AC9FF;
+  --primary-400: #57ADFF;
+  --primary-500: #0086FF;
+  --primary-600: #0065DB;
+  --primary-700: #004DB7;
+  --primary-800: #003A93;
+  --primary-900: #002970;
+  
+  --secondary-500: #FABD59;
+  --accent-500: #9236FF;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --info: #3B82F6;
+  
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --gray-900: #111827;
+}
+
+@font-face {
+  font-family: 'IRANSans';
+  src: url('/fonts/IRANSans.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSans';
+  src: url('/fonts/IRANSans-Bold.woff2') format('woff2');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSans';
+  src: url('/fonts/IRANSans-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+html,
+body {
+  direction: rtl;
+  font-family: 'IRANSans', sans-serif;
+}
+
+body {
+  background-color: var(--gray-50);
+}
+
+.dark body {
+  background-color: var(--gray-900);
+  color: var(--gray-100);
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 text-center;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-500 text-white hover:bg-primary-600 focus:ring-2 focus:ring-primary-300 focus:outline-none;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary-500 text-gray-900 hover:bg-secondary-600 focus:ring-2 focus:ring-secondary-300 focus:outline-none;
+  }
+  
+  .btn-accent {
+    @apply bg-accent-500 text-white hover:bg-accent-600 focus:ring-2 focus:ring-accent-300 focus:outline-none;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-primary-500 text-primary-500 hover:bg-primary-50 focus:ring-2 focus:ring-primary-300 focus:outline-none;
+  }
+  
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-card p-6 transition-all duration-200;
+  }
+  
+  .card-hover {
+    @apply hover:shadow-card-hover hover:translate-y-[-2px];
+  }
+  
+  .form-input {
+    @apply w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-primary-500 focus:ring focus:ring-primary-200 focus:ring-opacity-50;
+  }
+  
+  .form-label {
+    @apply block mb-2 text-sm font-medium text-gray-700 dark:text-gray-200;
+  }
+  
+  .nav-link {
+    @apply px-3 py-2 text-gray-700 dark:text-gray-200 hover:text-primary-500 dark:hover:text-primary-400 font-medium;
+  }
+  
+  .nav-link-active {
+    @apply text-primary-500 dark:text-primary-300 font-bold;
+  }
+}
+
+/* Spinner animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  border-color: var(--gray-300);
+  border-top-color: var(--primary-500);
+  animation: spin 1s linear infinite;
+} 
+
+/* Custom Persian Calendar Styles */
+.persian-calendar {
+  direction: rtl;
+  font-family: inherit;
+}
+
+.persian-calendar .calendar-day {
+  transition: all 0.2s ease;
+}
+
+.persian-calendar .calendar-day:hover {
+  transform: scale(1.05);
+}
+
+.persian-calendar .calendar-day.selected {
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.persian-calendar .calendar-day.today {
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+}
+
+.persian-calendar .calendar-day.in-range {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+}
+
+.dark .persian-calendar .calendar-day.in-range {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+} 

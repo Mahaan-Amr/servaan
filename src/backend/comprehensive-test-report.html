@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servaan Integration Test Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; }
+        .stat-value { font-size: 2em; font-weight: bold; margin-bottom: 5px; }
+        .success { color: #28a745; }
+        .warning { color: #ffc107; }
+        .danger { color: #dc3545; }
+        .test-suite { margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+        .suite-header { background: #f8f9fa; padding: 15px; font-weight: bold; }
+        .suite-content { padding: 15px; }
+        .recommendation { padding: 10px; margin: 10px 0; border-left: 4px solid; }
+        .rec-high { border-color: #dc3545; background: #f8d7da; }
+        .rec-medium { border-color: #ffc107; background: #fff3cd; }
+        .rec-low { border-color: #28a745; background: #d4edda; }
+        .timestamp { color: #666; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Servaan Integration Test Report</h1>
+            <p class="timestamp">Generated: 6/3/2025, 10:39:33 PM</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value success">22</div>
+                <div>Total Tests</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value success">22</div>
+                <div>Passed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value success">0</div>
+                <div>Failed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value success">100.0%</div>
+                <div>Success Rate</div>
+            </div>
+        </div>
+
+        <h2>📋 Recommendations</h2>
+        
+            <div class="recommendation rec-high">
+                <strong>HIGH - Test Infrastructure:</strong> Some test suites failed to complete.<br>
+                <em>Action: Check server connectivity and test environment setup</em>
+            </div>
+        
+            <div class="recommendation rec-medium">
+                <strong>MEDIUM - Failed Test Suites:</strong> 1 test suite(s) failed: Backend Unit Tests<br>
+                <em>Action: Review error logs and fix underlying issues</em>
+            </div>
+        
+            <div class="recommendation rec-low">
+                <strong>LOW - Excellent:</strong> All systems are working excellently!<br>
+                <em>Action: Continue with production deployment or next development phase</em>
+            </div>
+        
+
+        <h2>🔍 Test Suite Results</h2>
+        
+            <div class="test-suite">
+                <div class="suite-header success">
+                    ✅ API Integration Tests
+                </div>
+                <div class="suite-content">
+                    <p><strong>Status:</strong> Passed</p>
+                    
+                        <p><strong>Tests:</strong> 22 total, 22 passed, 0 failed</p>
+                        <p><strong>Success Rate:</strong> 100.0%</p>
+                    
+                    
+                </div>
+            </div>
+        
+            <div class="test-suite">
+                <div class="suite-header success">
+                    ✅ Frontend Integration Tests
+                </div>
+                <div class="suite-content">
+                    <p><strong>Status:</strong> Passed</p>
+                    
+                    
+                </div>
+            </div>
+        
+            <div class="test-suite">
+                <div class="suite-header danger">
+                    ❌ Backend Unit Tests
+                </div>
+                <div class="suite-content">
+                    <p><strong>Status:</strong> Failed</p>
+                    
+                    <p><strong>Error:</strong> Unit tests failed - likely database connection issue</p>
+                </div>
+            </div>
+        
+    </div>
+</body>
+</html>

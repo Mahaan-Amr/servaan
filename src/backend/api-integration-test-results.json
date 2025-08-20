@@ -1,0 +1,121 @@
+{
+  "timestamp": "2025-06-03T19:09:28.422Z",
+  "summary": {
+    "total": 22,
+    "passed": 22,
+    "failed": 0,
+    "successRate": "100.0"
+  },
+  "details": [
+    {
+      "name": "Server Health Check",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "name": "User Registration",
+      "success": true,
+      "details": "Status: 201"
+    },
+    {
+      "name": "User Login",
+      "success": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImVhYTRlNGExLTQ2OGMtNDYzMS1iNmY0LTAwYTFiMzkzYmYxMyIsImlhdCI6MTc0ODk3Nzc2NywiZXhwIjoxNzQ5NTgyNTY3fQ.koixQQp-WFtcr3lK9R-59b7OuhApIhgmScun9SKMnkQ",
+      "details": "Status: 200"
+    },
+    {
+      "name": "Get User Profile",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "name": "Create Supplier",
+      "success": true,
+      "details": "Status: 201"
+    },
+    {
+      "name": "Get Suppliers List",
+      "success": true,
+      "details": "Status: 200, Count: 8"
+    },
+    {
+      "name": "Update Supplier",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "name": "Create Item",
+      "success": true,
+      "details": "Status: 201"
+    },
+    {
+      "name": "Get Items List",
+      "success": true,
+      "details": "Status: 200, Count: 23"
+    },
+    {
+      "name": "Create Inventory Entry",
+      "success": true,
+      "details": "Status: 201"
+    },
+    {
+      "name": "Get Inventory Entries",
+      "success": true,
+      "details": "Status: 200, Count: 50"
+    },
+    {
+      "name": "Get Current Inventory Status",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "name": "Get Low Stock Items",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "name": "Barcode Lookup",
+      "success": true,
+      "details": "Status: 200 (404 expected for non-existent barcode)"
+    },
+    {
+      "name": "Get Scan Statistics",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "name": "Get Reports List",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "name": "Get Users List",
+      "success": true,
+      "details": "Status: 200, Count: 6"
+    },
+    {
+      "name": "Unauthorized Access Handling",
+      "success": true,
+      "details": "Status: 401"
+    },
+    {
+      "name": "Invalid Endpoint Handling",
+      "success": true,
+      "details": "Status: 404"
+    },
+    {
+      "name": "Invalid Data Handling",
+      "success": true,
+      "details": "Status: 400"
+    },
+    {
+      "name": "Delete Test Supplier",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "name": "Delete Test Item",
+      "success": true,
+      "details": "Status: 200"
+    }
+  ]
+}

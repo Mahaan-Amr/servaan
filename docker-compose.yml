@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14
+    container_name: servaan-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: servaan
+      POSTGRES_PASSWORD: servaan_pass
+      POSTGRES_DB: servaan_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Add pgAdmin for database management (optional)
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: servaan-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@servaan.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_LISTEN_PORT: 5050
+    ports:
+      - "5050:5050"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+  pgadmin_data: 

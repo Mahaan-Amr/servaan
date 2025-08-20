@@ -1,0 +1,127 @@
+{
+  "timestamp": "2025-06-03T19:09:28.890Z",
+  "testType": "Frontend Integration",
+  "summary": {
+    "total": 23,
+    "passed": 23,
+    "failed": 0,
+    "successRate": "100.0"
+  },
+  "details": [
+    {
+      "name": "Auth Service - Login",
+      "success": true,
+      "details": "Token received and stored"
+    },
+    {
+      "name": "Auth Service - Get Profile",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "name": "Supplier Service - Create",
+      "success": true,
+      "details": "Status: 201, ID: 1cd8058e-43dd-4d05-853e-eebd76ee2860"
+    },
+    {
+      "name": "Supplier Service - Get List",
+      "success": true,
+      "details": "Status: 200, Count: 8"
+    },
+    {
+      "name": "Supplier Service - Get By ID",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "name": "Supplier Service - Update",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "name": "Item Service - Create",
+      "success": true,
+      "details": "Status: 201, ID: 18753df3-cddb-48db-b187-7f0a276ae12a"
+    },
+    {
+      "name": "Item Service - Get List",
+      "success": true,
+      "details": "Status: 200, Count: 23"
+    },
+    {
+      "name": "Item Service - Get By ID",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "name": "Inventory Service - Create Entry",
+      "success": true,
+      "details": "Status: 201"
+    },
+    {
+      "name": "Inventory Service - Get Entries",
+      "success": true,
+      "details": "Status: 200, Count: 50"
+    },
+    {
+      "name": "Inventory Service - Get Current",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "name": "Inventory Service - Get Low Stock",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "name": "Scanner Service - Barcode Lookup",
+      "success": true,
+      "details": "Status: 200 (404 expected for non-existent barcode)"
+    },
+    {
+      "name": "Scanner Service - Get Statistics",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "name": "Scanner Service - Get History",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "name": "BI Service - Get Reports",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "name": "BI Service - Create Report",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "name": "Error Handling - Unauthorized",
+      "success": true,
+      "details": "Status: 401"
+    },
+    {
+      "name": "Error Handling - Invalid Data",
+      "success": true,
+      "details": "Status: 400"
+    },
+    {
+      "name": "Error Handling - 404 Endpoint",
+      "success": true,
+      "details": "Status: 404"
+    },
+    {
+      "name": "Cleanup - Delete Supplier",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "name": "Cleanup - Delete Item",
+      "success": true,
+      "details": "Status: 200"
+    }
+  ]
+}
