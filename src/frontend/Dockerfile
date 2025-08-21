@@ -29,11 +29,15 @@ RUN apk add --no-cache dumb-init
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
 
+# Copy package files first for dependency installation
+COPY --from=builder --chown=nodejs:nodejs /app/src/frontend/package*.json ./
+
+# Install only production dependencies
+RUN npm ci --only=production
+
 # Copy built application
 COPY --from=builder --chown=nodejs:nodejs /app/src/frontend/.next ./.next
 COPY --from=builder --chown=nodejs:nodejs /app/src/frontend/public ./public
-COPY --from=builder --chown=nodejs:nodejs /app/src/frontend/package*.json ./
-COPY --from=builder --chown=nodejs:nodejs /app/src/frontend/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/src/frontend/next.config.js ./
 
 # Switch to non-root user
