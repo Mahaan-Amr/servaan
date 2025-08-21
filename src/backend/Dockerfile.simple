@@ -5,8 +5,8 @@ WORKDIR /app
 # Copy package files
 COPY src/backend/package*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies including ts-node for runtime TypeScript execution
+RUN npm ci && npm install -g ts-node typescript
 
 # Copy Prisma schema
 COPY src/prisma ./prisma/
@@ -14,51 +14,56 @@ COPY src/prisma ./prisma/
 # Copy the ENTIRE project structure to maintain relative paths
 COPY . .
 
-# Change to backend directory for build (maintains expected ../shared structure)
+# Change to backend directory
 WORKDIR /app/src/backend
 
 # Generate Prisma client from the correct location
 WORKDIR /app/src/prisma
 RUN npx prisma generate
 
-# Return to backend directory for build
+# Return to backend directory
 WORKDIR /app/src/backend
 
 # Ensure shared files are available at both expected locations
-# This allows both relative (../../shared/*) and absolute (shared/*) imports to work
 RUN cp -r /app/src/shared /app/shared && \
     mkdir -p /app/src/backend/shared && \
     cp -r /app/src/shared/* /app/src/backend/shared/
 
-# Build the application using Docker-specific TypeScript config
-RUN npm run build:docker
-
-# Debug: Show what was built
-RUN ls -la dist/ || echo "dist directory not found"
-RUN find . -name "*.js" -type f | head -10 || echo "No JS files found"
+# Debug: Show what we have
+RUN echo "=== Current directory structure ===" && \
+    ls -la && \
+    echo "=== Shared directory ===" && \
+    ls -la ../shared/ || echo "No ../shared found" && \
+    echo "=== Backend shared directory ===" && \
+    ls -la shared/ || echo "No shared found"
 
 # Production stage
 FROM node:18-alpine AS runner
 
 WORKDIR /app
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# Install dumb-init and ts-node for runtime TypeScript execution
+RUN apk add --no-cache dumb-init && \
+    npm install -g ts-node typescript
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
 
-# Copy built application and shared files
-COPY --from=builder --chown=nodejs:nodejs /app/src/backend/dist ./dist
+# Copy source files and dependencies (no build needed)
+COPY --from=builder --chown=nodejs:nodejs /app/src/backend ./backend
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/src/backend/package*.json ./
 COPY --from=builder --chown=nodejs:nodejs /app/src/shared ./shared
 COPY --from=builder --chown=nodejs:nodejs /app/src/prisma ./prisma
 
 # Debug: Show what was copied
-RUN ls -la dist/ || echo "dist directory not found in runner"
-RUN find . -name "*.js" -type f | head -10 || echo "No JS files found in runner"
+RUN echo "=== Runner stage contents ===" && \
+    ls -la && \
+    echo "=== Backend contents ===" && \
+    ls -la backend/ || echo "No backend directory" && \
+    echo "=== Shared contents ===" && \
+    ls -la shared/ || echo "No shared directory"
 
 # Switch to non-root user
 USER nodejs
@@ -70,5 +75,5 @@ EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
-# Start the application
-CMD ["dumb-init", "node", "dist/index.js"]
+# Start the application using ts-node to run TypeScript directly
+CMD ["dumb-init", "ts-node", "backend/src/index.ts"]
