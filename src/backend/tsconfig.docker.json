@@ -24,8 +24,10 @@
     "moduleResolution": "node",
     "noImplicitOverride": false,
     "allowJs": true,
-    "checkJs": false
+    "checkJs": false,
+    "declaration": false,
+    "sourceMap": false
   },
-  "include": ["src/**/*", "../shared/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "../shared"]
 }
