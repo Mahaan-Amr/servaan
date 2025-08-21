@@ -1,21 +1,21 @@
+# Alternative approach: Copy pre-built artifacts
 FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY prisma ../prisma/
-
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy source code
+# Copy the entire project structure to maintain exact paths
 COPY . .
 
-# Generate Prisma client
+# Install dependencies
+WORKDIR /app/src/backend
+RUN npm ci
+
+# Generate Prisma client (this will create the shared/generated/client directory)
+WORKDIR /app/src/prisma
 RUN npx prisma generate
 
 # Build the application
+WORKDIR /app/src/backend
 RUN npm run build
 
 # Production stage
@@ -30,11 +30,12 @@ RUN apk add --no-cache dumb-init
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
 
-# Copy built application
-COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
-COPY --from=builder --chown=nodejs:nodejs /app/prisma ../prisma
+# Copy built application and necessary files
+COPY --from=builder --chown=nodejs:nodejs /app/src/backend/dist ./dist
+COPY --from=builder --chown=nodejs:nodejs /app/src/backend/node_modules ./node_modules
+COPY --from=builder --chown=nodejs:nodejs /app/src/backend/package*.json ./
+COPY --from=builder --chown=nodejs:nodejs /app/src/prisma ./prisma/
+COPY --from=builder --chown=nodejs:nodejs /app/src/shared ./shared/
 
 # Switch to non-root user
 USER nodejs

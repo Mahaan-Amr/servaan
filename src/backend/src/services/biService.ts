@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../../shared/generated/client';
+import { PrismaClient } from '../../shared/generated/client';
 import { KPIMetric, DateRange, ExecutiveDashboard, ABCAnalysis, TrendAnalysis, ProfitAnalysis } from '../types/bi';
 
 const prisma = new PrismaClient();

@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../../shared/generated/client';
+import { PrismaClient } from '../../shared/generated/client';
 import { AppError } from '../utils/AppError';
 import { OrderCalculationService, OrderOptions, BusinessPreset } from './orderCalculationService';
 

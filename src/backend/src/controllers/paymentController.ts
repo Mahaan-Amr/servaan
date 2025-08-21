@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { PaymentService, ProcessPaymentData, RefundPaymentData, PaymentFilterOptions } from '../services/paymentService';
 import { AppError } from '../utils/AppError';
-import { PaymentMethod, PaymentStatus } from '../../../shared/generated/client';
+import { PaymentMethod, PaymentStatus } from '../../shared/generated/client';
 
 export class PaymentController {
   /**

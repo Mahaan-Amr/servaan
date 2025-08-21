@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '../../../shared/generated/client';
+import { PrismaClient, Prisma } from '../../shared/generated/client';
 import { AppError } from '../middlewares/errorHandler';
 import { addLoyaltyPoints, calculatePointsFromAmount } from './loyaltyService';
 

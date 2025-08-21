@@ -7,14 +7,12 @@ const nextConfig = {
         source: '/api/:path*',
         destination: process.env.NODE_ENV === 'production' 
           ? 'https://api.servaan.com/api/:path*'
-          : 'http://localhost:3001/api/:path*',
+          : 'http://localhost:3000/api/:path*',
       },
     ];
   },
   // Enable output for production
   output: 'standalone',
-  // Disable telemetry
-  telemetry: false,
 };
 
 module.exports = nextConfig; 

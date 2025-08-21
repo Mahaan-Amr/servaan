@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../../shared/generated/client';
+import { PrismaClient } from '../../shared/generated/client';
 import { QueryBuilder } from './queryBuilder';
 
 const prisma = new PrismaClient();

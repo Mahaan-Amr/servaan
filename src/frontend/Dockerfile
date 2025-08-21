@@ -3,13 +3,16 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY src/frontend/package*.json ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy source code
+# Copy the ENTIRE project structure to maintain consistency
 COPY . .
+
+# Change to frontend directory for build
+WORKDIR /app/src/frontend
 
 # Build the application
 RUN npm run build
@@ -27,11 +30,11 @@ RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
 
 # Copy built application
-COPY --from=builder --chown=nodejs:nodejs /app/.next ./.next
-COPY --from=builder --chown=nodejs:nodejs /app/public ./public
-COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nodejs:nodejs /app/next.config.js ./
+COPY --from=builder --chown=nodejs:nodejs /app/src/frontend/.next ./.next
+COPY --from=builder --chown=nodejs:nodejs /app/src/frontend/public ./public
+COPY --from=builder --chown=nodejs:nodejs /app/src/frontend/package*.json ./
+COPY --from=builder --chown=nodejs:nodejs /app/src/frontend/node_modules ./node_modules
+COPY --from=builder --chown=nodejs:nodejs /app/src/frontend/next.config.js ./
 
 # Switch to non-root user
 USER nodejs

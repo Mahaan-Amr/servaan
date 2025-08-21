@@ -3,7 +3,7 @@ import { Server as HTTPServer } from 'http';
 import { verifyToken } from './authService';
 import { prisma } from './dbService';
 import { notificationService } from './notificationService';
-import { NotificationType, NotificationPriority, UserRole } from '../../../shared/types';
+import { NotificationType, NotificationPriority, UserRole } from '../../shared/types';
 
 // Interface for authenticated socket
 interface AuthenticatedSocket extends Socket {

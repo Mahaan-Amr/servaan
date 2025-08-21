@@ -4,13 +4,13 @@ import {
   NotificationType, 
   NotificationPriority,
   InventoryEntryType
-} from '../../../shared/generated/client';
+} from '../../shared/generated/client';
 import { 
   LowStockNotificationData,
   InventoryUpdateNotificationData,
   UserActivityNotificationData,
   StockDeficitNotificationData
-} from '../../../shared/types';
+} from '../../shared/types';
 
 class NotificationService {
   

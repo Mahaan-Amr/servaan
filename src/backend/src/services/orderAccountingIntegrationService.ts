@@ -1,4 +1,4 @@
-import { PrismaClient, PaymentMethod } from '../../../shared/generated/client';
+import { PrismaClient, PaymentMethod } from '../../shared/generated/client';
 import { AppError } from '../utils/AppError';
 import { JournalEntryService, JournalEntryLineData } from './journalEntryService';
 import { OrderInventoryIntegrationService } from './orderInventoryIntegrationService';

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:14-alpine
@@ -14,7 +12,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./backups:/backups
     ports:
-      - "127.0.0.1:5432:5432"
+      - "5432:5432"
     networks:
       - servaan-network
     healthcheck:
@@ -31,7 +29,7 @@ services:
     volumes:
       - redis_data:/data
     ports:
-      - "127.0.0.1:6379:6379"
+      - "6379:6379"
     networks:
       - servaan-network
     healthcheck:
@@ -42,8 +40,8 @@ services:
 
   backend:
     build:
-      context: ./src/backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: src/backend/Dockerfile.simple
     container_name: servaan-backend-prod
     restart: unless-stopped
     environment:
@@ -54,7 +52,7 @@ services:
       - BACKEND_PORT=3001
       - CORS_ORIGIN=https://*.servaan.com,https://servaan.com
     ports:
-      - "127.0.0.1:3001:3001"
+      - "3001:3001"
     depends_on:
       postgres:
         condition: service_healthy
@@ -63,7 +61,7 @@ services:
     networks:
       - servaan-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/health"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -71,8 +69,8 @@ services:
 
   frontend:
     build:
-      context: ./src/frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: src/frontend/Dockerfile
     container_name: servaan-frontend-prod
     restart: unless-stopped
     environment:
@@ -80,14 +78,14 @@ services:
       - NEXT_PUBLIC_API_URL=https://api.servaan.com/api
       - NEXT_PUBLIC_APP_URL=https://servaan.com
     ports:
-      - "127.0.0.1:3000:3000"
+      - "3000:3000"
     depends_on:
       backend:
         condition: service_healthy
     networks:
       - servaan-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -106,7 +104,7 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     ports:
-      - "127.0.0.1:5050:80"
+      - "5050:80"
     depends_on:
       postgres:
         condition: service_healthy
