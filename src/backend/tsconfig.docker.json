@@ -13,12 +13,12 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": false,
     "outDir": "dist",
-    "rootDir": "../",
-    "baseUrl": "../",
+    "rootDir": "src",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["backend/src/*"],
-      "shared/*": ["shared/*"],
-      "../../shared/*": ["shared/*"]
+      "@/*": ["src/*"],
+      "shared/*": ["../shared/*"],
+      "../../shared/*": ["../shared/*"]
     },
     "resolveJsonModule": true,
     "moduleResolution": "node",

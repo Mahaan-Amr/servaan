@@ -33,6 +33,10 @@ RUN cp -r /app/src/shared /app/shared && \
 # Build the application using Docker-specific TypeScript config
 RUN npm run build:docker
 
+# Debug: Show what was built
+RUN ls -la dist/ || echo "dist directory not found"
+RUN find . -name "*.js" -type f | head -10 || echo "No JS files found"
+
 # Production stage
 FROM node:18-alpine AS runner
 
@@ -51,6 +55,10 @@ COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/src/backend/package*.json ./
 COPY --from=builder --chown=nodejs:nodejs /app/src/shared ./shared
 COPY --from=builder --chown=nodejs:nodejs /app/src/prisma ./prisma
+
+# Debug: Show what was copied
+RUN ls -la dist/ || echo "dist directory not found in runner"
+RUN find . -name "*.js" -type f | head -10 || echo "No JS files found in runner"
 
 # Switch to non-root user
 USER nodejs
