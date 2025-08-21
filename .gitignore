@@ -40,4 +40,12 @@ next-env.d.ts
 .vscode
 
 # Prisma
-/src/shared/generated/ 
+/src/shared/generated/
+
+# Docker build artifacts
+src/frontend/.next/
+src/backend/dist/
+
+# Additional build outputs
+*.tsbuildinfo
+next-env.d.ts 
