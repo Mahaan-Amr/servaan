@@ -195,6 +195,11 @@ rm -f /etc/nginx/sites-enabled/default
 echo -e "${YELLOW}Testing Nginx configuration...${NC}"
 nginx -t
 
+# Start Nginx if not running, then reload
+echo -e "${YELLOW}Starting Nginx service...${NC}"
+systemctl start nginx
+systemctl enable nginx
+
 # Reload Nginx
 echo -e "${YELLOW}Reloading Nginx...${NC}"
 systemctl reload nginx
