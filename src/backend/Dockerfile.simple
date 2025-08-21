@@ -3,7 +3,7 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Install OpenSSL and other required libraries for Prisma
-RUN apk add --no-cache openssl libssl1.1
+RUN apk add --no-cache openssl openssl-dev
 
 # Copy package files
 COPY src/backend/package*.json ./
@@ -46,7 +46,7 @@ FROM node:18-alpine AS runner
 WORKDIR /app
 
 # Install dumb-init, ts-node, and OpenSSL libraries for Prisma
-RUN apk add --no-cache dumb-init openssl libssl1.1 && \
+RUN apk add --no-cache dumb-init openssl openssl-dev && \
     npm install -g ts-node typescript
 
 # Create non-root user
