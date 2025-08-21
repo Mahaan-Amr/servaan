@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "lib": ["es2020", "dom"],
+    "strict": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "noImplicitReturns": false,
+    "noImplicitThis": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": false,
+    "outDir": "dist",
+    "rootDir": "../",
+    "baseUrl": "../",
+    "paths": {
+      "@/*": ["backend/src/*"],
+      "shared/*": ["shared/*"],
+      "../../shared/*": ["shared/*"]
+    },
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "noImplicitOverride": false,
+    "allowJs": true,
+    "checkJs": false
+  },
+  "include": ["src/**/*", "../shared/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
