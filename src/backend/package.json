@@ -12,7 +12,7 @@
     "build:docker": "npm run build:docker:skip-ts || npm run build:docker:with-ts",
     "build:docker:skip-ts": "echo 'Skipping TypeScript compilation for emergency deployment' && npm run postbuild",
     "build:docker:with-ts": "tsc --project tsconfig.docker.json && npm run postbuild",
-    "postbuild": "node -e \"const fs=require('fs');const path=require('path');if(fs.existsSync('../shared')){fs.cpSync('../shared','dist/shared',{recursive:true,force:true})}\"",
+    "postbuild": "node -e \"const fs=require('fs');const path=require('path');if(fs.existsSync('../shared')){fs.cpSync('../shared','dist/shared',{recursive:true,force:true})}else if(fs.existsSync('shared')){fs.cpSync('shared','dist/shared',{recursive:true,force:true})}\"",
     "start": "node dist/backend/src/index.js",
     "pretest": "node setup-test-db.js",
     "test": "jest",
@@ -39,7 +39,7 @@
     "jsonwebtoken": "^9.0.2",
     "kavenegar": "^1.1.4",
     "morgan": "^1.10.0",
-    "puppeteer": "^24.10.0",
+
     "qrcode": "^1.5.4",
     "socket.io": "^4.8.1",
     "zod": "^3.22.4"

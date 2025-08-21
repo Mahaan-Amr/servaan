@@ -47,7 +47,7 @@ RUN adduser -S nodejs -u 1001
 
 # Copy built application and shared files
 COPY --from=builder --chown=nodejs:nodejs /app/src/backend/dist ./dist
-COPY --from=builder --chown=nodejs:nodejs /app/src/backend/node_modules ./node_modules
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/src/backend/package*.json ./
 COPY --from=builder --chown=nodejs:nodejs /app/src/shared ./shared
 COPY --from=builder --chown=nodejs:nodejs /app/src/prisma ./prisma
