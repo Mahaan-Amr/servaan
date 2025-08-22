@@ -230,6 +230,11 @@ async function main() {
   try {
     console.log('🚀 Starting tenant creation process...');
     
+    // Create main domain tenant: Servaan
+    await createTenant('servaan', 'سِروان', 'admin@servaan.com', 'servaan123456');
+    
+    console.log('\n' + '='.repeat(50) + '\n');
+    
     // Create first tenant: Dima
     await createTenant('dima', 'دیما', 'admin@dima.servaan.com', 'dima123456');
     
@@ -240,6 +245,7 @@ async function main() {
     
     console.log('\n🎉 All tenants created successfully!');
     console.log('\n📋 Summary:');
+    console.log('🏢 Servaan (سِروان): admin@servaan.com / servaan123456');
     console.log('🏢 Dima (دیما): admin@dima.servaan.com / dima123456');
     console.log('🏢 Macheen (مچین): admin@macheen.servaan.com / macheen123456');
     
