@@ -14,6 +14,10 @@ COPY . .
 # Change to frontend directory for build
 WORKDIR /app/src/frontend
 
+# CRITICAL: Set environment variables for build time
+ENV NEXT_PUBLIC_API_URL=https://servaan.com/api
+ENV NEXT_PUBLIC_APP_URL=https://servaan.com
+
 # Build the application
 RUN npm run build
 

@@ -54,19 +54,19 @@ RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
 
 # Copy source files and dependencies (no build needed)
-COPY --from=builder --chown=nodejs:nodejs /app/src/backend ./backend
+COPY --from=builder --chown=nodejs:nodejs /app/src/backend ./src/backend
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/src/backend/package*.json ./
-COPY --from=builder --chown=nodejs:nodejs /app/src/shared ./shared
-COPY --from=builder --chown=nodejs:nodejs /app/src/prisma ./prisma
+COPY --from=builder --chown=nodejs:nodejs /app/src/shared ./src/shared
+COPY --from=builder --chown=nodejs:nodejs /app/src/prisma ./src/prisma
 
 # Debug: Show what was copied
 RUN echo "=== Runner stage contents ===" && \
     ls -la && \
     echo "=== Backend contents ===" && \
-    ls -la backend/ || echo "No backend directory" && \
+    ls -la src/backend/ || echo "No src/backend directory" && \
     echo "=== Shared contents ===" && \
-    ls -la shared/ || echo "No shared directory"
+    ls -la src/shared/ || echo "No src/shared directory"
 
 # Switch to non-root user
 USER nodejs
@@ -79,4 +79,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
 # Start the application using ts-node to run TypeScript directly
-CMD ["dumb-init", "ts-node", "backend/src/index.ts"]
+CMD ["dumb-init", "ts-node", "src/backend/src/index.ts"]

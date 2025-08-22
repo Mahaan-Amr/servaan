@@ -135,7 +135,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ mode, itemId, initialData }) => {
         {mode === 'create' ? 'افزودن کالای جدید' : 'ویرایش کالا'}
       </h1>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6" role="form">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
             نام کالا *
@@ -150,7 +150,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ mode, itemId, initialData }) => {
             }`}
             placeholder="نام کالا را وارد کنید"
           />
-          {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+          {errors.name && <p className="mt-1 text-sm text-red-600" role="alert" aria-live="polite">{errors.name}</p>}
         </div>
 
         <div>
@@ -167,7 +167,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ mode, itemId, initialData }) => {
             }`}
             placeholder="دسته‌بندی کالا را وارد کنید"
           />
-          {errors.category && <p className="mt-1 text-sm text-red-600">{errors.category}</p>}
+          {errors.category && <p className="mt-1 text-sm text-red-600" role="alert" aria-live="polite">{errors.category}</p>}
         </div>
 
         <div>
