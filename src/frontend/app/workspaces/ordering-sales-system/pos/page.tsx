@@ -88,6 +88,9 @@ export default function POSInterface() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
+  // Mobile sidebar state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
   // Order options and calculation
   const [orderOptions, setOrderOptions] = useState<OrderOptions>({
     discountEnabled: false,
@@ -178,6 +181,32 @@ export default function POSInterface() {
       newSocket.disconnect();
     };
   }, [currentOrderId, selectedTable?.id]);
+
+  // Handle window resize for mobile sidebar
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024 && isSidebarOpen) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isSidebarOpen]);
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isSidebarOpen) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    if (isSidebarOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isSidebarOpen]);
 
   // Load menu data and tables
   useEffect(() => {
@@ -675,12 +704,106 @@ export default function POSInterface() {
 
   return (
     <div className="h-screen flex bg-gray-50 dark:bg-gray-900">
-      {/* Left Panel - Menu */}
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Left Sidebar - Categories */}
+      <div className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto transform transition-transform duration-300 ease-in-out ${
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      } w-64 lg:w-72 xl:w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col flex-shrink-0`}>
+        {/* Categories Header */}
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">دسته‌بندی‌ها</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">انتخاب دسته برای مشاهده آیتم‌ها</p>
+            </div>
+            {/* Mobile Close Button */}
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Categories List - Scrollable */}
+        <div className="flex-1 overflow-y-auto">
+          {loading ? (
+            <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-500 mx-auto mb-2"></div>
+              <p className="text-sm">در حال بارگذاری...</p>
+            </div>
+          ) : error ? (
+            <div className="p-4 text-center text-red-500 dark:text-red-400">
+              <p className="text-sm">{error}</p>
+            </div>
+          ) : categories.length === 0 ? (
+            <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+              <p className="text-sm">منوی موجودیت ندارد.</p>
+            </div>
+          ) : (
+            <div className="p-2">
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => {
+                    setSelectedCategory(category.id);
+                    // Close sidebar on mobile after selection
+                    if (window.innerWidth < 1024) {
+                      setIsSidebarOpen(false);
+                    }
+                  }}
+                  className={`w-full text-right p-3 mb-2 rounded-lg transition-all duration-200 ${
+                    selectedCategory === category.id
+                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400 border-2 border-amber-300 dark:border-amber-600 shadow-sm'
+                      : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-sm">{category.name}</span>
+                    {selectedCategory === category.id && (
+                      <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                  {category.items && category.items.length > 0 && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {category.items.length} آیتم
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 space-x-reverse">
+              {/* Mobile Menu Toggle */}
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <svg className="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+              
               <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">ثبت سفارش جدید</h1>
               <div className="flex items-center space-x-2 space-x-reverse">
                 <span className="text-sm text-gray-500 dark:text-gray-400">نوع سفارش:</span>
@@ -707,120 +830,132 @@ export default function POSInterface() {
           </div>
         </div>
 
-        {/* Categories */}
-        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-3 md:p-4">
-          <div className="flex space-x-2 space-x-reverse overflow-x-auto pb-2">
-            {loading ? (
-              <p className="text-center text-gray-500 dark:text-gray-400">در حال بارگذاری منو...</p>
-            ) : error ? (
-              <p className="text-center text-red-500 dark:text-red-400">{error}</p>
-            ) : categories.length === 0 ? (
-              <p className="text-center text-gray-500 dark:text-gray-400">منوی موجودیت ندارد.</p>
-            ) : (
-              categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`flex-shrink-0 px-3 md:px-4 py-2 text-xs md:text-sm font-medium rounded-lg transition-colors ${
-                    selectedCategory === category.id
-                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400'
-                      : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {category.name}
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-
         {/* Menu Items Grid */}
         <div className="flex-1 p-4 overflow-y-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
-            {loading ? (
-              <p className="text-center text-gray-500 dark:text-gray-400">در حال بارگذاری آیتم‌ها...</p>
-            ) : error ? (
-              <p className="text-center text-red-500 dark:text-red-400">{error}</p>
-            ) : selectedCategoryItems.length === 0 ? (
-              <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
-                <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                <p>آیتمی در این دسته پیدا نشد.</p>
-              </div>
-            ) : (
-              selectedCategoryItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => addToOrder(item)}
-                  disabled={!item.isAvailable}
-                  className={`p-3 md:p-4 rounded-lg border-2 text-right transition-all ${
-                    item.isAvailable
-                      ? 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-amber-300 hover:shadow-md'
-                      : 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  <div className="space-y-2">
-                    {/* Item Image */}
-                    {item.imageUrl && (
-                      <div className="w-full h-24 md:h-32 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden mb-2 relative">
-                        <Image
-                          src={item.imageUrl}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          onError={() => {
-                            // Hide the image container on error
-                            const container = document.querySelector(`[data-image-error="${item.id}"]`);
-                            if (container) {
-                              (container as HTMLElement).style.display = 'none';
-                            }
-                          }}
-                          data-image-error={item.id}
-                        />
-                      </div>
-                    )}
-                    
-                    {/* Item Name */}
-                    <h3 className="font-medium text-gray-900 dark:text-white text-sm md:text-base line-clamp-2">
-                      {item.name}
+          {selectedCategory ? (
+            <>
+              {/* Selected Category Header */}
+              <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3 space-x-reverse">
+                    <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
+                    <h3 className="text-lg font-bold text-amber-800 dark:text-amber-400">
+                      {categories.find(cat => cat.id === selectedCategory)?.name}
                     </h3>
-                    
-                    {/* Item Description */}
-                    {item.description && (
-                      <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                        {item.description}
-                      </p>
-                    )}
-                    
-                    {/* Price */}
-                    <p className="text-base md:text-lg font-bold text-amber-600 dark:text-amber-400">
-                      {formatPrice(item.price)}
-                    </p>
-                    
-                    {/* Availability Status */}
-                    {!item.isAvailable && (
-                      <span className="text-xs text-red-500">ناموجود</span>
-                    )}
                   </div>
+                  <span className="text-sm text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-800/30 px-3 py-1 rounded-full">
+                    {selectedCategoryItems.length} آیتم
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+                {loading ? (
+                  <p className="text-center text-gray-500 dark:text-gray-400">در حال بارگذاری آیتم‌ها...</p>
+                ) : error ? (
+                  <p className="text-center text-red-500 dark:text-red-400">{error}</p>
+                ) : selectedCategoryItems.length === 0 ? (
+                  <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
+                    <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <p>آیتمی در این دسته پیدا نشد.</p>
+                  </div>
+                ) : (
+                  selectedCategoryItems.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => addToOrder(item)}
+                      disabled={!item.isAvailable}
+                      className={`p-3 md:p-4 rounded-lg border-2 text-right transition-all ${
+                        item.isAvailable
+                          ? 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-amber-300 hover:shadow-md'
+                          : 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      <div className="space-y-2">
+                        {/* Item Image */}
+                        {item.imageUrl && (
+                          <div className="w-full h-24 md:h-32 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden mb-2 relative">
+                            <Image
+                              src={item.imageUrl}
+                              alt={item.name}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                              onError={() => {
+                                // Hide the image container on error
+                                const container = document.querySelector(`[data-image-error="${item.id}"]`);
+                                if (container) {
+                                  (container as HTMLElement).style.display = 'none';
+                                }
+                              }}
+                              data-image-error={item.id}
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Item Name */}
+                        <h3 className="font-medium text-gray-900 dark:text-white text-sm md:text-base line-clamp-2">
+                          {item.name}
+                        </h3>
+                        
+                        {/* Item Description */}
+                        {item.description && (
+                          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                            {item.description}
+                          </p>
+                        )}
+                        
+                        {/* Price */}
+                        <p className="text-base md:text-lg font-bold text-amber-600 dark:text-amber-400">
+                          {formatPrice(item.price)}
+                        </p>
+                        
+                        {/* Availability Status */}
+                        {!item.isAvailable && (
+                          <span className="text-xs text-red-500">ناموجود</span>
+                        )}
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
+              <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" />
+              </svg>
+              <p className="text-lg font-medium mb-2">دسته‌ای انتخاب نشده</p>
+              <p className="text-sm">لطفاً یک دسته از منوی سمت چپ انتخاب کنید</p>
+              {/* Mobile hint */}
+              <div className="mt-4 lg:hidden">
+                <button
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  باز کردن منوی دسته‌ها
                 </button>
-              ))
-            )}
-          </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Right Panel - Order Cart */}
-      <div className="w-full md:w-[400px] lg:w-[500px] bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col">
+      <div className="w-full md:w-[400px] lg:w-[500px] bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col flex-shrink-0">
         {/* Cart Header */}
         <div className="p-3 md:p-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-base md:text-lg font-bold text-gray-900 dark:text-white">سفارش جاری</h2>
-          {orderItems.length > 0 && (
-            <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
-              {orderItems.length} آیتم
-            </p>
-          )}
+          <div className="flex items-center justify-between">
+            <h2 className="text-base md:text-lg font-bold text-gray-900 dark:text-white">سفارش جاری</h2>
+            {orderItems.length > 0 && (
+              <span className="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 text-xs px-2 py-1 rounded-full font-medium">
+                {orderItems.length} آیتم
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Customer & Table Info */}
@@ -833,14 +968,14 @@ export default function POSInterface() {
               {selectedTable ? (
                 <div className="flex items-center justify-between">
                   <div className="text-right">
-                    <div className="text-gray-900 dark:text-white">میز {selectedTable.tableNumber}</div>
+                    <div className="text-gray-900 dark:text-white font-medium">میز {selectedTable.tableNumber}</div>
                     {selectedTable.tableName && (
                       <div className="text-xs text-gray-500 dark:text-gray-400">
                         {selectedTable.tableName}
                       </div>
                     )}
                   </div>
-                  <span className={`text-xs ${getStatusInfo(selectedTable.status).color}`}>
+                  <span className={`text-xs px-2 py-1 rounded-full ${getStatusInfo(selectedTable.status).color} bg-opacity-10`}>
                     {getStatusInfo(selectedTable.status).label}
                   </span>
                 </div>
@@ -851,10 +986,15 @@ export default function POSInterface() {
           )}
           
           <button
-            className="w-full p-3 text-right bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600"
+            className="w-full p-3 text-right bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
           >
             {customer.name ? (
-              <span className="text-gray-900 dark:text-white">{customer.name}</span>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-900 dark:text-white font-medium">{customer.name}</span>
+                {customer.phone && (
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{customer.phone}</span>
+                )}
+              </div>
             ) : (
               <span className="text-gray-500 dark:text-gray-400">اطلاعات مشتری (اختیاری)</span>
             )}
@@ -869,14 +1009,14 @@ export default function POSInterface() {
                 <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
-                <p>سبد خرید خالی است</p>
-                <p className="text-sm mt-1">آیتم مورد نظر را انتخاب کنید</p>
+                <p className="font-medium mb-1">سبد خرید خالی است</p>
+                <p className="text-sm">آیتم مورد نظر را انتخاب کنید</p>
               </div>
             ) : (
               <div className="space-y-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-white">آیتم‌های انتخاب شده</h3>
-                  <span className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
+                  <span className="text-xs md:text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
                     {orderItems.length} آیتم
                   </span>
                 </div>
@@ -885,7 +1025,7 @@ export default function POSInterface() {
                   <div key={item.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 md:p-4 border border-gray-200 dark:border-gray-600 shadow-sm">
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 dark:text-white text-sm md:text-base mb-1 line-clamp-2">{item.menuItem.name}</h4>
+                        <h4 className="font-medium text-gray-900 dark:text-white text-sm md:text-base mb-2 line-clamp-2">{item.menuItem.name}</h4>
                         <div className="flex items-center justify-between mb-3">
                           <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
                             {formatPrice(item.menuItem.price)} × {item.quantity}
@@ -900,7 +1040,7 @@ export default function POSInterface() {
                           <div className="flex items-center space-x-2 md:space-x-3 space-x-reverse">
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+                              className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors active:scale-95"
                             >
                               <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
@@ -913,7 +1053,7 @@ export default function POSInterface() {
                             
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+                              className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors active:scale-95"
                             >
                               <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -923,7 +1063,7 @@ export default function POSInterface() {
                           
                           <button
                             onClick={() => removeFromOrder(item.id)}
-                            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center justify-center hover:bg-red-200 dark:hover:bg-red-900/40 transition-colors"
+                            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center justify-center hover:bg-red-200 dark:hover:bg-red-900/40 transition-colors active:scale-95"
                           >
                             <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -964,26 +1104,33 @@ export default function POSInterface() {
               }}
             />
 
-            <div className="p-3 md:p-4 space-y-2">
+            <div className="p-3 md:p-4 space-y-3">
               <button
                 onClick={handleCreateOrder}
                 disabled={isProcessing}
-                className={`w-full py-2 md:py-3 rounded-lg font-medium transition-colors text-sm md:text-base ${
+                className={`w-full py-3 md:py-4 rounded-lg font-medium transition-all text-sm md:text-base ${
                   isProcessing
                     ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                    : 'bg-amber-600 hover:bg-amber-700 text-white'
+                    : 'bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]'
                 }`}
               >
-                {isProcessing ? 'در حال پردازش...' : 'پرداخت و ثبت سفارش'}
+                {isProcessing ? (
+                  <div className="flex items-center justify-center space-x-2 space-x-reverse">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>در حال پردازش...</span>
+                  </div>
+                ) : (
+                  'پرداخت و ثبت سفارش'
+                )}
               </button>
               
               <button
                 onClick={() => setOrderItems([])}
                 disabled={isProcessing}
-                className={`w-full py-2 rounded-lg transition-colors text-sm md:text-base ${
+                className={`w-full py-2 md:py-3 rounded-lg transition-all text-sm md:text-base ${
                   isProcessing
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
+                    : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 active:bg-gray-400 dark:active:bg-gray-500 text-gray-700 dark:text-gray-300 transform hover:scale-[1.02] active:scale-[0.98]'
                 }`}
               >
                 پاک کردن سبد
