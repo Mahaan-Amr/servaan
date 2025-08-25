@@ -10,9 +10,9 @@ set -e  # Exit on any error
 BACKUP_DIR="/opt/servaan/backups"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 BACKUP_NAME="servaan_server_backup_${TIMESTAMP}"
-DB_NAME="servaan_prod"
+DB_NAME="servaan"
 DB_USER="servaan"
-DB_CONTAINER="servaan-postgres-prod"
+DB_CONTAINER="servaan-postgres-server"
 
 # Colors for output
 RED='\033[0;31m'
@@ -60,6 +60,8 @@ fi
 log "Checking database container status..."
 if ! docker ps | grep -q "$DB_CONTAINER"; then
     error "Database container $DB_CONTAINER is not running"
+    echo "Available containers:"
+    docker ps --format "table {{.Names}}\t{{.Status}}"
     exit 1
 fi
 
@@ -159,6 +161,7 @@ Backup Date: $(date)
 Backup Name: $BACKUP_NAME
 Database: $DB_NAME
 Database User: $DB_USER
+Container: $DB_CONTAINER
 
 Files Created:
 - Database Dump: ${BACKUP_NAME}.dump ($DUMP_SIZE)
@@ -194,16 +197,16 @@ Servaan Server Database Restore Instructions
 To restore this backup:
 
 1. Stop the application:
-   docker-compose -f docker-compose.prod.yml down
+   docker-compose down
 
 2. Restore the database:
-   docker exec -i servaan-postgres-prod pg_restore -U servaan -d servaan_prod --clean --if-exists < ${BACKUP_NAME}.dump
+   docker exec -i servaan-postgres-server pg_restore -U servaan -d servaan --clean --if-exists < ${BACKUP_NAME}.dump
 
 3. Restart the application:
-   docker-compose -f docker-compose.prod.yml up -d
+   docker-compose up -d
 
 4. Verify the restore:
-   docker exec servaan-postgres-prod psql -U servaan -d servaan_prod -c "SELECT COUNT(*) FROM tenants;"
+   docker exec servaan-postgres-server psql -U servaan -d servaan -c "SELECT COUNT(*) FROM tenants;"
 
 Note: This will completely replace the current database. Make sure to backup any current data first.
 
@@ -213,10 +216,10 @@ CSV Import Instructions:
 To import specific tables from CSV:
 
 1. Copy the CSV file to the container:
-   docker cp table_name.csv servaan-postgres-prod:/tmp/
+   docker cp table_name.csv servaan-postgres-server:/tmp/
 
 2. Import using psql:
-   docker exec servaan-postgres-prod psql -U servaan -d servaan_prod -c "\\COPY table_name FROM '/tmp/table_name.csv' WITH CSV HEADER;"
+   docker exec servaan-postgres-server psql -U servaan -d servaan -c "\\COPY table_name FROM '/tmp/table_name.csv' WITH CSV HEADER;"
 
 Warning: CSV import will append data. Use with caution in production.
 EOF
