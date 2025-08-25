@@ -7,7 +7,7 @@
 set -e  # Exit on any error
 
 # Configuration
-BACKUP_DIR="/home/ubuntu/backups"
+BACKUP_DIR="/opt/servaan/backups"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 BACKUP_NAME="servaan_server_backup_${TIMESTAMP}"
 DB_NAME="servaan_prod"
@@ -40,8 +40,9 @@ warning() {
 
 # Check if running as root
 if [[ $EUID -eq 0 ]]; then
-   error "This script should not be run as root"
-   exit 1
+   log "Running as root user"
+else
+   warning "Not running as root - some operations may fail"
 fi
 
 # Create backup directory

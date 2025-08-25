@@ -6,7 +6,7 @@
 set -e
 
 # Configuration
-BACKUP_DIR="/home/ubuntu/backups"
+BACKUP_DIR="/opt/servaan/backups"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 BACKUP_NAME="servaan_quick_backup_${TIMESTAMP}"
 
