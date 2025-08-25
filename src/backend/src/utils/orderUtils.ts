@@ -141,11 +141,11 @@ export function validateIranianPhoneNumber(phone: string): boolean {
 }
 
 /**
- * Format price for display in Iranian Rial
+ * Format price for display in Iranian Toman
  */
 export function formatPrice(amount: number, includeCurrency: boolean = true): string {
   const formatted = new Intl.NumberFormat('fa-IR').format(amount);
-  return includeCurrency ? `${formatted} ریال` : formatted;
+  return includeCurrency ? `${formatted} تومان` : formatted;
 }
 
 /**

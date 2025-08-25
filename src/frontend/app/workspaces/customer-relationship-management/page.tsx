@@ -114,11 +114,11 @@ export default function CustomerRelationshipManagementPage() {
 
   const formatPrice = (price: number): string => {
     if (price >= 1000000) {
-      return `${(price / 1000000).toFixed(1)} میلیون`;
+      return `${(price / 1000000).toFixed(1)} میلیون تومان`;
     } else if (price >= 1000) {
-      return `${(price / 1000).toFixed(0)} هزار`;
+      return `${(price / 1000).toFixed(0)} هزار تومان`;
     }
-    return new Intl.NumberFormat('fa-IR').format(price);
+    return `${new Intl.NumberFormat('fa-IR').format(price)} تومان`;
   };
 
   const formatNumber = (num: number): string => {
@@ -213,7 +213,7 @@ export default function CustomerRelationshipManagementPage() {
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">درآمد کل</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {formatPrice(dashboardData?.visitStats.totalRevenue || 0)} ریال
+                    {formatPrice(dashboardData?.visitStats.totalRevenue || 0)}
                   </p>
                   <p className="text-sm text-purple-600 dark:text-purple-400">
                     میانگین: {formatPrice(dashboardData?.visitStats.averageOrderValue || 0)}

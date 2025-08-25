@@ -121,8 +121,9 @@ export class PaymentService {
           (sum, payment) => sum + Number(payment.amount), 
           0
         );
-        // Consider both payments table and order's paidAmount field
-        const totalPaid = Math.max(totalPaidFromPayments, Number(order.paidAmount || 0));
+        // Use only the payments table for validation, not the order's paidAmount field
+        // The paidAmount field is for tracking purposes, not for validation
+        const totalPaid = totalPaidFromPayments;
         const remainingAmount = Number(order.totalAmount) - totalPaid;
 
         // Debug logging
@@ -142,6 +143,7 @@ export class PaymentService {
         }
 
         // Allow payment if it matches the remaining amount (full payment) or is less
+        // For new orders with no payments, this should always pass
         if (paymentData.amount > remainingAmount) {
           throw new AppError(
             `Payment amount (${paymentData.amount}) exceeds remaining balance (${remainingAmount})`,

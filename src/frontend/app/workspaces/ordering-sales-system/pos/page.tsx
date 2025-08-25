@@ -296,7 +296,7 @@ export default function POSInterface() {
   }, [categories, selectedCategory]);
 
   const formatPrice = (amount: number) => {
-    return new Intl.NumberFormat('fa-IR').format(amount) + ' ریال';
+    return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان';
   };
 
   const addToOrder = (menuItem: MenuItem) => {
@@ -452,7 +452,8 @@ export default function POSInterface() {
         paymentMethod: data.paymentMethod,
         paidAmount: (() => {
           if (data.paymentType === 'IMMEDIATE') {
-            return data.amountReceived || 0;
+            // For immediate payments, set paidAmount to 0 and process payment separately
+            return 0;
           } else if (data.paymentType === 'PARTIAL' && data.selectedItems) {
             // Calculate proportional amount for partial payments
             const selectedSubtotal = data.selectedItems.reduce((sum, index) => sum + orderItems[index].totalPrice, 0);
@@ -504,7 +505,7 @@ export default function POSInterface() {
             cashReceived: data.paymentMethod === 'CASH' ? selectedItemsAmount : undefined
           });
 
-          toast.success(`پرداخت جزئی ${formatPrice(selectedItemsAmount)} ریال با موفقیت انجام شد`);
+                     toast.success(`پرداخت جزئی ${formatPrice(selectedItemsAmount)} تومان با موفقیت انجام شد`);
           setShowReceipt(true);
           
           // Reset form after partial payment
@@ -752,37 +753,39 @@ export default function POSInterface() {
             </div>
           ) : (
             <div className="p-2">
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => {
-                    setSelectedCategory(category.id);
-                    // Close sidebar on mobile after selection
-                    if (window.innerWidth < 1024) {
-                      setIsSidebarOpen(false);
-                    }
-                  }}
-                  className={`w-full text-right p-3 mb-2 rounded-lg transition-all duration-200 ${
-                    selectedCategory === category.id
-                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400 border-2 border-amber-300 dark:border-amber-600 shadow-sm'
-                      : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-sm">{category.name}</span>
-                    {selectedCategory === category.id && (
-                      <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </div>
-                  {category.items && category.items.length > 0 && (
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {category.items.length} آیتم
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-full">
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => {
+                      setSelectedCategory(category.id);
+                      // Close sidebar on mobile after selection
+                      if (window.innerWidth < 1024) {
+                        setIsSidebarOpen(false);
+                      }
+                    }}
+                    className={`w-full text-right p-2 rounded-lg transition-all duration-200 ${
+                      selectedCategory === category.id
+                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400 border-2 border-amber-300 dark:border-amber-600 shadow-sm'
+                        : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-xs leading-tight" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{category.name}</span>
+                      {selectedCategory === category.id && (
+                        <svg className="w-3 h-3 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
                     </div>
-                  )}
-                </button>
-              ))}
+                    {category.items && category.items.length > 0 && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        {category.items.length} آیتم
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -1030,9 +1033,9 @@ export default function POSInterface() {
                           <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
                             {formatPrice(item.menuItem.price)} × {item.quantity}
                           </p>
-                          <p className="text-xs md:text-sm font-bold text-amber-600 dark:text-amber-400">
-                            {formatPrice(item.totalPrice)} ریال
-                          </p>
+                                                     <p className="text-xs md:text-sm font-bold text-amber-600 dark:text-amber-400">
+                             {formatPrice(item.totalPrice)} تومان
+                           </p>
                         </div>
                         
                         {/* Quantity Controls */}

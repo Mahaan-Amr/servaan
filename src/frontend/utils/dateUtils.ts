@@ -29,7 +29,7 @@ export const formatDate = (dateString: string | Date): string => {
  */
 export const formatCurrency = (amount: number): string => {
   if (amount === null || amount === undefined || isNaN(amount)) {
-    return '۰ ریال';
+    return '۰ تومان';
   }
 
   // Use Intl for Persian number formatting

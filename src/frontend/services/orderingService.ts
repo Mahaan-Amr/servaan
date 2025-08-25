@@ -1459,10 +1459,10 @@ export const OrderingUtils = {
     return num.toString().replace(/\d/g, (digit) => persianDigits[parseInt(digit)]);
   },
 
-  // Format price in Iranian Rial
+  // Format price in Iranian Toman
   formatPrice: (amount: number, includeCurrency = true): string => {
     const formatted = new Intl.NumberFormat('fa-IR').format(amount);
-    return includeCurrency ? `${formatted} ریال` : formatted;
+    return includeCurrency ? `${formatted} تومان` : formatted;
   },
 
   // Get status color

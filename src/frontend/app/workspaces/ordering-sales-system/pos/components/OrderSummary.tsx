@@ -39,7 +39,7 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
           <h3 className="font-bold text-gray-900 dark:text-white text-sm">خلاصه سفارش</h3>
           <div className="flex items-center space-x-2 space-x-reverse">
             <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
-              {formatPrice(calculation.totalAmount)} ریال
+              {formatPrice(calculation.totalAmount)} تومان
             </span>
             <svg 
               className={`w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
@@ -54,11 +54,11 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
         
         {/* Quick Summary - Always Visible */}
         <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-          {orderItems.length} آیتم • {formatPrice(calculation.subtotal)} ریال
-          {calculation.discountAmount > 0 && ` • تخفیف: ${formatPrice(calculation.discountAmount)} ریال`}
-          {calculation.taxAmount > 0 && ` • مالیات: ${formatPrice(calculation.taxAmount)} ریال`}
-          {calculation.serviceAmount > 0 && ` • خدمات: ${formatPrice(calculation.serviceAmount)} ریال`}
-          {calculation.courierAmount > 0 && ` • پیک: ${formatPrice(calculation.courierAmount)} ریال`}
+          {orderItems.length} آیتم • {formatPrice(calculation.subtotal)} تومان
+          {calculation.discountAmount > 0 && ` • تخفیف: ${formatPrice(calculation.discountAmount)} تومان`}
+          {calculation.taxAmount > 0 && ` • مالیات: ${formatPrice(calculation.taxAmount)} تومان`}
+          {calculation.serviceAmount > 0 && ` • خدمات: ${formatPrice(calculation.serviceAmount)} تومان`}
+          {calculation.courierAmount > 0 && ` • پیک: ${formatPrice(calculation.courierAmount)} تومان`}
         </div>
       </div>
 
@@ -72,9 +72,9 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
                 <span className="text-gray-700 dark:text-gray-300">
                   {item.quantity}x {item.menuItem.name}
                 </span>
-                <span className="text-gray-900 dark:text-white font-medium">
-                  {formatPrice(item.totalPrice)} ریال
-                </span>
+                                  <span className="text-gray-900 dark:text-white font-medium">
+                    {formatPrice(item.totalPrice)} تومان
+                  </span>
               </div>
             ))}
           </div>
@@ -83,7 +83,7 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
           <div className="space-y-2 text-sm mb-4">
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">جمع آیتم‌ها:</span>
-              <span className="text-gray-900 dark:text-white">{formatPrice(calculation.subtotal)} ریال</span>
+              <span className="text-gray-900 dark:text-white">{formatPrice(calculation.subtotal)} تومان</span>
             </div>
             
             {calculation.discountAmount > 0 && (
@@ -91,37 +91,37 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
                 <span>
                   تخفیف ({calculation.discountPercentage}%):
                 </span>
-                <span>-{formatPrice(calculation.discountAmount)} ریال</span>
+                <span>-{formatPrice(calculation.discountAmount)} تومان</span>
               </div>
             )}
             
             {calculation.taxAmount > 0 && (
               <div className="flex justify-between">
                 <span>مالیات ({calculation.taxPercentage}%):</span>
-                <span>{formatPrice(calculation.taxAmount)} ریال</span>
+                <span>{formatPrice(calculation.taxAmount)} تومان</span>
               </div>
             )}
             
             {calculation.serviceAmount > 0 && (
               <div className="flex justify-between">
                 <span>خدمات ({calculation.servicePercentage}%):</span>
-                <span>{formatPrice(calculation.serviceAmount)} ریال</span>
+                <span>{formatPrice(calculation.serviceAmount)} تومان</span>
               </div>
             )}
             
             {calculation.courierAmount > 0 && (
               <div className="flex justify-between">
                 <span>پیک:</span>
-                <span>{formatPrice(calculation.courierAmount)} ریال</span>
+                <span>{formatPrice(calculation.courierAmount)} تومان</span>
               </div>
             )}
             
             <div className="border-t border-gray-300 dark:border-gray-600 pt-2 font-bold">
               <div className="flex justify-between">
                 <span className="text-gray-900 dark:text-white">مجموع کل:</span>
-                <span className="text-amber-600 dark:text-amber-400">
-                  {formatPrice(calculation.totalAmount)} ریال
-                </span>
+                                  <span className="text-amber-600 dark:text-amber-400">
+                    {formatPrice(calculation.totalAmount)} تومان
+                  </span>
               </div>
             </div>
           </div>
@@ -170,7 +170,7 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
                       className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-amber-500 focus:border-transparent"
                     >
                       <option value="PERCENTAGE">%</option>
-                      <option value="AMOUNT">ریال</option>
+                      <option value="AMOUNT">تومان</option>
                     </select>
                     <input
                       type="number"
@@ -246,7 +246,7 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
                 </div>
                 {options.courierEnabled && (
                   <div className="flex items-center space-x-2 space-x-reverse">
-                    <span className="text-xs text-gray-500">ریال</span>
+                    <span className="text-xs text-gray-500">تومان</span>
                     <input
                       type="number"
                       value={options.courierAmount}

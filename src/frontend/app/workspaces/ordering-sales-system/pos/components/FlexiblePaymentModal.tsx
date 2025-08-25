@@ -45,18 +45,8 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
 
   const handleSubmit = () => {
-    // Validate customer information based on payment type
-    if (paymentType === 'IMMEDIATE' || paymentType === 'PARTIAL') {
-      if (!customerName.trim()) {
-        alert('لطفاً نام مشتری را وارد کنید');
-        return;
-      }
-
-      if (!customerPhone.trim()) {
-        alert('لطفاً شماره تلفن مشتری را وارد کنید');
-        return;
-      }
-    }
+    // Customer information is now truly optional for all payment types
+    // No validation required for customer name and phone
 
     // Validate payment type specific requirements
     if (paymentType === 'IMMEDIATE') {
@@ -201,7 +191,7 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
         {/* Customer Information */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            نام مشتری {paymentType === 'PAY_AFTER_SERVICE' && <span className="text-gray-500 text-xs">(اختیاری)</span>}
+            نام مشتری <span className="text-gray-500 text-xs">(اختیاری)</span>
           </label>
           <div className="relative">
             <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -210,17 +200,15 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               className="w-full pr-10 pl-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
-              placeholder={paymentType === 'PAY_AFTER_SERVICE' ? "نام مشتری (اختیاری)" : "نام مشتری"}
+              placeholder="نام مشتری (اختیاری)"
             />
           </div>
-          {paymentType === 'PAY_AFTER_SERVICE' && (
-            <p className="text-xs text-gray-500 mt-1">برای پرداخت پس از سرویس، اطلاعات مشتری اختیاری است</p>
-          )}
+          <p className="text-xs text-gray-500 mt-1">اطلاعات مشتری اختیاری است</p>
         </div>
 
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            شماره تلفن {paymentType === 'PAY_AFTER_SERVICE' && <span className="text-gray-500 text-xs">(اختیاری)</span>}
+            شماره تلفن <span className="text-gray-500 text-xs">(اختیاری)</span>
           </label>
           <div className="relative">
             <FaPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -229,12 +217,10 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
               className="w-full pr-10 pl-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
-              placeholder={paymentType === 'PAY_AFTER_SERVICE' ? "شماره تلفن (اختیاری)" : "شماره تلفن"}
+              placeholder="شماره تلفن (اختیاری)"
             />
           </div>
-          {paymentType === 'PAY_AFTER_SERVICE' && (
-            <p className="text-xs text-gray-500 mt-1">برای پرداخت پس از سرویس، شماره تلفن اختیاری است</p>
-          )}
+          <p className="text-xs text-gray-500 mt-1">شماره تلفن اختیاری است</p>
         </div>
 
         {/* Order Notes */}
@@ -335,7 +321,7 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
                         {item.quantity}x {item.menuItem.name}
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {formatPrice(item.totalPrice)} ریال
+                        {formatPrice(item.totalPrice)} تومان
                       </div>
                     </div>
                   </label>
@@ -357,7 +343,7 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
                             {item.quantity}x {item.menuItem.name}
                           </span>
                           <span className="text-amber-700 dark:text-amber-300 font-medium">
-                            {formatPrice(item.totalPrice)} ریال
+                            {formatPrice(item.totalPrice)} تومان
                           </span>
                         </div>
                       );
@@ -372,14 +358,14 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
                             <div className="flex justify-between text-xs">
                               <span className="text-amber-600 dark:text-amber-400">مجموع آیتم‌ها:</span>
                               <span className="text-amber-600 dark:text-amber-400">
-                                {formatPrice(proportional.subtotal)} ریال
+                                {formatPrice(proportional.subtotal)} تومان
                               </span>
                             </div>
                             {proportional.discountAmount > 0 && (
                               <div className="flex justify-between text-xs">
                                 <span className="text-green-600 dark:text-green-400">تخفیف:</span>
                                 <span className="text-green-600 dark:text-green-400">
-                                  -{formatPrice(proportional.discountAmount)} ریال
+                                  -{formatPrice(proportional.discountAmount)} تومان
                                 </span>
                               </div>
                             )}
@@ -387,7 +373,7 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
                               <div className="flex justify-between text-xs">
                                 <span className="text-amber-600 dark:text-amber-400">مالیات:</span>
                                 <span className="text-amber-600 dark:text-amber-400">
-                                  +{formatPrice(proportional.taxAmount)} ریال
+                                  +{formatPrice(proportional.taxAmount)} تومان
                                 </span>
                               </div>
                             )}
@@ -395,7 +381,7 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
                               <div className="flex justify-between text-xs">
                                 <span className="text-amber-600 dark:text-amber-400">کارمزد سرویس:</span>
                                 <span className="text-amber-600 dark:text-amber-400">
-                                  +{formatPrice(proportional.serviceAmount)} ریال
+                                  +{formatPrice(proportional.serviceAmount)} تومان
                                 </span>
                               </div>
                             )}
@@ -404,13 +390,13 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
                             <div className="flex justify-between font-medium">
                               <span className="text-amber-800 dark:text-amber-200">مجموع پرداختی:</span>
                               <span className="text-amber-800 dark:text-amber-200">
-                                {formatPrice(proportional.totalAmount)} ریال
+                                {formatPrice(proportional.totalAmount)} تومان
                               </span>
                             </div>
                             <div className="flex justify-between text-xs mt-1">
                               <span className="text-amber-600 dark:text-amber-400">باقی‌مانده:</span>
                               <span className="text-amber-600 dark:text-amber-400">
-                                {formatPrice(totalAmount - proportional.totalAmount)} ریال
+                                {formatPrice(totalAmount - proportional.totalAmount)} تومان
                               </span>
                             </div>
                           </div>

@@ -227,10 +227,8 @@ export default function OrdersPage() {
   }, [orders, activeTab, statusFilter, searchQuery]);
 
   const formatPrice = (amount: number) => {
-    return new Intl.NumberFormat('fa-IR', {
-      style: 'currency',
-      currency: 'IRR'
-    }).format(amount);
+    const formatted = new Intl.NumberFormat('fa-IR').format(amount);
+    return `${formatted} تومان`;
   };
 
   const getStatusColor = (status: string) => {

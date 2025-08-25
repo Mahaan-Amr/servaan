@@ -249,7 +249,8 @@ export default function OrderingSystemDashboard() {
   };
 
   const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat('fa-IR').format(price);
+    const formatted = new Intl.NumberFormat('fa-IR').format(price);
+    return `${formatted} تومان`;
   };
 
   if (loading) {
@@ -329,7 +330,7 @@ export default function OrderingSystemDashboard() {
             {
               id: 2,
               name: 'درآمد امروز',
-              value: `${formatPrice(stats.todaysRevenue || 0)} ریال`,
+              value: `${formatPrice(stats.todaysRevenue || 0)}`,
               icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1',
               color: 'bg-green-100 dark:bg-green-900 text-green-500',
               gradient: 'from-green-500 to-green-600'
@@ -345,7 +346,7 @@ export default function OrderingSystemDashboard() {
             {
               id: 4,
               name: 'میانگین سفارش',
-              value: `${formatPrice(stats.averageOrderValue || 0)} ریال`,
+              value: `${formatPrice(stats.averageOrderValue || 0)}`,
               icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
               color: 'bg-purple-100 dark:bg-purple-900 text-purple-500',
               gradient: 'from-purple-500 to-purple-600'
@@ -377,7 +378,7 @@ export default function OrderingSystemDashboard() {
             {
               id: 2,
               name: 'درآمد امروز',
-              value: '0 ریال',
+              value: '0 تومان',
               icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1',
               color: 'bg-green-100 dark:bg-green-900 text-green-500',
               gradient: 'from-green-500 to-green-600'
@@ -393,7 +394,7 @@ export default function OrderingSystemDashboard() {
             {
               id: 4,
               name: 'میانگین سفارش',
-              value: '0 ریال',
+              value: '0 تومان',
               icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
               color: 'bg-purple-100 dark:bg-purple-900 text-purple-500',
               gradient: 'from-purple-500 to-purple-600'
@@ -453,7 +454,7 @@ export default function OrderingSystemDashboard() {
               {stats.paymentMethods.map((method, index) => (
                 <div key={index} className="flex justify-between items-center">
                   <span className="text-sm text-gray-600 dark:text-gray-400">{method.method}</span>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">{formatPrice(method.amount)} ریال</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">{formatPrice(method.amount)}</span>
                 </div>
               ))}
             </div>

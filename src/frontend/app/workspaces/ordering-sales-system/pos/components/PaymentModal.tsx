@@ -78,7 +78,7 @@ export default function PaymentModal({
                   {item.quantity}x {item.menuItem.name}
                 </span>
                 <span className="text-gray-900 dark:text-white">
-                  {formatPrice(item.totalPrice)} ریال
+                  {formatPrice(item.totalPrice)} تومان
                 </span>
               </div>
             ))}
@@ -86,7 +86,7 @@ export default function PaymentModal({
               <div className="flex justify-between font-medium">
                 <span className="text-gray-900 dark:text-white">مجموع کل:</span>
                 <span className="text-amber-600 dark:text-amber-400">
-                  {formatPrice(calculation.totalAmount)} ریال
+                  {formatPrice(calculation.totalAmount)} تومان
                 </span>
               </div>
             </div>
@@ -144,7 +144,7 @@ export default function PaymentModal({
             <div className="flex justify-between text-sm">
               <span className="text-green-700 dark:text-green-400">تغییر:</span>
               <span className="text-green-700 dark:text-green-400 font-medium">
-                {formatPrice(changeAmount)} ریال
+                {formatPrice(changeAmount)} تومان
               </span>
             </div>
           </div>

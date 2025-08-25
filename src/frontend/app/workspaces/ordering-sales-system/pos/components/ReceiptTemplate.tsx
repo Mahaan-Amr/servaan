@@ -263,41 +263,41 @@ export default function ReceiptTemplate({
           <div class="calculation">
             <div>
               <span>جمع آیتم‌ها:</span>
-              <span>${formatPrice(calculation.subtotal)} ریال</span>
+              <span>${formatPrice(calculation.subtotal)} تومان</span>
             </div>
             
             ${calculation.discountAmount > 0 ? `
               <div style="color: green;">
                 <span>تخفیف (${calculation.discountPercentage}%):</span>
-                <span>-${formatPrice(calculation.discountAmount)} ریال</span>
+                <span>-${formatPrice(calculation.discountAmount)} تومان</span>
               </div>
             ` : ''}
             
             ${calculation.taxAmount > 0 ? `
               <div>
                 <span>مالیات (${calculation.taxPercentage}%):</span>
-                <span>${formatPrice(calculation.taxAmount)} ریال</span>
+                <span>${formatPrice(calculation.taxAmount)} تومان</span>
               </div>
             ` : ''}
             
             ${calculation.serviceAmount > 0 ? `
               <div>
                 <span>خدمات (${calculation.servicePercentage}%):</span>
-                <span>${formatPrice(calculation.serviceAmount)} ریال</span>
+                <span>${formatPrice(calculation.serviceAmount)} تومان</span>
               </div>
             ` : ''}
             
             ${calculation.courierAmount > 0 ? `
               <div>
                 <span>پیک:</span>
-                <span>${formatPrice(calculation.courierAmount)} ریال</span>
+                <span>${formatPrice(calculation.courierAmount)} تومان</span>
               </div>
             ` : ''}
             
             <div style="border-top: 1px solid #ccc; padding-top: 1px; font-weight: bold;">
               <div>
                 <span>مجموع کل:</span>
-                <span>${formatPrice(calculation.totalAmount)} ریال</span>
+                <span>${formatPrice(calculation.totalAmount)} تومان</span>
               </div>
             </div>
           </div>
@@ -310,12 +310,12 @@ export default function ReceiptTemplate({
             </div>
             <div>
               <span>مبلغ دریافتی:</span>
-              <span style="font-weight: bold;">${formatPrice(paymentData.amountReceived)} ریال</span>
+              <span style="font-weight: bold;">${formatPrice(paymentData.amountReceived)} تومان</span>
             </div>
             ${paymentData.amountReceived > calculation.totalAmount ? `
               <div style="color: green;">
                 <span>تغییر:</span>
-                <span style="font-weight: bold;">${formatPrice(paymentData.amountReceived - calculation.totalAmount)} ریال</span>
+                <span style="font-weight: bold;">${formatPrice(paymentData.amountReceived - calculation.totalAmount)} تومان</span>
               </div>
             ` : ''}
           </div>
@@ -409,41 +409,41 @@ export default function ReceiptTemplate({
           <div className="space-y-0.5 text-sm print:text-xs print:space-y-0">
             <div className="flex justify-between">
               <span className="text-gray-600">جمع آیتم‌ها:</span>
-              <span>{formatPrice(calculation.subtotal)} ریال</span>
+              <span>{formatPrice(calculation.subtotal)} تومان</span>
             </div>
             
             {calculation.discountAmount > 0 && (
               <div className="flex justify-between text-green-600">
                 <span>تخفیف ({calculation.discountPercentage}%):</span>
-                <span>-{formatPrice(calculation.discountAmount)} ریال</span>
+                <span>-{formatPrice(calculation.discountAmount)} تومان</span>
               </div>
             )}
             
             {calculation.taxAmount > 0 && (
               <div className="flex justify-between">
                 <span>مالیات ({calculation.taxPercentage}%):</span>
-                <span>{formatPrice(calculation.taxAmount)} ریال</span>
+                <span>{formatPrice(calculation.taxAmount)} تومان</span>
               </div>
             )}
             
             {calculation.serviceAmount > 0 && (
               <div className="flex justify-between">
                 <span>خدمات ({calculation.servicePercentage}%):</span>
-                <span>{formatPrice(calculation.serviceAmount)} ریال</span>
+                <span>{formatPrice(calculation.serviceAmount)} تومان</span>
               </div>
             )}
             
             {calculation.courierAmount > 0 && (
               <div className="flex justify-between">
                 <span>پیک:</span>
-                <span>{formatPrice(calculation.courierAmount)} ریال</span>
+                <span>{formatPrice(calculation.courierAmount)} تومان</span>
               </div>
             )}
             
             <div className="border-t border-gray-300 pt-0.5 font-bold">
               <div className="flex justify-between">
                 <span>مجموع کل:</span>
-                <span>{formatPrice(calculation.totalAmount)} ریال</span>
+                <span>{formatPrice(calculation.totalAmount)} تومان</span>
               </div>
             </div>
           </div>
@@ -460,13 +460,13 @@ export default function ReceiptTemplate({
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">مبلغ دریافتی:</span>
-              <span className="font-medium">{formatPrice(paymentData.amountReceived)} ریال</span>
+              <span className="font-medium">{formatPrice(paymentData.amountReceived)} تومان</span>
             </div>
             {paymentData.amountReceived > calculation.totalAmount && (
               <div className="flex justify-between text-green-600">
                 <span>تغییر:</span>
                 <span className="font-medium">
-                  {formatPrice(paymentData.amountReceived - calculation.totalAmount)} ریال
+                  {formatPrice(paymentData.amountReceived - calculation.totalAmount)} تومان
                 </span>
               </div>
             )}

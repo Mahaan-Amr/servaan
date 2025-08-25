@@ -472,11 +472,11 @@ class WorkspaceService implements IWorkspaceService {
 
       const formatPrice = (price: number): string => {
         if (price >= 1000000) {
-          return `${(price / 1000000).toFixed(1)} میلیون`;
+          return `${(price / 1000000).toFixed(1)} میلیون تومان`;
         } else if (price >= 1000) {
-          return `${(price / 1000).toFixed(0)} هزار`;
+          return `${(price / 1000).toFixed(0)} هزار تومان`;
         }
-        return price.toLocaleString('fa-IR');
+        return `${price.toLocaleString('fa-IR')} تومان`;
       };
 
       return {
@@ -494,7 +494,7 @@ class WorkspaceService implements IWorkspaceService {
         },
         tertiary: {
           label: 'تراز امروز',
-          value: `${formatPrice(balance.data?.balance || 0)} ریال`,
+          value: formatPrice(balance.data?.balance || 0),
           icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
           color: 'text-purple-500'
         },
