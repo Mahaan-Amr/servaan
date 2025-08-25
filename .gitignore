@@ -48,4 +48,27 @@ src/backend/dist/
 
 # Additional build outputs
 *.tsbuildinfo
-next-env.d.ts 
+next-env.d.ts
+
+# Backup files and data exports
+*.dump
+backups/
+backup_exports/
+complete_csv_export_*/
+
+# Temporary SQL analysis files
+*_analysis.sql
+*_check.sql
+*_correct.sql
+*_data.sql
+*_suppliers.sql
+*_menu.sql
+
+# Temporary backup scripts (keep only the main ones)
+deploy-backup-scripts.*
+backup-database.bat
+export-*.bat
+restore-database.bat
+
+# Database readable exports
+database_backup_readable.sql 
