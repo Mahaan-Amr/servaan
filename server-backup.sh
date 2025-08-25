@@ -10,7 +10,7 @@ set -e  # Exit on any error
 BACKUP_DIR="/opt/servaan/backups"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 BACKUP_NAME="servaan_server_backup_${TIMESTAMP}"
-DB_NAME="servaan"
+DB_NAME="servaan_prod"
 DB_USER="servaan"
 DB_CONTAINER="servaan-postgres-server"
 
@@ -200,13 +200,13 @@ To restore this backup:
    docker-compose down
 
 2. Restore the database:
-   docker exec -i servaan-postgres-server pg_restore -U servaan -d servaan --clean --if-exists < ${BACKUP_NAME}.dump
+   docker exec -i servaan-postgres-server pg_restore -U servaan -d servaan_prod --clean --if-exists < ${BACKUP_NAME}.dump
 
 3. Restart the application:
    docker-compose up -d
 
 4. Verify the restore:
-   docker exec servaan-postgres-server psql -U servaan -d servaan -c "SELECT COUNT(*) FROM tenants;"
+   docker exec servaan-postgres-server psql -U servaan -d servaan_prod -c "SELECT COUNT(*) FROM tenants;"
 
 Note: This will completely replace the current database. Make sure to backup any current data first.
 
@@ -219,7 +219,7 @@ To import specific tables from CSV:
    docker cp table_name.csv servaan-postgres-server:/tmp/
 
 2. Import using psql:
-   docker exec servaan-postgres-server psql -U servaan -d servaan -c "\\COPY table_name FROM '/tmp/table_name.csv' WITH CSV HEADER;"
+   docker exec servaan-postgres-server psql -U servaan -d servaan_prod -c "\\COPY table_name FROM '/tmp/table_name.csv' WITH CSV HEADER;"
 
 Warning: CSV import will append data. Use with caution in production.
 EOF
