@@ -1643,3 +1643,85 @@ enum ExportFormat {
   CSV
   JSON
 }
+
+// Admin System Models
+model AdminUser {
+  id                String      @id @default(cuid())
+  email             String      @unique
+  passwordHash      String      @map("password_hash")
+  role              AdminRole
+  isActive          Boolean     @default(true) @map("is_active")
+  twoFactorSecret   String?     @map("two_factor_secret")
+  lastLogin         DateTime?   @map("last_login")
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
+  auditLogs         AdminAuditLog[]
+
+  @@map("admin_users")
+}
+
+model AdminAuditLog {
+  id            String      @id @default(cuid())
+  adminUserId   String      @map("admin_user_id")
+  action        String
+  resourceType  String?     @map("resource_type")
+  resourceId    String?     @map("resource_id")
+  details       Json?
+  ipAddress     String?     @map("ip_address") @db.Inet
+  userAgent     String?     @map("user_agent")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  adminUser     AdminUser   @relation(fields: [adminUserId], references: [id], onDelete: Restrict)
+
+  @@map("admin_audit_logs")
+}
+
+model SystemHealthMetric {
+  id           String      @id @default(cuid())
+  metricName   String      @map("metric_name")
+  metricValue  Json        @map("metric_value")
+  status       HealthStatus
+  collectedAt  DateTime    @default(now()) @map("collected_at")
+
+  @@map("system_health_metrics")
+}
+
+model FeatureFlag {
+  id                 String    @id @default(cuid())
+  featureName        String    @unique @map("feature_name")
+  isEnabled          Boolean   @default(false) @map("is_enabled")
+  rolloutPercentage  Int       @default(0) @map("rollout_percentage")
+  targetTenants      Json?     @map("target_tenants")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  @@map("feature_flags")
+}
+
+model ApiUsageLog {
+  id           String    @id @default(cuid())
+  tenantId     String?   @map("tenant_id")
+  endpoint     String
+  method       String
+  responseTime Int?      @map("response_time")
+  statusCode   Int?      @map("status_code")
+  userAgent    String?   @map("user_agent")
+  ipAddress    String?   @map("ip_address") @db.Inet
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@map("api_usage_logs")
+}
+
+// Admin System Enums
+enum AdminRole {
+  SUPER_ADMIN
+  PLATFORM_ADMIN
+  SUPPORT
+  DEVELOPER
+}
+
+enum HealthStatus {
+  HEALTHY
+  WARNING
+  CRITICAL
+  UNKNOWN
+}

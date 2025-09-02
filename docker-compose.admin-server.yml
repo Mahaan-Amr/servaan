@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: servaan-postgres-admin
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: servaan
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: servaan_prod
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - servaan-admin-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U servaan -d servaan_prod"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  admin-backend:
+    build:
+      context: .
+      dockerfile: src/admin/backend/Dockerfile
+    container_name: servaan-admin-backend-standalone
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://servaan:${DB_PASSWORD}@postgres:5432/servaan_prod
+      - ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET}
+      - ADMIN_BACKEND_PORT=3003
+      - ADMIN_CORS_ORIGINS=${ADMIN_CORS_ORIGINS}
+      - ADMIN_LOG_LEVEL=info
+    ports:
+      - "3003:3003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - servaan-admin-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3003/api/admin/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  admin-frontend:
+    build:
+      context: .
+      dockerfile: src/admin/frontend/Dockerfile
+    container_name: servaan-admin-frontend-standalone
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_ADMIN_API_URL=${NEXT_PUBLIC_ADMIN_API_URL}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+    ports:
+      - "3004:3004"
+    depends_on:
+      admin-backend:
+        condition: service_healthy
+    networks:
+      - servaan-admin-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3004', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: servaan-pgadmin-admin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - servaan-admin-network
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  servaan-admin-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16

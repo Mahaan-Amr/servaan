@@ -15,9 +15,12 @@ interface Tenant {
   isActive: boolean;
   ownerName: string;
   ownerEmail: string;
+  ownerPhone?: string;
   businessType?: string;
+  address?: string;
   city?: string;
   state?: string;
+  postalCode?: string;
   country?: string;
 }
 

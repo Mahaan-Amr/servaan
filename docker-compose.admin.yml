@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  admin-backend-dev:
+    build:
+      context: .
+      dockerfile: src/admin/backend/Dockerfile
+    container_name: servaan-admin-backend-dev
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://servaan:servaan_pass@postgres:5432/servaan_db
+      - ADMIN_JWT_SECRET=servaan-admin-super-secret-key-different-from-tenant
+      - ADMIN_BACKEND_PORT=3003
+      - ADMIN_CORS_ORIGINS=http://localhost:3004,http://admin.localhost:3004
+      - ADMIN_LOG_LEVEL=debug
+    ports:
+      - "3003:3003"
+    depends_on:
+      - postgres
+    networks:
+      - servaan-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3003/api/admin/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - ./src/admin/backend:/app/src/admin/backend
+      - ./src/shared:/app/src/shared
+      - ./src/prisma:/app/src/prisma
+
+networks:
+  servaan-network:
+    external: true

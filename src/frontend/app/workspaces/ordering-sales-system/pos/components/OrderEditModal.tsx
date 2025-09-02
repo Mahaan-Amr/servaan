@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaSearch, FaPlus, FaMinus, FaTrash } from 'react-icons/fa';
+import { FaTimes, FaSearch, FaPlus, FaMinus, FaTrash, FaPrint } from 'react-icons/fa';
 import Image from 'next/image';
 import { OrderService, MenuService } from '../../../../../services/orderingService';
 import { toast } from 'react-hot-toast';
+import ReceiptTemplate from './ReceiptTemplate';
 
 interface MenuItem {
   id: string;
@@ -35,6 +36,46 @@ interface OrderEditModalProps {
   onOrderUpdated: () => void;
 }
 
+interface OrderData {
+  id: string;
+  orderNumber: string;
+  orderDate: string;
+  orderType: 'DINE_IN' | 'TAKEAWAY' | 'DELIVERY' | 'ONLINE';
+  status: string;
+  totalAmount: number;
+  subtotal: number;
+  taxAmount: number;
+  serviceCharge: number;
+  discountAmount: number;
+  items: Array<{
+    id: string;
+    itemId: string | null;
+    menuItemId: string | null;
+    itemName: string;
+    quantity: number;
+    totalPrice: number;
+    item?: {
+      id: string;
+      name: string;
+      price: number;
+    } | null;
+    menuItem?: {
+      id: string;
+      name: string;
+      price: number;
+    } | null;
+  }>;
+  tableInfo?: {
+    tableNumber: string;
+    tableName?: string;
+  };
+  paymentData?: {
+    paymentMethod: 'CASH' | 'CARD';
+    amountReceived: number;
+    notes?: string;
+  };
+}
+
 export default function OrderEditModal({ 
   isOpen, 
   onClose, 
@@ -48,6 +89,11 @@ export default function OrderEditModal({
   const [orderItems, setOrderItems] = useState<OrderItem[]>(currentItems);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  
+  // Receipt printing state
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [orderData, setOrderData] = useState<OrderData | null>(null);
+  const [receiptLoading, setReceiptLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -205,6 +251,31 @@ export default function OrderEditModal({
     }
   };
 
+  const handlePrintReceipt = async () => {
+    try {
+      setReceiptLoading(true);
+      
+      // Fetch complete order data
+      const orderDetails = await OrderService.getOrderById(orderId) as OrderData;
+      console.log('🔍 Order details for receipt:', orderDetails);
+      console.log('🔍 Order items structure:', orderDetails.items);
+      
+      // Debug: Check for null items
+      const nullItems = orderDetails.items.filter(item => !item || !item.item);
+      if (nullItems.length > 0) {
+        console.warn('⚠️ Found items with null item property:', nullItems);
+      }
+      
+      setOrderData(orderDetails);
+      setShowReceipt(true);
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+      toast.error('خطا در دریافت اطلاعات سفارش برای چاپ رسید');
+    } finally {
+      setReceiptLoading(false);
+    }
+  };
+
   const formatPrice = (amount: number) => {
     return new Intl.NumberFormat('fa-IR', {
       style: 'currency',
@@ -321,7 +392,7 @@ export default function OrderEditModal({
                       </div>
                     )}
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-2 text-lg">{item.name}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 break-words">
                       {item.description || 'توضیحات موجود نیست'}
                     </p>
                     <p className="text-xl font-bold text-amber-600 dark:text-amber-400">
@@ -425,6 +496,19 @@ export default function OrderEditModal({
                   </button>
                   
                   <button
+                    onClick={handlePrintReceipt}
+                    disabled={receiptLoading}
+                    className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${
+                      receiptLoading
+                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                        : 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
+                    }`}
+                  >
+                    <FaPrint className="inline ml-2" />
+                    {receiptLoading ? 'در حال چاپ...' : 'چاپ رسید'}
+                  </button>
+
+                  <button
                     onClick={onClose}
                     className="w-full py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-semibold"
                   >
@@ -436,6 +520,85 @@ export default function OrderEditModal({
           </div>
         </div>
       </div>
+
+      {/* Receipt Modal */}
+      {showReceipt && orderData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">رسید سفارش</h3>
+              <button
+                onClick={() => setShowReceipt(false)}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                <FaTimes size={20} />
+              </button>
+            </div>
+            
+            <ReceiptTemplate
+              orderNumber={orderData.orderNumber}
+              orderDate={new Date(orderData.orderDate)}
+              orderItems={orderData.items
+                .filter((item: OrderData['items'][0]) => item && (item.item || item.menuItem || item.itemName)) // Filter out completely invalid items
+                .map((item: OrderData['items'][0]) => ({
+                  id: item.id,
+                  menuItem: {
+                    id: item.item?.id || item.menuItem?.id || item.menuItemId || '',
+                    name: item.item?.name || item.menuItem?.name || item.itemName || 'Unknown Item',
+                    price: item.item?.price || item.menuItem?.price || 0
+                  },
+                  quantity: item.quantity,
+                  totalPrice: item.totalPrice
+                }))}
+              calculation={{
+                subtotal: orderData.subtotal,
+                discountAmount: orderData.discountAmount,
+                discountPercentage: orderData.discountAmount > 0 ? (orderData.discountAmount / orderData.subtotal) * 100 : 0,
+                taxAmount: orderData.taxAmount,
+                taxPercentage: 9.00,
+                serviceAmount: orderData.serviceCharge,
+                servicePercentage: 10.00,
+                courierAmount: 0,
+                totalAmount: orderData.totalAmount,
+                breakdown: {
+                  subtotal: orderData.subtotal,
+                  discount: orderData.discountAmount,
+                  tax: orderData.taxAmount,
+                  service: orderData.serviceCharge,
+                  courier: 0,
+                  total: orderData.totalAmount
+                }
+              }}
+              options={{
+                discountEnabled: orderData.discountAmount > 0,
+                discountType: 'PERCENTAGE',
+                discountValue: 0,
+                taxEnabled: orderData.taxAmount > 0,
+                taxPercentage: 9.00,
+                serviceEnabled: orderData.serviceCharge > 0,
+                servicePercentage: 10.00,
+                courierEnabled: false,
+                courierAmount: 0,
+                courierNotes: ''
+              }}
+              paymentData={orderData.paymentData || {
+                paymentMethod: 'CASH',
+                amountReceived: orderData.totalAmount,
+                notes: ''
+              }}
+              businessInfo={{
+                name: 'کافه سروان',
+                address: 'تهران، خیابان ولیعصر',
+                phone: '021-12345678',
+                taxId: '123456789'
+              }}
+              orderType={orderData.orderType}
+              tableInfo={orderData.tableInfo}
+              onPrintComplete={() => setShowReceipt(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

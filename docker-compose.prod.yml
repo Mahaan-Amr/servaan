@@ -91,6 +91,32 @@ services:
       retries: 3
       start_period: 40s
 
+  admin-backend:
+    build:
+      context: .
+      dockerfile: src/admin/backend/Dockerfile
+    container_name: servaan-admin-backend-prod
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://servaan:${DB_PASSWORD}@postgres:5432/servaan_prod
+      - ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET}
+      - ADMIN_BACKEND_PORT=3003
+      - ADMIN_CORS_ORIGINS=https://admin.servaan.com,https://*.servaan.com
+    ports:
+      - "3003:3003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - servaan-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3003/api/admin/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   # Optional: pgAdmin for database management
   pgadmin:
     image: dpage/pgadmin4:latest

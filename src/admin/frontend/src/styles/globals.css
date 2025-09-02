@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles for the admin panel */
+body {
+  font-family: 'Vazirmatn', 'Inter', sans-serif;
+  background-color: #F8FAFB; /* admin-bg */
+  color: #1E293B; /* admin-text */
+  direction: rtl;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #1E293B; /* admin-text */
+  font-family: 'Vazirmatn', 'Inter', sans-serif;
+}
+
+a {
+  color: #3B82F6; /* admin-secondary */
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Layout specific styles */
+.admin-layout {
+  @apply flex min-h-screen;
+}
+
+.sidebar-admin {
+  @apply w-admin-sidebar bg-admin-primary text-white flex flex-col;
+}
+
+.header-admin {
+  @apply bg-admin-card shadow-admin-sm p-4 flex justify-between items-center;
+}
+
+.content-admin {
+  @apply flex-1 overflow-auto p-6;
+}
+
+/* Form styles */
+.form-admin-input {
+  @apply block w-full px-3 py-2 border border-admin-border rounded-admin focus:outline-none focus:ring-2 focus:ring-admin-primary focus:border-transparent;
+}
+
+.btn-admin-primary {
+  @apply bg-admin-primary hover:bg-blue-900 text-white font-medium rounded-admin transition-colors duration-200;
+}
+
+.btn-admin-secondary {
+  @apply bg-admin-secondary hover:bg-blue-600 text-white font-medium rounded-admin transition-colors duration-200;
+}
+
+.btn-admin-success {
+  @apply bg-admin-success hover:bg-emerald-600 text-white font-medium rounded-admin transition-colors duration-200;
+}
+
+.btn-admin-warning {
+  @apply bg-admin-warning hover:bg-amber-600 text-white font-medium rounded-admin transition-colors duration-200;
+}
+
+.btn-admin-danger {
+  @apply bg-admin-danger hover:bg-red-600 text-white font-medium rounded-admin transition-colors duration-200;
+}
+
+/* Card styles */
+.admin-card {
+  @apply bg-admin-card rounded-admin shadow-admin border border-admin-border;
+}
+
+.admin-card-header {
+  @apply px-6 py-4 border-b border-admin-border;
+}
+
+.admin-card-body {
+  @apply px-6 py-4;
+}
+
+.admin-card-footer {
+  @apply px-6 py-4 border-t border-admin-border bg-gray-50;
+}
+
+/* Status indicators */
+.status-healthy {
+  @apply text-admin-healthy bg-green-100 px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.status-warning {
+  @apply text-admin-warning bg-yellow-100 px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.status-critical {
+  @apply text-admin-critical bg-red-100 px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.status-maintenance {
+  @apply text-admin-maintenance bg-purple-100 px-2 py-1 rounded-full text-xs font-medium;
+}
+
+/* RTL specific adjustments */
+.rtl {
+  direction: rtl;
+}
+
+.rtl .ml-auto {
+  margin-left: unset;
+  margin-right: auto;
+}
+
+.rtl .mr-auto {
+  margin-right: unset;
+  margin-left: auto;
+}
+
+/* Persian number formatting */
+.persian-numbers {
+  font-family: 'Vazirmatn', 'Inter', sans-serif;
+}
+
+/* Custom utilities for admin panel */
+@layer utilities {
+  .text-admin-primary {
+    @apply text-blue-800;
+  }
+
+  .bg-admin-primary {
+    @apply bg-blue-800;
+  }
+
+  .border-admin-primary {
+    @apply border-blue-800;
+  }
+
+  .ring-admin-primary {
+    @apply ring-blue-800;
+  }
+}

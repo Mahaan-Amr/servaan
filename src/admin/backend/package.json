@@ -1,0 +1,66 @@
+{
+  "name": "servaan-admin-backend",
+  "version": "1.0.0",
+  "description": "Admin Backend for Servaan Platform - Platform Management System",
+  "main": "dist/src/index.js",
+  "prisma": {
+    "schema": "../../prisma/schema.prisma"
+  },
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc",
+    "build:docker": "echo 'Docker build: Using ts-node runtime execution'",
+    "start": "ts-node src/index.ts",
+    "start:prod": "node dist/src/index.js",
+    "pretest": "echo 'Admin backend test setup'",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:integration": "jest --testPathPattern=integration",
+    "test:unit": "jest --testPathPattern=unit",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate deploy",
+    "db:studio": "prisma studio",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "clean": "rimraf dist",
+    "prebuild": "npm run clean"
+  },
+  "keywords": [
+    "admin",
+    "platform",
+    "management",
+    "multi-tenant",
+    "servaan"
+  ],
+  "author": "Servaan Platform Team",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^6.14.0",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.1",
+    "pdfkit": "^0.15.0",
+    "zod": "^4.1.3"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/morgan": "^1.9.10",
+    "@types/pdfkit": "^0.13.3",
+    "@types/node": "^24.3.0",
+    "nodemon": "^3.1.10",
+    "prisma": "^6.14.0",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.2"
+  }
+}

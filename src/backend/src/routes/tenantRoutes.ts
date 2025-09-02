@@ -177,7 +177,13 @@ router.get('/:subdomain', async (req, res) => {
         features: tenant.features,
         ownerName: tenant.ownerName,
         ownerEmail: tenant.ownerEmail,
+        ownerPhone: tenant.ownerPhone,
         businessType: tenant.businessType,
+        address: tenant.address,
+        city: tenant.city,
+        state: tenant.state,
+        postalCode: tenant.postalCode,
+        country: tenant.country,
         timezone: tenant.timezone,
         locale: tenant.locale,
         currency: tenant.currency

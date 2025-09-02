@@ -36,8 +36,12 @@ RUN adduser -S nodejs -u 1001
 # Copy package files first for dependency installation
 COPY --from=builder --chown=nodejs:nodejs /app/src/frontend/package*.json ./
 
-# Install only production dependencies
-RUN npm ci --only=production
+# Install all dependencies (some dev deps are needed for production)
+RUN npm ci && \
+    echo "Installed packages:" && \
+    npm list --depth=0 && \
+    echo "Next.js version:" && \
+    npx next --version
 
 # Copy built application
 COPY --from=builder --chown=nodejs:nodejs /app/src/frontend/.next ./.next
@@ -54,5 +58,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
-# Start the application
-CMD ["dumb-init", "npm", "start"]
+# Start the application with better error handling
+CMD ["dumb-init", "sh", "-c", "npm start || node server.js || echo 'Failed to start application'"]

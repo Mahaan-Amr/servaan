@@ -15,11 +15,22 @@ import ReceiptTemplate from './components/ReceiptTemplate';
 import FlexiblePaymentModal from './components/FlexiblePaymentModal';
 import AddItemsModal from './components/AddItemsModal';
 import { FaList } from 'react-icons/fa';
+import { useTenant } from '../../../../contexts/TenantContext';
 
 // Simple toast function for now - we'll replace with proper toast library later
 const toast = {
   success: (message: string) => console.log('SUCCESS:', message),
-  error: (message: string) => console.error('ERROR:', message)
+  error: (message: string) => console.log('ERROR:', message)
+};
+
+// Generate temporary order number for receipt preview
+const generateTempOrderNumber = (): string => {
+  const now = new Date();
+  const dateStr = now.getFullYear().toString() + 
+                  (now.getMonth() + 1).toString().padStart(2, '0') + 
+                  now.getDate().toString().padStart(2, '0');
+  const timeStr = now.getTime().toString().slice(-4);
+  return `TEMP-${dateStr}-${timeStr}`;
 };
 
 // Interfaces for POS data structures
@@ -64,6 +75,7 @@ interface MenuCategory {
 
 export default function POSInterface() {
   const router = useRouter();
+  const { tenant } = useTenant();
   
   // State for order management
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
@@ -82,6 +94,7 @@ export default function POSInterface() {
   const [showFlexiblePayment, setShowFlexiblePayment] = useState(false);
   const [showAddItems, setShowAddItems] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [receiptOrderDate, setReceiptOrderDate] = useState<Date | null>(null);
   
   // Menu data state
   const [categories, setCategories] = useState<MenuCategory[]>([]);
@@ -506,21 +519,17 @@ export default function POSInterface() {
           });
 
                      toast.success(`پرداخت جزئی ${formatPrice(selectedItemsAmount)} تومان با موفقیت انجام شد`);
+          setReceiptOrderDate(new Date());
           setShowReceipt(true);
           
-          // Reset form after partial payment
-          setOrderItems([]);
+          // DON'T clear orderItems here - let the receipt template handle it
+          // Only clear other form data
           setCustomer({});
           setSelectedTable(null);
           setOrderNotes('');
-          setCurrentOrderId(null);
+          // Keep currentOrderId for receipt display
           
-          // Redirect to orders page for DINE_IN orders
-          if (orderType === OrderType.DINE_IN) {
-            setTimeout(() => {
-              router.push('/workspaces/ordering-sales-system/orders?fromPOS=true&orderType=DINE_IN');
-            }, 2000); // Wait 2 seconds to show receipt
-          }
+          // Don't auto-redirect - let user finish manually
         } catch (error) {
           console.error('Error processing partial payment:', error);
           toast.error('خطا در پردازش پرداخت جزئی: ' + (error instanceof Error ? error.message : 'خطای نامشخص'));
@@ -528,20 +537,16 @@ export default function POSInterface() {
       } else {
         // For pay after service, show success message and reset form
         toast.success('سفارش با موفقیت ایجاد شد');
+        setReceiptOrderDate(new Date());
         setShowReceipt(true);
         
-        // Reset form only for non-immediate payments
-        setOrderItems([]);
+        // DON'T clear orderItems here - let the receipt template handle it
+        // Only clear other form data
         setCustomer({});
         setSelectedTable(null);
         setOrderNotes('');
         
-        // Redirect to orders page for DINE_IN orders
-        if (orderType === OrderType.DINE_IN) {
-          setTimeout(() => {
-            router.push('/workspaces/ordering-sales-system/orders?fromPOS=true&orderType=DINE_IN');
-          }, 2000); // Wait 2 seconds to show receipt
-        }
+        // Don't auto-redirect - let user finish manually
       }
       
     } catch (error) {
@@ -620,6 +625,7 @@ export default function POSInterface() {
       // Set payment data for receipt
       setPaymentData(paymentData);
       setShowPayment(false);
+      setReceiptOrderDate(new Date());
       setShowReceipt(true);
 
       // Log integration results
@@ -627,19 +633,14 @@ export default function POSInterface() {
 
       toast.success('پرداخت با موفقیت انجام شد و سفارش تکمیل شد');
 
-      // Reset form after successful payment
-      setOrderItems([]);
+      // DON'T clear orderItems here - let the receipt template handle it
+      // Only clear other form data
       setCustomer({});
       setSelectedTable(null);
       setOrderNotes('');
-      setCurrentOrderId(null);
+      // Keep currentOrderId for receipt display
 
-      // Redirect to orders page for DINE_IN orders
-      if (orderType === OrderType.DINE_IN) {
-        setTimeout(() => {
-          router.push('/workspaces/ordering-sales-system/orders?fromPOS=true&orderType=DINE_IN');
-        }, 2000); // Wait 2 seconds to show receipt
-      }
+      // Don't auto-redirect - let user finish manually
 
     } catch (error) {
       console.error('Error processing payment:', error);
@@ -899,13 +900,13 @@ export default function POSInterface() {
                         )}
                         
                         {/* Item Name */}
-                        <h3 className="font-medium text-gray-900 dark:text-white text-sm md:text-base line-clamp-2">
+                        <h3 className="font-medium text-gray-900 dark:text-white text-sm md:text-base break-words">
                           {item.name}
                         </h3>
                         
                         {/* Item Description */}
                         {item.description && (
-                          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 break-words">
                             {item.description}
                           </p>
                         )}
@@ -1028,7 +1029,7 @@ export default function POSInterface() {
                   <div key={item.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 md:p-4 border border-gray-200 dark:border-gray-600 shadow-sm">
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 dark:text-white text-sm md:text-base mb-2 line-clamp-2">{item.menuItem.name}</h4>
+                        <h4 className="font-medium text-gray-900 dark:text-white text-sm md:text-base mb-2 break-words">{item.menuItem.name}</h4>
                         <div className="flex items-center justify-between mb-3">
                           <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
                             {formatPrice(item.menuItem.price)} × {item.quantity}
@@ -1235,23 +1236,57 @@ export default function POSInterface() {
       {showReceipt && paymentData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+            {(() => {
+              // Debug logging for receipt data
+              console.log('🔍 Receipt Modal Debug - Data being passed:');
+              console.log('orderItems:', orderItems);
+              console.log('orderItems.length:', orderItems?.length);
+              console.log('calculation:', calculation);
+              console.log('paymentData:', paymentData);
+              console.log('showReceipt:', showReceipt);
+              return null;
+            })()}
             <ReceiptTemplate
-              orderNumber={`ORD-${Date.now()}`}
-              orderDate={new Date()}
+              orderNumber={currentOrderId || generateTempOrderNumber()}
+              orderDate={receiptOrderDate || new Date()}
               orderItems={orderItems}
               calculation={calculation}
               options={orderOptions}
               paymentData={paymentData}
               businessInfo={{
-                name: 'کافه سروان',
-                address: 'تهران، خیابان ولیعصر',
-                phone: '021-12345678',
-                taxId: '123456789'
+                name: tenant?.displayName || tenant?.name || 'کافه سروان',
+                address: tenant?.address || (tenant?.city ? `${tenant.city}، ${tenant.state || ''}`.trim() : 'تهران، خیابان ولیعصر'),
+                phone: tenant?.ownerPhone || '021-12345678',
+                taxId: tenant?.businessType ? `${tenant.businessType.toUpperCase()}-${tenant.subdomain.toUpperCase()}` : '123456789'
+              }}
+              orderType={orderType}
+              tableInfo={selectedTable ? { tableNumber: selectedTable.tableNumber, tableName: selectedTable.tableName } : undefined}
+              onPrintComplete={() => {
+                // Clear order items after receipt is printed
+                setOrderItems([]);
+                setCurrentOrderId(null);
+                setOrderOptions({
+                  discountEnabled: false,
+                  discountType: 'PERCENTAGE',
+                  discountValue: 0,
+                  taxEnabled: true,
+                  taxPercentage: 9.00,
+                  serviceEnabled: false,
+                  servicePercentage: 10.00,
+                  courierEnabled: false,
+                  courierAmount: 0,
+                  courierNotes: ''
+                });
+                
+                // Close receipt modal after cleanup
+                setShowReceipt(false);
+                setPaymentData(null);
               }}
             />
             <div className="mt-4 flex space-x-2 space-x-reverse modal-buttons">
               <button
                 onClick={() => {
+                  // Clear everything manually since user clicked complete
                   setShowReceipt(false);
                   setPaymentData(null);
                   setOrderItems([]);
@@ -1272,6 +1307,33 @@ export default function POSInterface() {
                 className="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 font-medium"
               >
                 تکمیل سفارش
+              </button>
+              <button
+                onClick={() => {
+                  // Clear everything and redirect to orders page
+                  setShowReceipt(false);
+                  setPaymentData(null);
+                  setOrderItems([]);
+                  setCurrentOrderId(null);
+                  setOrderOptions({
+                    discountEnabled: false,
+                    discountType: 'PERCENTAGE',
+                    discountValue: 0,
+                    taxEnabled: true,
+                    taxPercentage: 9.00,
+                    serviceEnabled: false,
+                    servicePercentage: 10.00,
+                    courierEnabled: false,
+                    courierAmount: 0,
+                    courierNotes: ''
+                  });
+                  
+                  // Redirect to orders page
+                  router.push('/workspaces/ordering-sales-system/orders?fromPOS=true&orderType=DINE_IN');
+                }}
+                className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 font-medium"
+              >
+                پایان سفارش و بازگشت
               </button>
               <button
                 onClick={() => setShowReceipt(false)}

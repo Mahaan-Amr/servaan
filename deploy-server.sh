@@ -102,6 +102,19 @@ main() {
         exit 1
     fi
 
+    # Check if admin Dockerfiles exist
+    if [ ! -f "src/admin/backend/Dockerfile" ]; then
+        print_error "Admin backend Dockerfile not found!"
+        echo "Please ensure admin backend is properly configured."
+        exit 1
+    fi
+
+    if [ ! -f "src/admin/frontend/Dockerfile" ]; then
+        print_error "Admin frontend Dockerfile not found!"
+        echo "Please ensure admin frontend is properly configured."
+        exit 1
+    fi
+
     print_success "All required files found"
     echo
 
@@ -117,6 +130,18 @@ main() {
         print_warning "Port 3001 is already in use (backend)"
     else
         print_success "Port 3001 is available"
+    fi
+
+    if check_port 3003; then
+        print_warning "Port 3003 is already in use (admin-backend)"
+    else
+        print_success "Port 3003 is available"
+    fi
+
+    if check_port 3004; then
+        print_warning "Port 3004 is already in use (admin-frontend)"
+    else
+        print_success "Port 3004 is available"
     fi
 
     if check_port 5432; then
@@ -167,7 +192,7 @@ main() {
 
     # Wait for services to be ready
     print_status "Waiting for services to be ready..."
-    sleep 10
+    sleep 15
     echo
 
     # Verify deployment
@@ -195,19 +220,45 @@ main() {
         print_warning "Frontend accessibility check failed (may still be starting)"
     fi
 
+    # Test admin backend health
+    print_status "Testing admin backend health..."
+    if curl -s http://localhost:3003/api/admin/health >/dev/null 2>&1; then
+        print_success "Admin backend health check passed"
+    else
+        print_warning "Admin backend health check failed (may still be starting)"
+    fi
+
+    # Test admin frontend accessibility
+    print_status "Testing admin frontend accessibility..."
+    if curl -s http://localhost:3004 >/dev/null 2>&1; then
+        print_success "Admin frontend is accessible"
+    else
+        print_warning "Admin frontend accessibility check failed (may still be starting)"
+    fi
+
     echo
     print_success "Deployment completed!"
     echo
     echo "📊 Next steps:"
     echo "1. Wait 2-3 minutes for all services to fully start"
     echo "2. Test your application at: http://localhost:3000"
-    echo "3. Verify API endpoints at: http://localhost:3001/api/health"
-    echo "4. Check container logs if needed: docker-compose logs"
+    echo "3. Test admin panel at: http://localhost:3004"
+    echo "4. Verify API endpoints at: http://localhost:3001/api/health"
+    echo "5. Verify admin API at: http://localhost:3003/api/admin/health"
+    echo "6. Check container logs if needed: docker-compose logs"
     echo
     echo "🔧 If you encounter issues:"
     echo "- Check container logs: docker-compose logs [service-name]"
     echo "- Restart specific service: docker-compose restart [service-name]"
     echo "- Rollback: Run rollback-server.sh"
+    echo
+    echo "🌐 Service URLs:"
+    echo "- Main Application: http://localhost:3000"
+    echo "- Admin Panel: http://localhost:3004"
+    echo "- Main API: http://localhost:3001/api"
+    echo "- Admin API: http://localhost:3003/api/admin"
+    echo "- Database: localhost:5432"
+    echo "- pgAdmin: http://localhost:5050"
     echo
 }
 
