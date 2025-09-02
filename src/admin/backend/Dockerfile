@@ -34,6 +34,7 @@ COPY --from=builder --chown=nodejs:nodejs /app/src/admin/backend/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/src/admin/backend/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/src/admin/backend/package*.json ./
 COPY --from=builder --chown=nodejs:nodejs /app/src/prisma ./prisma/
+# Copy the shared directory with generated client
 COPY --from=builder --chown=nodejs:nodejs /app/src/shared ./shared/
 
 # Switch to non-root user
