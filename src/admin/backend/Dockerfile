@@ -68,18 +68,15 @@ COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
 # Copy the generated Prisma client from builder stage
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 
-# Generate Prisma client in runner stage with correct schema path
-WORKDIR /app/prisma
-RUN npx prisma generate --schema=./schema.prisma
-WORKDIR /app
-
 # Debug: Show what was copied
 RUN echo "=== Runner stage contents ===" && \
     ls -la && \
     echo "=== Admin backend contents ===" && \
-    ls -la admin/backend/ || echo "No admin/backend directory" && \
+    ls -la src/admin/backend/ || echo "No admin/backend directory" && \
     echo "=== Shared contents ===" && \
-    ls -la src/shared/ || echo "No shared directory"
+    ls -la src/shared/ || echo "No shared directory" && \
+    echo "=== Prisma client contents ===" && \
+    ls -la node_modules/.prisma/ || echo "No .prisma directory"
 
 # Switch to non-root user
 USER nodejs
