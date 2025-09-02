@@ -1,8 +1,6 @@
 import { prisma } from '../lib/prisma';
 import PDFDocument from 'pdfkit';
 
-const prisma = new PrismaClient();
-
 export interface TenantListParams {
   page: number;
   limit: number;
