@@ -1,7 +1,7 @@
 // Admin Authentication Service for Servaan Platform
 // Handles admin login, logout, and authentication logic
 
-import { PrismaClient } from '../../shared/generated/client';
+import { PrismaClient } from '@prisma/client';
 import { compareAdminPassword, generateAdminToken, hashAdminPassword } from '../utils/admin';
 import { adminConfig } from '../config/admin';
 import { AdminLoginRequest, AdminLoginResponse, AdminUser } from '../types/admin';

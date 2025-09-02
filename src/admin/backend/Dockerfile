@@ -59,14 +59,19 @@ RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
 
 # Copy source files and dependencies (no build needed)
-COPY --from=builder --chown=nodejs:nodejs /app/admin/backend ./src/admin/backend
+COPY --from=builder --chown=nodejs:nodejs /app/src/admin/backend ./src/admin/backend
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nodejs:nodejs /app/admin/backend/package*.json ./
+COPY --from=builder --chown=nodejs:nodejs /app/src/admin/backend/package*.json ./
 COPY --from=builder --chown=nodejs:nodejs /app/src/shared ./shared
 COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
 
-# Ensure Prisma client is properly linked
-RUN ln -sf /app/src/shared/generated/client /app/node_modules/.prisma/client
+# Copy the generated Prisma client from builder stage
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+
+# Generate Prisma client in runner stage with correct schema path
+WORKDIR /app/prisma
+RUN npx prisma generate --schema=./schema.prisma
+WORKDIR /app
 
 # Debug: Show what was copied
 RUN echo "=== Runner stage contents ===" && \
@@ -83,7 +88,7 @@ USER nodejs
 EXPOSE 3003
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3003/api/admin/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
 # Start the application using ts-node to run TypeScript directly
