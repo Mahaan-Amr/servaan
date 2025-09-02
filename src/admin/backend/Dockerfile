@@ -6,13 +6,13 @@ WORKDIR /app
 RUN apk add --no-cache openssl openssl-dev
 
 # Copy package files
-COPY admin/backend/package*.json ./
+COPY src/admin/backend/package*.json ./
 
 # Install dependencies including ts-node for runtime TypeScript execution
 RUN npm ci && npm install -g ts-node typescript
 
 # Copy Prisma schema
-COPY prisma ./prisma/
+COPY src/prisma ./prisma/
 
 # Copy the ENTIRE project structure to maintain relative paths
 COPY . .
@@ -35,13 +35,13 @@ WORKDIR /app/admin/backend
 
 # Ensure shared files are available at the expected location
 RUN mkdir -p /app/admin/backend/shared && \
-    cp -r /app/shared/* /app/admin/backend/shared/
+    cp -r /app/src/shared/* /app/admin/backend/shared/
 
 # Debug: Show what we have
 RUN echo "=== Current directory structure ===" && \
     ls -la && \
     echo "=== Shared directory ===" && \
-    ls -la ../shared/ || echo "No ../shared found" && \
+    ls -la ../src/shared/ || echo "No ../src/shared found" && \
     echo "=== Admin backend shared directory ===" && \
     ls -la shared/ || echo "No shared found"
 
@@ -62,11 +62,11 @@ RUN adduser -S nodejs -u 1001
 COPY --from=builder --chown=nodejs:nodejs /app/admin/backend ./src/admin/backend
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/admin/backend/package*.json ./
-COPY --from=builder --chown=nodejs:nodejs /app/shared ./shared
+COPY --from=builder --chown=nodejs:nodejs /app/src/shared ./shared
 COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
 
 # Ensure Prisma client is properly linked
-RUN ln -sf /app/shared/generated/client /app/node_modules/.prisma/client
+RUN ln -sf /app/src/shared/generated/client /app/node_modules/.prisma/client
 
 # Debug: Show what was copied
 RUN echo "=== Runner stage contents ===" && \
@@ -74,7 +74,7 @@ RUN echo "=== Runner stage contents ===" && \
     echo "=== Admin backend contents ===" && \
     ls -la admin/backend/ || echo "No admin/backend directory" && \
     echo "=== Shared contents ===" && \
-    ls -la shared/ || echo "No shared directory"
+    ls -la src/shared/ || echo "No shared directory"
 
 # Switch to non-root user
 USER nodejs
