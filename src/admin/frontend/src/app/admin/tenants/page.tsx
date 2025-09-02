@@ -20,7 +20,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { getTenants, TenantListResponse, TenantListParams, exportTenants } from '@/services/admin/tenants/tenantService';
+import { getTenants, TenantListResponse, TenantListParams, exportTenants, TenantDetail } from '@/services/admin/tenants/tenantService';
 import { Tenant, TenantStatus, TenantPlan } from '@/types/admin';
 import { formatAdminDate } from '@/utils/persianDate';
 import { withAdminAuth } from '@/contexts/AdminAuthContext';
@@ -138,9 +138,39 @@ function TenantsPage() {
   };
 
   // Handle save tenant
-  const handleSaveTenant = (updatedTenant: Tenant) => {
+  const handleSaveTenant = (updatedTenant: TenantDetail) => {
+    // Convert TenantDetail to Tenant format for the list
+    const tenantForList: Tenant = {
+      id: updatedTenant.id,
+      name: updatedTenant.name,
+      displayName: updatedTenant.displayName,
+      subdomain: updatedTenant.subdomain,
+      description: updatedTenant.description,
+      businessType: updatedTenant.businessType,
+      city: updatedTenant.city,
+      country: updatedTenant.country,
+      status: 'ACTIVE' as TenantStatus, // Default status
+      plan: updatedTenant.plan as TenantPlan,
+      isActive: updatedTenant.isActive,
+      ownerName: updatedTenant.ownerName,
+      ownerEmail: updatedTenant.ownerEmail,
+      ownerPhone: updatedTenant.ownerPhone,
+      createdAt: updatedTenant.createdAt,
+      updatedAt: updatedTenant.updatedAt,
+      userCount: 0, // Will be updated from API
+      storageUsed: 0, // Will be updated from API
+      storageLimit: 0, // Will be updated from API
+      features: updatedTenant.features,
+      metrics: {
+        userCount: 0,
+        customerCount: 0,
+        orderCount: 0,
+        revenue: 0
+      }
+    };
+    
     setTenants(prev => 
-      prev.map(t => t.id === updatedTenant.id ? updatedTenant : t)
+      prev.map(t => t.id === updatedTenant.id ? tenantForList : t)
     );
     toast.success('مستأجر با موفقیت به‌روزرسانی شد');
   };

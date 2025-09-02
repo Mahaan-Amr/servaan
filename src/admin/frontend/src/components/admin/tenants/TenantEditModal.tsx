@@ -6,11 +6,13 @@ import { toast } from 'react-hot-toast';
 import { Tenant, TenantPlan, TenantStatus } from '@/types/admin';
 import { updateTenant } from '@/services/admin/tenants/tenantService';
 
+import { TenantDetail } from '@/services/admin/tenants/tenantService';
+
 interface TenantEditModalProps {
   tenant: Tenant | null;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (updatedTenant: Tenant) => void;
+  onSave: (updatedTenant: TenantDetail) => void;
 }
 
 export default function TenantEditModal({ tenant, isOpen, onClose, onSave }: TenantEditModalProps) {
@@ -44,11 +46,23 @@ export default function TenantEditModal({ tenant, isOpen, onClose, onSave }: Ten
     }));
   };
 
-  const handleFeatureToggle = (feature: string) => {
+  const handleFeatureToggle = (feature: keyof NonNullable<Tenant['features']>) => {
     setFormData(prev => ({
       ...prev,
       features: {
-        ...prev.features,
+        hasInventoryManagement: prev.features?.hasInventoryManagement ?? false,
+        hasCustomerManagement: prev.features?.hasCustomerManagement ?? false,
+        hasAccountingSystem: prev.features?.hasAccountingSystem ?? false,
+        hasReporting: prev.features?.hasReporting ?? false,
+        hasNotifications: prev.features?.hasNotifications ?? false,
+        hasAdvancedReporting: prev.features?.hasAdvancedReporting ?? false,
+        hasApiAccess: prev.features?.hasApiAccess ?? false,
+        hasCustomBranding: prev.features?.hasCustomBranding ?? false,
+        hasMultiLocation: prev.features?.hasMultiLocation ?? false,
+        hasAdvancedCRM: prev.features?.hasAdvancedCRM ?? false,
+        hasWhatsappIntegration: prev.features?.hasWhatsappIntegration ?? false,
+        hasInstagramIntegration: prev.features?.hasInstagramIntegration ?? false,
+        hasAnalyticsBI: prev.features?.hasAnalyticsBI ?? false,
         [feature]: !prev.features?.[feature]
       }
     }));
@@ -303,7 +317,7 @@ export default function TenantEditModal({ tenant, isOpen, onClose, onSave }: Ten
                       <input
                         type="checkbox"
                         checked={value}
-                        onChange={() => handleFeatureToggle(key)}
+                        onChange={() => handleFeatureToggle(key as keyof NonNullable<Tenant['features']>)}
                         className="ml-2 text-admin-primary focus:ring-admin-primary"
                       />
                       <span className="text-sm text-admin-text">
