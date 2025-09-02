@@ -11,6 +11,10 @@ RUN npm ci
 # Copy the ENTIRE project structure to maintain consistency
 COPY . .
 
+# Debug: Show what we copied
+RUN echo "=== Contents of /app ===" && ls -la /app
+RUN echo "=== Contents of /app/src/admin/frontend ===" && ls -la /app/src/admin/frontend
+
 # Change to admin frontend directory for build
 WORKDIR /app/src/admin/frontend
 
