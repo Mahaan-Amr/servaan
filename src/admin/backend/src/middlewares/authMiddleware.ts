@@ -1,9 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { AdminRole } from '../types/admin';
-
-const prisma = new PrismaClient();
 
 // Extend Express Request interface to include admin user
 declare global {

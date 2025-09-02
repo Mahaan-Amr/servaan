@@ -1,10 +1,8 @@
 // Dashboard Service for Admin Panel
 // سرویس داشبورد برای پنل مدیریت
 
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { DashboardStats, RecentActivity, SystemMetrics } from '../types/dashboard';
-
-const prisma = new PrismaClient();
 
 export interface DashboardData {
   stats: DashboardStats;

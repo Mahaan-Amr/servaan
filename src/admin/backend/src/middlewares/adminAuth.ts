@@ -2,7 +2,7 @@
 // This is SEPARATE from tenant authentication - completely isolated
 
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import { verifyAdminToken } from '../utils/admin';
 import { adminConfig } from '../config/admin';
 import { AdminRole } from '../types/admin';
@@ -20,8 +20,6 @@ declare global {
     }
   }
 }
-
-const prisma = new PrismaClient();
 
 /**
  * Admin Authentication Middleware

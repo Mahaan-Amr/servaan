@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 import PDFDocument from 'pdfkit';
 
 const prisma = new PrismaClient();
