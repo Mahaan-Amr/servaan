@@ -56,6 +56,32 @@ export default function ReceiptTemplate({
   const FONT_SIZE_MEDIUM = 14;
   const FONT_SIZE_SMALL = 12;
 
+  // Helper function to wrap text for RTL layout
+  const wrapText = (text: string, maxWidth: number, ctx: CanvasRenderingContext2D): string[] => {
+    const words = text.split(' ');
+    const lines: string[] = [];
+    let currentLine = '';
+
+    for (let i = words.length - 1; i >= 0; i--) { // RTL: start from end
+      const word = words[i];
+      const testLine = currentLine ? `${word} ${currentLine}` : word;
+      const metrics = ctx.measureText(testLine);
+      
+      if (metrics.width > maxWidth && currentLine) {
+        lines.unshift(currentLine); // RTL: add to beginning
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    
+    if (currentLine) {
+      lines.unshift(currentLine); // RTL: add to beginning
+    }
+    
+    return lines;
+  };
+
   const formatPrice = useCallback((amount: number) => {
     return new Intl.NumberFormat('fa-IR').format(amount);
   }, []);
@@ -94,7 +120,19 @@ export default function ReceiptTemplate({
     
     // Items section
     totalHeight += LINE_HEIGHT; // Header
-    totalHeight += orderItems.length * LINE_HEIGHT; // Items
+    
+    // Calculate height for items with text wrapping
+    let itemsHeight = 0;
+    const tempCtx = canvas.getContext('2d');
+    if (tempCtx) {
+      tempCtx.font = `${FONT_SIZE_SMALL}px Tahoma, Arial, sans-serif`;
+      orderItems.forEach(item => {
+        const titleMaxWidth = 50; // Approximate width for title column
+        const wrappedLines = wrapText(item.menuItem.name, titleMaxWidth, tempCtx);
+        itemsHeight += Math.max(LINE_HEIGHT, wrappedLines.length * LINE_HEIGHT);
+      });
+    }
+    totalHeight += itemsHeight;
     totalHeight += 20; // Separator
     
     // Calculations
@@ -171,45 +209,56 @@ export default function ReceiptTemplate({
       ctx.font = `bold ${FONT_SIZE_SMALL}px Tahoma, Arial, sans-serif`;
       ctx.textAlign = 'center';
       
-      // RTL Layout: Position from right to left
-      const col1 = RECEIPT_WIDTH - MARGIN - 20; // جمع (Total) - Rightmost
-      const col2 = RECEIPT_WIDTH - MARGIN - 70; // قیمت (Price) - 50px spacing from right
-      const col3 = RECEIPT_WIDTH - MARGIN - 120; // تعداد (Quantity) - 50px spacing from right
-      const col4 = RECEIPT_WIDTH - MARGIN - 170; // عنوان (Title) - 50px spacing from right
+      // CORRECTED RTL Layout: عنوان | تعداد | قیمت | جمع (Title | Quantity | Price | Total)
+      const col1 = RECEIPT_WIDTH - MARGIN - 20; // عنوان (Title) - Rightmost
+      const col2 = RECEIPT_WIDTH - MARGIN - 70; // تعداد (Quantity) - 50px spacing from right
+      const col3 = RECEIPT_WIDTH - MARGIN - 120; // قیمت (Price) - 50px spacing from right
+      const col4 = RECEIPT_WIDTH - MARGIN - 170; // جمع (Total) - 50px spacing from right
       
-      ctx.fillText('جمع', col1, y);
-      ctx.fillText('قیمت', col2, y);
-      ctx.fillText('تعداد', col3, y);
-      ctx.fillText('عنوان', col4, y);
+      ctx.fillText('عنوان', col1, y);
+      ctx.fillText('تعداد', col2, y);
+      ctx.fillText('قیمت', col3, y);
+      ctx.fillText('جمع', col4, y);
       y += LINE_HEIGHT;
     };
 
     const drawRTLTableRow = (rowNum: number, itemName: string, quantity: number, totalPrice: number) => {
       ctx.font = `${FONT_SIZE_SMALL}px Tahoma, Arial, sans-serif`;
       
-      // RTL Layout: Position from right to left
-      const col1 = RECEIPT_WIDTH - MARGIN - 20; // جمع (Total) - Rightmost
-      const col2 = RECEIPT_WIDTH - MARGIN - 70; // قیمت (Price) - 50px spacing from right
-      const col3 = RECEIPT_WIDTH - MARGIN - 120; // تعداد (Quantity) - 50px spacing from right
-      const col4 = RECEIPT_WIDTH - MARGIN - 170; // عنوان (Title) - 50px spacing from right
+      // CORRECTED RTL Layout: عنوان | تعداد | قیمت | جمع (Title | Quantity | Price | Total)
+      const col1 = RECEIPT_WIDTH - MARGIN - 20; // عنوان (Title) - Rightmost
+      const col2 = RECEIPT_WIDTH - MARGIN - 70; // تعداد (Quantity) - 50px spacing from right
+      const col3 = RECEIPT_WIDTH - MARGIN - 120; // قیمت (Price) - 50px spacing from right
+      const col4 = RECEIPT_WIDTH - MARGIN - 170; // جمع (Total) - 50px spacing from right
       
-      // Total (right-aligned)
+      // Item name with text wrapping (right-aligned)
       ctx.textAlign = 'right';
-      ctx.fillText(formatPrice(totalPrice), col1 + 15, y);
+      const titleMaxWidth = col2 - col1 - 10; // Space between title and quantity columns
+      const wrappedLines = wrapText(itemName, titleMaxWidth, ctx);
       
-      // Price (right-aligned)
-      ctx.textAlign = 'right';
-      ctx.fillText(formatPrice(totalPrice / quantity), col2 + 15, y);
+      // Draw wrapped text lines
+      let currentY = y;
+      wrappedLines.forEach((line, lineIndex) => {
+        ctx.fillText(line, col1 + 15, currentY);
+        if (lineIndex < wrappedLines.length - 1) {
+          currentY += LINE_HEIGHT;
+        }
+      });
       
       // Quantity (center-aligned)
       ctx.textAlign = 'center';
-      ctx.fillText(quantity.toString(), col3, y);
+      ctx.fillText(quantity.toString(), col2, y);
       
-      // Item name (right-aligned) - More space for longer names
+      // Price (right-aligned)
       ctx.textAlign = 'right';
-      ctx.fillText(itemName, col4 + 20, y);
+      ctx.fillText(formatPrice(totalPrice / quantity), col3 + 15, y);
       
-      y += LINE_HEIGHT;
+      // Total (right-aligned)
+      ctx.textAlign = 'right';
+      ctx.fillText(formatPrice(totalPrice), col4 + 15, y);
+      
+      // Adjust y position based on number of wrapped lines
+      y += Math.max(LINE_HEIGHT, wrappedLines.length * LINE_HEIGHT);
     };
 
     // Header with bold business name
