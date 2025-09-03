@@ -11,7 +11,7 @@ The Receipt Generation System is a **Canvas-based thermal printer solution** des
 1. **ReceiptTemplate Component** (`src/frontend/app/workspaces/ordering-sales-system/pos/components/ReceiptTemplate.tsx`)
    - **Canvas-based rendering** for pixel-perfect control
    - **8cm thermal printer optimization** (302px width)
-   - **Simplified drawing logic** with comprehensive logging
+   - **Enhanced print quality** with larger fonts and better contrast
    - **HTML fallback** for browser compatibility
 
 2. **POS Integration** (`src/frontend/app/workspaces/ordering-sales-system/pos/page.tsx`)
@@ -23,6 +23,7 @@ The Receipt Generation System is a **Canvas-based thermal printer solution** des
 
 - **8cm Width Optimization**: Designed specifically for 8cm thermal printers
 - **Canvas Rendering**: HTML5 Canvas API for precise control
+- **Enhanced Print Quality**: Larger fonts, bold text, better contrast
 - **Comprehensive Logging**: Detailed debug logs for troubleshooting
 - **Print Integration**: Direct thermal printer support
 - **Responsive Design**: Adapts to different screen sizes
@@ -33,19 +34,43 @@ The Receipt Generation System is a **Canvas-based thermal printer solution** des
 ### Canvas Dimensions
 - **Width**: 302 pixels (8cm at 96 DPI)
 - **Height**: Dynamic based on content
-- **Margins**: 10px on all sides
+- **Margins**: 13px on all sides
 - **Line Height**: 20px for consistent spacing
 
-### Font Specifications
-- **Large**: 16px (business name, totals)
-- **Medium**: 14px (headers, labels)
-- **Small**: 12px (items, details)
+### Font Specifications (Enhanced)
+- **Large**: 16px (business name, totals) - **INCREASED from 14px**
+- **Medium**: 14px (headers, labels) - **INCREASED from 12px**
+- **Small**: 12px (items, details) - **INCREASED from 10px**
 - **Font Family**: Tahoma, Arial, sans-serif
+- **Bold Text**: Enabled for better visibility
 
 ### Color Scheme
-- **Text**: #000000 (black)
-- **Lines**: #000000 (black)
+- **Text**: #000000 (pure black for maximum contrast)
+- **Lines**: #000000 (pure black)
+- **Line Width**: 2px (increased for better visibility)
 - **Background**: Transparent/white
+
+## Enhanced Print Quality Features
+
+### **Font Size Improvements**
+- **Business Name**: 16px (was 14px)
+- **Headers**: 14px (was 12px)
+- **Regular Text**: 12px (was 10px)
+- **Line Height**: 20px (was 18px)
+
+### **Text Rendering Enhancements**
+- **Bold Text**: Enabled for business name, totals, and footer
+- **Pure Black Color**: #000000 for maximum contrast
+- **Increased Line Width**: 2px for better visibility
+- **Better Spacing**: Improved line heights and margins
+
+### **CSS Enhancements**
+```css
+/* Enhanced image rendering for thermal printers */
+image-rendering: -webkit-optimize-contrast;
+image-rendering: crisp-edges;
+filter: contrast(1.2) brightness(1.1);
+```
 
 ## Data Flow
 
@@ -76,20 +101,20 @@ Print Button → New Window → Canvas to PNG → HTML Document → Print Dialog
 7. **Footer**: Thank you message, timestamp
 
 ### Drawing Functions
-- `drawCenteredText()`: Center-aligned text
+- `drawCenteredText()`: Center-aligned text with bold option
 - `drawRightText()`: Right-aligned text (labels)
 - `drawLeftText()`: Left-aligned text (values)
-- `drawLine()`: Horizontal separator lines
+- `drawLine()`: Horizontal separator lines with increased width
 
 ## Debug Logging
 
 ### Canvas Generation Logs
 ```
-🎨 Starting Canvas Generation...
+🎨 Starting Enhanced Canvas Generation...
 ✅ Canvas context obtained
 📝 Starting to draw at Y: 10
 📝 Drawing header section...
-📝 Drew centered text: "Business Name" at Y: 10
+📝 Drew centered text: "Business Name" at Y: 10 (BOLD)
 📝 Drawing order details...
 📝 Drawing items...
 📦 Items to draw: [Array]
@@ -101,118 +126,124 @@ Print Button → New Window → Canvas to PNG → HTML Document → Print Dialog
 📝 Drawing calculations...
 📝 Drew subtotal: "80,000 تومان" at Y: 200
 📝 Drawing total...
-📝 Drew total: "87,200 تومان" at Y: 250
+📝 Drew total: "87,200 تومان" at Y: 250 (BOLD)
 📝 Drawing payment...
 📝 Drew payment method: "نقدی" at Y: 280
 📝 Drawing footer...
-✅ Canvas generation completed. Final height: 350
+✅ Enhanced canvas generation completed. Final height: 350
 🧪 Canvas has content: true
 🧪 Canvas dimensions: 302 x 350
 ```
 
 ### Print Process Logs
 ```
-🖨️ Starting print process...
+🖨️ Starting ENHANCED print process...
 🖨️ Print window opened
-🖨️ Print document generated
+🖨️ Enhanced canvas image generated
+🖨️ Print document generated with quality enhancements
 🖨️ Document written to print window
-🖨️ Print window loaded, triggering print...
-🖨️ Print window closed
+🖨️ Enhanced print window loaded, triggering print...
+🖨️ Enhanced print window closed
 ```
+
+## Troubleshooting
+
+### **Common Print Quality Issues**
+
+#### **1. Faded/Pale Receipts**
+**Problem**: Receipt text appears extremely light and barely legible
+**Solution**: 
+- Clean thermal printer print head
+- Check thermal paper quality and expiration
+- Adjust printer density settings to maximum
+- Use enhanced receipt template with larger fonts
+
+#### **2. Vertical Faded Band**
+**Problem**: Center of receipt appears lighter than edges
+**Solution**:
+- Clean print head thoroughly with isopropyl alcohol
+- Check for print head wear (may need replacement)
+- Ensure proper paper alignment
+- Test with different thermal paper
+
+#### **3. Poor Contrast**
+**Problem**: Text lacks sufficient contrast for readability
+**Solution**:
+- Use enhanced receipt template (larger fonts, bold text)
+- Check printer contrast settings
+- Ensure pure black color (#000000) is used
+- Test with different print quality settings
+
+### **Hardware Maintenance**
+
+#### **Thermal Printer Care**
+```bash
+# Weekly maintenance
+1. Turn off printer
+2. Remove paper roll
+3. Clean print head with isopropyl alcohol (90%+)
+4. Use cotton swab, gently clean print head surface
+5. Allow to dry completely (5-10 minutes)
+6. Reinstall paper roll
+```
+
+#### **Paper Quality**
+- **Use thermal paper only** (not regular paper)
+- **Check expiration date** - thermal paper degrades over time
+- **Store in cool, dry place** away from sunlight
+- **Avoid touching thermal surface** with fingers
+
+#### **Printer Settings**
+- **Print Quality**: High/Dark
+- **Print Speed**: Normal (not fast)
+- **Paper Width**: 80mm (8cm)
+- **Density**: Maximum
+- **Temperature**: High (if adjustable)
 
 ## Common Issues
 
 ### Canvas Not Rendering
 - **Check canvas context**: Verify `getContext('2d')` returns valid context
-- **Check canvas dimensions**: Ensure width and height are set
-- **Check drawing functions**: Verify text alignment and positioning
-- **Check canvas height adjustment**: **CRITICAL** - Changing canvas height after drawing clears the canvas
+- **Verify dimensions**: Ensure canvas width/height are set correctly
+- **Check font loading**: Ensure Tahoma font is available
 
-### Canvas Not Updating
-- **Check useEffect dependencies**: Ensure all required props are included
-- **Check useCallback dependencies**: Verify function recreation triggers
-- **Check timing**: Add delay for DOM readiness
+### Print Quality Issues
+- **Use enhanced template**: Larger fonts and bold text
+- **Check printer settings**: Ensure maximum density and quality
+- **Clean print head**: Regular maintenance prevents faded printing
+- **Test paper quality**: Use fresh thermal paper
 
-### Print Issues
-- **Check popup blocker**: Ensure new windows are allowed
-- **Check canvas data**: Verify `toDataURL()` produces valid image
-- **Check print CSS**: Ensure proper page sizing
+### Layout Problems
+- **Verify RTL support**: Ensure Persian text renders correctly
+- **Check column alignment**: Verify table column positioning
+- **Test different content**: Try with various item names and quantities
 
-### Drawing Debug
-- **Missing drawing logs**: Indicates drawing functions not executing
-- **Empty canvas content**: Check pixel analysis results
-- **Incorrect positioning**: Verify Y-coordinate calculations
+## Performance Optimization
 
-## Usage
+### **Canvas Rendering**
+- **Pre-calculate height**: Avoid canvas clearing during drawing
+- **Optimize font loading**: Use system fonts for better performance
+- **Minimize redraws**: Only regenerate when data changes
 
-### Basic Implementation
-```typescript
-<ReceiptTemplate
-  orderNumber="ORDER-123"
-  orderDate={new Date()}
-  orderItems={items}
-  calculation={calculation}
-  paymentData={paymentData}
-  businessInfo={businessInfo}
-  orderType="DINE_IN"
-  onPrintComplete={() => console.log('Print completed')}
-/>
-```
-
-### Required Props
-- `orderNumber`: Unique order identifier
-- `orderDate`: Order timestamp
-- `orderItems`: Array of ordered items
-- `calculation`: Order calculations (subtotal, tax, etc.)
-- `paymentData`: Payment information
-- `businessInfo`: Business details
-- `orderType`: Order type (DINE_IN, TAKEAWAY, etc.)
+### **Print Process**
+- **Efficient image generation**: Optimize PNG quality vs file size
+- **Window management**: Proper cleanup of print windows
+- **Memory management**: Clear canvas references after printing
 
 ## Future Enhancements
 
-### Planned Features
-- **Barcode generation**: QR codes for digital receipts
-- **Logo support**: Business logo integration
-- **Custom styling**: Theme customization
-- **Multi-language**: Additional language support
-- **Offline support**: Local receipt storage
+### **Planned Features**
+- **Multiple receipt templates**: Different layouts for different use cases
+- **Print preview modes**: Test different quality settings
+- **Custom branding**: Business logo and styling options
+- **Multi-language support**: Additional language templates
 
-### Performance Optimizations
-- **Canvas caching**: Pre-render common elements
-- **Lazy loading**: Load fonts and resources on demand
-- **Memory management**: Optimize canvas memory usage
+### **Quality Improvements**
+- **Advanced font rendering**: Better text anti-aliasing
+- **Dynamic sizing**: Automatic adjustment based on content
+- **Print quality presets**: Different quality levels for different printers
 
-## Maintenance
+---
 
-### Regular Tasks
-- **Font testing**: Verify Persian text rendering
-- **Print testing**: Test with actual thermal printers
-- **Performance monitoring**: Check canvas rendering speed
-- **Error logging**: Monitor debug log patterns
-
-### Troubleshooting
-- **Canvas issues**: Check browser compatibility
-- **Print issues**: Verify printer drivers and settings
-- **Layout issues**: Test with different content lengths
-- **Performance issues**: Monitor memory usage and rendering time
-
-## Technical Notes
-
-### Browser Compatibility
-- **Chrome**: Full support
-- **Firefox**: Full support
-- **Safari**: Full support
-- **Edge**: Full support
-
-### Thermal Printer Compatibility
-- **8cm width**: Optimized for standard thermal receipt printers
-- **ESC/POS**: Compatible with ESC/POS commands
-- **Black text**: Ensures readability on thermal paper
-- **Fixed width**: Prevents layout issues
-
-### Canvas Optimization
-- **Pixel-perfect**: Exact positioning for thermal printers
-- **Memory efficient**: Minimal canvas size
-- **Fast rendering**: Optimized drawing operations
-- **Reliable**: Consistent output across browsers
-- **Height calculation**: Pre-calculate canvas height to avoid clearing content
+**Last Updated**: [Current Date] - Enhanced Print Quality Implementation  
+**Status**: 🟢 **ENHANCED RECEIPT TEMPLATE WITH BETTER PRINT QUALITY, LARGER FONTS, AND IMPROVED CONTRAST**

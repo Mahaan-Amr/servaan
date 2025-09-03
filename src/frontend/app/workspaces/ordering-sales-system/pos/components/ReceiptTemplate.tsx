@@ -49,13 +49,13 @@ export default function ReceiptTemplate({
 }: ReceiptTemplateProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Thermal printer constants (8cm = 302.4 pixels at 96 DPI)
+  // ENHANCED: Increased font sizes for better print quality
   const RECEIPT_WIDTH = 302; // 8cm width
-  const MARGIN = 13; // Increased margin by 5px for better spacing
-  const LINE_HEIGHT = 18; // Slightly reduced for better fit
-  const FONT_SIZE_LARGE = 14; // Reduced business name
-  const FONT_SIZE_MEDIUM = 12; // Reduced headers and totals
-  const FONT_SIZE_SMALL = 10; // Reduced regular text
+  const MARGIN = 13;
+  const LINE_HEIGHT = 20; // Increased from 18 for better spacing
+  const FONT_SIZE_LARGE = 16; // Increased from 14
+  const FONT_SIZE_MEDIUM = 14; // Increased from 12
+  const FONT_SIZE_SMALL = 12; // Increased from 10
 
   const formatPrice = useCallback((amount: number) => {
     return new Intl.NumberFormat('fa-IR').format(amount);
@@ -79,7 +79,7 @@ export default function ReceiptTemplate({
     if (!ctx) return;
 
     // Calculate total height needed
-    let totalHeight = MARGIN * 2; // Top and bottom margins
+    let totalHeight = MARGIN * 2;
     
     // Header section
     totalHeight += LINE_HEIGHT; // Business name
@@ -126,21 +126,19 @@ export default function ReceiptTemplate({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     console.log('🎨 Canvas cleared, dimensions:', canvas.width, 'x', canvas.height);
 
-    // PRODUCTION READY - Clean receipt without debug elements
-
-    // Set default styles
-    ctx.fillStyle = '#000000';
+    // ENHANCED: Better contrast and visibility settings
+    ctx.fillStyle = '#000000'; // Pure black for maximum contrast
     ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2; // Increased line width for better visibility
 
-    let y = MARGIN + 5; // Start with small top margin
+    let y = MARGIN + 5;
 
-    // Helper functions for RTL layout
-    const drawCenteredText = (text: string, fontSize: number = FONT_SIZE_MEDIUM) => {
-      ctx.font = `bold ${fontSize}px Tahoma, Arial, sans-serif`;
+    // ENHANCED: Helper functions with better text rendering
+    const drawCenteredText = (text: string, fontSize: number = FONT_SIZE_MEDIUM, isBold: boolean = true) => {
+      // ENHANCED: Use bold font weight for better visibility
+      const fontWeight = isBold ? 'bold' : 'normal';
+      ctx.font = `${fontWeight} ${fontSize}px Tahoma, Arial, sans-serif`;
       ctx.textAlign = 'center';
-      
-      // FIXED: NO TRUNCATION - let text render naturally
       ctx.fillText(text, RECEIPT_WIDTH / 2, y);
       y += LINE_HEIGHT;
     };
@@ -150,38 +148,37 @@ export default function ReceiptTemplate({
       ctx.moveTo(MARGIN, y);
       ctx.lineTo(RECEIPT_WIDTH - MARGIN, y);
       ctx.stroke();
-      y += 15; // More space after lines
+      y += 15;
     };
 
-    // RTL two-column layout: Label on right, value on left
-    const drawRTLTwoColumn = (label: string, value: string, fontSize: number = FONT_SIZE_SMALL) => {
-      ctx.font = `${fontSize}px Tahoma, Arial, sans-serif`;
+    // ENHANCED: RTL two-column layout with better text rendering
+    const drawRTLTwoColumn = (label: string, value: string, fontSize: number = FONT_SIZE_SMALL, isBold: boolean = false) => {
+      const fontWeight = isBold ? 'bold' : 'normal';
+      ctx.font = `${fontWeight} ${fontSize}px Tahoma, Arial, sans-serif`;
       
-      // FIXED: Apply same logic as table columns to prevent overflow
-      const rightMargin = MARGIN + 20; // Match table column positioning
-      const leftMargin = MARGIN + 20; // Match table column positioning
+      const rightMargin = MARGIN + 20;
+      const leftMargin = MARGIN + 20;
       
-      // Label on the right (RTL) - NO TRUNCATION
+      // Label on the right (RTL)
       ctx.textAlign = 'right';
       ctx.fillText(label, RECEIPT_WIDTH - rightMargin, y);
       
-      // Value on the left (RTL) - NO TRUNCATION
+      // Value on the left (RTL)
       ctx.textAlign = 'left';
       ctx.fillText(value, leftMargin, y);
       
       y += LINE_HEIGHT;
     };
 
-    // RTL table header - REVERSED order: جمع، قیمت، تعداد، عنوان (Total, Price, Quantity, Title)
+    // ENHANCED: RTL table header with better visibility
     const drawRTLTableHeader = () => {
       ctx.font = `bold ${FONT_SIZE_SMALL}px Tahoma, Arial, sans-serif`;
       ctx.textAlign = 'center';
       
-      // ENHANCED: Optimized column spacing with better separation
-      const col1 = MARGIN + 15; // جمع (Total) - Rightmost
-      const col2 = MARGIN + 75; // قیمت (Price) - 60px spacing
-      const col3 = MARGIN + 135; // تعداد (Quantity) - 60px spacing  
-      const col4 = MARGIN + 240; // عنوان (Title) - 105px spacing from quantity
+      const col1 = MARGIN + 15; // جمع (Total)
+      const col2 = MARGIN + 75; // قیمت (Price)
+      const col3 = MARGIN + 135; // تعداد (Quantity)
+      const col4 = MARGIN + 240; // عنوان (Title)
       
       ctx.fillText('جمع', col1, y);
       ctx.fillText('قیمت', col2, y);
@@ -190,17 +187,16 @@ export default function ReceiptTemplate({
       y += LINE_HEIGHT;
     };
 
-    // RTL table row - REVERSED order: جمع، قیمت، تعداد، عنوان
+    // ENHANCED: RTL table row with better text rendering
     const drawRTLTableRow = (rowNum: number, itemName: string, quantity: number, totalPrice: number) => {
       ctx.font = `${FONT_SIZE_SMALL}px Tahoma, Arial, sans-serif`;
       
-      // ENHANCED: Match header column positions with optimized spacing
       const col1 = MARGIN + 15; // جمع (Total)
-      const col2 = MARGIN + 75; // قیمت (Price) - 60px spacing
-      const col3 = MARGIN + 135; // تعداد (Quantity) - 60px spacing
-      const col4 = MARGIN + 240; // عنوان (Title) - 105px spacing from quantity
+      const col2 = MARGIN + 75; // قیمت (Price)
+      const col3 = MARGIN + 135; // تعداد (Quantity)
+      const col4 = MARGIN + 240; // عنوان (Title)
       
-      // Total (right-aligned) - Rightmost column
+      // Total (right-aligned)
       ctx.textAlign = 'right';
       ctx.fillText(formatPrice(totalPrice), col1 + 20, y);
       
@@ -208,34 +204,34 @@ export default function ReceiptTemplate({
       ctx.textAlign = 'right';
       ctx.fillText(formatPrice(totalPrice / quantity), col2 + 20, y);
       
-      // Quantity (center-aligned) - Fixed positioning to align under column header
+      // Quantity (center-aligned)
       ctx.textAlign = 'center';
       ctx.fillText(quantity.toString(), col3, y);
       
-      // Item name (right-aligned, NO TRUNCATION) - Optimized position with better spacing
+      // Item name (right-aligned)
       ctx.textAlign = 'right';
       ctx.fillText(itemName, col4 + 15, y);
       
       y += LINE_HEIGHT;
     };
 
-    // Header - Business Information (ENHANCED: Simplified)
-    drawCenteredText(businessInfo.name, FONT_SIZE_LARGE);
+    // ENHANCED: Header with bold business name
+    drawCenteredText(businessInfo.name, FONT_SIZE_LARGE, true);
     drawLine();
 
-    // Order Details - RTL Layout
-    drawRTLTwoColumn('تاریخ:', formatDate(orderDate));
+    // ENHANCED: Order Details with better visibility
+    drawRTLTwoColumn('تاریخ:', formatDate(orderDate), FONT_SIZE_SMALL, false);
     const orderTypeText = orderType === 'DINE_IN' ? 'سالن' : 
                           orderType === 'TAKEAWAY' ? 'بیرون بری' : 
                           orderType === 'DELIVERY' ? 'ارسال' : 'آنلاین';
-    drawRTLTwoColumn('نوع سفارش:', orderTypeText);
+    drawRTLTwoColumn('نوع سفارش:', orderTypeText, FONT_SIZE_SMALL, false);
     if (tableInfo) {
       const tableText = tableInfo.tableName || `میز ${tableInfo.tableNumber}`;
-      drawRTLTwoColumn('میز:', tableText);
+      drawRTLTwoColumn('میز:', tableText, FONT_SIZE_SMALL, false);
     }
     drawLine();
 
-    // Items Table - RTL Layout
+    // ENHANCED: Items Table with bold header
     drawRTLTableHeader();
     drawLine();
 
@@ -246,59 +242,54 @@ export default function ReceiptTemplate({
 
     drawLine();
 
-    // Calculations - RTL Layout
-    drawRTLTwoColumn('جمع:', `${formatPrice(calculation.subtotal)} تومان`);
+    // ENHANCED: Calculations with better visibility
+    drawRTLTwoColumn('جمع:', `${formatPrice(calculation.subtotal)} تومان`, FONT_SIZE_SMALL, false);
     
     if (calculation.discountAmount > 0) {
-      drawRTLTwoColumn('تخفیف:', `-${formatPrice(calculation.discountAmount)} تومان`);
+      drawRTLTwoColumn('تخفیف:', `-${formatPrice(calculation.discountAmount)} تومان`, FONT_SIZE_SMALL, false);
     }
 
     if (calculation.taxAmount > 0) {
-      drawRTLTwoColumn('مالیات:', `${formatPrice(calculation.taxAmount)} تومان`);
+      drawRTLTwoColumn('مالیات:', `${formatPrice(calculation.taxAmount)} تومان`, FONT_SIZE_SMALL, false);
     }
 
     if (calculation.serviceAmount > 0) {
-      drawRTLTwoColumn('خدمات:', `${formatPrice(calculation.serviceAmount)} تومان`);
+      drawRTLTwoColumn('خدمات:', `${formatPrice(calculation.serviceAmount)} تومان`, FONT_SIZE_SMALL, false);
     }
 
     if (calculation.courierAmount > 0) {
-      drawRTLTwoColumn('پیک:', `${formatPrice(calculation.courierAmount)} تومان`);
+      drawRTLTwoColumn('پیک:', `${formatPrice(calculation.courierAmount)} تومان`, FONT_SIZE_SMALL, false);
     }
 
     drawLine();
 
-    // Total - RTL Layout
-    ctx.font = `bold ${FONT_SIZE_MEDIUM}px Tahoma, Arial, sans-serif`;
-    drawRTLTwoColumn('مجموع:', `${formatPrice(calculation.totalAmount)} تومان`);
+    // ENHANCED: Total with bold text for emphasis
+    drawRTLTwoColumn('مجموع:', `${formatPrice(calculation.totalAmount)} تومان`, FONT_SIZE_MEDIUM, true);
     drawLine();
 
-    // Payment - RTL Layout
-    ctx.font = `${FONT_SIZE_SMALL}px Tahoma, Arial, sans-serif`;
+    // ENHANCED: Payment with better visibility
     const paymentMethod = paymentData.paymentMethod === 'CASH' ? 'نقدی' : 'اعتباری';
-    drawRTLTwoColumn('پرداخت:', paymentMethod);
-    drawRTLTwoColumn('دریافتی:', `${formatPrice(paymentData.amountReceived)} تومان`);
+    drawRTLTwoColumn('پرداخت:', paymentMethod, FONT_SIZE_SMALL, false);
+    drawRTLTwoColumn('دریافتی:', `${formatPrice(paymentData.amountReceived)} تومان`, FONT_SIZE_SMALL, false);
     
     if (paymentData.amountReceived > calculation.totalAmount) {
       const changeAmount = paymentData.amountReceived - calculation.totalAmount;
-      drawRTLTwoColumn('تغییر:', `${formatPrice(changeAmount)} تومان`);
+      drawRTLTwoColumn('تغییر:', `${formatPrice(changeAmount)} تومان`, FONT_SIZE_SMALL, false);
     }
 
     drawLine();
 
-    // Footer
-    ctx.font = `${FONT_SIZE_SMALL}px Tahoma, Arial, sans-serif`;
-    ctx.textAlign = 'center';
-    drawCenteredText('با تشکر از خرید شما');
-    drawCenteredText('امیدواریم از خدمات ما راضی باشید');
-    drawCenteredText('--- پایان رسید ---');
-    drawCenteredText(new Date().toLocaleTimeString('fa-IR'));
+    // ENHANCED: Footer with bold text
+    drawCenteredText('با تشکر از خرید شما', FONT_SIZE_SMALL, true);
+    drawCenteredText('امیدواریم از خدمات ما راضی باشید', FONT_SIZE_SMALL, true);
+    drawCenteredText('--- پایان رسید ---', FONT_SIZE_SMALL, true);
+    drawCenteredText(new Date().toLocaleTimeString('fa-IR'), FONT_SIZE_SMALL, false);
   }, [orderItems, calculation, paymentData, businessInfo, orderType, tableInfo, orderDate, formatDate, formatPrice]);
 
   useEffect(() => {
     if (orderItems && orderItems.length > 0) {
-      // Add a small delay to ensure DOM is ready and clear any cached canvas
       setTimeout(() => {
-        console.log('🔄 Generating new receipt template...');
+        console.log('🔄 Generating enhanced receipt template...');
         console.log('📊 orderItems length:', orderItems.length);
         console.log('📊 Canvas ref available:', !!canvasRef.current);
         generateReceipt();
@@ -307,17 +298,16 @@ export default function ReceiptTemplate({
   }, [generateReceipt]);
 
   const handlePrint = () => {
-    console.log('🖨️ Starting BULLETPROOF print process...');
+    console.log('🖨️ Starting ENHANCED print process...');
     const canvas = canvasRef.current;
     if (!canvas) {
       console.log('❌ Canvas not available for printing');
       return;
     }
 
-    // Force canvas regeneration with cache busting
+    // Force canvas regeneration
     generateReceipt();
     
-    // PHASE 1: DYNAMIC DIMENSION DETECTION
     const canvasRect = canvas.getBoundingClientRect();
     const actualCanvasWidth = canvasRect.width;
     const actualCanvasHeight = canvasRect.height;
@@ -325,21 +315,18 @@ export default function ReceiptTemplate({
     const deviceWidth = window.innerWidth;
     const deviceHeight = window.innerHeight;
     
-    console.log('📏 DYNAMIC DETECTION RESULTS:');
+    console.log('📏 ENHANCED DETECTION RESULTS:');
     console.log('📏 Canvas actual size:', actualCanvasWidth, 'x', actualCanvasHeight);
     console.log('📏 Canvas internal size:', canvas.width, 'x', canvas.height);
     console.log('📏 Device pixel ratio:', pixelRatio);
     console.log('📏 Device dimensions:', deviceWidth, 'x', deviceHeight);
     
-    // PHASE 2: CALCULATE OPTIMAL PRINT DIMENSIONS
-    // Force exact 302px width for thermal printer compatibility
-    const optimalPrintWidth = 302; // Fixed width for 8cm thermal printer
+    const optimalPrintWidth = 302;
     const optimalPrintHeight = Math.min(actualCanvasHeight, canvas.height);
     
-    console.log('🎯 OPTIMAL PRINT DIMENSIONS:', optimalPrintWidth, 'x', optimalPrintHeight);
+    console.log('🎯 ENHANCED PRINT DIMENSIONS:', optimalPrintWidth, 'x', optimalPrintHeight);
     console.log('🎯 FORCED WIDTH: 302px for thermal printer compatibility');
     
-    // PHASE 3: CREATE PRINT WINDOW WITH EXACT DIMENSIONS
     const printWindow = window.open('', '_blank', 
       `width=${optimalPrintWidth},height=${optimalPrintHeight},scrollbars=no,resizable=no,toolbar=no,menubar=no,location=no,status=no`
     );
@@ -349,12 +336,11 @@ export default function ReceiptTemplate({
       return;
     }
     
-    // Add cache busting timestamp to image URL
     const timestamp = Date.now();
     const imageDataUrl = canvas.toDataURL('image/png');
-    console.log('🖨️ Generated canvas image with timestamp:', timestamp);
+    console.log('🖨️ Generated enhanced canvas image with timestamp:', timestamp);
 
-    // PHASE 4: DYNAMIC CSS INJECTION
+    // ENHANCED: Better CSS for improved print quality
     const dynamicCSS = `
       @page { 
         size: ${optimalPrintWidth}px auto; 
@@ -391,6 +377,10 @@ export default function ReceiptTemplate({
         margin: 0; 
         padding: 0; 
         max-width: 100%;
+        /* ENHANCED: Better image rendering for thermal printers */
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        filter: contrast(1.2) brightness(1.1);
       }
       * {
         box-sizing: border-box;
@@ -403,19 +393,17 @@ export default function ReceiptTemplate({
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>رسید سفارش - Production Ready</title>
+        <title>رسید سفارش - Enhanced Print Quality</title>
         <style>${dynamicCSS}</style>
       </head>
       <body>
         <div class="receipt-container">
-          <img src="${imageDataUrl}" alt="رسید سفارش - Production Ready" class="receipt-image" />
+          <img src="${imageDataUrl}" alt="رسید سفارش - Enhanced Print Quality" class="receipt-image" />
         </div>
         
         <script>
-          // PHASE 5: REAL-TIME DIMENSION MONITORING
-          console.log('🔍 PRINT WINDOW MONITORING STARTED');
+          console.log('🔍 ENHANCED PRINT WINDOW MONITORING STARTED');
           
-          // Monitor window size changes
           let lastWidth = ${optimalPrintWidth};
           let lastHeight = ${optimalPrintHeight};
           
@@ -428,7 +416,6 @@ export default function ReceiptTemplate({
               lastWidth = currentWidth;
               lastHeight = currentHeight;
               
-              // Force container to match new dimensions
               const container = document.querySelector('.receipt-container');
               const image = document.querySelector('.receipt-image');
               if (container && image) {
@@ -440,13 +427,11 @@ export default function ReceiptTemplate({
             }
           }
           
-          // Check dimensions every 100ms
           setInterval(checkDimensions, 100);
           
-          // Initial dimension check
           setTimeout(() => {
-            console.log('📏 Initial print window size:', window.innerWidth, 'x', window.innerHeight);
-            console.log('📏 Canvas image size:', document.querySelector('.receipt-image').naturalWidth, 'x', document.querySelector('.receipt-image').naturalHeight);
+            console.log('📏 Enhanced print window size:', window.innerWidth, 'x', window.innerHeight);
+            console.log('📏 Enhanced canvas image size:', document.querySelector('.receipt-image').naturalWidth, 'x', document.querySelector('.receipt-image').naturalHeight);
           }, 100);
         </script>
       </body>
@@ -456,22 +441,19 @@ export default function ReceiptTemplate({
     printWindow.document.write(printDocument);
     printWindow.document.close();
 
-    // PHASE 6: ENHANCED LOAD MONITORING
     printWindow.onload = () => {
-      console.log('🖨️ BULLETPROOF print window loaded');
+      console.log('🖨️ ENHANCED print window loaded');
       console.log('🖨️ Print window dimensions:', printWindow.innerWidth, 'x', printWindow.innerHeight);
       console.log('🖨️ Canvas dimensions:', canvas.width, 'x', canvas.height);
       console.log('🖨️ Optimal dimensions:', optimalPrintWidth, 'x', optimalPrintHeight);
       
-      // PHASE 7: DIMENSION VERIFICATION
       const img = printWindow.document.querySelector('.receipt-image') as HTMLImageElement;
       if (img) {
         img.onload = () => {
-          console.log('🖨️ Image loaded in print window');
+          console.log('🖨️ Enhanced image loaded in print window');
           console.log('🖨️ Image natural size:', img.naturalWidth, 'x', img.naturalHeight);
           console.log('🖨️ Image rendered size:', img.offsetWidth, 'x', img.offsetHeight);
           
-          // Verify dimensions match
           if (img.offsetWidth !== optimalPrintWidth) {
             console.log('⚠️ WARNING: Image width mismatch, forcing correction');
             img.style.width = optimalPrintWidth + 'px';
@@ -479,12 +461,11 @@ export default function ReceiptTemplate({
         };
       }
       
-      // Force a small delay to ensure everything is properly loaded
       setTimeout(() => {
-        console.log('🖨️ Triggering print...');
+        console.log('🖨️ Triggering enhanced print...');
         printWindow.print();
         setTimeout(() => {
-          console.log('🖨️ Print completed, closing window');
+          console.log('🖨️ Enhanced print completed, closing window');
           printWindow.close();
           onPrintComplete?.();
         }, 1000);
@@ -499,12 +480,12 @@ export default function ReceiptTemplate({
           onClick={handlePrint}
           className="w-full bg-amber-600 text-white py-2 px-4 rounded-lg hover:bg-amber-700 font-medium"
         >
-          چاپ رسید
+          چاپ رسید (کیفیت بالا)
         </button>
       </div>
 
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-700 mb-3 text-center">پیش‌نمایش رسید</h3>
+        <h3 className="text-lg font-semibold text-gray-700 mb-3 text-center">پیش‌نمایش رسید (کیفیت بالا)</h3>
         <div className="border-2 border-gray-300 rounded-lg p-4 bg-white">
           <canvas
             ref={canvasRef}
