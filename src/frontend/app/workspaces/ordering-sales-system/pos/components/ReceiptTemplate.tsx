@@ -56,32 +56,40 @@ export default function ReceiptTemplate({
   const FONT_SIZE_MEDIUM = 14;
   const FONT_SIZE_SMALL = 12;
 
-  // Helper function to wrap text for RTL layout with proper word grouping
+  // Helper function to wrap text for RTL layout with intelligent word grouping
   const wrapText = (text: string, maxWidth: number, ctx: CanvasRenderingContext2D): string[] => {
     const words = text.split(' ');
     const lines: string[] = [];
-    let currentLine = '';
-
+    
     // RTL: Process words from right to left
+    let currentLine = '';
+    
     for (let i = words.length - 1; i >= 0; i--) {
       const word = words[i];
+      
+      // Try to add the word to the current line
       const testLine = currentLine ? `${word} ${currentLine}` : word;
       const metrics = ctx.measureText(testLine);
       
-      // If adding this word exceeds the width and we already have words on the line
-      if (metrics.width > maxWidth && currentLine) {
-        // Save the current line and start a new one
-        lines.unshift(currentLine); // RTL: add to beginning
-        currentLine = word;
-      } else {
-        // Add the word to the current line
+      // If the test line fits within maxWidth, add the word
+      if (metrics.width <= maxWidth) {
         currentLine = testLine;
+      } else {
+        // If current line has content, save it and start a new line
+        if (currentLine) {
+          lines.unshift(currentLine);
+          currentLine = word;
+        } else {
+          // If even a single word is too wide, force it onto a line
+          lines.unshift(word);
+          currentLine = '';
+        }
       }
     }
     
     // Add the last line if it has content
     if (currentLine) {
-      lines.unshift(currentLine); // RTL: add to beginning
+      lines.unshift(currentLine);
     }
     
     return lines;
@@ -239,7 +247,15 @@ export default function ReceiptTemplate({
       // Item name with text wrapping (right-aligned)
       ctx.textAlign = 'right';
       const titleMaxWidth = col2 - col1 - 10; // Space between title and quantity columns
+      console.log('🔍 Text wrapping debug:', {
+        itemName,
+        titleMaxWidth,
+        col1,
+        col2,
+        availableSpace: col2 - col1 - 10
+      });
       const wrappedLines = wrapText(itemName, titleMaxWidth, ctx);
+      console.log('🔍 Wrapped lines:', wrappedLines);
       
       // Draw wrapped text lines
       let currentY = y;
