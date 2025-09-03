@@ -135,7 +135,7 @@ export default function ReceiptTemplate({
     if (tempCtx) {
       tempCtx.font = `${FONT_SIZE_SMALL}px Tahoma, Arial, sans-serif`;
       orderItems.forEach(item => {
-        const titleMaxWidth = 80; // Increased width to match new column spacing (100 - 20 = 80px)
+        const titleMaxWidth = 70; // CORRECTED: Matches the actual available space (267 - 187 - 10 = 70px)
         const wrappedLines = wrapText(item.menuItem.name, titleMaxWidth, tempCtx);
         itemsHeight += Math.max(LINE_HEIGHT, wrappedLines.length * LINE_HEIGHT);
       });
@@ -241,13 +241,13 @@ export default function ReceiptTemplate({
       
       // Item name with text wrapping (right-aligned)
       ctx.textAlign = 'right';
-      const titleMaxWidth = col2 - col1 - 10; // Space between title and quantity columns
+      const titleMaxWidth = col1 - col2 - 10; // CORRECTED: Space between title and quantity columns (RTL: col1 is rightmost)
       console.log('🔍 Text wrapping debug:', {
         itemName,
         titleMaxWidth,
         col1,
         col2,
-        availableSpace: col2 - col1 - 10
+        availableSpace: col1 - col2 - 10
       });
       const wrappedLines = wrapText(itemName, titleMaxWidth, ctx);
       console.log('🔍 Wrapped lines:', wrappedLines);
