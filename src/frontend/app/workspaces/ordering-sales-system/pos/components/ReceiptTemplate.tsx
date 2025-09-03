@@ -56,14 +56,13 @@ export default function ReceiptTemplate({
   const FONT_SIZE_MEDIUM = 14;
   const FONT_SIZE_SMALL = 12;
 
-  // Helper function to wrap text for RTL layout with 2-word grouping
+  // Helper function to wrap text for RTL layout with intelligent word grouping
   const wrapText = (text: string, maxWidth: number, ctx: CanvasRenderingContext2D): string[] => {
     const words = text.split(' ');
     const lines: string[] = [];
     
     // RTL: Process words from right to left
     let currentLine = '';
-    let wordCount = 0;
     
     for (let i = words.length - 1; i >= 0; i--) {
       const word = words[i];
@@ -72,18 +71,14 @@ export default function ReceiptTemplate({
       const testLine = currentLine ? `${word} ${currentLine}` : word;
       const metrics = ctx.measureText(testLine);
       
-      // Check if we should wrap: either exceeds width OR we have 2 words and adding a third
-      const shouldWrap = metrics.width > maxWidth || (wordCount >= 2 && currentLine);
-      
-      if (shouldWrap && currentLine) {
+      // Only wrap if the text actually exceeds the width
+      if (metrics.width > maxWidth && currentLine) {
         // Save current line and start a new one
         lines.unshift(currentLine);
         currentLine = word;
-        wordCount = 1;
       } else {
         // Add word to current line
         currentLine = testLine;
-        wordCount++;
       }
     }
     
@@ -140,7 +135,7 @@ export default function ReceiptTemplate({
     if (tempCtx) {
       tempCtx.font = `${FONT_SIZE_SMALL}px Tahoma, Arial, sans-serif`;
       orderItems.forEach(item => {
-        const titleMaxWidth = 60; // Reduced width to match new column spacing
+        const titleMaxWidth = 80; // Increased width to match new column spacing (100 - 20 = 80px)
         const wrappedLines = wrapText(item.menuItem.name, titleMaxWidth, tempCtx);
         itemsHeight += Math.max(LINE_HEIGHT, wrappedLines.length * LINE_HEIGHT);
       });
@@ -224,9 +219,9 @@ export default function ReceiptTemplate({
       
       // CORRECTED RTL Layout: عنوان | تعداد | قیمت | جمع (Title | Quantity | Price | Total)
       const col1 = RECEIPT_WIDTH - MARGIN - 20; // عنوان (Title) - Rightmost
-      const col2 = RECEIPT_WIDTH - MARGIN - 80; // تعداد (Quantity) - 60px spacing from right (reduced space for title)
-      const col3 = RECEIPT_WIDTH - MARGIN - 130; // قیمت (Price) - 50px spacing from right
-      const col4 = RECEIPT_WIDTH - MARGIN - 180; // جمع (Total) - 50px spacing from right
+      const col2 = RECEIPT_WIDTH - MARGIN - 100; // تعداد (Quantity) - 80px spacing from right (increased space for title)
+      const col3 = RECEIPT_WIDTH - MARGIN - 150; // قیمت (Price) - 50px spacing from right
+      const col4 = RECEIPT_WIDTH - MARGIN - 200; // جمع (Total) - 50px spacing from right
       
       ctx.fillText('عنوان', col1, y);
       ctx.fillText('تعداد', col2, y);
@@ -240,9 +235,9 @@ export default function ReceiptTemplate({
       
       // CORRECTED RTL Layout: عنوان | تعداد | قیمت | جمع (Title | Quantity | Price | Total)
       const col1 = RECEIPT_WIDTH - MARGIN - 20; // عنوان (Title) - Rightmost
-      const col2 = RECEIPT_WIDTH - MARGIN - 80; // تعداد (Quantity) - 60px spacing from right (reduced space for title)
-      const col3 = RECEIPT_WIDTH - MARGIN - 130; // قیمت (Price) - 50px spacing from right
-      const col4 = RECEIPT_WIDTH - MARGIN - 180; // جمع (Total) - 50px spacing from right
+      const col2 = RECEIPT_WIDTH - MARGIN - 100; // تعداد (Quantity) - 80px spacing from right (increased space for title)
+      const col3 = RECEIPT_WIDTH - MARGIN - 150; // قیمت (Price) - 50px spacing from right
+      const col4 = RECEIPT_WIDTH - MARGIN - 200; // جمع (Total) - 50px spacing from right
       
       // Item name with text wrapping (right-aligned)
       ctx.textAlign = 'right';
