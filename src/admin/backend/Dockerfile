@@ -36,6 +36,8 @@ COPY --from=builder --chown=nodejs:nodejs /app/src/admin/backend/package*.json .
 COPY --from=builder --chown=nodejs:nodejs /app/src/prisma ./prisma/
 # Copy the shared directory with generated client
 COPY --from=builder --chown=nodejs:nodejs /app/src/shared ./shared/
+# Copy the generated client to the dist output for runtime access
+COPY --from=builder --chown=nodejs:nodejs /app/src/shared/generated ./dist/shared/generated/
 
 # Switch to non-root user
 USER nodejs
