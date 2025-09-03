@@ -171,16 +171,21 @@ export default function ReceiptTemplate({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     console.log('🎨 Canvas cleared, dimensions:', canvas.width, 'x', canvas.height);
 
-    // OPTIMIZED: Direct print settings for maximum quality
+    // THERMAL PRINTER OPTIMIZED: Enhanced settings for maximum print quality
     ctx.fillStyle = '#000000'; // Pure black
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 2;
+    
+    // Disable image smoothing for crisp thermal printing
+    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingQuality = 'high';
 
     let y = MARGIN + 5;
 
     // Helper functions for direct printing
-    const drawCenteredText = (text: string, fontSize: number = FONT_SIZE_MEDIUM, isBold: boolean = true) => {
-      const fontWeight = isBold ? 'bold' : 'normal';
+    const drawCenteredText = (text: string, fontSize: number = FONT_SIZE_MEDIUM) => {
+      // THERMAL PRINTER OPTIMIZED: All text bold for consistent print quality
+      const fontWeight = 'bold'; // Force bold for all text
       ctx.font = `${fontWeight} ${fontSize}px Tahoma, Arial, sans-serif`;
       ctx.textAlign = 'center';
       ctx.fillText(text, RECEIPT_WIDTH / 2, y);
@@ -195,8 +200,9 @@ export default function ReceiptTemplate({
       y += 15;
     };
 
-    const drawRTLTwoColumn = (label: string, value: string, fontSize: number = FONT_SIZE_SMALL, isBold: boolean = false) => {
-      const fontWeight = isBold ? 'bold' : 'normal';
+    const drawRTLTwoColumn = (label: string, value: string, fontSize: number = FONT_SIZE_SMALL) => {
+      // THERMAL PRINTER OPTIMIZED: All text bold for consistent print quality
+      const fontWeight = 'bold'; // Force bold for all text
       ctx.font = `${fontWeight} ${fontSize}px Tahoma, Arial, sans-serif`;
       
       const rightMargin = MARGIN + 20; // Increased margin for RTL
@@ -231,7 +237,8 @@ export default function ReceiptTemplate({
     };
 
     const drawRTLTableRow = (rowNum: number, itemName: string, quantity: number, totalPrice: number) => {
-      ctx.font = `${FONT_SIZE_SMALL}px Tahoma, Arial, sans-serif`;
+      // THERMAL PRINTER OPTIMIZED: Bold font for consistent print quality
+      ctx.font = `bold ${FONT_SIZE_SMALL}px Tahoma, Arial, sans-serif`;
       
       // CORRECTED RTL Layout: عنوان | تعداد | قیمت | جمع (Title | Quantity | Price | Total)
       const col1 = RECEIPT_WIDTH - MARGIN - 20; // عنوان (Title) - Rightmost
@@ -278,18 +285,18 @@ export default function ReceiptTemplate({
     };
 
     // Header with bold business name
-    drawCenteredText(businessInfo.name, FONT_SIZE_LARGE, true);
+    drawCenteredText(businessInfo.name, FONT_SIZE_LARGE);
     drawLine();
 
     // Order Details
-    drawRTLTwoColumn('تاریخ:', formatDate(orderDate), FONT_SIZE_SMALL, false);
+    drawRTLTwoColumn('تاریخ:', formatDate(orderDate), FONT_SIZE_SMALL);
     const orderTypeText = orderType === 'DINE_IN' ? 'سالن' : 
                           orderType === 'TAKEAWAY' ? 'بیرون بری' : 
                           orderType === 'DELIVERY' ? 'ارسال' : 'آنلاین';
-    drawRTLTwoColumn('نوع سفارش:', orderTypeText, FONT_SIZE_SMALL, false);
+    drawRTLTwoColumn('نوع سفارش:', orderTypeText, FONT_SIZE_SMALL);
     if (tableInfo) {
       const tableText = tableInfo.tableName || `میز ${tableInfo.tableNumber}`;
-      drawRTLTwoColumn('میز:', tableText, FONT_SIZE_SMALL, false);
+      drawRTLTwoColumn('میز:', tableText, FONT_SIZE_SMALL);
     }
     drawLine();
 
@@ -305,47 +312,47 @@ export default function ReceiptTemplate({
     drawLine();
 
     // Calculations
-    drawRTLTwoColumn('جمع:', `${formatPrice(calculation.subtotal)} تومان`, FONT_SIZE_SMALL, false);
+    drawRTLTwoColumn('جمع:', `${formatPrice(calculation.subtotal)} تومان`, FONT_SIZE_SMALL);
     
     if (calculation.discountAmount > 0) {
-      drawRTLTwoColumn('تخفیف:', `-${formatPrice(calculation.discountAmount)} تومان`, FONT_SIZE_SMALL, false);
+      drawRTLTwoColumn('تخفیف:', `-${formatPrice(calculation.discountAmount)} تومان`, FONT_SIZE_SMALL);
     }
 
     if (calculation.taxAmount > 0) {
-      drawRTLTwoColumn('مالیات:', `${formatPrice(calculation.taxAmount)} تومان`, FONT_SIZE_SMALL, false);
+      drawRTLTwoColumn('مالیات:', `${formatPrice(calculation.taxAmount)} تومان`, FONT_SIZE_SMALL);
     }
 
     if (calculation.serviceAmount > 0) {
-      drawRTLTwoColumn('خدمات:', `${formatPrice(calculation.serviceAmount)} تومان`, FONT_SIZE_SMALL, false);
+      drawRTLTwoColumn('خدمات:', `${formatPrice(calculation.serviceAmount)} تومان`, FONT_SIZE_SMALL);
     }
 
     if (calculation.courierAmount > 0) {
-      drawRTLTwoColumn('پیک:', `${formatPrice(calculation.courierAmount)} تومان`, FONT_SIZE_SMALL, false);
+      drawRTLTwoColumn('پیک:', `${formatPrice(calculation.courierAmount)} تومان`, FONT_SIZE_SMALL);
     }
 
     drawLine();
 
     // Total with bold text
-    drawRTLTwoColumn('مجموع:', `${formatPrice(calculation.totalAmount)} تومان`, FONT_SIZE_MEDIUM, true);
+    drawRTLTwoColumn('مجموع:', `${formatPrice(calculation.totalAmount)} تومان`, FONT_SIZE_MEDIUM);
     drawLine();
 
     // Payment
     const paymentMethod = paymentData.paymentMethod === 'CASH' ? 'نقدی' : 'اعتباری';
-    drawRTLTwoColumn('پرداخت:', paymentMethod, FONT_SIZE_SMALL, false);
-    drawRTLTwoColumn('دریافتی:', `${formatPrice(paymentData.amountReceived)} تومان`, FONT_SIZE_SMALL, false);
+    drawRTLTwoColumn('پرداخت:', paymentMethod, FONT_SIZE_SMALL);
+    drawRTLTwoColumn('دریافتی:', `${formatPrice(paymentData.amountReceived)} تومان`, FONT_SIZE_SMALL);
     
     if (paymentData.amountReceived > calculation.totalAmount) {
       const changeAmount = paymentData.amountReceived - calculation.totalAmount;
-      drawRTLTwoColumn('تغییر:', `${formatPrice(changeAmount)} تومان`, FONT_SIZE_SMALL, false);
+      drawRTLTwoColumn('تغییر:', `${formatPrice(changeAmount)} تومان`, FONT_SIZE_SMALL);
     }
 
     drawLine();
 
     // Footer
-    drawCenteredText('با تشکر از خرید شما', FONT_SIZE_SMALL, true);
-    drawCenteredText('امیدواریم از خدمات ما راضی باشید', FONT_SIZE_SMALL, true);
-    drawCenteredText('--- پایان رسید ---', FONT_SIZE_SMALL, true);
-    drawCenteredText(new Date().toLocaleTimeString('fa-IR'), FONT_SIZE_SMALL, false);
+    drawCenteredText('با تشکر از خرید شما', FONT_SIZE_SMALL);
+    drawCenteredText('امیدواریم از خدمات ما راضی باشید', FONT_SIZE_SMALL);
+    drawCenteredText('--- پایان رسید ---', FONT_SIZE_SMALL);
+    drawCenteredText(new Date().toLocaleTimeString('fa-IR'), FONT_SIZE_SMALL);
   }, [orderItems, calculation, paymentData, businessInfo, orderType, tableInfo, orderDate, formatDate, formatPrice]);
 
   useEffect(() => {
@@ -380,7 +387,7 @@ export default function ReceiptTemplate({
       return;
     }
 
-    // OPTIMIZED: Direct canvas printing without PNG conversion
+    // THERMAL PRINTER OPTIMIZED: Enhanced CSS for maximum print quality
     const directPrintCSS = `
       @page { 
         size: 302px auto; 
@@ -404,10 +411,22 @@ export default function ReceiptTemplate({
         margin: 0; 
         padding: 0; 
         max-width: 100%;
-        /* OPTIMIZED: Direct canvas rendering for maximum quality */
+        /* THERMAL PRINTER OPTIMIZED: Enhanced rendering for maximum quality */
         image-rendering: pixelated;
         image-rendering: -moz-crisp-edges;
         image-rendering: crisp-edges;
+        /* THERMAL PRINTER ENHANCEMENT: Contrast and density optimization */
+        filter: contrast(1.5) brightness(0.9) saturate(1.2);
+        -webkit-print-color-adjust: exact;
+        color-adjust: exact;
+      }
+      @media print {
+        .receipt-canvas {
+          filter: contrast(1.8) brightness(0.8) saturate(1.5);
+          image-rendering: pixelated;
+          -webkit-print-color-adjust: exact;
+          color-adjust: exact;
+        }
       }
       * {
         box-sizing: border-box;
@@ -433,15 +452,21 @@ export default function ReceiptTemplate({
         ></canvas>
         
         <script>
-          // OPTIMIZED: Direct canvas copy without image conversion
+          // THERMAL PRINTER OPTIMIZED: Enhanced canvas copy with print quality settings
           const printCanvas = document.querySelector('.receipt-canvas');
           const printCtx = printCanvas.getContext('2d');
+          
+          // THERMAL PRINTER OPTIMIZATION: Disable image smoothing for crisp printing
+          if (printCtx) {
+            printCtx.imageSmoothingEnabled = false;
+            printCtx.imageSmoothingQuality = 'high';
+          }
           
           // Copy the original canvas content directly
           const originalCanvas = window.opener.document.querySelector('canvas');
           if (originalCanvas && printCtx) {
             printCtx.drawImage(originalCanvas, 0, 0);
-            console.log('✅ Direct canvas copy completed');
+            console.log('✅ Thermal printer optimized canvas copy completed');
           }
           
                      // Trigger print after canvas is ready
