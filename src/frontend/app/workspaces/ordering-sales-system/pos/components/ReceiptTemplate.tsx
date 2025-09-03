@@ -50,7 +50,7 @@ export default function ReceiptTemplate({
 
   // OPTIMIZED: Font sizes for direct printing
   const RECEIPT_WIDTH = 302; // 8cm width
-  const MARGIN = 8; // Reduced from 13 to prevent overflow
+  const MARGIN = 15; // Increased margin to prevent overflow
   const LINE_HEIGHT = 20;
   const FONT_SIZE_LARGE = 16;
   const FONT_SIZE_MEDIUM = 14;
@@ -153,8 +153,8 @@ export default function ReceiptTemplate({
       const fontWeight = isBold ? 'bold' : 'normal';
       ctx.font = `${fontWeight} ${fontSize}px Tahoma, Arial, sans-serif`;
       
-      const rightMargin = MARGIN + 10; // Reduced from 20
-      const leftMargin = MARGIN + 10; // Reduced from 20
+      const rightMargin = MARGIN + 20; // Increased margin for RTL
+      const leftMargin = MARGIN + 20; // Increased margin for RTL
       
       // Label on the right (RTL)
       ctx.textAlign = 'right';
@@ -171,10 +171,11 @@ export default function ReceiptTemplate({
       ctx.font = `bold ${FONT_SIZE_SMALL}px Tahoma, Arial, sans-serif`;
       ctx.textAlign = 'center';
       
-      const col1 = MARGIN + 10; // جمع (Total) - Rightmost
-      const col2 = MARGIN + 60; // قیمت (Price) - 50px spacing
-      const col3 = MARGIN + 110; // تعداد (Quantity) - 50px spacing
-      const col4 = MARGIN + 160; // عنوان (Title) - 50px spacing, more space for text
+      // RTL Layout: Position from right to left
+      const col1 = RECEIPT_WIDTH - MARGIN - 20; // جمع (Total) - Rightmost
+      const col2 = RECEIPT_WIDTH - MARGIN - 70; // قیمت (Price) - 50px spacing from right
+      const col3 = RECEIPT_WIDTH - MARGIN - 120; // تعداد (Quantity) - 50px spacing from right
+      const col4 = RECEIPT_WIDTH - MARGIN - 170; // عنوان (Title) - 50px spacing from right
       
       ctx.fillText('جمع', col1, y);
       ctx.fillText('قیمت', col2, y);
@@ -186,10 +187,11 @@ export default function ReceiptTemplate({
     const drawRTLTableRow = (rowNum: number, itemName: string, quantity: number, totalPrice: number) => {
       ctx.font = `${FONT_SIZE_SMALL}px Tahoma, Arial, sans-serif`;
       
-      const col1 = MARGIN + 10; // جمع (Total) - Rightmost
-      const col2 = MARGIN + 60; // قیمت (Price) - 50px spacing
-      const col3 = MARGIN + 110; // تعداد (Quantity) - 50px spacing
-      const col4 = MARGIN + 160; // عنوان (Title) - 50px spacing, more space for text
+      // RTL Layout: Position from right to left
+      const col1 = RECEIPT_WIDTH - MARGIN - 20; // جمع (Total) - Rightmost
+      const col2 = RECEIPT_WIDTH - MARGIN - 70; // قیمت (Price) - 50px spacing from right
+      const col3 = RECEIPT_WIDTH - MARGIN - 120; // تعداد (Quantity) - 50px spacing from right
+      const col4 = RECEIPT_WIDTH - MARGIN - 170; // عنوان (Title) - 50px spacing from right
       
       // Total (right-aligned)
       ctx.textAlign = 'right';
