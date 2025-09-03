@@ -135,7 +135,7 @@ export default function ReceiptTemplate({
     if (tempCtx) {
       tempCtx.font = `${FONT_SIZE_SMALL}px Tahoma, Arial, sans-serif`;
       orderItems.forEach(item => {
-        const titleMaxWidth = 70; // CORRECTED: Matches the actual available space (267 - 187 - 10 = 70px)
+        const titleMaxWidth = 90; // UPDATED: Matches the new available space (267 - 177 - 10 = 90px)
         const wrappedLines = wrapText(item.menuItem.name, titleMaxWidth, tempCtx);
         itemsHeight += Math.max(LINE_HEIGHT, wrappedLines.length * LINE_HEIGHT);
       });
@@ -219,9 +219,9 @@ export default function ReceiptTemplate({
       
       // CORRECTED RTL Layout: عنوان | تعداد | قیمت | جمع (Title | Quantity | Price | Total)
       const col1 = RECEIPT_WIDTH - MARGIN - 20; // عنوان (Title) - Rightmost
-      const col2 = RECEIPT_WIDTH - MARGIN - 100; // تعداد (Quantity) - 80px spacing from right (increased space for title)
-      const col3 = RECEIPT_WIDTH - MARGIN - 150; // قیمت (Price) - 50px spacing from right
-      const col4 = RECEIPT_WIDTH - MARGIN - 200; // جمع (Total) - 50px spacing from right
+      const col2 = RECEIPT_WIDTH - MARGIN - 120; // تعداد (Quantity) - 100px spacing from right (increased space for title by 20px)
+      const col3 = RECEIPT_WIDTH - MARGIN - 170; // قیمت (Price) - 50px spacing from right
+      const col4 = RECEIPT_WIDTH - MARGIN - 220; // جمع (Total) - 50px spacing from right
       
       ctx.fillText('عنوان', col1, y);
       ctx.fillText('تعداد', col2, y);
@@ -235,9 +235,9 @@ export default function ReceiptTemplate({
       
       // CORRECTED RTL Layout: عنوان | تعداد | قیمت | جمع (Title | Quantity | Price | Total)
       const col1 = RECEIPT_WIDTH - MARGIN - 20; // عنوان (Title) - Rightmost
-      const col2 = RECEIPT_WIDTH - MARGIN - 100; // تعداد (Quantity) - 80px spacing from right (increased space for title)
-      const col3 = RECEIPT_WIDTH - MARGIN - 150; // قیمت (Price) - 50px spacing from right
-      const col4 = RECEIPT_WIDTH - MARGIN - 200; // جمع (Total) - 50px spacing from right
+      const col2 = RECEIPT_WIDTH - MARGIN - 120; // تعداد (Quantity) - 100px spacing from right (increased space for title by 20px)
+      const col3 = RECEIPT_WIDTH - MARGIN - 170; // قیمت (Price) - 50px spacing from right
+      const col4 = RECEIPT_WIDTH - MARGIN - 220; // جمع (Total) - 50px spacing from right
       
       // Item name with text wrapping (right-aligned)
       ctx.textAlign = 'right';
