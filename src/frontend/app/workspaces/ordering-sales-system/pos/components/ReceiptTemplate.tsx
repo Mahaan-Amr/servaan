@@ -50,7 +50,7 @@ export default function ReceiptTemplate({
 
   // OPTIMIZED: Font sizes for direct printing
   const RECEIPT_WIDTH = 302; // 8cm width
-  const MARGIN = 13;
+  const MARGIN = 8; // Reduced from 13 to prevent overflow
   const LINE_HEIGHT = 20;
   const FONT_SIZE_LARGE = 16;
   const FONT_SIZE_MEDIUM = 14;
@@ -153,8 +153,8 @@ export default function ReceiptTemplate({
       const fontWeight = isBold ? 'bold' : 'normal';
       ctx.font = `${fontWeight} ${fontSize}px Tahoma, Arial, sans-serif`;
       
-      const rightMargin = MARGIN + 20;
-      const leftMargin = MARGIN + 20;
+      const rightMargin = MARGIN + 10; // Reduced from 20
+      const leftMargin = MARGIN + 10; // Reduced from 20
       
       // Label on the right (RTL)
       ctx.textAlign = 'right';
@@ -171,10 +171,10 @@ export default function ReceiptTemplate({
       ctx.font = `bold ${FONT_SIZE_SMALL}px Tahoma, Arial, sans-serif`;
       ctx.textAlign = 'center';
       
-      const col1 = MARGIN + 15; // جمع (Total)
-      const col2 = MARGIN + 75; // قیمت (Price)
-      const col3 = MARGIN + 135; // تعداد (Quantity)
-      const col4 = MARGIN + 240; // عنوان (Title)
+      const col1 = MARGIN + 10; // جمع (Total) - Rightmost
+      const col2 = MARGIN + 60; // قیمت (Price) - 50px spacing
+      const col3 = MARGIN + 110; // تعداد (Quantity) - 50px spacing
+      const col4 = MARGIN + 160; // عنوان (Title) - 50px spacing, more space for text
       
       ctx.fillText('جمع', col1, y);
       ctx.fillText('قیمت', col2, y);
@@ -186,26 +186,26 @@ export default function ReceiptTemplate({
     const drawRTLTableRow = (rowNum: number, itemName: string, quantity: number, totalPrice: number) => {
       ctx.font = `${FONT_SIZE_SMALL}px Tahoma, Arial, sans-serif`;
       
-      const col1 = MARGIN + 15; // جمع (Total)
-      const col2 = MARGIN + 75; // قیمت (Price)
-      const col3 = MARGIN + 135; // تعداد (Quantity)
-      const col4 = MARGIN + 240; // عنوان (Title)
+      const col1 = MARGIN + 10; // جمع (Total) - Rightmost
+      const col2 = MARGIN + 60; // قیمت (Price) - 50px spacing
+      const col3 = MARGIN + 110; // تعداد (Quantity) - 50px spacing
+      const col4 = MARGIN + 160; // عنوان (Title) - 50px spacing, more space for text
       
       // Total (right-aligned)
       ctx.textAlign = 'right';
-      ctx.fillText(formatPrice(totalPrice), col1 + 20, y);
+      ctx.fillText(formatPrice(totalPrice), col1 + 15, y);
       
       // Price (right-aligned)
       ctx.textAlign = 'right';
-      ctx.fillText(formatPrice(totalPrice / quantity), col2 + 20, y);
+      ctx.fillText(formatPrice(totalPrice / quantity), col2 + 15, y);
       
       // Quantity (center-aligned)
       ctx.textAlign = 'center';
       ctx.fillText(quantity.toString(), col3, y);
       
-      // Item name (right-aligned)
+      // Item name (right-aligned) - More space for longer names
       ctx.textAlign = 'right';
-      ctx.fillText(itemName, col4 + 15, y);
+      ctx.fillText(itemName, col4 + 20, y);
       
       y += LINE_HEIGHT;
     };
