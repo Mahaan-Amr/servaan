@@ -20,6 +20,10 @@ docker builder prune -f
 echo "🔨 Rebuilding admin frontend with no cache..."
 docker-compose -f docker-compose.prod.yml build --no-cache admin-frontend
 
+# Verify the standalone build was created
+echo "🔍 Verifying standalone build..."
+docker run --rm app-admin-frontend ls -la .next/standalone/ || echo "Standalone build not found!"
+
 # Start all containers
 echo "🚀 Starting all containers..."
 docker-compose -f docker-compose.prod.yml up -d
