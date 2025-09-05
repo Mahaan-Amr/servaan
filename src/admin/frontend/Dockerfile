@@ -58,13 +58,14 @@ RUN npm ci && \
     echo "Next.js version:" && \
     npx next --version
 
-# Copy built application
-COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/.next ./.next
-COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/next.config.js ./
+# Copy the standalone output (this is the key for standalone mode)
+COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/.next/standalone ./
 
-# Create public directory and copy static files for standalone mode
-RUN mkdir -p ./public
-COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/.next/static ./public/_next/static
+# Copy static files to the correct location for standalone mode
+COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/.next/static ./.next/static
+
+# Copy public directory if it exists
+COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/public ./public
 
 # Switch to non-root user
 USER nodejs
@@ -74,7 +75,7 @@ EXPOSE 3004
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3004', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
+  CMD node -e "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
 # Start the application using standalone server
-CMD ["dumb-init", "sh", "-c", "npm run start:standalone || echo 'Failed to start admin application'"]
+CMD ["dumb-init", "sh", "-c", "PORT=3000 node server.js || echo 'Failed to start admin application'"]
