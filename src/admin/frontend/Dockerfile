@@ -3,20 +3,16 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Copy package files
-COPY src/admin/frontend/package*.json ./
+COPY package*.json ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy the ENTIRE project structure to maintain consistency
+# Copy the admin frontend source code
 COPY . .
 
 # Debug: Show what we copied
 RUN echo "=== Contents of /app ===" && ls -la /app
-RUN echo "=== Contents of /app/src/admin/frontend ===" && ls -la /app/src/admin/frontend
-
-# Change to admin frontend directory for build
-WORKDIR /app/src/admin/frontend
 
 # CRITICAL: Set environment variables for build time
 # These will be embedded into the Next.js build
@@ -49,7 +45,7 @@ RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
 
 # Copy package files first for dependency installation
-COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/package*.json ./
+COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
 
 # Install all dependencies (some dev deps are needed for production)
 RUN npm ci && \
@@ -59,13 +55,13 @@ RUN npm ci && \
     npx next --version
 
 # Copy the standalone output (this is the key for standalone mode)
-COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/.next/standalone ./
+COPY --from=builder --chown=nodejs:nodejs /app/.next/standalone ./
 
 # Copy static files to the correct location for standalone mode
-COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/.next/static ./.next/static
+COPY --from=builder --chown=nodejs:nodejs /app/.next/static ./.next/static
 
 # Copy public directory if it exists
-COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/public ./public
+COPY --from=builder --chown=nodejs:nodejs /app/public ./public
 
 # Switch to non-root user
 USER nodejs
