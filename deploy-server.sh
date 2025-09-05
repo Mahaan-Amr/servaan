@@ -237,28 +237,172 @@ main() {
     fi
 
     echo
-    print_success "Deployment completed!"
+
+    # Update Nginx configuration for admin domain support
+    print_header "Updating Nginx Configuration for Admin Domain"
+    echo
+
+    print_status "Backing up current nginx configuration..."
+    if [ -f "/etc/nginx/sites-available/servaan" ]; then
+        cp /etc/nginx/sites-available/servaan /etc/nginx/sites-available/servaan.backup.$(date +%Y%m%d_%H%M%S)
+        print_success "Nginx backup created"
+    else
+        print_warning "No existing servaan nginx configuration found"
+    fi
+    echo
+
+    print_status "Creating updated nginx configuration with admin support..."
+    
+    # Create the new nginx configuration with admin support
+    cat > /etc/nginx/sites-available/servaan << 'EOF'
+# =============================================================================
+# سِروان (Servaan) Platform - Updated Nginx Configuration with Admin Support
+# =============================================================================
+
+# Main domain configuration (servaan.com)
+server {
+    listen 80;
+    server_name servaan.com www.servaan.com 94.182.177.74;
+    
+    # Frontend proxy
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 86400;
+    }
+    
+    # Backend API proxy
+    location /api/ {
+        proxy_pass http://127.0.0.1:3001/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # Health check
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+}
+
+# Admin domain configuration (admin.servaan.com)
+server {
+    listen 80;
+    server_name admin.servaan.com;
+    
+    # Admin frontend proxy
+    location / {
+        proxy_pass http://127.0.0.1:3004;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 86400;
+    }
+    
+    # Admin backend API proxy
+    location /api/ {
+        proxy_pass http://127.0.0.1:3003/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # Health check
+    location /health {
+        access_log off;
+        return 200 "admin healthy\n";
+        add_header Content-Type text/plain;
+    }
+}
+EOF
+
+    print_success "Updated nginx configuration created"
+    echo
+
+    print_status "Testing nginx configuration..."
+    if nginx -t; then
+        print_success "Nginx configuration test passed"
+    else
+        print_error "Nginx configuration test failed!"
+        echo "Restoring backup..."
+        if ls /etc/nginx/sites-available/servaan.backup.* 1> /dev/null 2>&1; then
+            cp /etc/nginx/sites-available/servaan.backup.* /etc/nginx/sites-available/servaan
+        fi
+        print_error "Nginx configuration failed - deployment aborted"
+        exit 1
+    fi
+    echo
+
+    print_status "Reloading nginx..."
+    if systemctl reload nginx; then
+        print_success "Nginx reloaded successfully"
+    else
+        print_error "Failed to reload nginx!"
+        exit 1
+    fi
+    echo
+
+    # Test domain routing
+    print_status "Testing domain routing..."
+    if curl -s -H "Host: servaan.com" http://localhost >/dev/null 2>&1; then
+        print_success "Main domain routing working"
+    else
+        print_warning "Main domain routing test failed (may still be starting)"
+    fi
+
+    if curl -s -H "Host: admin.servaan.com" http://localhost >/dev/null 2>&1; then
+        print_success "Admin domain routing working"
+    else
+        print_warning "Admin domain routing test failed (may still be starting)"
+    fi
+    echo
+
+    print_success "Deployment completed with admin domain support! 🎉"
     echo
     echo "📊 Next steps:"
     echo "1. Wait 2-3 minutes for all services to fully start"
-    echo "2. Test your application at: http://localhost:3000"
-    echo "3. Test admin panel at: http://localhost:3004"
-    echo "4. Verify API endpoints at: http://localhost:3001/api/health"
-    echo "5. Verify admin API at: http://localhost:3003/api/admin/health"
+    echo "2. Test your application at: https://servaan.com"
+    echo "3. Test admin panel at: https://admin.servaan.com"
+    echo "4. Verify API endpoints at: https://servaan.com/api/health"
+    echo "5. Verify admin API at: https://admin.servaan.com/api/admin/health"
     echo "6. Check container logs if needed: docker-compose logs"
     echo
     echo "🔧 If you encounter issues:"
     echo "- Check container logs: docker-compose logs [service-name]"
     echo "- Restart specific service: docker-compose restart [service-name]"
+    echo "- Check nginx logs: journalctl -u nginx -f"
     echo "- Rollback: Run rollback-server.sh"
     echo
     echo "🌐 Service URLs:"
-    echo "- Main Application: http://localhost:3000"
-    echo "- Admin Panel: http://localhost:3004"
-    echo "- Main API: http://localhost:3001/api"
-    echo "- Admin API: http://localhost:3003/api/admin"
+    echo "- Main Application: https://servaan.com"
+    echo "- Admin Panel: https://admin.servaan.com"
+    echo "- Main API: https://servaan.com/api"
+    echo "- Admin API: https://admin.servaan.com/api/admin"
     echo "- Database: localhost:5432"
     echo "- pgAdmin: http://localhost:5050"
+    echo
+    echo "🎯 Admin Domain Fix Applied:"
+    echo "- admin.servaan.com now routes to port 3004 (admin frontend)"
+    echo "- servaan.com continues to route to port 3000 (main frontend)"
+    echo "- Both domains have proper API routing configured"
     echo
 }
 

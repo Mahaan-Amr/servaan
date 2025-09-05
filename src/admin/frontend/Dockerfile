@@ -19,9 +19,9 @@ RUN echo "=== Contents of /app/src/admin/frontend ===" && ls -la /app/src/admin/
 WORKDIR /app/src/admin/frontend
 
 # CRITICAL: Set environment variables for build time
-ENV NEXT_PUBLIC_API_URL=https://servaan.com/api
-ENV NEXT_PUBLIC_ADMIN_API_URL=https://servaan.com/api/admin
-ENV NEXT_PUBLIC_APP_URL=https://servaan.com
+ENV NEXT_PUBLIC_API_URL=https://admin.servaan.com/api
+ENV NEXT_PUBLIC_ADMIN_API_URL=https://admin.servaan.com/api
+ENV NEXT_PUBLIC_APP_URL=https://admin.servaan.com
 
 # Build the application
 RUN npm run build

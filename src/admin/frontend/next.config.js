@@ -6,7 +6,7 @@ const nextConfig = {
       {
         source: '/api/:path*',
         destination: process.env.NODE_ENV === 'production' 
-          ? 'https://api.servaan.com/api/:path*'
+          ? 'https://admin.servaan.com/api/:path*'
           : 'http://localhost:3003/api/:path*',
       },
     ];
