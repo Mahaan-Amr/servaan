@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { RecipeService, CreateRecipeData, UpdateRecipeData, CreateRecipeIngredientData, UpdateRecipeIngredientData, RecipeFilterOptions } from '../services/recipeService';
 import { AppError } from '../utils/AppError';
-import { PrismaClient } from '../../shared/generated/client';
+import { PrismaClient } from '../../../shared/generated/client';
 
 const prisma = new PrismaClient();
 

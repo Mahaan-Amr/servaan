@@ -1,4 +1,4 @@
-import { PrismaClient, PaymentStatus, PaymentMethod, OrderStatus } from '../../shared/generated/client';
+import { PrismaClient, PaymentStatus, PaymentMethod, OrderStatus } from '../../../shared/generated/client';
 import { AppError } from '../utils/AppError';
 import { generatePaymentNumber } from '../utils/orderUtils';
 

@@ -1,6 +1,6 @@
 import { socketService } from './socketService';
 import { tableCacheService } from './tableCacheService';
-import { TableStatus } from '../../shared/generated/client';
+import { TableStatus } from '../../../shared/generated/client';
 
 // Real-time table event types
 export interface TableStatusUpdate {

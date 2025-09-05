@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../shared/generated/client';
+import { PrismaClient } from '../../../shared/generated/client';
 
 // Validate and log DATABASE_URL before creating client
 console.log('DATABASE_URL:', process.env.DATABASE_URL);

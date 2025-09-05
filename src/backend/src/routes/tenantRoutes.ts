@@ -1,5 +1,5 @@
 import express from 'express';
-import { PrismaClient, Prisma } from '../../shared/generated/client';
+import { PrismaClient, Prisma } from '../../../shared/generated/client';
 import { validateSubdomain } from '../middlewares/tenantMiddleware';
 
 const router = express.Router();

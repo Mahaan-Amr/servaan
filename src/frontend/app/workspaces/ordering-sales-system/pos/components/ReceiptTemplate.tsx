@@ -394,7 +394,7 @@ export default function ReceiptTemplate({
         margin: 0; 
         padding: 0; 
       }
-      body { 
+            body {
         margin: 0; 
         padding: 0; 
         background: white; 
@@ -513,4 +513,4 @@ export default function ReceiptTemplate({
       </div>
     </div>
   );
-}
+} 

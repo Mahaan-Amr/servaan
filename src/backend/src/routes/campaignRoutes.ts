@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { authenticate, authorize } from '../middlewares/authMiddleware';
 import { requireTenant } from '../middlewares/tenantMiddleware';
 import campaignService from '../services/campaignService';
-import { PrismaClient } from '../../shared/generated/client';
+import { PrismaClient } from '../../../shared/generated/client';
 
 const router = Router();
 const prisma = new PrismaClient();

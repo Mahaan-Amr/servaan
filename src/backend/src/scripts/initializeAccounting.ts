@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../shared/generated/client';
+import { PrismaClient } from '../../../shared/generated/client';
 import ChartOfAccountsService from '../services/chartOfAccountsService';
 
 const prisma = new PrismaClient();

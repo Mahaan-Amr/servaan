@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../services/dbService';
 import { z } from 'zod';
-import { InventoryEntryType } from '../../shared/types';
+import { InventoryEntryType } from '../../../shared/types';
 import { authenticate, authorize } from '../middlewares/authMiddleware';
 import { requireTenant } from '../middlewares/tenantMiddleware';
 import { notificationService } from '../services/notificationService';

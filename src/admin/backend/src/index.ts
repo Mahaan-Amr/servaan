@@ -1,10 +1,10 @@
-// Load environment variables from Docker environment (not hardcoded .env file)
-// import dotenv from 'dotenv';
-// import path from 'path';
+// Load environment variables from .env file for local development
+import dotenv from 'dotenv';
+import path from 'path';
 
-// dotenv.config({ 
-//   path: path.resolve(__dirname, '../.env')
-// });
+dotenv.config({ 
+  path: path.resolve(__dirname, '../.env')
+});
 
 // Debug: Log environment variables loading
 console.log('🔧 Admin Backend Environment variables loaded:');
