@@ -13,6 +13,12 @@ const nextConfig = {
   },
   // Enable output for production
   output: 'standalone',
+  // Debug: Log environment variables
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_ADMIN_API_URL: process.env.NEXT_PUBLIC_ADMIN_API_URL,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  },
 };
 
 module.exports = nextConfig;

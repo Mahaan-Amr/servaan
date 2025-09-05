@@ -19,9 +19,16 @@ RUN echo "=== Contents of /app/src/admin/frontend ===" && ls -la /app/src/admin/
 WORKDIR /app/src/admin/frontend
 
 # CRITICAL: Set environment variables for build time
+# These will be embedded into the Next.js build
 ENV NEXT_PUBLIC_API_URL=http://admin-backend:3003/api
 ENV NEXT_PUBLIC_ADMIN_API_URL=http://admin-backend:3003/api
 ENV NEXT_PUBLIC_APP_URL=https://admin.servaan.com
+
+# Debug: Show environment variables before build
+RUN echo "🔧 Build-time environment variables:"
+RUN echo "NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL"
+RUN echo "NEXT_PUBLIC_ADMIN_API_URL=$NEXT_PUBLIC_ADMIN_API_URL"
+RUN echo "NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL"
 
 # Build the application
 RUN npm run build
