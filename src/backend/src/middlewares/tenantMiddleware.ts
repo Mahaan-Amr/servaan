@@ -38,7 +38,7 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
     }
     
     // Skip tenant resolution for main domain or API endpoints
-    if (!subdomain || subdomain === 'www' || subdomain === 'api') {
+    if (!subdomain || subdomain === 'www' || subdomain === 'api' || subdomain === 'admin') {
       return next();
     }
 
