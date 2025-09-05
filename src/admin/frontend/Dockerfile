@@ -62,8 +62,9 @@ RUN npm ci && \
 COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/.next ./.next
 COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/next.config.js ./
 
-# Create empty public directory (since it's empty anyway)
+# Create public directory and copy static files for standalone mode
 RUN mkdir -p ./public
+COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/.next/static ./public/_next/static
 
 # Switch to non-root user
 USER nodejs
