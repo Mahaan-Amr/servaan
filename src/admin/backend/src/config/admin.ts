@@ -18,8 +18,8 @@ export const adminConfig = {
 
   // Admin Server Configuration
   server: {
-    port: parseInt(process.env['ADMIN_BACKEND_PORT'] || '3002'),
-    apiUrl: process.env['ADMIN_API_URL'] || 'http://localhost:3002/api',
+    port: parseInt(process.env['ADMIN_BACKEND_PORT'] || '3003'),
+    apiUrl: process.env['ADMIN_API_URL'] || 'http://localhost:3003/api',
     environment: process.env['NODE_ENV'] || 'development'
   },
 
