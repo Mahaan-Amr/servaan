@@ -3,16 +3,20 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY src/admin/frontend/package*.json ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy the admin frontend source code
+# Copy the ENTIRE project structure to maintain consistency
 COPY . .
 
 # Debug: Show what we copied
 RUN echo "=== Contents of /app ===" && ls -la /app
+RUN echo "=== Contents of /app/src/admin/frontend ===" && ls -la /app/src/admin/frontend
+
+# Change to admin frontend directory for build
+WORKDIR /app/src/admin/frontend
 
 # CRITICAL: Set environment variables for build time
 # These will be embedded into the Next.js build
@@ -45,7 +49,7 @@ RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
 
 # Copy package files first for dependency installation
-COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
+COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/package*.json ./
 
 # Install all dependencies (some dev deps are needed for production)
 RUN npm ci && \
@@ -54,15 +58,10 @@ RUN npm ci && \
     echo "Next.js version:" && \
     npx next --version
 
-# Copy the standalone output (this is the key for standalone mode)
-COPY --from=builder --chown=nodejs:nodejs /app/.next/standalone ./
-
-# Copy static files to the correct location for standalone mode
-COPY --from=builder --chown=nodejs:nodejs /app/.next/static ./.next/static
-
-# Copy public directory if it exists
-RUN mkdir -p ./public
-COPY --from=builder --chown=nodejs:nodejs /app/public ./public
+# Copy built application (following main frontend pattern)
+COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/.next ./.next
+COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/public ./public
+COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/next.config.js ./
 
 # Switch to non-root user
 USER nodejs
@@ -72,7 +71,7 @@ EXPOSE 3004
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
+  CMD node -e "require('http').get('http://localhost:3004', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
-# Start the application using standalone server
-CMD ["dumb-init", "sh", "-c", "PORT=3000 node server.js || echo 'Failed to start admin application'"]
+# Start the application with better error handling (following main frontend pattern)
+CMD ["dumb-init", "sh", "-c", "npm start || echo 'Failed to start admin application'"]

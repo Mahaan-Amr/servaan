@@ -119,8 +119,8 @@ services:
 
   admin-frontend:
     build:
-      context: src/admin/frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: src/admin/frontend/Dockerfile
     container_name: servaan-admin-frontend-prod
     restart: unless-stopped
     environment:
