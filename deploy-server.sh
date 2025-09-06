@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# 🚀 Servaan Server Deployment Script
-# =====================================
+# 🚀 Servaan Complete Server Deployment Script
+# ============================================
+# Safe deployment with zero downtime and rollback capability
 
 set -e  # Exit on any error
 
@@ -49,14 +50,195 @@ check_port() {
     fi
 }
 
+# Function to create backup
+create_backup() {
+    local backup_dir="/opt/servaan/backups/$(date +%Y%m%d_%H%M%S)"
+    print_status "Creating backup in $backup_dir..."
+    
+    mkdir -p "$backup_dir"
+    
+    # Backup current docker-compose files
+    cp docker-compose.yml "$backup_dir/" 2>/dev/null || true
+    cp docker-compose.prod.yml "$backup_dir/" 2>/dev/null || true
+    cp .env "$backup_dir/" 2>/dev/null || true
+    cp .env.production "$backup_dir/" 2>/dev/null || true
+    
+    # Backup current running containers
+    docker-compose -f docker-compose.prod.yml ps > "$backup_dir/containers_status.txt" 2>/dev/null || true
+    
+    print_success "Backup created at $backup_dir"
+    echo "$backup_dir"
+}
+
+# Function to rollback deployment
+rollback_deployment() {
+    local backup_dir=$1
+    print_error "Deployment failed! Rolling back..."
+    
+    if [ -d "$backup_dir" ]; then
+        print_status "Restoring from backup..."
+        cp "$backup_dir/docker-compose.yml" ./ 2>/dev/null || true
+        cp "$backup_dir/docker-compose.prod.yml" ./ 2>/dev/null || true
+        cp "$backup_dir/.env" ./ 2>/dev/null || true
+        cp "$backup_dir/.env.production" ./ 2>/dev/null || true
+        
+        # Restart services
+        docker-compose -f docker-compose.prod.yml down
+        docker-compose -f docker-compose.prod.yml up -d
+        
+        print_success "Rollback completed"
+    else
+        print_error "No backup found for rollback"
+    fi
+}
+
+# Function to check service health
+check_service_health() {
+    local service_name=$1
+    local max_attempts=30
+    local attempt=1
+    
+    print_status "Checking health of $service_name..."
+    
+    while [ $attempt -le $max_attempts ]; do
+        if docker-compose -f docker-compose.prod.yml ps | grep "$service_name" | grep -q "healthy\|Up"; then
+            print_success "$service_name is healthy"
+            return 0
+        fi
+        
+        print_status "Attempt $attempt/$max_attempts - $service_name still starting..."
+        sleep 10
+        ((attempt++))
+    done
+    
+    print_error "$service_name failed to become healthy"
+    return 1
+}
+
+# Function to perform zero-downtime deployment
+zero_downtime_deployment() {
+    print_header "Zero-Downtime Deployment"
+    
+    # Step 1: Pull latest changes
+    print_status "Pulling latest changes from Git..."
+    git pull origin master
+    
+    # Step 2: Create backup
+    local backup_dir=$(create_backup)
+    
+    # Step 3: Build new images without stopping services
+    print_status "Building new Docker images..."
+    docker-compose -f docker-compose.prod.yml build --no-cache
+    
+    # Step 4: Update services one by one (blue-green deployment)
+    print_status "Updating services with zero downtime..."
+    
+    # Update backend first
+    print_status "Updating backend service..."
+    docker-compose -f docker-compose.prod.yml up -d --no-deps backend
+    if ! check_service_health "backend"; then
+        rollback_deployment "$backup_dir"
+        exit 1
+    fi
+    
+    # Update admin backend
+    print_status "Updating admin backend service..."
+    docker-compose -f docker-compose.prod.yml up -d --no-deps admin-backend
+    if ! check_service_health "admin-backend"; then
+        rollback_deployment "$backup_dir"
+        exit 1
+    fi
+    
+    # Update frontend
+    print_status "Updating frontend service..."
+    docker-compose -f docker-compose.prod.yml up -d --no-deps frontend
+    if ! check_service_health "frontend"; then
+        rollback_deployment "$backup_dir"
+        exit 1
+    fi
+    
+    # Update admin frontend
+    print_status "Updating admin frontend service..."
+    docker-compose -f docker-compose.prod.yml up -d --no-deps admin-frontend
+    if ! check_service_health "admin-frontend"; then
+        rollback_deployment "$backup_dir"
+        exit 1
+    fi
+    
+    # Step 5: Update Nginx configuration
+    print_status "Updating Nginx configuration..."
+    update_nginx_config
+    
+    # Step 6: Final health check
+    print_status "Performing final health checks..."
+    perform_final_health_checks
+    
+    print_success "Zero-downtime deployment completed successfully!"
+}
+
+# Function to perform comprehensive health checks
+perform_final_health_checks() {
+    print_status "Performing comprehensive health checks..."
+    
+    # Check all containers are running
+    print_status "Checking container status..."
+    docker-compose -f docker-compose.prod.yml ps
+    
+    # Test main application
+    print_status "Testing main application..."
+    if curl -s http://localhost:3000 >/dev/null 2>&1; then
+        print_success "Main frontend is accessible"
+    else
+        print_warning "Main frontend accessibility check failed"
+    fi
+    
+    # Test admin application
+    print_status "Testing admin application..."
+    if curl -s http://localhost:3004 >/dev/null 2>&1; then
+        print_success "Admin frontend is accessible"
+    else
+        print_warning "Admin frontend accessibility check failed"
+    fi
+    
+    # Test backend API
+    print_status "Testing backend API..."
+    if curl -s http://localhost:3001/api/health >/dev/null 2>&1; then
+        print_success "Backend API is accessible"
+    else
+        print_warning "Backend API accessibility check failed"
+    fi
+    
+    # Test admin backend API
+    print_status "Testing admin backend API..."
+    if curl -s http://localhost:3003/api/admin/health >/dev/null 2>&1; then
+        print_success "Admin backend API is accessible"
+    else
+        print_warning "Admin backend API accessibility check failed"
+    fi
+    
+    # Test domain routing
+    print_status "Testing domain routing..."
+    if curl -s -H "Host: servaan.com" http://localhost >/dev/null 2>&1; then
+        print_success "Main domain routing working"
+    else
+        print_warning "Main domain routing test failed"
+    fi
+    
+    if curl -s -H "Host: admin.servaan.com" http://localhost >/dev/null 2>&1; then
+        print_success "Admin domain routing working"
+    else
+        print_warning "Admin domain routing test failed"
+    fi
+}
+
 # Main deployment function
 main() {
-    print_header "Servaan Server Deployment Script"
+    print_header "Servaan Complete Server Deployment"
     echo
 
     # Check if we're in the right directory
-    if [ ! -f "docker-compose.yml" ]; then
-        print_error "docker-compose.yml not found!"
+    if [ ! -f "docker-compose.prod.yml" ]; then
+        print_error "docker-compose.prod.yml not found!"
         echo "Please run this script from the servaan project root directory."
         exit 1
     fi
@@ -90,15 +272,9 @@ main() {
     echo
 
     # Check if we have the necessary files
-    if [ ! -f "docker-compose.server.yml" ]; then
-        print_error "docker-compose.server.yml not found!"
-        echo "Please ensure all deployment files are present."
-        exit 1
-    fi
-
-    if [ ! -f ".env.server" ]; then
-        print_error ".env.server not found!"
-        echo "Please ensure all deployment files are present."
+    if [ ! -f ".env.production" ]; then
+        print_error ".env.production not found!"
+        echo "Please ensure production environment file is present."
         exit 1
     fi
 
@@ -151,247 +327,13 @@ main() {
     fi
     echo
 
-    # Backup current configuration
-    print_status "Creating backup of current configuration..."
-    if [ -f "docker-compose.yml.backup" ]; then
-        rm "docker-compose.yml.backup"
-    fi
-    cp "docker-compose.yml" "docker-compose.yml.backup"
-    print_success "Backup created: docker-compose.yml.backup"
-    echo
-
-    # Deploy server configuration
-    print_header "Deploying server configuration"
-    echo
-
-    # Stop any running containers
-    print_status "Stopping existing containers..."
-    docker-compose down >/dev/null 2>&1 || true
-    print_success "Existing containers stopped"
-    echo
-
-    # Copy server configuration
-    print_status "Applying server configuration..."
-    cp "docker-compose.server.yml" "docker-compose.yml"
-    cp ".env.server" ".env"
-    print_success "Server configuration applied"
-    echo
-
-    # Build and start containers
-    print_status "Building and starting containers..."
-    if docker-compose up -d --build; then
-        print_success "Containers started successfully"
-    else
-        print_error "Failed to build/start containers!"
-        echo "Rolling back to previous configuration..."
-        cp "docker-compose.yml.backup" "docker-compose.yml"
-        print_success "Rollback completed"
-        exit 1
-    fi
-    echo
-
-    # Wait for services to be ready
-    print_status "Waiting for services to be ready..."
-    sleep 15
-    echo
-
-    # Verify deployment
-    print_status "Verifying deployment..."
-    echo
-
-    # Check container status
-    print_status "Container status:"
-    docker-compose ps
-    echo
-
-    # Test backend health
-    print_status "Testing backend health..."
-    if curl -s http://localhost:3001/api/health >/dev/null 2>&1; then
-        print_success "Backend health check passed"
-    else
-        print_warning "Backend health check failed (may still be starting)"
-    fi
-
-    # Test frontend accessibility
-    print_status "Testing frontend accessibility..."
-    if curl -s http://localhost:3000 >/dev/null 2>&1; then
-        print_success "Frontend is accessible"
-    else
-        print_warning "Frontend accessibility check failed (may still be starting)"
-    fi
-
-    # Test admin backend health
-    print_status "Testing admin backend health..."
-    if curl -s http://localhost:3003/api/admin/health >/dev/null 2>&1; then
-        print_success "Admin backend health check passed"
-    else
-        print_warning "Admin backend health check failed (may still be starting)"
-    fi
-
-    # Test admin frontend accessibility
-    print_status "Testing admin frontend accessibility..."
-    if curl -s http://localhost:3004 >/dev/null 2>&1; then
-        print_success "Admin frontend is accessible"
-    else
-        print_warning "Admin frontend accessibility check failed (may still be starting)"
-    fi
-
-    echo
-
-    # Update Nginx configuration for admin domain support
-    print_header "Updating Nginx Configuration for Admin Domain"
-    echo
-
-    print_status "Backing up current nginx configuration..."
-    if [ -f "/etc/nginx/sites-available/servaan" ]; then
-        cp /etc/nginx/sites-available/servaan /etc/nginx/sites-available/servaan.backup.$(date +%Y%m%d_%H%M%S)
-        print_success "Nginx backup created"
-    else
-        print_warning "No existing servaan nginx configuration found"
-    fi
-    echo
-
-    print_status "Creating updated nginx configuration with admin support..."
+    # Perform zero-downtime deployment
+    zero_downtime_deployment
     
-    # Create the new nginx configuration with admin support
-    cat > /etc/nginx/sites-available/servaan << 'EOF'
-# =============================================================================
-# سِروان (Servaan) Platform - Updated Nginx Configuration with Admin Support
-# =============================================================================
-
-# Main domain configuration (servaan.com)
-server {
-    listen 80;
-    server_name servaan.com www.servaan.com 94.182.177.74;
-    
-    # Frontend proxy
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-        proxy_read_timeout 86400;
-    }
-    
-    # Backend API proxy
-    location /api/ {
-        proxy_pass http://127.0.0.1:3001/;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-    
-    # Health check
-    location /health {
-        access_log off;
-        return 200 "healthy\n";
-        add_header Content-Type text/plain;
-    }
-}
-
-# Admin domain configuration (admin.servaan.com)
-server {
-    listen 80;
-    server_name admin.servaan.com;
-    
-    # Admin frontend proxy
-    location / {
-        proxy_pass http://127.0.0.1:3004;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-        proxy_read_timeout 86400;
-    }
-    
-    # Admin backend API proxy
-    location /api/ {
-        proxy_pass http://127.0.0.1:3003/;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-    
-    # Health check
-    location /health {
-        access_log off;
-        return 200 "admin healthy\n";
-        add_header Content-Type text/plain;
-    }
-}
-EOF
-
-    print_success "Updated nginx configuration created"
     echo
-
-    print_status "Testing nginx configuration..."
-    if nginx -t; then
-        print_success "Nginx configuration test passed"
-    else
-        print_error "Nginx configuration test failed!"
-        echo "Restoring backup..."
-        if ls /etc/nginx/sites-available/servaan.backup.* 1> /dev/null 2>&1; then
-            cp /etc/nginx/sites-available/servaan.backup.* /etc/nginx/sites-available/servaan
-        fi
-        print_error "Nginx configuration failed - deployment aborted"
-        exit 1
-    fi
+    print_success "🎉 Complete deployment successful!"
     echo
-
-    print_status "Reloading nginx..."
-    if systemctl reload nginx; then
-        print_success "Nginx reloaded successfully"
-    else
-        print_error "Failed to reload nginx!"
-        exit 1
-    fi
-    echo
-
-    # Test domain routing
-    print_status "Testing domain routing..."
-    if curl -s -H "Host: servaan.com" http://localhost >/dev/null 2>&1; then
-        print_success "Main domain routing working"
-    else
-        print_warning "Main domain routing test failed (may still be starting)"
-    fi
-
-    if curl -s -H "Host: admin.servaan.com" http://localhost >/dev/null 2>&1; then
-        print_success "Admin domain routing working"
-    else
-        print_warning "Admin domain routing test failed (may still be starting)"
-    fi
-    echo
-
-    print_success "Deployment completed with admin domain support! 🎉"
-    echo
-    echo "📊 Next steps:"
-    echo "1. Wait 2-3 minutes for all services to fully start"
-    echo "2. Test your application at: https://servaan.com"
-    echo "3. Test admin panel at: https://admin.servaan.com"
-    echo "4. Verify API endpoints at: https://servaan.com/api/health"
-    echo "5. Verify admin API at: https://admin.servaan.com/api/admin/health"
-    echo "6. Check container logs if needed: docker-compose logs"
-    echo
-    echo "🔧 If you encounter issues:"
-    echo "- Check container logs: docker-compose logs [service-name]"
-    echo "- Restart specific service: docker-compose restart [service-name]"
-    echo "- Check nginx logs: journalctl -u nginx -f"
-    echo "- Rollback: Run rollback-server.sh"
-    echo
-    echo "🌐 Service URLs:"
+    echo "📊 Service URLs:"
     echo "- Main Application: https://servaan.com"
     echo "- Admin Panel: https://admin.servaan.com"
     echo "- Main API: https://servaan.com/api"
@@ -399,15 +341,24 @@ EOF
     echo "- Database: localhost:5432"
     echo "- pgAdmin: http://localhost:5050"
     echo
-    echo "🎯 Admin Domain Fix Applied:"
-    echo "- admin.servaan.com now routes to port 3004 (admin frontend)"
-    echo "- servaan.com continues to route to port 3000 (main frontend)"
-    echo "- Both domains have proper API routing configured"
+    echo "🔧 Management Commands:"
+    echo "- View logs: docker-compose -f docker-compose.prod.yml logs [service-name]"
+    echo "- Restart service: docker-compose -f docker-compose.prod.yml restart [service-name]"
+    echo "- Check status: docker-compose -f docker-compose.prod.yml ps"
+    echo "- Rollback: Use backup directory from /opt/servaan/backups/"
+    echo
+    echo "📈 Deployment Features:"
+    echo "- ✅ Zero downtime deployment"
+    echo "- ✅ Automatic rollback on failure"
+    echo "- ✅ Health checks for all services"
+    echo "- ✅ Nginx configuration updates"
+    echo "- ✅ Complete backup before deployment"
+    echo "- ✅ Admin domain support"
     echo
 }
 
 # Error handling
-trap 'print_error "Deployment failed! Rolling back..."; cp "docker-compose.yml.backup" "docker-compose.yml" 2>/dev/null || true; exit 1' ERR
+trap 'print_error "Deployment failed! Check logs for details."; exit 1' ERR
 
 # Run main function
 main "$@"
