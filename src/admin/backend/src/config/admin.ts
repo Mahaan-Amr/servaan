@@ -39,7 +39,7 @@ export const adminConfig = {
 
   // Admin CORS Configuration
   cors: {
-    allowedOrigins: (process.env['ADMIN_CORS_ORIGINS'] || 'http://localhost:3004,http://localhost:3003,http://admin.localhost:3003,https://admin.servaan.com').split(',')
+    allowedOrigins: (process.env['ADMIN_CORS_ORIGINS'] || 'http://localhost:3004,http://localhost:3003,http://admin.localhost:3003,http://admin.localhost:3004,https://admin.servaan.com').split(',')
   },
 
   // Admin Rate Limiting Configuration

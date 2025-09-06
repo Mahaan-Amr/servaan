@@ -102,7 +102,7 @@ services:
       - DATABASE_URL=postgresql://servaan:${DB_PASSWORD}@postgres:5432/servaan_prod
       - ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET}
       - ADMIN_BACKEND_PORT=3003
-      - ADMIN_CORS_ORIGINS=https://admin.servaan.com,https://*.servaan.com
+      - ADMIN_CORS_ORIGINS=https://admin.servaan.com,https://*.servaan.com,http://admin.localhost:3004,http://localhost:3004
     ports:
       - "3003:3003"
     depends_on:
