@@ -60,11 +60,11 @@ RUN npm ci && \
 
 # Copy built application (following main frontend pattern)
 COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/.next ./.next
+COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/public ./public
 COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/next.config.js ./
 
-# Copy public directory if it exists (create empty if not)
-RUN mkdir -p ./public
-COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/public ./public
+# Ensure static assets are explicitly copied (ChatGPT's fix)
+COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/.next/static ./.next/static
 
 # Switch to non-root user
 USER nodejs
@@ -76,5 +76,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
-# Start the application in standalone mode (fixed)
-CMD ["dumb-init", "sh", "-c", "PORT=3000 node .next/standalone/server.js || echo 'Failed to start admin application'"]
+# Start the application with better error handling (following main frontend pattern)
+CMD ["dumb-init", "sh", "-c", "npm start || echo 'Failed to start admin application'"]

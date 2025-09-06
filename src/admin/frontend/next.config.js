@@ -11,8 +11,8 @@ const nextConfig = {
       },
     ];
   },
-  // Enable output for production
-  output: 'standalone',
+  // Remove standalone mode to match main frontend pattern
+  // output: 'standalone',
 };
 
 module.exports = nextConfig;
