@@ -60,8 +60,11 @@ RUN npm ci && \
 
 # Copy built application (following main frontend pattern)
 COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/.next ./.next
-COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/public ./public
 COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/next.config.js ./
+
+# Copy public directory if it exists (create empty if not)
+RUN mkdir -p ./public
+COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/public ./public
 
 # Switch to non-root user
 USER nodejs
