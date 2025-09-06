@@ -76,5 +76,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
-# Start the application with better error handling (following main frontend pattern)
-CMD ["dumb-init", "sh", "-c", "npm start || echo 'Failed to start admin application'"]
+# Start the application on port 3000 (matches docker-compose mapping)
+CMD ["dumb-init", "sh", "-c", "PORT=3000 npm start || echo 'Failed to start admin application'"]
