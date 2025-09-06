@@ -2,7 +2,10 @@ import axios from 'axios';
 import { AdminUser, AdminLoginRequest, AdminLoginResponse, AdminRole } from '@/types/admin';
 
 // Admin API Configuration
-const ADMIN_API_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:3003/api';
+// Use local development URL when running locally, production URL otherwise
+const ADMIN_API_URL = process.env.NODE_ENV === 'development' 
+  ? 'http://localhost:3003/api'
+  : (process.env.NEXT_PUBLIC_ADMIN_API_URL || 'http://localhost:3003/api');
 
 // Create axios instance for admin API
 const adminApi = axios.create({
