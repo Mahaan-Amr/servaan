@@ -69,12 +69,12 @@ COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/public ./publi
 # Switch to non-root user
 USER nodejs
 
-# Expose port 3004 for admin frontend
-EXPOSE 3004
+# Expose port 3000 for admin frontend (matches docker-compose mapping)
+EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3004', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
+  CMD node -e "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
 # Start the application in standalone mode (fixed)
-CMD ["dumb-init", "sh", "-c", "PORT=3004 node .next/standalone/server.js || echo 'Failed to start admin application'"]
+CMD ["dumb-init", "sh", "-c", "PORT=3000 node .next/standalone/server.js || echo 'Failed to start admin application'"]
