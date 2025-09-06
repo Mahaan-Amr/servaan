@@ -76,5 +76,5 @@ EXPOSE 3004
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3004', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
-# Start the application with better error handling (following main frontend pattern)
-CMD ["dumb-init", "sh", "-c", "npm start || echo 'Failed to start admin application'"]
+# Start the application in standalone mode (fixed)
+CMD ["dumb-init", "sh", "-c", "PORT=3004 node .next/standalone/server.js || echo 'Failed to start admin application'"]
