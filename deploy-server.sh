@@ -5,6 +5,8 @@
 # Safe deployment with zero downtime and rollback capability
 
 set -e  # Exit on any error
+# Force compose to use the production env file consistently
+ENV_FILE="--env-file .env.production"
 
 # Colors for output
 RED='\033[0;31m'
@@ -64,7 +66,7 @@ create_backup() {
     cp .env.production "$backup_dir/" 2>/dev/null || true
     
     # Backup current running containers
-    docker-compose -f docker-compose.prod.yml ps > "$backup_dir/containers_status.txt" 2>/dev/null || true
+    docker-compose $ENV_FILE -f docker-compose.prod.yml ps > "$backup_dir/containers_status.txt" 2>/dev/null || true
     
     print_success "Backup created at $backup_dir"
     echo "$backup_dir"
@@ -83,8 +85,8 @@ rollback_deployment() {
         cp "$backup_dir/.env.production" ./ 2>/dev/null || true
         
         # Restart services
-        docker-compose -f docker-compose.prod.yml down
-        docker-compose -f docker-compose.prod.yml up -d
+        docker-compose $ENV_FILE -f docker-compose.prod.yml down
+        docker-compose $ENV_FILE -f docker-compose.prod.yml up -d
         
         print_success "Rollback completed"
     else
@@ -101,7 +103,7 @@ check_service_health() {
     print_status "Checking health of $service_name..."
     
     while [ $attempt -le $max_attempts ]; do
-        if docker-compose -f docker-compose.prod.yml ps | grep "$service_name" | grep -q "healthy\|Up"; then
+        if docker-compose $ENV_FILE -f docker-compose.prod.yml ps | grep "$service_name" | grep -q "healthy\|Up"; then
             print_success "$service_name is healthy"
             return 0
         fi
@@ -128,14 +130,14 @@ zero_downtime_deployment() {
     
     # Step 3: Build new images without stopping services
     print_status "Building new Docker images..."
-    docker-compose -f docker-compose.prod.yml build --no-cache
+    docker-compose $ENV_FILE -f docker-compose.prod.yml build --no-cache
     
     # Step 4: Update services one by one (blue-green deployment)
     print_status "Updating services with zero downtime..."
     
     # Update backend first
     print_status "Updating backend service..."
-    docker-compose -f docker-compose.prod.yml up -d --no-deps backend
+    docker-compose $ENV_FILE -f docker-compose.prod.yml up -d --no-deps backend
     if ! check_service_health "backend"; then
         rollback_deployment "$backup_dir"
         exit 1
@@ -143,15 +145,20 @@ zero_downtime_deployment() {
     
     # Update admin backend
     print_status "Updating admin backend service..."
-    docker-compose -f docker-compose.prod.yml up -d --no-deps admin-backend
+    docker-compose $ENV_FILE -f docker-compose.prod.yml up -d --no-deps admin-backend
     if ! check_service_health "admin-backend"; then
         rollback_deployment "$backup_dir"
         exit 1
     fi
+
+    # Run Prisma migrations after admin-backend is healthy
+    print_status "Running Prisma migrations (admin-backend)..."
+    docker-compose $ENV_FILE -f docker-compose.prod.yml exec admin-backend sh -lc "npx prisma migrate deploy --schema prisma/schema.prisma" || {
+        rollback_deployment "$backup_dir"; exit 1; }
     
     # Update frontend
     print_status "Updating frontend service..."
-    docker-compose -f docker-compose.prod.yml up -d --no-deps frontend
+    docker-compose $ENV_FILE -f docker-compose.prod.yml up -d --no-deps frontend
     if ! check_service_health "frontend"; then
         rollback_deployment "$backup_dir"
         exit 1
@@ -159,15 +166,15 @@ zero_downtime_deployment() {
     
     # Update admin frontend
     print_status "Updating admin frontend service..."
-    docker-compose -f docker-compose.prod.yml up -d --no-deps admin-frontend
+    docker-compose $ENV_FILE -f docker-compose.prod.yml up -d --no-deps admin-frontend
     if ! check_service_health "admin-frontend"; then
         rollback_deployment "$backup_dir"
         exit 1
     fi
     
     # Step 5: Update Nginx configuration
-    print_status "Updating Nginx configuration..."
-    update_nginx_config
+    # Nginx configuration (no Nginx service in compose). Skipping.
+    print_status "Nginx configuration update: skipped (no Nginx service)."
     
     # Step 6: Final health check
     print_status "Performing final health checks..."
@@ -182,7 +189,7 @@ perform_final_health_checks() {
     
     # Check all containers are running
     print_status "Checking container status..."
-    docker-compose -f docker-compose.prod.yml ps
+    docker-compose $ENV_FILE -f docker-compose.prod.yml ps
     
     # Test main application
     print_status "Testing main application..."
@@ -342,9 +349,9 @@ main() {
     echo "- pgAdmin: http://localhost:5050"
     echo
     echo "🔧 Management Commands:"
-    echo "- View logs: docker-compose -f docker-compose.prod.yml logs [service-name]"
-    echo "- Restart service: docker-compose -f docker-compose.prod.yml restart [service-name]"
-    echo "- Check status: docker-compose -f docker-compose.prod.yml ps"
+    echo "- View logs: docker-compose $ENV_FILE -f docker-compose.prod.yml logs [service-name]"
+    echo "- Restart service: docker-compose $ENV_FILE -f docker-compose.prod.yml restart [service-name]"
+    echo "- Check status: docker-compose $ENV_FILE -f docker-compose.prod.yml ps"
     echo "- Rollback: Use backup directory from /opt/servaan/backups/"
     echo
     echo "📈 Deployment Features:"

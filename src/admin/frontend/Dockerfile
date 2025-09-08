@@ -18,11 +18,13 @@ RUN echo "=== Contents of /app/src/admin/frontend ===" && ls -la /app/src/admin/
 # Change to admin frontend directory for build
 WORKDIR /app/src/admin/frontend
 
-# CRITICAL: Set environment variables for build time
-# These will be embedded into the Next.js build
-ENV NEXT_PUBLIC_API_URL=https://admin.servaan.com/api
-ENV NEXT_PUBLIC_ADMIN_API_URL=https://admin.servaan.com/api
-ENV NEXT_PUBLIC_APP_URL=https://admin.servaan.com
+# Build-time environment variables (injected via build args from compose)
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_ADMIN_API_URL
+ARG NEXT_PUBLIC_APP_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_PUBLIC_ADMIN_API_URL=${NEXT_PUBLIC_ADMIN_API_URL}
+ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
 
 # Debug: Show environment variables before build
 RUN echo "🔧 Build-time environment variables:"
@@ -30,11 +32,8 @@ RUN echo "NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL"
 RUN echo "NEXT_PUBLIC_ADMIN_API_URL=$NEXT_PUBLIC_ADMIN_API_URL"
 RUN echo "NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL"
 
-# Build the application with explicit environment variables
-RUN NEXT_PUBLIC_API_URL=https://admin.servaan.com/api \
-    NEXT_PUBLIC_ADMIN_API_URL=https://admin.servaan.com/api \
-    NEXT_PUBLIC_APP_URL=https://admin.servaan.com \
-    npm run build
+# Build the application (envs already set above)
+RUN npm run build
 
 # Production stage
 FROM node:18-alpine AS runner

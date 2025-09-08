@@ -124,6 +124,10 @@ services:
     build:
       context: .
       dockerfile: src/admin/frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_ADMIN_API_URL}
+        NEXT_PUBLIC_ADMIN_API_URL: ${NEXT_PUBLIC_ADMIN_API_URL}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
     container_name: servaan-admin-frontend-server
     restart: unless-stopped
     environment:
@@ -132,7 +136,7 @@ services:
       - NEXT_PUBLIC_ADMIN_API_URL=${NEXT_PUBLIC_ADMIN_API_URL}
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
     ports:
-      - "3004:3004"
+      - "3004:3000"
     depends_on:
       admin-backend:
         condition: service_healthy
