@@ -10,9 +10,31 @@ set -e  # Exit on any error
 BACKUP_DIR="/opt/servaan/backups"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 BACKUP_NAME="servaan_server_backup_${TIMESTAMP}"
-DB_NAME="servaan_prod"
-DB_USER="servaan"
-DB_CONTAINER="servaan-postgres-server"
+DB_NAME="${DB_NAME:-servaan_prod}"
+DB_USER="${DB_USER:-servaan}"
+# Auto-detect Postgres container if not provided
+DB_CONTAINER="${DB_CONTAINER:-}"
+RETENTION_DAYS="${RETENTION_DAYS:-30}"
+REQUIRED_SPACE_KB="${REQUIRED_SPACE_KB:-1000000}" # 1GB in KB
+
+# Candidate container names (in order of likelihood)
+CONTAINER_CANDIDATES=(
+  "servaan-postgres-prod"
+  "servaan-postgres-server"
+  "servaan-postgres"
+)
+
+resolve_db_container() {
+  if [ -n "$DB_CONTAINER" ]; then
+    return 0
+  fi
+  for name in "${CONTAINER_CANDIDATES[@]}"; do
+    if docker ps --format '{{.Names}}' | grep -q "^${name}$"; then
+      DB_CONTAINER="$name"
+      break
+    fi
+  done
+}
 
 # Colors for output
 RED='\033[0;31m'
@@ -56,27 +78,24 @@ if ! docker info > /dev/null 2>&1; then
     exit 1
 fi
 
+# Resolve DB container automatically if not set
+resolve_db_container
+
 # Check if database container is running
 log "Checking database container status..."
-if ! docker ps | grep -q "$DB_CONTAINER"; then
-    error "Database container $DB_CONTAINER is not running"
+if [ -z "$DB_CONTAINER" ] || ! docker ps --format '{{.Names}}' | grep -q "^${DB_CONTAINER}$"; then
+    error "Database container not found or not running"
     echo "Available containers:"
     docker ps --format "table {{.Names}}\t{{.Status}}"
     exit 1
 fi
+log "Using database container: $DB_CONTAINER"
 
-# Check available disk space
+# Check available disk space (non-interactive)
 log "Checking available disk space..."
 AVAILABLE_SPACE=$(df "$BACKUP_DIR" | awk 'NR==2 {print $4}')
-REQUIRED_SPACE=1000000  # 1GB in KB
-if [ "$AVAILABLE_SPACE" -lt "$REQUIRED_SPACE" ]; then
-    warning "Low disk space. Available: ${AVAILABLE_SPACE}KB, Required: ${REQUIRED_SPACE}KB"
-    read -p "Continue anyway? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        log "Backup cancelled by user"
-        exit 1
-    fi
+if [ -n "$AVAILABLE_SPACE" ] && [ "$AVAILABLE_SPACE" -lt "$REQUIRED_SPACE_KB" ]; then
+    warning "Low disk space. Available: ${AVAILABLE_SPACE}KB, Required: ${REQUIRED_SPACE_KB}KB. Proceeding anyway."
 fi
 
 # Start backup process
@@ -242,7 +261,27 @@ else
     exit 1
 fi
 
-# 7. Final summary
+# 7. Retention policy: delete archives older than RETENTION_DAYS
+if [ -n "$RETENTION_DAYS" ]; then
+  log "Applying retention policy: keeping last ${RETENTION_DAYS} days"
+  find "$BACKUP_DIR" -type f -name "servaan_server_backup_*_complete.tar.gz" -mtime +"$RETENTION_DAYS" -print -delete || true
+fi
+
+# 8. Optional offsite upload (S3). Requires aws cli and AWS_S3_BUCKET env.
+if [ -n "$AWS_S3_BUCKET" ]; then
+  if command -v aws >/dev/null 2>&1; then
+    log "Uploading archive to s3://$AWS_S3_BUCKET/servaan/backups/"
+    if aws s3 cp "${BACKUP_NAME}_complete.tar.gz" "s3://${AWS_S3_BUCKET}/servaan/backups/${BACKUP_NAME}_complete.tar.gz" --only-show-errors; then
+      success "Uploaded archive to S3"
+    else
+      warning "Failed to upload to S3"
+    fi
+  else
+    warning "aws CLI not found; skipping S3 upload"
+  fi
+fi
+
+# 9. Final summary
 log "Backup completed successfully!"
 echo ""
 echo "=========================================="
