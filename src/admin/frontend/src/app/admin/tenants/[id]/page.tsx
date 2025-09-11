@@ -24,10 +24,11 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { getTenantById, getTenantMetrics, TenantDetail, TenantMetrics } from '@/services/admin/tenants/tenantService';
+import { getTenantById, getTenantMetrics, TenantDetail, TenantMetrics, activateTenant, deactivateTenant } from '@/services/admin/tenants/tenantService';
 import { TenantPlan } from '@/types/admin';
 import { formatAdminDate } from '@/utils/persianDate';
 import { withAdminAuth } from '@/contexts/AdminAuthContext';
+import TenantUsersResetPassword from './TenantUsersResetPassword';
 
 function TenantDetailPage() {
   const params = useParams();
@@ -39,6 +40,7 @@ function TenantDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'metrics' | 'users' | 'activity'>('overview');
+  const [statusLoading, setStatusLoading] = useState(false);
 
   // Load tenant data
   const loadTenantData = async () => {
@@ -105,18 +107,32 @@ function TenantDetailPage() {
   };
 
   // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fa-IR', {
-      style: 'currency',
-      currency: 'IRR',
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
+  const formatToman = (amountRial: number) => `${Math.floor((amountRial || 0)/10).toLocaleString('fa-IR')} تومان`;
 
   // Handle refresh
   const handleRefresh = () => {
     loadTenantData();
     toast.success('داده‌ها به‌روزرسانی شد');
+  };
+
+  const toggleStatus = async () => {
+    if (!tenant) return;
+    setStatusLoading(true);
+    try {
+      if (tenant.isActive) {
+        await deactivateTenant(tenant.id);
+        setTenant({ ...tenant, isActive: false });
+        toast.success('مستأجر غیرفعال شد');
+      } else {
+        await activateTenant(tenant.id);
+        setTenant({ ...tenant, isActive: true });
+        toast.success('مستأجر فعال شد');
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'خطا در تغییر وضعیت');
+    } finally {
+      setStatusLoading(false);
+    }
   };
 
   // Show error state
@@ -199,6 +215,9 @@ function TenantDetailPage() {
             <span className="text-sm text-admin-text-muted">
               ایجاد شده در {formatAdminDate(tenant.createdAt, { format: 'long' })}
             </span>
+            <button onClick={toggleStatus} disabled={statusLoading} className={`ml-4 btn-admin-secondary ${tenant.isActive ? 'text-admin-danger' : 'text-admin-success'}`}>
+              {statusLoading ? '...' : tenant.isActive ? 'غیرفعال‌سازی' : 'فعال‌سازی'}
+            </button>
           </div>
         </div>
 
@@ -406,11 +425,11 @@ function TenantDetailPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 bg-green-50 rounded-admin">
                     <p className="text-sm font-medium text-green-800">کل درآمد</p>
-                    <p className="text-2xl font-bold text-green-900">{formatCurrency(metrics.revenue.total)}</p>
+                    <p className="text-2xl font-bold text-green-900">{formatToman(metrics.revenue.total)}</p>
                   </div>
                   <div className="p-4 bg-blue-50 rounded-admin">
                     <p className="text-sm font-medium text-blue-800">درآمد این ماه</p>
-                    <p className="text-2xl font-bold text-blue-900">{formatCurrency(metrics.revenue.thisMonth)}</p>
+                    <p className="text-2xl font-bold text-blue-900">{formatToman(metrics.revenue.thisMonth)}</p>
                   </div>
                   <div className="p-4 bg-purple-50 rounded-admin">
                     <div className="flex items-center">
@@ -450,15 +469,9 @@ function TenantDetailPage() {
           )}
 
           {activeTab === 'users' && (
-            <div className="text-center py-12">
-              <Users className="h-16 w-16 text-admin-text-muted mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-admin-text mb-2">مدیریت کاربران</h3>
-              <p className="text-admin-text-light mb-4">
-                این بخش به زودی اضافه خواهد شد
-              </p>
-              <button className="btn-admin-primary">
-                مشاهده کاربران
-              </button>
+            <div className="p-4">
+              <h3 className="text-lg font-semibold text-admin-text mb-4">مدیریت کاربران مستأجر</h3>
+              <TenantUsersResetPassword tenantId={tenantId} />
             </div>
           )}
 

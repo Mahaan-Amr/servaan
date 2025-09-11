@@ -126,33 +126,33 @@ export default function FinancialRatiosPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-500"></div>
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <div className="animate-spin rounded-full h-16 w-16 sm:h-32 sm:w-32 border-b-2 border-green-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
               نسبت‌های مالی
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
               تحلیل نسبت‌های مالی کلیدی و بررسی عملکرد
             </p>
           </div>
-          <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+          <button className="bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm sm:text-base whitespace-nowrap">
             گزارش تحلیلی
           </button>
         </div>
       </div>
 
       {/* Charts Visualization */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <CustomBarChart
           data={ratios.map(r => ({ name: r.name, مقدار: r.value, هدف: r.target }))}
           bars={[
@@ -161,7 +161,7 @@ export default function FinancialRatiosPage() {
           ]}
           title="مقایسه نسبت‌های مالی با اهداف"
           xAxisKey="name"
-          height={320}
+          height={280}
         />
         <CustomPieChart
           data={[
@@ -170,18 +170,18 @@ export default function FinancialRatiosPage() {
             { name: 'نیاز به بهبود', value: ratios.filter(r => r.status === 'poor').length, fill: '#ef4444' }
           ]}
           title="وضعیت کلی نسبت‌ها"
-          height={320}
+          height={280}
         />
       </div>
 
       {/* Categories */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
         <div className="flex flex-wrap gap-2">
           {categories.map((category) => (
             <button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                 selectedCategory === category.id
                   ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
@@ -194,32 +194,32 @@ export default function FinancialRatiosPage() {
       </div>
 
       {/* Ratios Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredRatios.map((ratio) => (
-          <div key={ratio.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+          <div key={ratio.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
+              <div className="flex-1">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-1">
                   {ratio.name}
                 </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{ratio.category}</p>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{ratio.category}</p>
               </div>
-              <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(ratio.status)}`}>
+              <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(ratio.status)} flex-shrink-0`}>
                 {getStatusLabel(ratio.status)}
               </span>
             </div>
 
-            <div className="mb-4">
+            <div className="mb-3 sm:mb-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400">مقدار فعلی</span>
-                <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">مقدار فعلی</span>
+                <span className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                   {ratio.value.toFixed(2)}
                   {ratio.name.includes('حاشیه') || ratio.name.includes('بدهی') ? '%' : ''}
                 </span>
               </div>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-gray-600 dark:text-gray-400">هدف</span>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">هدف</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
                   {ratio.target.toFixed(2)}
                   {ratio.name.includes('حاشیه') || ratio.name.includes('بدهی') ? '%' : ''}
                 </span>
@@ -239,7 +239,7 @@ export default function FinancialRatiosPage() {
               </div>
             </div>
 
-            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
               {ratio.description}
             </p>
           </div>
@@ -247,46 +247,46 @@ export default function FinancialRatiosPage() {
       </div>
 
       {/* Summary */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+        <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">
           خلاصه تحلیل نسبت‌ها
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600 mb-1">
+            <div className="text-xl sm:text-2xl font-bold text-green-600 mb-1">
               {ratios.filter(r => r.status === 'good').length}
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">نسبت‌های مطلوب</p>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">نسبت‌های مطلوب</p>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-yellow-600 mb-1">
+            <div className="text-xl sm:text-2xl font-bold text-yellow-600 mb-1">
               {ratios.filter(r => r.status === 'warning').length}
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">نسبت‌های قابل قبول</p>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">نسبت‌های قابل قبول</p>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-red-600 mb-1">
+            <div className="text-xl sm:text-2xl font-bold text-red-600 mb-1">
               {ratios.filter(r => r.status === 'poor').length}
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">نسبت‌های نیازمند بهبود</p>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">نسبت‌های نیازمند بهبود</p>
           </div>
         </div>
       </div>
 
       {/* Recommendations */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+        <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">
           پیشنهادات بهبود
         </h2>
         <div className="space-y-3">
           {ratios.filter(r => r.status === 'poor' || r.status === 'warning').map((ratio) => (
             <div key={ratio.id} className="flex items-start space-x-3 space-x-reverse p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
-              <div className={`w-3 h-3 rounded-full mt-1 ${
+              <div className={`w-3 h-3 rounded-full mt-1 flex-shrink-0 ${
                 ratio.status === 'warning' ? 'bg-yellow-500' : 'bg-red-500'
               }`}></div>
-              <div>
-                <h4 className="font-medium text-gray-900 dark:text-white">{ratio.name}</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+              <div className="min-w-0 flex-1">
+                <h4 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">{ratio.name}</h4>
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                   {ratio.status === 'poor' ? 
                     'نیاز به توجه فوری و اقدامات اصلاحی دارد.' :
                     'قابل بهبود است و نیاز به بررسی دارد.'
@@ -296,7 +296,7 @@ export default function FinancialRatiosPage() {
             </div>
           ))}
           {ratios.filter(r => r.status === 'poor' || r.status === 'warning').length === 0 && (
-            <p className="text-gray-600 dark:text-gray-400 text-center py-4">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 text-center py-4">
               همه نسبت‌های مالی در وضعیت مطلوبی قرار دارند.
             </p>
           )}

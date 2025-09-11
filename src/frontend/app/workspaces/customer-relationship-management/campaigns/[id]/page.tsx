@@ -300,50 +300,50 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      <div className="flex items-center justify-center h-48 sm:h-64 p-4 sm:p-6">
+        <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-primary-600"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-8">
-        <p className="text-red-600 dark:text-red-400">{error}</p>
+      <div className="text-center py-6 sm:py-8 p-4 sm:p-6">
+        <p className="text-sm sm:text-base text-red-600 dark:text-red-400">{error}</p>
       </div>
     );
   }
 
   if (!campaign) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-500 dark:text-gray-400">کمپین یافت نشد</p>
+      <div className="text-center py-6 sm:py-8 p-4 sm:p-6">
+        <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">کمپین یافت نشد</p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.push('/workspaces/customer-relationship-management/campaigns')}
-              className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
+              className="flex items-center px-3 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
             >
-              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               بازگشت
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                 {campaign.name}
               </h1>
               <div className="flex items-center gap-2 mt-2">
-                <span className="text-2xl">{getCampaignTypeIcon(campaign.campaignType)}</span>
-                <span className="text-sm text-gray-600 dark:text-gray-400">
+                <span className="text-lg sm:text-2xl">{getCampaignTypeIcon(campaign.campaignType)}</span>
+                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                   {getCampaignTypeText(campaign.campaignType)}
                 </span>
                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(campaign.status)}`}>
@@ -353,21 +353,21 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {(campaign.status === 'DRAFT' || campaign.status === 'SCHEDULED') && (
               <button
                 onClick={handleSendCampaign}
                 disabled={sending}
-                className="flex items-center px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+                className="flex items-center px-3 py-2 sm:px-4 sm:py-2 bg-primary-600 text-white text-xs sm:text-sm rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
               >
                 {sending ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white ml-2"></div>
+                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white ml-2"></div>
                     در حال ارسال...
                   </>
                 ) : (
                   <>
-                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
                     ارسال کمپین
@@ -375,8 +375,8 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
                 )}
               </button>
             )}
-            <button className="flex items-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">
-              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button className="flex items-center px-3 py-2 sm:px-4 sm:py-2 text-gray-700 bg-white border border-gray-300 text-xs sm:text-sm rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
               ویرایش
@@ -386,62 +386,62 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
       </div>
 
       {/* Performance Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">ارسال شده</h3>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h3 className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">ارسال شده</h3>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                 {campaign.messagesSent.toLocaleString('fa-IR')}
               </p>
             </div>
-            <div className="text-3xl">📤</div>
+            <div className="text-2xl sm:text-3xl">📤</div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+        <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">تحویل شده</h3>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h3 className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">تحویل شده</h3>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                 {campaign.messagesDelivered.toLocaleString('fa-IR')}
               </p>
             </div>
-            <div className="text-3xl">✅</div>
+            <div className="text-2xl sm:text-3xl">✅</div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+        <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">باز شده</h3>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h3 className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">باز شده</h3>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                 {campaign.messagesOpened.toLocaleString('fa-IR')}
               </p>
             </div>
-            <div className="text-3xl">👀</div>
+            <div className="text-2xl sm:text-3xl">👀</div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+        <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">هزینه کل</h3>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h3 className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">هزینه کل</h3>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                 {formatCurrency(campaign.actualCost)}
               </p>
             </div>
-            <div className="text-3xl">💰</div>
+            <div className="text-2xl sm:text-3xl">💰</div>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
-        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+      <div className="border-b border-gray-200 dark:border-gray-700 mb-4 sm:mb-6">
+        <nav className="-mb-px flex overflow-x-auto space-x-4 sm:space-x-8" aria-label="Tabs">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+            className={`py-2 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
               activeTab === 'overview'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -451,7 +451,7 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
           </button>
           <button
             onClick={() => setActiveTab('deliveries')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+            className={`py-2 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
               activeTab === 'deliveries'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -461,7 +461,7 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
           </button>
           <button
             onClick={() => setActiveTab('performance')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+            className={`py-2 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
               activeTab === 'performance'
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -474,73 +474,73 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
 
       {/* Tab Content */}
       {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Campaign Details */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">جزئیات کمپین</h3>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+            <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-md">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">جزئیات کمپین</h3>
+              <div className="space-y-3 sm:space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">تاریخ ایجاد:</span>
-                    <p className="font-medium text-gray-900 dark:text-white">{formatDate(campaign.createdAt)}</p>
+                    <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">تاریخ ایجاد:</span>
+                    <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">{formatDate(campaign.createdAt)}</p>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">آخرین بروزرسانی:</span>
-                    <p className="font-medium text-gray-900 dark:text-white">{formatDate(campaign.updatedAt)}</p>
+                    <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">آخرین بروزرسانی:</span>
+                    <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">{formatDate(campaign.updatedAt)}</p>
                   </div>
                 </div>
                 
                 {campaign.description && (
                   <div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">توضیحات:</span>
-                    <p className="font-medium text-gray-900 dark:text-white">{campaign.description}</p>
+                    <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">توضیحات:</span>
+                    <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">{campaign.description}</p>
                   </div>
                 )}
 
                 {campaign.scheduledDate && (
                   <div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">زمان‌بندی:</span>
-                    <p className="font-medium text-gray-900 dark:text-white">{formatDate(campaign.scheduledDate)}</p>
+                    <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">زمان‌بندی:</span>
+                    <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">{formatDate(campaign.scheduledDate)}</p>
                   </div>
                 )}
 
                 {campaign.sentDate && (
                   <div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">تاریخ ارسال:</span>
-                    <p className="font-medium text-gray-900 dark:text-white">{formatDate(campaign.sentDate)}</p>
+                    <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">تاریخ ارسال:</span>
+                    <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">{formatDate(campaign.sentDate)}</p>
                   </div>
                 )}
 
                 <div>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">ایجاد کننده:</span>
-                  <p className="font-medium text-gray-900 dark:text-white">{campaign.createdByUser.name}</p>
+                  <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">ایجاد کننده:</span>
+                  <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">{campaign.createdByUser.name}</p>
                 </div>
               </div>
             </div>
 
             {/* Message Content */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">محتوای پیام</h3>
-              <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{campaign.templateContent}</p>
+            <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-md">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">محتوای پیام</h3>
+              <div className="bg-gray-50 dark:bg-gray-700 p-3 sm:p-4 rounded-lg">
+                <p className="text-sm sm:text-base text-gray-900 dark:text-white whitespace-pre-wrap">{campaign.templateContent}</p>
               </div>
             </div>
           </div>
 
           {/* Target Audience */}
-          <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">مخاطبان هدف</h3>
-              <div className="space-y-4">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-md">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">مخاطبان هدف</h3>
+              <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">تعداد مخاطبان:</span>
-                  <p className="font-medium text-gray-900 dark:text-white">{campaign.estimatedRecipients.toLocaleString('fa-IR')}</p>
+                  <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">تعداد مخاطبان:</span>
+                  <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">{campaign.estimatedRecipients.toLocaleString('fa-IR')}</p>
                 </div>
 
                 {campaign.targetSegment.segments && campaign.targetSegment.segments.length > 0 && (
                   <div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">بخش‌های مشتری:</span>
+                    <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">بخش‌های مشتری:</span>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {campaign.targetSegment.segments.map((segment: string) => (
                         <span key={segment} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full dark:bg-blue-800 dark:text-blue-200">
@@ -553,7 +553,7 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
 
                 {campaign.targetSegment.tiers && campaign.targetSegment.tiers.length > 0 && (
                   <div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">سطح وفاداری:</span>
+                    <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">سطح وفاداری:</span>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {campaign.targetSegment.tiers.map((tier: string) => (
                         <span key={tier} className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full dark:bg-yellow-800 dark:text-yellow-200">
@@ -567,22 +567,22 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
             </div>
 
             {/* Cost Information */}
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">اطلاعات هزینه</h3>
-              <div className="space-y-4">
+            <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-md">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">اطلاعات هزینه</h3>
+              <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">هزینه هر پیام:</span>
-                  <p className="font-medium text-gray-900 dark:text-white">{formatCurrency(campaign.costPerMessage)}</p>
+                  <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">هزینه هر پیام:</span>
+                  <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">{formatCurrency(campaign.costPerMessage)}</p>
                 </div>
                 <div>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">هزینه برآورد شده:</span>
-                  <p className="font-medium text-gray-900 dark:text-white">
+                  <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">هزینه برآورد شده:</span>
+                  <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
                     {campaign.estimatedCost ? formatCurrency(campaign.estimatedCost) : '-'}
                   </p>
                 </div>
                 <div>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">هزینه واقعی:</span>
-                  <p className="font-medium text-gray-900 dark:text-white">{formatCurrency(campaign.actualCost)}</p>
+                  <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">هزینه واقعی:</span>
+                  <p className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">{formatCurrency(campaign.actualCost)}</p>
                 </div>
               </div>
             </div>
@@ -593,22 +593,22 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
       {activeTab === 'deliveries' && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
           {/* Filters */}
-          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex flex-col sm:flex-row gap-4">
+          <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <div className="flex-1">
                 <input
                   type="text"
                   placeholder="جستجو در نام یا شماره تلفن..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 />
               </div>
               <div>
                 <select
                   value={deliveryFilter}
                   onChange={(e) => setDeliveryFilter(e.target.value as 'all' | 'sent' | 'failed' | 'delivered')}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  className="px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 >
                   <option value="all">همه وضعیت‌ها</option>
                   <option value="sent">ارسال شده</option>
@@ -624,19 +624,19 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     مخاطب
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     وضعیت
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     تاریخ ارسال
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     هزینه
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     جزئیات
                   </th>
                 </tr>
@@ -644,28 +644,28 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredDeliveries.map((delivery) => (
                   <tr key={delivery.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
                           {delivery.recipientName}
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                        <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                           {delivery.recipientPhone}
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${getDeliveryStatusColor(delivery.deliveryStatus)}`}>
                         {getDeliveryStatusText(delivery.deliveryStatus)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-white">
                       {delivery.sentAt ? formatDate(delivery.sentAt) : '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-white">
                       {formatCurrency(delivery.messageCost)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-white">
                       {delivery.errorMessage ? (
                         <span className="text-red-600 dark:text-red-400" title={delivery.errorMessage}>
                           خطا
@@ -680,8 +680,8 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
             </table>
 
             {filteredDeliveries.length === 0 && (
-              <div className="text-center py-8">
-                <p className="text-gray-500 dark:text-gray-400">هیچ تحویل پیامی یافت نشد</p>
+              <div className="text-center py-6 sm:py-8">
+                <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">هیچ تحویل پیامی یافت نشد</p>
               </div>
             )}
           </div>
@@ -689,30 +689,30 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
       )}
 
       {activeTab === 'performance' && performance && (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Performance Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">نرخ تحویل</h3>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-md">
+              <h3 className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">نرخ تحویل</h3>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                 {performance.deliveryRate.toFixed(1)}%
               </p>
             </div>
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">نرخ باز کردن</h3>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-md">
+              <h3 className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">نرخ باز کردن</h3>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                 {performance.openRate.toFixed(1)}%
               </p>
             </div>
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">نرخ خطا</h3>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-md">
+              <h3 className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">نرخ خطا</h3>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                 {performance.failureRate.toFixed(1)}%
               </p>
             </div>
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">متوسط زمان تحویل</h3>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-md">
+              <h3 className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">متوسط زمان تحویل</h3>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                 {performance.avgDeliveryTime.toFixed(1)}s
               </p>
             </div>
@@ -720,13 +720,13 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
 
           {/* Top Failure Reasons */}
           {performance.topFailureReasons.length > 0 && (
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">دلایل اصلی خطا</h3>
+            <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-md">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">دلایل اصلی خطا</h3>
               <div className="space-y-3">
                 {performance.topFailureReasons.map((reason: { reason: string; count: number }, index: number) => (
                   <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <span className="text-sm text-gray-900 dark:text-white">{reason.reason}</span>
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    <span className="text-xs sm:text-sm text-gray-900 dark:text-white">{reason.reason}</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                       {reason.count.toLocaleString('fa-IR')} مورد
                     </span>
                   </div>

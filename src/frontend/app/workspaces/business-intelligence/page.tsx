@@ -183,8 +183,8 @@ export default function BusinessIntelligenceDashboard() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-500 mx-auto"></div>
-          <p className="text-gray-600 dark:text-gray-400 mt-4">در حال بارگذاری داده‌های BI...</p>
+          <div className="animate-spin rounded-full h-16 w-16 sm:h-32 sm:w-32 border-b-2 border-purple-500 mx-auto"></div>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-4">در حال بارگذاری داده‌های BI...</p>
         </div>
       </div>
     );
@@ -192,18 +192,18 @@ export default function BusinessIntelligenceDashboard() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen p-4">
         <div className="text-center max-w-md">
-          <div className="bg-red-100 dark:bg-red-900/20 rounded-full p-4 mx-auto w-16 h-16 flex items-center justify-center mb-4">
-            <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-red-100 dark:bg-red-900/20 rounded-full p-3 sm:p-4 mx-auto w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mb-3 sm:mb-4">
+            <svg className="w-6 h-6 sm:w-8 sm:h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">خطا در بارگذاری داده‌ها</h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2">خطا در بارگذاری داده‌ها</h3>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4">{error}</p>
           <button
             onClick={fetchBIData}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
+            className="bg-purple-600 hover:bg-purple-700 text-white px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm sm:text-base"
           >
             تلاش مجدد
           </button>
@@ -213,22 +213,22 @@ export default function BusinessIntelligenceDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
               داشبورد هوش تجاری
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
               خوش آمدید {user?.name} - تحلیل و گزارش‌گیری پیشرفته
             </p>
           </div>
           <div className="flex items-center space-x-4 space-x-reverse">
             <div className="text-left">
-              <p className="text-sm text-gray-500 dark:text-gray-400">آخرین بروزرسانی</p>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">آخرین بروزرسانی</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
                 {new Date().toLocaleDateString('fa-IR')}
               </p>
             </div>
@@ -237,47 +237,47 @@ export default function BusinessIntelligenceDashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-              <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
             </div>
-            <div className="mr-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">کل فروش</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.totalSales)}</p>
+            <div className="mr-3 sm:mr-4">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">کل فروش</p>
+              <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.totalSales)}</p>
               <p className="text-xs text-green-600 dark:text-green-400">+{stats.monthlyGrowth}% این ماه</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
           <div className="flex items-center">
             <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-              <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <div className="mr-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">سود خالص</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.totalProfit)}</p>
+            <div className="mr-3 sm:mr-4">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">سود خالص</p>
+              <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.totalProfit)}</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">حاشیه سود: {stats.profitMargin}%</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
           <div className="flex items-center">
             <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-              <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
             </div>
-            <div className="mr-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">محصولات فعال</p>
-              <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.activeProducts}</p>
+            <div className="mr-3 sm:mr-4">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">محصولات فعال</p>
+              <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{stats.activeProducts}</p>
               <p className="text-xs text-red-600 dark:text-red-400">{stats.lowStockItems} کم موجود</p>
             </div>
           </div>
@@ -285,26 +285,26 @@ export default function BusinessIntelligenceDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">ابزارهای تحلیل</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+        <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">ابزارهای تحلیل</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {quickActions.map((action, index) => (
             <Link
               key={index}
               href={action.href}
-              className="group p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+              className="group p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
             >
-              <div className="flex items-center space-x-3 space-x-reverse">
+              <div className="flex items-center space-x-2 sm:space-x-3 space-x-reverse">
                 <div className={`p-2 ${action.color} rounded-lg`}>
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={action.icon} />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-medium text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400">
+                  <h3 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400">
                     {action.title}
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{action.description}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{action.description}</p>
                 </div>
               </div>
             </Link>
@@ -313,33 +313,33 @@ export default function BusinessIntelligenceDashboard() {
       </div>
 
       {/* Quick Reports */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">گزارش‌های سریع</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">گزارش‌های سریع</h2>
           <Link
             href="/workspaces/business-intelligence/custom-reports"
-            className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 text-sm font-medium"
+            className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 text-xs sm:text-sm font-medium"
           >
             مشاهده همه گزارش‌ها
           </Link>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {reports.map((report) => (
-            <div key={report.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+            <div key={report.id} className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-medium text-gray-900 dark:text-white">{report.title}</h3>
+                <h3 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">{report.title}</h3>
                 <div className="flex items-center">
                   {report.trend === 'up' && (
-                    <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                     </svg>
                   )}
                   {report.trend === 'down' && (
-                    <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
                     </svg>
                   )}
-                  <span className={`text-sm ml-1 ${
+                  <span className={`text-xs sm:text-sm ml-1 ${
                     report.trend === 'up' ? 'text-green-600' : 
                     report.trend === 'down' ? 'text-red-600' : 'text-gray-600'
                   }`}>
@@ -347,8 +347,8 @@ export default function BusinessIntelligenceDashboard() {
                   </span>
                 </div>
               </div>
-              <p className="text-lg font-bold text-gray-900 dark:text-white mb-1">{report.value}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{report.description}</p>
+              <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-1">{report.value}</p>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{report.description}</p>
             </div>
           ))}
         </div>

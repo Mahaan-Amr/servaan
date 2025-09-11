@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { X, Save, Building2, User, Settings } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { createTenant } from '@/services/admin/tenants/tenantService';
+import type { TenantPlan } from '@/types/admin';
 
 interface CreateTenantModalProps {
   isOpen: boolean;
@@ -16,7 +18,7 @@ export default function CreateTenantModal({ isOpen, onClose, onSuccess }: Create
     displayName: '',
     subdomain: '',
     description: '',
-    plan: 'STARTER' as 'STARTER' | 'BUSINESS' | 'ENTERPRISE',
+    plan: 'STARTER' as TenantPlan,
     ownerName: '',
     ownerEmail: '',
     ownerPhone: '',
@@ -40,9 +42,20 @@ export default function CreateTenantModal({ isOpen, onClose, onSuccess }: Create
     try {
       setLoading(true);
       
-      // TODO: Implement actual tenant creation API call
-      // For now, just show success message
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      await createTenant({
+        name: formData.name,
+        displayName: formData.displayName || formData.name,
+        subdomain: formData.subdomain,
+        description: formData.description,
+        plan: formData.plan as TenantPlan,
+        ownerName: formData.ownerName,
+        ownerEmail: formData.ownerEmail,
+        ownerPhone: formData.ownerPhone,
+        businessType: formData.businessType,
+        city: formData.city,
+        country: formData.country,
+        isActive: formData.isActive,
+      });
       
       toast.success('مستأجر جدید با موفقیت ایجاد شد');
       onSuccess();
@@ -54,7 +67,7 @@ export default function CreateTenantModal({ isOpen, onClose, onSuccess }: Create
         displayName: '',
         subdomain: '',
         description: '',
-        plan: 'STARTER',
+        plan: 'STARTER' as TenantPlan,
         ownerName: '',
         ownerEmail: '',
         ownerPhone: '',

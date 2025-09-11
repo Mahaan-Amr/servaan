@@ -240,106 +240,108 @@ export default function CampaignsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">مدیریت کمپین‌ها</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">مدیریت کمپین‌ها</h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
             ایجاد و مدیریت کمپین‌های تبلیغاتی و اطلاع‌رسانی
           </p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Link
             href="/workspaces/customer-relationship-management/campaigns/templates"
-            className="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors"
+            className="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm sm:text-base font-medium rounded-lg transition-colors"
           >
-            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
             </svg>
-            قالب‌ها
+            <span className="hidden sm:inline">قالب‌ها</span>
+            <span className="sm:hidden">قالب</span>
           </Link>
           
           <Link
             href="/workspaces/customer-relationship-management/campaigns/new"
-            className="inline-flex items-center px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-lg transition-colors"
+            className="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 bg-pink-600 hover:bg-pink-700 text-white text-sm sm:text-base font-medium rounded-lg transition-colors"
           >
-            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            کمپین جدید
+            <span className="hidden sm:inline">کمپین جدید</span>
+            <span className="sm:hidden">جدید</span>
           </Link>
         </div>
       </div>
 
       {/* Analytics Overview */}
       {analytics && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-6 rounded-lg shadow-sm border border-blue-200 dark:border-blue-800">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 sm:p-6 rounded-lg shadow-sm border border-blue-200 dark:border-blue-800">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300">کل کمپین‌ها</h3>
+              <h3 className="text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300">کل کمپین‌ها</h3>
               <div className="p-2 bg-blue-500 rounded-lg">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
               </div>
             </div>
-            <div className="text-3xl font-bold text-blue-900 dark:text-blue-100 mb-1">
+            <div className="text-2xl sm:text-3xl font-bold text-blue-900 dark:text-blue-100 mb-1">
               {analytics.totalCampaigns.toLocaleString('fa-IR')}
             </div>
-            <div className="text-sm text-blue-600 dark:text-blue-400">
+            <div className="text-xs sm:text-sm text-blue-600 dark:text-blue-400">
               {analytics.activeCampaigns.toLocaleString('fa-IR')} فعال
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-6 rounded-lg shadow-sm border border-green-200 dark:border-green-800">
+          <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-4 sm:p-6 rounded-lg shadow-sm border border-green-200 dark:border-green-800">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-green-700 dark:text-green-300">پیام‌های ارسالی</h3>
+              <h3 className="text-xs sm:text-sm font-medium text-green-700 dark:text-green-300">پیام‌های ارسالی</h3>
               <div className="p-2 bg-green-500 rounded-lg">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
             </div>
-            <div className="text-3xl font-bold text-green-900 dark:text-green-100 mb-1">
+            <div className="text-2xl sm:text-3xl font-bold text-green-900 dark:text-green-100 mb-1">
               {analytics.totalMessagesSent.toLocaleString('fa-IR')}
             </div>
-            <div className="text-sm text-green-600 dark:text-green-400">
+            <div className="text-xs sm:text-sm text-green-600 dark:text-green-400">
               {analytics.totalMessagesDelivered.toLocaleString('fa-IR')} تحویل شده
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-6 rounded-lg shadow-sm border border-purple-200 dark:border-purple-800">
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-4 sm:p-6 rounded-lg shadow-sm border border-purple-200 dark:border-purple-800">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-purple-700 dark:text-purple-300">نرخ تحویل</h3>
+              <h3 className="text-xs sm:text-sm font-medium text-purple-700 dark:text-purple-300">نرخ تحویل</h3>
               <div className="p-2 bg-purple-500 rounded-lg">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
             </div>
-            <div className="text-3xl font-bold text-purple-900 dark:text-purple-100 mb-1">
+            <div className="text-2xl sm:text-3xl font-bold text-purple-900 dark:text-purple-100 mb-1">
               {analytics.averageDeliveryRate.toFixed(1)}%
             </div>
-            <div className="text-sm text-purple-600 dark:text-purple-400">
+            <div className="text-xs sm:text-sm text-purple-600 dark:text-purple-400">
               میانگین موفقیت
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 p-6 rounded-lg shadow-sm border border-orange-200 dark:border-orange-800">
+          <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 p-4 sm:p-6 rounded-lg shadow-sm border border-orange-200 dark:border-orange-800">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-orange-700 dark:text-orange-300">هزینه کل</h3>
+              <h3 className="text-xs sm:text-sm font-medium text-orange-700 dark:text-orange-300">هزینه کل</h3>
               <div className="p-2 bg-orange-500 rounded-lg">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </div>
             </div>
-            <div className="text-3xl font-bold text-orange-900 dark:text-orange-100 mb-1">
+            <div className="text-2xl sm:text-3xl font-bold text-orange-900 dark:text-orange-100 mb-1">
               {formatCurrency(analytics.totalCost)}
             </div>
-            <div className="text-sm text-orange-600 dark:text-orange-400">
+            <div className="text-xs sm:text-sm text-orange-600 dark:text-orange-400">
               کل هزینه‌ها
             </div>
           </div>
@@ -347,11 +349,11 @@ export default function CampaignsPage() {
       )}
 
       {/* Search and Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <form onSubmit={handleSearch} className="space-y-4">
-          <div className="flex gap-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+        <form onSubmit={handleSearch} className="space-y-3 sm:space-y-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="flex-1">
-              <label htmlFor="search" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="search" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 جستجوی کمپین
               </label>
               <div className="relative">
@@ -361,24 +363,24 @@ export default function CampaignsPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="نام کمپین یا توضیحات..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="w-full pl-10 pr-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
               </div>
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <div className="w-full sm:w-auto">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 وضعیت
               </label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
               >
                 <option value="">همه وضعیت‌ها</option>
                 <option value="DRAFT">پیش‌نویس</option>
@@ -391,14 +393,14 @@ export default function CampaignsPage() {
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <div className="w-full sm:w-auto">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 نوع کمپین
               </label>
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
               >
                 <option value="">همه انواع</option>
                 <option value="SMS">پیامک</option>
@@ -411,7 +413,7 @@ export default function CampaignsPage() {
             <div className="flex items-end">
               <button
                 type="submit"
-                className="px-6 py-2 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-lg transition-colors"
+                className="w-full sm:w-auto px-4 sm:px-6 py-2 bg-pink-600 hover:bg-pink-700 text-white text-sm sm:text-base font-medium rounded-lg transition-colors"
               >
                 جستجو
               </button>
@@ -422,9 +424,9 @@ export default function CampaignsPage() {
 
       {/* Campaigns List */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
               کمپین‌ها ({pagination.total.toLocaleString('fa-IR')})
             </h3>
             
@@ -435,54 +437,54 @@ export default function CampaignsPage() {
                 onChange={(e) => handleSelectAll(e.target.checked)}
                 className="rounded border-gray-300 text-pink-600 focus:ring-pink-500"
               />
-              <span className="text-sm text-gray-600 dark:text-gray-400">انتخاب همه</span>
+              <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">انتخاب همه</span>
             </div>
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {loading ? (
             <div className="space-y-4">
               {[...Array(5)].map((_, index) => (
                 <div key={index} className="animate-pulse">
-                  <div className="flex items-center space-x-4 rtl:space-x-reverse">
+                  <div className="flex items-center space-x-3 sm:space-x-4 rtl:space-x-reverse">
                     <div className="flex-shrink-0">
-                      <div className="h-12 w-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                      <div className="h-10 w-10 sm:h-12 sm:w-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
                     </div>
                     <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
-                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                      <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+                      <div className="h-2 sm:h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : error ? (
-            <div className="text-center py-12">
-              <svg className="w-16 h-16 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="text-center py-8 sm:py-12">
+              <svg className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">خطا در بارگذاری</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">خطا در بارگذاری</h3>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4">{error}</p>
               <button
                 onClick={() => fetchCampaigns()}
-                className="inline-flex items-center px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-lg transition-colors"
+                className="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 bg-pink-600 hover:bg-pink-700 text-white text-sm sm:text-base font-medium rounded-lg transition-colors"
               >
                 تلاش مجدد
               </button>
             </div>
           ) : campaigns.length === 0 ? (
-            <div className="text-center py-12">
-              <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="text-center py-8 sm:py-12">
+              <svg className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">کمپینی یافت نشد</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">کمپینی یافت نشد</h3>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4">
                 هنوز کمپینی ایجاد نشده است. اولین کمپین خود را شروع کنید.
               </p>
               <Link
                 href="/workspaces/customer-relationship-management/campaigns/new"
-                className="inline-flex items-center px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-lg transition-colors"
+                className="inline-flex items-center px-3 py-2 sm:px-4 sm:py-2 bg-pink-600 hover:bg-pink-700 text-white text-sm sm:text-base font-medium rounded-lg transition-colors"
               >
                 کمپین جدید
               </Link>
@@ -490,9 +492,9 @@ export default function CampaignsPage() {
           ) : (
             <div className="space-y-4">
               {campaigns.map((campaign) => (
-                <div key={campaign.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-5 hover:shadow-lg transition-all duration-200">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-4 rtl:space-x-reverse flex-1">
+                <div key={campaign.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-5 hover:shadow-lg transition-all duration-200">
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                    <div className="flex items-start space-x-3 sm:space-x-4 rtl:space-x-reverse flex-1">
                       <div className="flex items-center mt-1">
                         <input
                           type="checkbox"
@@ -503,25 +505,27 @@ export default function CampaignsPage() {
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-3 flex-wrap">
-                          <h3 className="text-lg font-bold text-gray-900 dark:text-white truncate">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
+                          <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">
                             {campaign.name}
                           </h3>
-                          <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(campaign.status)}`}>
-                            {campaign.status}
-                          </span>
-                          <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${getTypeBadgeColor(campaign.campaignType)}`}>
-                            {campaign.campaignType}
-                          </span>
+                          <div className="flex gap-2 flex-wrap">
+                            <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(campaign.status)}`}>
+                              {campaign.status}
+                            </span>
+                            <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${getTypeBadgeColor(campaign.campaignType)}`}>
+                              {campaign.campaignType}
+                            </span>
+                          </div>
                         </div>
                         
                         {campaign.description && (
-                          <p className="text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+                          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
                             {campaign.description}
                           </p>
                         )}
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-xs sm:text-sm">
                           <div>
                             <span className="text-gray-500 dark:text-gray-400">ارسال شده:</span>
                             <span className="font-semibold text-gray-900 dark:text-white mr-2">
@@ -551,7 +555,7 @@ export default function CampaignsPage() {
                           </div>
                         </div>
                         
-                        <div className="mt-3 flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                        <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                           <div>
                             ایجاد شده در {formatDate(campaign.createdAt)} توسط {campaign.createdByUser.name}
                           </div>
@@ -564,17 +568,17 @@ export default function CampaignsPage() {
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-2 ml-4">
+                    <div className="flex items-center gap-2 lg:ml-4">
                       <Link
                         href={`/workspaces/customer-relationship-management/campaigns/${campaign.id}`}
-                        className="inline-flex items-center px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
+                        className="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
                       >
                         مشاهده
                       </Link>
                       
                       <button
                         onClick={() => handleDuplicateCampaign(campaign.id)}
-                        className="inline-flex items-center px-3 py-1.5 text-sm bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-lg transition-colors"
+                        className="inline-flex items-center px-3 py-1.5 text-xs sm:text-sm bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 rounded-lg transition-colors"
                       >
                         کپی
                       </button>
@@ -587,8 +591,8 @@ export default function CampaignsPage() {
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="mt-6 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-6">
-              <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+            <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-gray-200 dark:border-gray-700 pt-4 sm:pt-6">
+              <div className="flex items-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                 نمایش {((pagination.page - 1) * pagination.limit + 1).toLocaleString('fa-IR')} تا{' '}
                 {Math.min(pagination.page * pagination.limit, pagination.total).toLocaleString('fa-IR')} از{' '}
                 {pagination.total.toLocaleString('fa-IR')} کمپین
@@ -598,19 +602,19 @@ export default function CampaignsPage() {
                 <button
                   onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
                   disabled={pagination.page === 1}
-                  className="px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 text-xs sm:text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   قبلی
                 </button>
                 
-                <span className="px-4 py-2 text-sm bg-pink-600 text-white rounded-lg">
+                <span className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-pink-600 text-white rounded-lg">
                   {pagination.page.toLocaleString('fa-IR')}
                 </span>
                 
                 <button
                   onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
                   disabled={pagination.page === pagination.totalPages}
-                  className="px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 text-xs sm:text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   بعدی
                 </button>

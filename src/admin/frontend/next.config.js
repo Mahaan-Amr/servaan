@@ -13,6 +13,8 @@ const nextConfig = {
   },
   // Remove standalone mode to match main frontend pattern
   // output: 'standalone',
+  // Allow dev origin used in local hosts mapping
+  allowedDevOrigins: ['http://admin.localhost:3004'],
 };
 
 module.exports = nextConfig;

@@ -363,27 +363,27 @@ export default function JournalEntriesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-500"></div>
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <div className="animate-spin rounded-full h-16 w-16 sm:h-32 sm:w-32 border-b-2 border-green-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
               اسناد حسابداری
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
               مدیریت و مشاهده اسناد حسابداری
             </p>
             {accountFilter && (
               <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p className="text-sm text-blue-700 dark:text-blue-300">
+                <p className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">
                   🔍 نمایش اسناد مربوط به حساب: {accountName || 'در حال بارگذاری...'}
                 </p>
                 <Link 
@@ -397,7 +397,7 @@ export default function JournalEntriesPage() {
           </div>
           <Link
             href="/workspaces/accounting-system/journal-entries/create"
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+            className="bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm sm:text-base whitespace-nowrap"
           >
             ثبت سند جدید
           </Link>
@@ -405,11 +405,11 @@ export default function JournalEntriesPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4 md:space-x-reverse">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0 sm:space-x-4 sm:space-x-reverse">
           <div className="flex-1">
             <div className="relative">
-              <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
@@ -417,14 +417,14 @@ export default function JournalEntriesPage() {
                 placeholder="جستجو در اسناد..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pr-10 pl-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 dark:text-white"
+                className="w-full pr-8 sm:pr-10 pl-3 sm:pl-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 dark:text-white"
               />
             </div>
           </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 dark:text-white"
+            className="px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 dark:text-white"
           >
             <option value="all">همه وضعیت‌ها</option>
             <option value="DRAFT">پیش‌نویس</option>
@@ -435,29 +435,29 @@ export default function JournalEntriesPage() {
       </div>
 
       {/* Journal Entries List */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {filteredEntries.map((entry) => (
-          <div key={entry.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <div className="flex items-center space-x-3 space-x-reverse mb-2">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <div key={entry.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 gap-3">
+              <div className="flex-1">
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 sm:space-x-reverse mb-2">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
                     سند شماره {entry.entryNumber}
                   </h3>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(entry.status)}`}>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(entry.status)} self-start`}>
                     {getStatusLabel(entry.status)}
                   </span>
                 </div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
                   {entry.description}
                 </p>
-                <div className="flex items-center space-x-4 space-x-reverse text-sm text-gray-500">
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 sm:space-x-reverse text-xs sm:text-sm text-gray-500">
                   <span>تاریخ: {new Date(entry.entryDate).toLocaleDateString('fa-IR')}</span>
                   <span>مبلغ: {formatCurrency(entry.totalDebit)}</span>
                   {entry.reference && <span>مرجع: {entry.reference}</span>}
                 </div>
               </div>
-              <div className="flex items-center space-x-2 space-x-reverse">
+              <div className="flex items-center space-x-2 space-x-reverse flex-wrap gap-2">
                 <button 
                   onClick={() => handleViewEntry(entry)}
                   className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded" 
@@ -472,14 +472,14 @@ export default function JournalEntriesPage() {
                   <>
                     <button
                       onClick={() => handleEditEntry(entry)}
-                      className="p-2 text-yellow-600 hover:text-yellow-900 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 rounded"
+                      className="px-2 py-1 text-xs sm:text-sm text-yellow-600 hover:text-yellow-900 hover:bg-yellow-50 dark:hover:bg-yellow-900/30 rounded"
                       title="ویرایش"
                     >
                       ویرایش
                     </button>
                     <button
                       onClick={() => handleDeleteEntry(entry)}
-                      className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
+                      className="px-2 py-1 text-xs sm:text-sm text-red-600 hover:text-red-900 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
                       title="حذف"
                     >
                       حذف
@@ -500,13 +500,13 @@ export default function JournalEntriesPage() {
               </div>
             </div>
 
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-3 sm:pt-4">
+              <h4 className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white mb-2">
                 ردیف‌های سند ({entry.lines.length} ردیف)
               </h4>
               <div className="space-y-2">
                 {entry.lines.map((line) => (
-                  <div key={line.id} className="flex items-center justify-between text-sm">
+                  <div key={line.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm gap-1 sm:gap-0">
                     <div className="flex-1">
                       <span className="text-gray-900 dark:text-white">
                         {line.accountCode} - {line.accountName}
@@ -515,7 +515,7 @@ export default function JournalEntriesPage() {
                         <span className="text-gray-500 mr-2">- {line.description}</span>
                       )}
                     </div>
-                    <div className="flex space-x-4 space-x-reverse">
+                    <div className="flex flex-col sm:flex-row sm:space-x-4 sm:space-x-reverse gap-1 sm:gap-0">
                       {line.debitAmount > 0 && (
                         <span className="text-green-600">
                           بدهکار: {formatCurrency(line.debitAmount)}
@@ -532,8 +532,8 @@ export default function JournalEntriesPage() {
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-500">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700 text-xs sm:text-sm text-gray-500">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
                 <div>ایجاد شده توسط: {entry.createdBy}</div>
                 <div>تاریخ ایجاد: {new Date(entry.createdAt).toLocaleDateString('fa-IR')}</div>
                 {entry.approvedBy && (
@@ -548,89 +548,89 @@ export default function JournalEntriesPage() {
         ))}
 
         {filteredEntries.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400">هیچ سند حسابداری یافت نشد.</p>
+          <div className="text-center py-8 sm:py-12">
+            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">هیچ سند حسابداری یافت نشد.</p>
           </div>
         )}
       </div>
 
       {/* Summary */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">خلاصه اسناد</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+        <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">خلاصه اسناد</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600 mb-1">
+            <div className="text-xl sm:text-2xl font-bold text-green-600 mb-1">
               {entries.filter(e => e.status === 'POSTED').length}
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">تایید شده</p>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">تایید شده</p>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-yellow-600 mb-1">
+            <div className="text-xl sm:text-2xl font-bold text-yellow-600 mb-1">
               {entries.filter(e => e.status === 'DRAFT').length}
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">پیش‌نویس</p>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">پیش‌نویس</p>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-red-600 mb-1">
+            <div className="text-xl sm:text-2xl font-bold text-red-600 mb-1">
               {entries.filter(e => e.status === 'REVERSED').length}
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">لغو شده</p>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">لغو شده</p>
           </div>
         </div>
       </div>
 
       {/* View Entry Modal */}
       {showViewModal && selectedEntry && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
                 جزئیات سند: {selectedEntry.entryNumber}
               </h2>
               <button
                 onClick={() => setShowViewModal(false)}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
             
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">شماره سند:</p>
-                  <p className="text-lg font-bold text-gray-900 dark:text-white">{selectedEntry.entryNumber}</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">شماره سند:</p>
+                  <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">{selectedEntry.entryNumber}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">وضعیت:</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">وضعیت:</p>
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedEntry.status)}`}>
                     {getStatusLabel(selectedEntry.status)}
                   </span>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">تاریخ:</p>
-                  <p className="text-lg text-gray-900 dark:text-white">{new Date(selectedEntry.entryDate).toLocaleDateString('fa-IR')}</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">تاریخ:</p>
+                  <p className="text-base sm:text-lg text-gray-900 dark:text-white">{new Date(selectedEntry.entryDate).toLocaleDateString('fa-IR')}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">مبلغ کل:</p>
-                  <p className="text-lg font-bold text-gray-900 dark:text-white">{formatCurrency(selectedEntry.totalDebit)}</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">مبلغ کل:</p>
+                  <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">{formatCurrency(selectedEntry.totalDebit)}</p>
                 </div>
-                <div className="md:col-span-2">
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">شرح:</p>
-                  <p className="text-lg text-gray-900 dark:text-white">{selectedEntry.description}</p>
+                <div className="sm:col-span-2">
+                  <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">شرح:</p>
+                  <p className="text-sm sm:text-base text-gray-900 dark:text-white">{selectedEntry.description}</p>
                 </div>
                 {selectedEntry.reference && (
-                  <div className="md:col-span-2">
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">مرجع:</p>
-                    <p className="text-lg text-gray-900 dark:text-white">{selectedEntry.reference}</p>
+                  <div className="sm:col-span-2">
+                    <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">مرجع:</p>
+                    <p className="text-sm sm:text-base text-gray-900 dark:text-white">{selectedEntry.reference}</p>
                   </div>
                 )}
               </div>
 
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">ردیف‌های سند</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">ردیف‌های سند</h3>
                 <div className="space-y-3">
                   {selectedEntry.lines.map((line, index) => (
                     <div key={line.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
@@ -706,17 +706,17 @@ export default function JournalEntriesPage() {
 
       {/* Approve Entry Modal */}
       {showApproveModal && selectedEntry && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 w-full max-w-md">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
                 تایید و ثبت سند
               </h2>
               <button
                 onClick={() => setShowApproveModal(false)}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>

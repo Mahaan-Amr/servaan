@@ -19,10 +19,11 @@ interface OrderSummaryProps {
   onOptionsChange: (options: OrderOptions) => void;
   presets: BusinessPreset[];
   onPresetSelect: (preset: BusinessPreset) => void;
+  defaultExpanded?: boolean;
 }
 
-export default function OrderSummary({ orderItems, options, calculation, onOptionsChange, presets, onPresetSelect }: OrderSummaryProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+export default function OrderSummary({ orderItems, options, calculation, onOptionsChange, presets, onPresetSelect, defaultExpanded }: OrderSummaryProps) {
+  const [isExpanded, setIsExpanded] = useState(!!defaultExpanded);
 
   const formatPrice = (amount: number) => {
     return amount.toLocaleString('fa-IR');

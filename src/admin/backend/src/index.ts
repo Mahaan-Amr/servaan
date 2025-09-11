@@ -21,7 +21,9 @@ import rateLimit from 'express-rate-limit';
 import { adminConfig } from './config/admin';
 import adminAuthRoutes from './routes/adminAuthRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
+import backupRoutes from './routes/backupRoutes';
 import tenantRoutes from './routes/tenantRoutes';
+import adminUserRoutes from './routes/adminUserRoutes';
 
 // Debug: Log configuration loading
 console.log('🔧 Admin configuration loaded:');
@@ -99,8 +101,14 @@ app.use('/api/admin/auth', adminAuthRoutes);
 // Admin Dashboard Routes
 app.use('/api/admin/dashboard', dashboardRoutes);
 
+// Admin Backup Routes
+app.use('/api/admin/backups', backupRoutes);
+
 // Admin Tenant Management Routes
 app.use('/api/admin/tenants', tenantRoutes);
+
+// Admin Users Management Routes
+app.use('/api/admin/users', adminUserRoutes);
 
 // Basic admin routes placeholder
 app.get('/api/admin', (_req, res) => {

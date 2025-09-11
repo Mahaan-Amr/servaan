@@ -20,7 +20,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { getTenants, TenantListResponse, TenantListParams, exportTenants, TenantDetail } from '@/services/admin/tenants/tenantService';
+import { getTenants, TenantListResponse, TenantListParams, exportTenants, TenantDetail, activateTenant, deactivateTenant } from '@/services/admin/tenants/tenantService';
 import { Tenant, TenantStatus, TenantPlan } from '@/types/admin';
 import { formatAdminDate } from '@/utils/persianDate';
 import { withAdminAuth } from '@/contexts/AdminAuthContext';
@@ -53,6 +53,7 @@ function TenantsPage() {
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
 
   // Load tenants data
   const loadTenants = async (params: Partial<TenantListParams> = {}) => {
@@ -110,6 +111,11 @@ function TenantsPage() {
     setPlanFilter(plan);
     loadTenants({ plan, page: 1 });
   };
+
+  // Sorting handlers
+  const sortByRevenue = () => loadTenants({ sortBy: 'monthlyRevenue', sortDir: 'desc', page: 1 });
+  const sortByOrders = () => loadTenants({ sortBy: 'ordersThisMonth', sortDir: 'desc', page: 1 });
+  const refreshBypassCache = () => loadTenants({ refresh: true });
 
   // Handle limit change
   const handleLimitChange = (limit: number) => {
@@ -175,6 +181,33 @@ function TenantsPage() {
     toast.success('مستأجر با موفقیت به‌روزرسانی شد');
   };
 
+  // Toggle tenant status with optimistic update
+  const handleToggleStatus = async (tenant: Tenant) => {
+    const targetActive = !tenant.isActive && tenant.status !== 'ACTIVE';
+    const newIsActive = !(tenant.isActive || tenant.status === 'ACTIVE');
+    const tenantId = tenant.id;
+    setStatusUpdatingId(tenantId);
+
+    // optimistic UI
+    const prevTenants = tenants;
+    setTenants(prev => prev.map(t => t.id === tenantId ? { ...t, isActive: newIsActive, status: newIsActive ? 'ACTIVE' as TenantStatus : 'INACTIVE' as TenantStatus } : t));
+    try {
+      if (newIsActive) {
+        await activateTenant(tenantId);
+        toast.success('مستأجر فعال شد');
+      } else {
+        await deactivateTenant(tenantId);
+        toast.success('مستأجر غیرفعال شد');
+      }
+    } catch (error: any) {
+      // rollback
+      setTenants(prevTenants);
+      toast.error(error.message || 'خطا در تغییر وضعیت مستأجر');
+    } finally {
+      setStatusUpdatingId(null);
+    }
+  };
+
   // Handle refresh
   const handleRefresh = () => {
     loadTenants();
@@ -235,12 +268,9 @@ function TenantsPage() {
     );
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fa-IR', {
-      style: 'currency',
-      currency: 'IRR',
-      minimumFractionDigits: 0
-    }).format(amount);
+  const formatToman = (amountRial: number) => {
+    const amountToman = Math.floor((amountRial || 0) / 10);
+    return `${amountToman.toLocaleString('fa-IR')} تومان`;
   };
 
   return (
@@ -308,6 +338,11 @@ function TenantsPage() {
               <Plus className="h-4 w-4 ml-2" />
               مستأجر جدید
             </button>
+
+            {/* Sort & Refresh */}
+            <button onClick={sortByRevenue} className="btn-admin-secondary">مرتب‌سازی بر اساس درآمد ماه</button>
+            <button onClick={sortByOrders} className="btn-admin-secondary">مرتب‌سازی بر اساس سفارشات ماه</button>
+            <button onClick={refreshBypassCache} className="btn-admin-secondary">بروزرسانی (بدون کش)</button>
           </div>
         </div>
       </div>
@@ -537,7 +572,7 @@ function TenantsPage() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center text-sm text-admin-text">
                               <DollarSign className="h-4 w-4 ml-1 text-admin-text-muted" />
-                              {formatCurrency(tenant.monthlyRevenue || tenant.metrics?.revenue || 0)}
+                              {formatToman(tenant.monthlyRevenue || 0)}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -571,13 +606,41 @@ function TenantsPage() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  // TODO: Implement quick actions menu
+                                  handleToggleStatus(tenant);
                                 }}
-                                className="text-admin-text-muted hover:text-admin-text"
-                                title="عملیات بیشتر"
+                                disabled={statusUpdatingId === tenant.id}
+                                className={`hover:opacity-80 ${ (tenant.isActive || tenant.status === 'ACTIVE') ? 'text-admin-danger' : 'text-admin-success'}`}
+                                title={(tenant.isActive || tenant.status === 'ACTIVE') ? 'غیرفعال‌سازی' : 'فعال‌سازی'}
                               >
-                                <MoreHorizontal className="h-4 w-4" />
+                                {statusUpdatingId === tenant.id ? (
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2"></div>
+                                ) : (
+                                  (tenant.isActive || tenant.status === 'ACTIVE') ? <XCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />
+                                )}
                               </button>
+                              <div className="relative group">
+                                <button
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-admin-text-muted hover:text-admin-text"
+                                  title="عملیات بیشتر"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </button>
+                                <div className="absolute left-0 bottom-full mb-2 bg-white border border-admin-border rounded-admin shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-10 min-w-[160px]">
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleEditTenant(tenant); }}
+                                    className="block w-full text-right px-4 py-2 text-sm text-admin-text hover:bg-admin-bg"
+                                  >ویرایش</button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleToggleStatus(tenant); }}
+                                    className="block w-full text-right px-4 py-2 text-sm text-admin-text hover:bg-admin-bg"
+                                  >{(tenant.isActive || tenant.status === 'ACTIVE') ? 'غیرفعال‌سازی' : 'فعال‌سازی'}</button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); router.push(`/admin/tenants/${tenant.id}`); }}
+                                    className="block w-full text-right px-4 py-2 text-sm text-admin-text hover:bg-admin-bg"
+                                  >مشاهده</button>
+                                </div>
+                              </div>
                             </div>
                           </td>
                         </tr>

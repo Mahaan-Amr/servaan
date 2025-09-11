@@ -82,11 +82,11 @@ export default function AccountingLayout({ children }: AccountingLayoutProps) {
 
   return (
     <WorkspaceProtection workspaceId="accounting-system">
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir="rtl">
-        <div className="flex">
+      <div className="h-screen bg-gray-50 dark:bg-gray-900" dir="rtl">
+        <div className="flex h-[calc(100vh-4rem)]">
           {/* Collapsible Hover Sidebar */}
           <div 
-            className={`fixed right-0 top-0 h-full bg-white dark:bg-gray-800 shadow-lg border-l border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out z-50 ${
+            className={`fixed right-0 top-16 h-[calc(100vh-4rem)] bg-white dark:bg-gray-800 shadow-lg border-l border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out z-50 ${
               isSidebarExpanded ? 'w-80' : 'w-16'
             }`}
             onMouseEnter={() => setIsSidebarExpanded(true)}
@@ -230,8 +230,10 @@ export default function AccountingLayout({ children }: AccountingLayoutProps) {
           </div>
 
           {/* Main Content */}
-          <div className={`flex-1 transition-all duration-300 ${isSidebarExpanded ? 'mr-80' : 'mr-16'}`}>
-            {children}
+          <div className={`flex-1 transition-all duration-300 ${isSidebarExpanded ? 'mr-80' : 'mr-16'} overflow-y-auto`}>
+            <div className="h-full">
+              {children}
+            </div>
           </div>
         </div>
       </div>

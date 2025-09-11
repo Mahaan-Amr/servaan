@@ -242,57 +242,57 @@ function NewVisitPageContent() {
   const finalAmount = formData.totalAmount - (formData.discountAmount || 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">ثبت بازدید جدید</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">ثبت بازدید جدید</h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
             اطلاعات بازدید مشتری را وارد کنید
           </p>
         </div>
         <Link
           href="/workspaces/customer-relationship-management/visits"
-          className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-lg transition-colors"
+          className="inline-flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs sm:text-sm font-medium rounded-lg transition-colors"
         >
-          <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 sm:w-5 sm:h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           بازگشت به فهرست
         </Link>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         {/* Error Alert */}
         {errors.submit && (
-          <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-4">
+          <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-3 sm:p-4">
             <div className="flex">
-              <svg className="w-5 h-5 text-red-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div className="mr-3">
-                <p className="text-sm text-red-800 dark:text-red-200">{errors.submit}</p>
+                <p className="text-xs sm:text-sm text-red-800 dark:text-red-200">{errors.submit}</p>
               </div>
             </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Main Form */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Customer Selection */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">انتخاب مشتری</h3>
-              <div className="space-y-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">انتخاب مشتری</h3>
+              <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <label htmlFor="customerId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="customerId" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     مشتری <span className="text-red-500">*</span>
                   </label>
                   <select
                     id="customerId"
                     value={formData.customerId}
                     onChange={(e) => handleInputChange('customerId', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+                    className={`w-full px-3 py-2 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
                       errors.customerId ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                     }`}
                     dir="rtl"
@@ -305,20 +305,20 @@ function NewVisitPageContent() {
                     ))}
                   </select>
                   {errors.customerId && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.customerId}</p>
+                    <p className="mt-1 text-xs sm:text-sm text-red-600 dark:text-red-400">{errors.customerId}</p>
                   )}
                 </div>
 
                 {selectedCustomer && (
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                    <div className="flex items-center space-x-4 space-x-reverse">
-                      <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 sm:p-4">
+                    <div className="flex items-center space-x-3 sm:space-x-4 space-x-reverse">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-lg">
                         {selectedCustomer.name.charAt(0)}
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900 dark:text-white">{selectedCustomer.name}</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400" dir="ltr">{selectedCustomer.phone}</p>
-                        <div className="flex items-center space-x-2 space-x-reverse mt-1">
+                        <h4 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">{selectedCustomer.name}</h4>
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400" dir="ltr">{selectedCustomer.phone}</p>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 sm:space-x-reverse mt-1">
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                             selectedCustomer.segment === 'VIP' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' :
                             selectedCustomer.segment === 'REGULAR' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
@@ -341,18 +341,18 @@ function NewVisitPageContent() {
             </div>
 
             {/* Items Ordered */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">آیتم‌های سفارش</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">آیتم‌های سفارش</h3>
               
               {/* Add Item Form */}
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-3 sm:mb-4 p-3 sm:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <div>
                   <input
                     type="text"
                     value={newItem.name}
                     onChange={(e) => setNewItem(prev => ({ ...prev, name: e.target.value }))}
                     placeholder="نام آیتم"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-600 dark:text-white"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-600 dark:text-white"
                     dir="rtl"
                   />
                 </div>
@@ -363,7 +363,7 @@ function NewVisitPageContent() {
                     onChange={(e) => setNewItem(prev => ({ ...prev, quantity: Number(e.target.value) }))}
                     placeholder="تعداد"
                     min="1"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-600 dark:text-white"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-600 dark:text-white"
                   />
                 </div>
                 <div>
@@ -373,7 +373,7 @@ function NewVisitPageContent() {
                     onChange={(e) => setNewItem(prev => ({ ...prev, price: Number(e.target.value) }))}
                     placeholder="قیمت واحد (ریال)"
                     min="0"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-600 dark:text-white"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-600 dark:text-white"
                     dir="ltr"
                   />
                 </div>
@@ -383,7 +383,7 @@ function NewVisitPageContent() {
                     value={newItem.category || ''}
                     onChange={(e) => setNewItem(prev => ({ ...prev, category: e.target.value }))}
                     placeholder="دسته‌بندی"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-600 dark:text-white"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-600 dark:text-white"
                     dir="rtl"
                   />
                 </div>
@@ -393,16 +393,16 @@ function NewVisitPageContent() {
                     value={newItem.notes}
                     onChange={(e) => setNewItem(prev => ({ ...prev, notes: e.target.value }))}
                     placeholder="یادداشت"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-600 dark:text-white"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-600 dark:text-white"
                     dir="rtl"
                   />
                 </div>
-                <div className="md:col-span-5">
+                <div className="sm:col-span-2 lg:col-span-5">
                   <button
                     type="button"
                     onClick={addItem}
                     disabled={!newItem.name.trim() || newItem.quantity <= 0}
-                    className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium rounded-lg transition-colors"
+                    className="w-full px-3 py-2 sm:px-4 sm:py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors"
                   >
                     افزودن
                   </button>
@@ -414,14 +414,14 @@ function NewVisitPageContent() {
                 <div className="space-y-2">
                   {formData.itemsOrdered.map((item, index) => (
                     <div key={item.id || index} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-600 rounded-lg">
-                      <div className="flex-1">
-                        <div className="font-medium text-gray-900 dark:text-white">{item.name}</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm sm:text-base font-medium text-gray-900 dark:text-white truncate">{item.name}</div>
+                        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                            {item.quantity} × {item.price?.toLocaleString('fa-IR')} ریال
                          </div>
                       </div>
-                      <div className="flex items-center space-x-3 space-x-reverse">
-                        <span className="font-medium text-gray-900 dark:text-white">
+                      <div className="flex items-center space-x-2 sm:space-x-3 space-x-reverse">
+                        <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
                           {formatCurrency(item.totalPrice || 0)}
                         </span>
                         <button
@@ -429,7 +429,7 @@ function NewVisitPageContent() {
                           onClick={() => removeItem(item.id)}
                           className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
                         </button>
@@ -438,18 +438,18 @@ function NewVisitPageContent() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <div className="text-center py-6 sm:py-8 text-sm sm:text-base text-gray-500 dark:text-gray-400">
                   هنوز هیچ آیتمی اضافه نشده است
                 </div>
               )}
             </div>
 
             {/* Payment Information */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">اطلاعات پرداخت</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">اطلاعات پرداخت</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
-                  <label htmlFor="totalAmount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="totalAmount" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     مبلغ کل (ریال) <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -458,7 +458,7 @@ function NewVisitPageContent() {
                     value={formData.totalAmount}
                     onChange={(e) => handleInputChange('totalAmount', Number(e.target.value))}
                     min="0"
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+                    className={`w-full px-3 py-2 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
                       errors.totalAmount ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                     }`}
                     dir="ltr"
@@ -469,7 +469,7 @@ function NewVisitPageContent() {
                 </div>
 
                 <div>
-                  <label htmlFor="discountAmount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="discountAmount" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     مبلغ تخفیف (ریال)
                   </label>
                   <input
@@ -479,7 +479,7 @@ function NewVisitPageContent() {
                     onChange={(e) => handleInputChange('discountAmount', Number(e.target.value))}
                     min="0"
                     max={formData.totalAmount}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+                    className={`w-full px-3 py-2 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
                       errors.discountAmount ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                     }`}
                     dir="ltr"
@@ -490,14 +490,14 @@ function NewVisitPageContent() {
                 </div>
 
                 <div>
-                  <label htmlFor="paymentMethod" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="paymentMethod" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     روش پرداخت
                   </label>
                   <select
                     id="paymentMethod"
                     value={formData.paymentMethod}
                                          onChange={(e) => handleInputChange('paymentMethod', e.target.value as 'CASH' | 'CARD' | 'ONLINE' | 'POINTS' | 'MIXED')}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                     dir="rtl"
                   >
                     <option value="CASH">نقدی</option>
@@ -510,7 +510,7 @@ function NewVisitPageContent() {
 
                 {selectedCustomer?.loyalty && (
                   <div>
-                    <label htmlFor="pointsRedeemed" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label htmlFor="pointsRedeemed" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       امتیاز استفاده شده
                     </label>
                     <input
@@ -520,7 +520,7 @@ function NewVisitPageContent() {
                       onChange={(e) => handleInputChange('pointsRedeemed', Number(e.target.value))}
                       min="0"
                       max={selectedCustomer.loyalty.currentPoints}
-                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+                      className={`w-full px-3 py-2 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
                         errors.pointsRedeemed ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                       }`}
                     />
@@ -528,7 +528,7 @@ function NewVisitPageContent() {
                       امتیاز موجود: {selectedCustomer.loyalty.currentPoints.toLocaleString('fa-IR')}
                     </p>
                     {errors.pointsRedeemed && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.pointsRedeemed}</p>
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 dark:text-red-400">{errors.pointsRedeemed}</p>
                     )}
                   </div>
                 )}
@@ -536,11 +536,11 @@ function NewVisitPageContent() {
             </div>
 
             {/* Additional Information */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">اطلاعات تکمیلی</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">اطلاعات تکمیلی</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
-                  <label htmlFor="tableNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="tableNumber" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     شماره میز
                   </label>
                   <input
@@ -549,12 +549,12 @@ function NewVisitPageContent() {
                     value={formData.tableNumber || ''}
                     onChange={(e) => handleInputChange('tableNumber', e.target.value)}
                     placeholder="مثال: A1, B5"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="serverName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="serverName" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     نام سرور
                   </label>
                   <input
@@ -563,13 +563,13 @@ function NewVisitPageContent() {
                     value={formData.serverName || ''}
                     onChange={(e) => handleInputChange('serverName', e.target.value)}
                     placeholder="نام پیشخدمت"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                     dir="rtl"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="serviceDuration" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="serviceDuration" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     مدت سرویس (دقیقه)
                   </label>
                   <input
@@ -579,19 +579,19 @@ function NewVisitPageContent() {
                     onChange={(e) => handleInputChange('serviceDuration', e.target.value ? Number(e.target.value) : undefined)}
                     min="1"
                     placeholder="30"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="feedbackRating" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="feedbackRating" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     امتیاز مشتری (1-5)
                   </label>
                   <select
                     id="feedbackRating"
                     value={formData.feedbackRating || ''}
                     onChange={(e) => handleInputChange('feedbackRating', e.target.value ? Number(e.target.value) : undefined)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                     dir="rtl"
                   >
                     <option value="">بدون امتیاز</option>
@@ -604,8 +604,8 @@ function NewVisitPageContent() {
                 </div>
               </div>
 
-              <div className="mt-6">
-                <label htmlFor="feedbackComment" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <div className="mt-4 sm:mt-6">
+                <label htmlFor="feedbackComment" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   نظر مشتری
                 </label>
                 <textarea
@@ -614,13 +614,13 @@ function NewVisitPageContent() {
                   onChange={(e) => handleInputChange('feedbackComment', e.target.value)}
                   rows={3}
                   placeholder="نظرات و پیشنهادات مشتری..."
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   dir="rtl"
                 />
               </div>
 
-              <div className="mt-6">
-                <label htmlFor="visitNotes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <div className="mt-4 sm:mt-6">
+                <label htmlFor="visitNotes" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   یادداشت‌های بازدید
                 </label>
                 <textarea
@@ -629,7 +629,7 @@ function NewVisitPageContent() {
                   onChange={(e) => handleInputChange('visitNotes', e.target.value)}
                   rows={3}
                   placeholder="یادداشت‌های داخلی، نکات خاص و..."
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   dir="rtl"
                 />
               </div>
@@ -637,23 +637,23 @@ function NewVisitPageContent() {
           </div>
 
           {/* Sidebar - Summary */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Order Summary */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 sticky top-6">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">خلاصه سفارش</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6 sticky top-6">
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">خلاصه سفارش</h3>
               
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">مبلغ کل:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">
+                  <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">مبلغ کل:</span>
+                  <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
                     {formatCurrency(formData.totalAmount)}
                   </span>
                 </div>
                 
                 {formData.discountAmount && formData.discountAmount > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">تخفیف:</span>
-                    <span className="font-medium text-red-600 dark:text-red-400">
+                    <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">تخفیف:</span>
+                    <span className="text-sm sm:text-base font-medium text-red-600 dark:text-red-400">
                       -{formatCurrency(formData.discountAmount)}
                     </span>
                   </div>
@@ -661,8 +661,8 @@ function NewVisitPageContent() {
 
                 {formData.pointsRedeemed && formData.pointsRedeemed > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">امتیاز استفاده شده:</span>
-                    <span className="font-medium text-yellow-600 dark:text-yellow-400">
+                    <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">امتیاز استفاده شده:</span>
+                    <span className="text-sm sm:text-base font-medium text-yellow-600 dark:text-yellow-400">
                       {formData.pointsRedeemed.toLocaleString('fa-IR')} امتیاز
                     </span>
                   </div>
@@ -670,33 +670,33 @@ function NewVisitPageContent() {
 
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
                   <div className="flex justify-between">
-                    <span className="text-lg font-medium text-gray-900 dark:text-white">مبلغ نهایی:</span>
-                    <span className="text-lg font-bold text-green-600 dark:text-green-400">
+                    <span className="text-sm sm:text-lg font-medium text-gray-900 dark:text-white">مبلغ نهایی:</span>
+                    <span className="text-sm sm:text-lg font-bold text-green-600 dark:text-green-400">
                       {formatCurrency(finalAmount)}
                     </span>
                   </div>
                 </div>
 
-                <div className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                   تعداد آیتم‌ها: {formData.itemsOrdered?.length || 0}
                 </div>
               </div>
 
               {/* Submit Button */}
-              <div className="mt-6 space-y-3">
+              <div className="mt-4 sm:mt-6 space-y-2 sm:space-y-3">
                 <button
                   type="submit"
                   disabled={saving || !formData.customerId || finalAmount < 0}
-                  className="w-full px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium rounded-lg transition-colors flex items-center justify-center"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors flex items-center justify-center"
                 >
                   {saving ? (
                     <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white ml-2"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white ml-2"></div>
                       در حال ثبت...
                     </>
                   ) : (
                     <>
-                      <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       ثبت بازدید
@@ -706,7 +706,7 @@ function NewVisitPageContent() {
 
                 <Link
                   href="/workspaces/customer-relationship-management/visits"
-                  className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-lg transition-colors"
+                  className="w-full inline-flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs sm:text-sm font-medium rounded-lg transition-colors"
                 >
                   انصراف
                 </Link>
@@ -722,8 +722,8 @@ function NewVisitPageContent() {
 export default function NewVisitPage() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      <div className="flex items-center justify-center h-48 sm:h-64 p-4 sm:p-6">
+        <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-green-600"></div>
       </div>
     }>
       <NewVisitPageContent />

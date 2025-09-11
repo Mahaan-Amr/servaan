@@ -11,14 +11,17 @@ const router = express.Router();
  */
 router.get('/', authenticateAdmin, async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, status, plan } = req.query;
+    const { page = 1, limit = 10, search, status, plan, sortBy, sortDir, refresh } = req.query;
     
     const result = await TenantService.listTenants({
       page: Number(page),
       limit: Number(limit),
       search: search as string,
       status: status as string,
-      plan: plan as string
+      plan: plan as string,
+      sortBy: (sortBy as any) || 'createdAt',
+      sortDir: (sortDir as any) || 'desc',
+      refresh: refresh === 'true'
     });
 
     // Audit log
@@ -40,6 +43,56 @@ router.get('/', authenticateAdmin, async (req, res) => {
       success: false,
       error: 'خطا در دریافت لیست مستأجرین',
       message: 'Failed to fetch tenants list'
+    });
+  }
+});
+
+/**
+ * POST /api/admin/tenants
+ * Create a new tenant
+ */
+router.post('/', authenticateAdmin, requireRole(['SUPER_ADMIN', 'PLATFORM_ADMIN']), async (req, res) => {
+  try {
+    const data = req.body;
+
+    // Basic validation
+    const required = ['name', 'subdomain', 'ownerName', 'ownerEmail'];
+    const missing = required.filter((k) => !data[k]);
+    if (missing.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'INVALID_PAYLOAD',
+        message: `Missing required fields: ${missing.join(', ')}`
+      });
+    }
+
+    const tenant = await TenantService.createTenant(data);
+
+    await auditLog({
+      adminUserId: req.adminUser!.id,
+      action: 'TENANT_CREATED',
+      details: { tenantId: tenant.id, subdomain: tenant.subdomain },
+      ipAddress: req.ip || 'unknown'
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Tenant created successfully',
+      data: { tenant }
+    });
+  } catch (error: any) {
+    if (error?.message === 'SUBDOMAIN_TAKEN') {
+      return res.status(409).json({
+        success: false,
+        error: 'SUBDOMAIN_TAKEN',
+        message: 'زیردامنه قبلاً استفاده شده است'
+      });
+    }
+    console.error('Admin tenant create error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'TENANT_CREATE_FAILED',
+      message: 'Failed to create tenant'
     });
   }
 });
@@ -577,3 +630,47 @@ router.get('/export', authenticateAdmin, async (req, res) => {
 });
 
 export default router;
+
+/**
+ * POST /api/admin/tenants/:id/users/reset-password
+ * Reset a tenant user's password by email (SUPER_ADMIN, PLATFORM_ADMIN)
+ */
+router.post('/:id/users/reset-password', authenticateAdmin, requireRole(['SUPER_ADMIN', 'PLATFORM_ADMIN']), async (req, res) => {
+  try {
+    const { id } = req.params as { id: string };
+    const { email, newPassword } = req.body as { email?: string; newPassword?: string };
+    if (!email || !newPassword || newPassword.length < 8) {
+      return res.status(400).json({ success: false, message: 'Invalid email or password' });
+    }
+    const result = await TenantService.resetTenantUserPasswordByEmail(id, email, newPassword);
+    await auditLog({
+      adminUserId: req.adminUser!.id,
+      action: 'TENANT_USER_PASSWORD_RESET',
+      details: { tenantId: id, email },
+      ipAddress: req.ip || 'unknown'
+    });
+    return res.json({ success: true, data: result });
+  } catch (e: any) {
+    if (e?.message === 'TENANT_USER_NOT_FOUND') {
+      return res.status(404).json({ success: false, message: 'Tenant user not found' });
+    }
+    console.error('Tenant user reset password error:', e);
+    return res.status(500).json({ success: false, message: 'Failed to reset password' });
+  }
+});
+
+/**
+ * GET /api/admin/tenants/:id/users
+ * List tenant users (minimal) with optional ?q= search
+ */
+router.get('/:id/users', authenticateAdmin, requireRole(['SUPER_ADMIN', 'PLATFORM_ADMIN']), async (req, res) => {
+  try {
+    const { id } = req.params as { id: string };
+    const q = (req.query['q'] as string | undefined) || undefined;
+    const users = await TenantService.listTenantUsers(id, q);
+    return res.json({ success: true, data: users });
+  } catch (e) {
+    console.error('List tenant users error:', e);
+    return res.status(500).json({ success: false, message: 'Failed to list tenant users' });
+  }
+});

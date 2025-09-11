@@ -102,7 +102,7 @@ export const authenticateAdmin = async (req: Request, res: Response, next: NextF
     req.adminUser = {
       id: adminUser.id,
       email: adminUser.email,
-      role: adminUser.role,
+      role: adminUser.role as AdminRole,
       isActive: adminUser.isActive
     };
     
@@ -205,7 +205,7 @@ export const optionalAdminAuth = async (req: Request, _res: Response, next: Next
         req.adminUser = {
           id: adminUser.id,
           email: adminUser.email,
-          role: adminUser.role,
+          role: adminUser.role as AdminRole,
           isActive: adminUser.isActive
         };
       }

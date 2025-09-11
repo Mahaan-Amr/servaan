@@ -342,21 +342,21 @@ export default function ScannerPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
               اسکنر هوشمند
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
               اسکن بارکد و QR کد کالاها برای عملیات سریع انبار
             </p>
           </div>
           <Link
             href="/workspaces/inventory-management"
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            className="px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base"
           >
             بازگشت
           </Link>
@@ -373,18 +373,18 @@ export default function ScannerPage() {
 
       {/* Scan History */}
       {scanHistory.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">تاریخچه اسکن</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">تاریخچه اسکن</h3>
           <div className="space-y-2">
             {scanHistory.map((code, index) => (
-              <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                <span className="font-mono text-sm text-gray-700 dark:text-gray-300">
+              <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-gray-50 dark:bg-gray-700 rounded-lg p-3 gap-2 sm:gap-0">
+                <span className="font-mono text-xs sm:text-sm text-gray-700 dark:text-gray-300 break-all">
                   {code.length > 30 ? `${code.substring(0, 30)}...` : code}
                 </span>
                 <button
                   onClick={() => lookupItem(code)}
                   disabled={isLookingUp}
-                  className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="px-2 sm:px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 self-start sm:self-auto"
                 >
                   جستجو مجدد
                 </button>
@@ -396,47 +396,47 @@ export default function ScannerPage() {
 
       {/* Scan Result */}
       {lastScanResult && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">نتیجه اسکن</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-3 sm:gap-0">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">نتیجه اسکن</h2>
             <div className="flex space-x-2 space-x-reverse">
               <button
                 onClick={retryLastScan}
                 disabled={isLookingUp}
-                className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 text-sm"
+                className="px-2 sm:px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 text-xs sm:text-sm"
               >
                 {isLookingUp ? 'در حال جستجو...' : 'جستجو مجدد'}
               </button>
               <button
                 onClick={resetScanner}
-                className="px-3 py-1 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                className="px-2 sm:px-3 py-1 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-xs sm:text-sm"
               >
                 اسکن جدید
               </button>
             </div>
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 کد اسکن شده
               </label>
-              <p className="font-mono text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-3 rounded-lg break-all">
+              <p className="font-mono text-xs sm:text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-700 p-2 sm:p-3 rounded-lg break-all">
                 {lastScanResult}
               </p>
             </div>
 
             {isLookingUp ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                <span className="mr-2 text-gray-600 dark:text-gray-400">در حال جستجوی کالا...</span>
+              <div className="flex items-center justify-center py-6 sm:py-8">
+                <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-500"></div>
+                <span className="mr-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">در حال جستجوی کالا...</span>
               </div>
             ) : foundItem ? (
-              <div className="border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
-                <h3 className="text-lg font-medium text-green-800 dark:text-green-400 mb-3">
+              <div className="border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 rounded-lg p-3 sm:p-4">
+                <h3 className="text-base sm:text-lg font-medium text-green-800 dark:text-green-400 mb-2 sm:mb-3">
                   ✅ کالا یافت شد
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
                   <div>
                     <span className="font-medium text-green-700 dark:text-green-300">نام:</span>
                     <span className="mr-2 text-green-800 dark:text-green-400">{foundItem.name}</span>
@@ -498,24 +498,24 @@ export default function ScannerPage() {
                 </div>
               </div>
             ) : (
-              <div className="border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
-                <h3 className="text-lg font-medium text-red-800 dark:text-red-400 mb-2">
+              <div className="border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 rounded-lg p-3 sm:p-4">
+                <h3 className="text-base sm:text-lg font-medium text-red-800 dark:text-red-400 mb-2">
                   ❌ کالا یافت نشد
                 </h3>
-                <p className="text-sm text-red-700 dark:text-red-300 mb-3">
+                <p className="text-xs sm:text-sm text-red-700 dark:text-red-300 mb-3">
                   کالایی با این کد در سیستم ثبت نشده است.
                 </p>
-                <div className="flex space-x-2 space-x-reverse">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 sm:space-x-reverse">
                   <Link
                     href="/workspaces/inventory-management/items/add"
-                    className="inline-flex items-center px-3 py-2 border border-red-300 dark:border-red-700 text-sm font-medium rounded-md text-red-700 dark:text-red-300 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/30"
+                    className="inline-flex items-center px-2 sm:px-3 py-2 border border-red-300 dark:border-red-700 text-xs sm:text-sm font-medium rounded-md text-red-700 dark:text-red-300 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/30"
                   >
                     افزودن کالای جدید
                   </Link>
                   <button
                     onClick={retryLastScan}
                     disabled={isLookingUp}
-                    className="inline-flex items-center px-3 py-2 text-sm font-medium rounded-md text-red-700 dark:text-red-300 hover:text-red-900 dark:hover:text-red-100 disabled:opacity-50"
+                    className="inline-flex items-center px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-md text-red-700 dark:text-red-300 hover:text-red-900 dark:hover:text-red-100 disabled:opacity-50"
                   >
                     تلاش مجدد
                   </button>
@@ -528,14 +528,14 @@ export default function ScannerPage() {
 
       {/* Quick Actions */}
       {foundItem && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">عملیات سریع انبار</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 sm:p-6">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">عملیات سریع انبار</h2>
           
-          <div className="space-y-4">
-            <div className="flex space-x-2 space-x-reverse">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 sm:space-x-reverse">
               <button
                 onClick={() => setQuickAction('in')}
-                className={`px-4 py-2 rounded-lg transition-colors flex items-center ${
+                className={`px-3 sm:px-4 py-2 rounded-lg transition-colors flex items-center justify-center text-sm sm:text-base ${
                   quickAction === 'in'
                     ? 'bg-green-600 text-white shadow-lg'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -549,7 +549,7 @@ export default function ScannerPage() {
               <button
                 onClick={() => setQuickAction('out')}
                 disabled={currentStock === 0}
-                className={`px-4 py-2 rounded-lg transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed ${
+                className={`px-3 sm:px-4 py-2 rounded-lg transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base ${
                   quickAction === 'out'
                     ? 'bg-red-600 text-white shadow-lg'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -563,10 +563,10 @@ export default function ScannerPage() {
             </div>
 
             {quickAction && (
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 sm:p-4">
                 {/* Preset Quantity Buttons */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <div className="mb-3 sm:mb-4">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     مقادیر پیش‌فرض
                   </label>
                   <div className="flex space-x-2 space-x-reverse flex-wrap gap-2">
@@ -613,8 +613,8 @@ export default function ScannerPage() {
                 </div>
 
                 {/* Quick Templates */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <div className="mb-3 sm:mb-4">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     الگوهای سریع
                   </label>
                   <div className="flex space-x-2 space-x-reverse flex-wrap gap-2">
@@ -683,9 +683,9 @@ export default function ScannerPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label htmlFor="quantity" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       مقدار * ({foundItem.unit})
                     </label>
                     <div className="flex space-x-2 space-x-reverse">
@@ -698,7 +698,7 @@ export default function ScannerPage() {
                         max={quickAction === 'out' ? currentStock : undefined}
                         step="0.01"
                         disabled={loading}
-                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                        className="flex-1 px-2 sm:px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white text-sm sm:text-base"
                         placeholder={`مقدار ${quickAction === 'in' ? 'ورودی' : 'خروجی'}`}
                       />
                       {/* Quick +/- buttons */}
@@ -730,14 +730,14 @@ export default function ScannerPage() {
                       </div>
                     </div>
                     {quickAction === 'out' && (
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                         حداکثر: {currentStock.toLocaleString('fa-IR')} {foundItem.unit}
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label htmlFor="note" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label htmlFor="note" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       توضیحات
                     </label>
                     <input
@@ -746,7 +746,7 @@ export default function ScannerPage() {
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
                       disabled={loading}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                      className="w-full px-2 sm:px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white text-sm sm:text-base"
                       placeholder="توضیحات اختیاری"
                     />
                   </div>
@@ -754,8 +754,8 @@ export default function ScannerPage() {
 
                 {/* Enhanced Action Buttons */}
                 {quantity && (
-                  <div className="mt-4 flex justify-between items-center">
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+                    <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                       {quickAction === 'in' ? (
                         <>
                           موجودی پس از ورود: <span className="font-medium text-green-600 dark:text-green-400">
@@ -776,14 +776,14 @@ export default function ScannerPage() {
                           setQuantity('');
                           setNote('');
                         }}
-                        className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                        className="px-3 sm:px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors text-sm sm:text-base"
                       >
                         پاک کردن
                       </button>
                       <button
                         onClick={handleQuickTransaction}
                         disabled={loading || !quantity || (quickAction === 'out' && parseFloat(quantity) > currentStock)}
-                        className={`px-6 py-2 text-white rounded-lg transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed ${
+                        className={`px-4 sm:px-6 py-2 text-white rounded-lg transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base ${
                           quickAction === 'in' 
                             ? 'bg-green-600 hover:bg-green-700' 
                             : 'bg-red-600 hover:bg-red-700'
@@ -791,7 +791,7 @@ export default function ScannerPage() {
                       >
                         {loading ? (
                           <>
-                            <svg className="animate-spin -mr-1 ml-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <svg className="animate-spin -mr-1 ml-3 h-3 w-3 sm:h-4 sm:w-4 text-white" fill="none" viewBox="0 0 24 24">
                               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
@@ -799,7 +799,7 @@ export default function ScannerPage() {
                           </>
                         ) : (
                           <>
-                            <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3 h-3 sm:w-4 sm:h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                             ثبت {quickAction === 'in' ? 'ورود' : 'خروج'} ({parseFloat(quantity).toLocaleString('fa-IR')} {foundItem.unit})
@@ -817,44 +817,44 @@ export default function ScannerPage() {
 
       {/* Quick Links */}
       {foundItem && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">لینک‌های سریع</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">لینک‌های سریع</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <Link
               href={`/workspaces/inventory-management/items/${foundItem.id}`}
-              className="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="flex items-center p-2 sm:p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
-              <svg className="w-5 h-5 text-blue-500 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 ml-2 sm:ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">جزئیات کالا</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">جزئیات کالا</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">مشاهده اطلاعات کامل</p>
               </div>
             </Link>
 
             <Link
               href={`/workspaces/inventory-management/items/${foundItem.id}/edit`}
-              className="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="flex items-center p-2 sm:p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
-              <svg className="w-5 h-5 text-green-500 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 ml-2 sm:ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
               <div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">ویرایش کالا</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">ویرایش کالا</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">اصلاح اطلاعات</p>
               </div>
             </Link>
 
             <Link
               href="/workspaces/inventory-management/inventory/add"
-              className="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="flex items-center p-2 sm:p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
-              <svg className="w-5 h-5 text-purple-500 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 ml-2 sm:ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
               <div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">تراکنش جدید</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">تراکنش جدید</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">ثبت تراکنش دستی</p>
               </div>
             </Link>

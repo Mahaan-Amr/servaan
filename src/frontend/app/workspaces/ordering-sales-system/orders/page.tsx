@@ -429,61 +429,61 @@ export default function OrdersPage() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+   return (
+     <div className="h-full bg-gray-50 dark:bg-gray-900" dir="rtl">
+       <div className="w-full px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
       {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">
             مدیریت سفارش‌ها
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
             مشاهده و مدیریت تمام سفارش‌های سیستم
           </p>
         </div>
 
-        {/* POS Button */}
-        <div className="flex justify-end mb-6">
-          <Link href="/workspaces/ordering-sales-system/pos">
-            <button className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-              <FaUtensils className="inline mr-2" />
-              ثبت سفارش جدید
-            </button>
-        </Link>
-      </div>
+         {/* POS Button */}
+         <div className="flex justify-end mb-4 sm:mb-6">
+           <Link href="/workspaces/ordering-sales-system/pos">
+             <button className="bg-amber-500 hover:bg-amber-600 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors w-auto sm:w-auto">
+               <FaUtensils className="inline mr-1 sm:mr-2" />
+               ثبت سفارش جدید
+             </button>
+         </Link>
+       </div>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">کل سفارش‌ها</div>
-          </div>
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 shadow-sm">
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.submitted}</div>
-            <div className="text-sm text-blue-600 dark:text-blue-400">ثبت شده</div>
-          </div>
-          <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 shadow-sm">
-            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.preparing}</div>
-            <div className="text-sm text-orange-600 dark:text-orange-400">در حال آماده‌سازی</div>
-          </div>
-          <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 shadow-sm">
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.ready}</div>
-            <div className="text-sm text-green-600 dark:text-green-400">آماده</div>
-          </div>
-          <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 shadow-sm">
-            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.completed}</div>
-            <div className="text-sm text-purple-600 dark:text-purple-400">تکمیل شده</div>
-          </div>
-          <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 shadow-sm">
-            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.cancelled}</div>
-            <div className="text-sm text-red-600 dark:text-red-400">لغو شده</div>
-          </div>
-        </div>
+         {/* Statistics Cards */}
+         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-3 mb-3 sm:mb-4">
+           <div className="bg-white dark:bg-gray-800 rounded-lg p-1.5 sm:p-3 shadow-sm">
+             <div className="text-base sm:text-xl font-bold text-gray-900 dark:text-white">{stats.total}</div>
+             <div className="text-xs text-gray-600 dark:text-gray-400">کل سفارش‌ها</div>
+           </div>
+           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-1.5 sm:p-3 shadow-sm">
+             <div className="text-base sm:text-xl font-bold text-blue-600 dark:text-blue-400">{stats.submitted}</div>
+             <div className="text-xs text-blue-600 dark:text-blue-400">ثبت شده</div>
+           </div>
+           <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-1.5 sm:p-3 shadow-sm">
+             <div className="text-base sm:text-xl font-bold text-orange-600 dark:text-orange-400">{stats.preparing}</div>
+             <div className="text-xs text-orange-600 dark:text-orange-400">در حال آماده‌سازی</div>
+           </div>
+           <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-1.5 sm:p-3 shadow-sm">
+             <div className="text-base sm:text-xl font-bold text-green-600 dark:text-green-400">{stats.ready}</div>
+             <div className="text-xs text-green-600 dark:text-green-400">آماده</div>
+           </div>
+           <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-1.5 sm:p-3 shadow-sm">
+             <div className="text-base sm:text-xl font-bold text-purple-600 dark:text-purple-400">{stats.completed}</div>
+             <div className="text-xs text-purple-600 dark:text-purple-400">تکمیل شده</div>
+           </div>
+           <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-1.5 sm:p-3 shadow-sm">
+             <div className="text-base sm:text-xl font-bold text-red-600 dark:text-red-400">{stats.cancelled}</div>
+             <div className="text-xs text-red-600 dark:text-red-400">لغو شده</div>
+           </div>
+         </div>
 
         {/* Tabs */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-3 sm:mb-4">
           <div className="border-b border-gray-200 dark:border-gray-700">
-            <nav className="flex space-x-8 space-x-reverse px-6" aria-label="Tabs">
+            <nav className="flex space-x-3 sm:space-x-6 space-x-reverse px-2 sm:px-6 overflow-x-auto whitespace-nowrap" aria-label="Tabs">
               <button
                 onClick={() => setActiveTab('all')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
@@ -532,40 +532,40 @@ export default function OrdersPage() {
           </div>
         </div>
 
-      {/* Filters */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
+       {/* Filters */}
+         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-2 sm:p-4 mb-3 sm:mb-4">
+           <div className="flex flex-col md:flex-row gap-2 sm:gap-3 items-stretch md:items-center">
             <div className="flex-1">
               <div className="relative">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
+                <input
+                  type="text"
                   placeholder="جستجو در سفارش‌ها..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
-            />
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
+                />
               </div>
-          </div>
+            </div>
 
-            <div className="flex items-center space-x-4 space-x-reverse">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
-            >
-              <option value="all">همه وضعیت‌ها</option>
+            <div className="flex items-center justify-between md:justify-start space-x-2 sm:space-x-4 space-x-reverse w-full md:w-auto">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="all">همه وضعیت‌ها</option>
                 <option value="SUBMITTED">ثبت شده</option>
                 <option value="CONFIRMED">تایید شده</option>
-              <option value="PREPARING">در حال آماده‌سازی</option>
-              <option value="READY">آماده</option>
-              <option value="SERVED">سرو شده</option>
-              <option value="COMPLETED">تکمیل شده</option>
+                <option value="PREPARING">در حال آماده‌سازی</option>
+                <option value="READY">آماده</option>
+                <option value="SERVED">سرو شده</option>
+                <option value="COMPLETED">تکمیل شده</option>
                 <option value="CANCELLED">لغو شده</option>
                 <option value="MODIFIED">ویرایش شده</option>
                 <option value="PARTIALLY_PAID">پرداخت جزئی</option>
-            </select>
-              
+              </select>
+
               <div className="flex items-center space-x-2 space-x-reverse">
                 <button
                   onClick={() => setViewMode('grid')}
@@ -590,7 +590,7 @@ export default function OrdersPage() {
               </div>
             </div>
           </div>
-          </div>
+        </div>
 
         {/* Orders Display */}
         {activeTab === 'DINE_IN' ? (
@@ -610,11 +610,11 @@ export default function OrdersPage() {
                     <p>در این بخش فقط سفارش‌های فعال (غیر از تکمیل شده و لغو شده) نمایش داده می‌شوند.</p>
                     <p className="mt-1">برای ایجاد سفارش جدید، از دکمه &quot;پیش‌فروشگاه&quot; استفاده کنید.</p>
                   </div>
-          </div>
-        </div>
-      </div>
+                </div>
+              </div>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
               {filteredOrders.map((order) => (
                 <div key={order.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                   {/* Table Header */}
@@ -720,101 +720,155 @@ export default function OrdersPage() {
             </div>
           </div>
         ) : (
-          // List view for other order types
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      شماره سفارش
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      مشتری
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      نوع
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      مبلغ
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      وضعیت
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      تاریخ
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      عملیات
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredOrders.map((order) => (
-                    <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                        {order.friendlyOrderNumber}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        {order.customerName || 'مشتری ناشناس'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        {getTypeLabel(order.orderType)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        {formatPrice(order.totalAmount)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                          {getStatusLabel(order.status)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        {new Date(order.orderDate).toLocaleDateString('fa-IR')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2 space-x-reverse">
-                          <button
-                            onClick={() => handleEditOrder(order)}
-                            className="text-amber-600 hover:text-amber-900 dark:text-amber-400 dark:hover:text-amber-300"
-                          >
-                            <FaEdit />
-                          </button>
-                  <button
-                            onClick={() => cancelOrder(order.id)}
-                            disabled={!canCancelOrder(order.status)}
-                            className={`text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 ${
-                              canCancelOrder(order.status) ? '' : 'opacity-50 cursor-not-allowed'
-                            }`}
-                          >
-                            <FaTrash />
-                  </button>
-                          {/* Status Change Dropdown */}
-                          {getNextStatusOptions(order.status).length > 0 && (
-                            <select
-                              onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                              className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                              defaultValue=""
-                            >
-                              <option value="" disabled>تغییر وضعیت</option>
-                              {getNextStatusOptions(order.status).map((nextStatus) => (
-                                <option key={nextStatus} value={nextStatus}>
-                                  {getStatusLabel(nextStatus)}
-                                </option>
-                              ))}
-                            </select>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                      ))}
-                </tbody>
-              </table>
-                    </div>
-                  </div>
-        )}
+           // Mobile Card View
+           <div className="block md:hidden space-y-2">
+             {filteredOrders.map((order) => (
+               <div key={order.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-2 sm:p-3">
+                 <div className="flex items-center justify-between mb-1">
+                   <div className="flex items-center space-x-2 space-x-reverse">
+                     <span className="text-sm font-medium text-gray-900 dark:text-white">{order.friendlyOrderNumber}</span>
+                     <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                       {getStatusLabel(order.status)}
+                     </span>
+                   </div>
+                   <div className="flex items-center space-x-1 space-x-reverse">
+                     <button
+                       onClick={() => handleEditOrder(order)}
+                       className="text-amber-600 hover:text-amber-900 dark:text-amber-400 dark:hover:text-amber-300 p-1"
+                     >
+                       <FaEdit className="text-xs" />
+                     </button>
+                     {canCancelOrder(order.status) && (
+                       <button
+                         onClick={() => cancelOrder(order.id)}
+                         className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 p-1"
+                       >
+                         <FaTrash className="text-xs" />
+                       </button>
+                     )}
+                   </div>
+                 </div>
+                 
+                 <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+                   <span>{order.customerName || 'مشتری ناشناس'} • {getTypeLabel(order.orderType)}</span>
+                   <span>{formatPrice(order.totalAmount)} • {new Date(order.orderDate).toLocaleDateString('fa-IR')}</span>
+                 </div>
+                 
+                 {getNextStatusOptions(order.status).length > 0 && (
+                   <div className="mt-1 pt-1 border-t border-gray-200 dark:border-gray-700">
+                     <select
+                       onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                       className="w-full text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                       defaultValue=""
+                     >
+                       <option value="" disabled>تغییر وضعیت</option>
+                       {getNextStatusOptions(order.status).map((nextStatus) => (
+                         <option key={nextStatus} value={nextStatus}>
+                           {getStatusLabel(nextStatus)}
+                         </option>
+                       ))}
+                     </select>
+                   </div>
+                 )}
+               </div>
+             ))}
+           </div>
+           )}
+           {/* Desktop Table View */}
+           <div className="hidden md:block bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+             <div className="overflow-x-auto">
+               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                 <thead className="bg-gray-50 dark:bg-gray-700">
+                   <tr>
+                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                       شماره سفارش
+                     </th>
+                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                       مشتری
+                     </th>
+                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                       نوع
+                     </th>
+                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                       مبلغ
+                     </th>
+                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                       وضعیت
+                     </th>
+                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                       تاریخ
+                     </th>
+                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                       عملیات
+                     </th>
+                   </tr>
+                 </thead>
+                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                   {filteredOrders.map((order) => (
+                     <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                         {order.friendlyOrderNumber}
+                       </td>
+                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                         {order.customerName || 'مشتری ناشناس'}
+                       </td>
+                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                         {getTypeLabel(order.orderType)}
+                       </td>
+                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                         {formatPrice(order.totalAmount)}
+                       </td>
+                       <td className="px-6 py-4 whitespace-nowrap">
+                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                           {getStatusLabel(order.status)}
+                         </span>
+                       </td>
+                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                         {new Date(order.orderDate).toLocaleDateString('fa-IR')}
+                       </td>
+                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                         <div className="flex space-x-2 space-x-reverse">
+                           <button
+                             onClick={() => handleEditOrder(order)}
+                             className="text-amber-600 hover:text-amber-900 dark:text-amber-400 dark:hover:text-amber-300"
+                           >
+                             <FaEdit />
+                           </button>
+                           <button
+                             onClick={() => cancelOrder(order.id)}
+                             disabled={!canCancelOrder(order.status)}
+                             className={`text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 ${
+                               canCancelOrder(order.status) ? '' : 'opacity-50 cursor-not-allowed'
+                             }`}
+                           >
+                             <FaTrash />
+                           </button>
+                           {/* Status Change Dropdown */}
+                           {getNextStatusOptions(order.status).length > 0 && (
+                             <select
+                               onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                               className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                               defaultValue=""
+                             >
+                               <option value="" disabled>تغییر وضعیت</option>
+                               {getNextStatusOptions(order.status).map((nextStatus) => (
+                                 <option key={nextStatus} value={nextStatus}>
+                                   {getStatusLabel(nextStatus)}
+                                 </option>
+                               ))}
+                             </select>
+                           )}
+                         </div>
+                       </td>
+                     </tr>
+                   ))}
+                 </tbody>
+               </table>
+             </div>
+           </div>
+         
 
-        {/* Empty State */}
+         {/* Empty State */}
         {filteredOrders.length === 0 && !loading && (
           <div className="text-center py-12">
             <div className="text-gray-400 dark:text-gray-500 text-6xl mb-4">

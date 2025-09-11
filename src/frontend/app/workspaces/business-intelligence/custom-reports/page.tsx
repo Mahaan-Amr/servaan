@@ -521,28 +521,28 @@ export default function CustomReportsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
               گزارش‌های سفارشی
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
               ایجاد و مدیریت گزارش‌های سفارشی
             </p>
           </div>
-          <div className="flex space-x-2 space-x-reverse">
+          <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2 sm:space-x-reverse">
             <button
               onClick={() => setShowCreateForm(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
             >
               گزارش جدید
             </button>
             <Link
               href="/workspaces/business-intelligence"
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base text-center"
             >
               بازگشت
             </Link>
@@ -552,37 +552,37 @@ export default function CustomReportsPage() {
 
       {/* Create Report Modal */}
       {showCreateForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
                 ایجاد گزارش سفارشی جدید
               </h3>
               <button
                 onClick={() => setShowCreateForm(false)}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Report Templates */}
               <div>
-                <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                <h4 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3">
                   قالب‌های آماده گزارش
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {reportTemplates.map((template, index) => (
                     <div
                       key={index}
                       onClick={() => handleSelectTemplate(template)}
                       className="p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                     >
-                      <h5 className="font-medium text-gray-900 dark:text-white">{template.name}</h5>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{template.description}</p>
+                      <h5 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">{template.name}</h5>
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">{template.description}</p>
                       <div className="text-xs text-blue-600 dark:text-blue-400 mt-2">
                         {template.fields.length} فیلد
                       </div>
@@ -592,7 +592,7 @@ export default function CustomReportsPage() {
               </div>
 
               {/* Basic Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     نام گزارش *
@@ -601,7 +601,7 @@ export default function CustomReportsPage() {
                     type="text"
                     value={newReport.name}
                     onChange={(e) => setNewReport({ ...newReport, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
                     placeholder="نام گزارش را وارد کنید"
                   />
                 </div>
@@ -613,7 +613,7 @@ export default function CustomReportsPage() {
                   <select
                     value={newReport.reportType}
                     onChange={(e) => setNewReport({ ...newReport, reportType: e.target.value as 'TABULAR' | 'CHART' | 'DASHBOARD' | 'PIVOT' })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
                   >
                     <option value="TABULAR">جدولی</option>
                     <option value="CHART">نمودار</option>
@@ -630,7 +630,7 @@ export default function CustomReportsPage() {
                 <textarea
                   value={newReport.description}
                   onChange={(e) => setNewReport({ ...newReport, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
                   placeholder="توضیحات گزارش"
                   rows={3}
                 />
@@ -638,10 +638,10 @@ export default function CustomReportsPage() {
 
               {/* Field Selection */}
               <div>
-                <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                <h4 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3">
                   انتخاب فیلدها ({newReport.selectedFields.length} انتخاب شده)
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {Object.entries(
                     availableFields.reduce((acc, field) => {
                       if (!acc[field.category]) acc[field.category] = [];
@@ -650,7 +650,7 @@ export default function CustomReportsPage() {
                     }, {} as Record<string, typeof availableFields>)
                   ).map(([category, fields]) => (
                     <div key={category} className="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
-                      <h5 className="font-medium text-gray-900 dark:text-white mb-2">{category}</h5>
+                      <h5 className="font-medium text-gray-900 dark:text-white mb-2 text-sm sm:text-base">{category}</h5>
                       <div className="space-y-2">
                         {fields.map(field => (
                           <label key={field.id} className="flex items-center space-x-2 space-x-reverse">
@@ -660,7 +660,7 @@ export default function CustomReportsPage() {
                               onChange={() => handleFieldToggle(field.id)}
                               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                             />
-                            <span className="text-sm text-gray-700 dark:text-gray-300">{field.label}</span>
+                            <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">{field.label}</span>
                           </label>
                         ))}
                       </div>
@@ -672,7 +672,7 @@ export default function CustomReportsPage() {
               {/* Selected Fields Preview */}
               {newReport.selectedFields.length > 0 && (
                 <div>
-                  <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                  <h4 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3">
                     فیلدهای انتخاب شده
                   </h4>
                   <div className="flex flex-wrap gap-2">
@@ -681,14 +681,14 @@ export default function CustomReportsPage() {
                       return (
                         <span
                           key={fieldId}
-                          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
+                          className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
                         >
                           {field?.label || fieldId}
                           <button
                             onClick={() => handleFieldToggle(fieldId)}
                             className="mr-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                           </button>
@@ -708,22 +708,22 @@ export default function CustomReportsPage() {
                     onChange={(e) => setNewReport({ ...newReport, isPublic: e.target.checked })}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
-                  <span className="mr-2 text-sm text-gray-900 dark:text-white">گزارش عمومی</span>
+                  <span className="mr-2 text-xs sm:text-sm text-gray-900 dark:text-white">گزارش عمومی</span>
                 </label>
               </div>
             </div>
             
-            <div className="flex justify-end space-x-3 space-x-reverse mt-8">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-3 sm:space-x-reverse mt-6 sm:mt-8">
               <button
                 onClick={() => setShowCreateForm(false)}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors text-sm sm:text-base"
               >
                 انصراف
               </button>
               <button
                 onClick={handleCreateReport}
                 disabled={!newReport.name.trim() || newReport.selectedFields.length === 0}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
               >
                 ایجاد گزارش
               </button>
@@ -733,8 +733,8 @@ export default function CustomReportsPage() {
       )}
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               جستجو
@@ -743,7 +743,7 @@ export default function CustomReportsPage() {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
               placeholder="جستجو در گزارش‌ها"
             />
           </div>
@@ -755,7 +755,7 @@ export default function CustomReportsPage() {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
             >
               <option value="ALL">همه انواع</option>
               <option value="TABULAR">جدولی</option>
@@ -765,10 +765,10 @@ export default function CustomReportsPage() {
             </select>
           </div>
           
-          <div className="flex items-end">
+          <div className="flex items-end sm:col-span-2 lg:col-span-1">
             <button
               onClick={loadReports}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
             >
               اعمال فیلتر
             </button>
@@ -777,38 +777,38 @@ export default function CustomReportsPage() {
       </div>
 
       {/* Reports List */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-4">
           گزارش‌های موجود ({filteredReports.length} مورد)
         </h3>
         
         {error && (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
-            <p className="text-red-700 dark:text-red-300">{error}</p>
+            <p className="text-red-700 dark:text-red-300 text-sm sm:text-base">{error}</p>
           </div>
         )}
         
         {filteredReports.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredReports.map((report) => (
-              <div key={report.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow">
+              <div key={report.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <h4 className="text-lg font-medium text-gray-900 dark:text-white">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm sm:text-lg font-medium text-gray-900 dark:text-white truncate">
                       {report.name}
                     </h4>
                     {report.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
                         {report.description}
                       </p>
                     )}
                   </div>
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getReportTypeColor(report.reportType)}`}>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getReportTypeColor(report.reportType)} flex-shrink-0 mr-2`}>
                     {getReportTypeLabel(report.reportType)}
                   </span>
                 </div>
                 
-                <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-3 gap-1 sm:gap-0">
                   <span>
                     ایجاد شده: {new Date(report.createdAt).toLocaleDateString('fa-IR')}
                   </span>
@@ -825,16 +825,16 @@ export default function CustomReportsPage() {
                   </div>
                 )}
                 
-                <div className="flex space-x-2 space-x-reverse">
+                <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2 sm:space-x-reverse">
                   <button
                     onClick={() => handleEditReport(report)}
-                    className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex-1 px-3 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     ویرایش
                   </button>
                   <button
                     onClick={() => handleExecuteReport(report.id)}
-                    className="flex-1 px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
+                    className="flex-1 px-3 py-2 bg-green-600 text-white text-xs sm:text-sm rounded-lg hover:bg-green-700 transition-colors"
                   >
                     اجرا
                   </button>
@@ -848,21 +848,21 @@ export default function CustomReportsPage() {
                         const dropdown = e.currentTarget.nextElementSibling as HTMLElement;
                         dropdown.classList.toggle('hidden');
                       }}
-                      className="px-3 py-2 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors"
+                      className="px-3 py-2 bg-gray-600 text-white text-xs sm:text-sm rounded-lg hover:bg-gray-700 transition-colors"
                       title="صادرات"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     </button>
-                    <div className="hidden export-dropdown absolute left-0 top-full mt-1 w-24 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-10">
+                    <div className="hidden export-dropdown absolute left-0 top-full mt-1 w-20 sm:w-24 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-10">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleExportReport(report.id, 'PDF');
                           (e.currentTarget.parentElement as HTMLElement).classList.add('hidden');
                         }}
-                        className="w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg"
+                        className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg"
                       >
                         PDF
                       </button>
@@ -872,7 +872,7 @@ export default function CustomReportsPage() {
                           handleExportReport(report.id, 'EXCEL');
                           (e.currentTarget.parentElement as HTMLElement).classList.add('hidden');
                         }}
-                        className="w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         Excel
                       </button>
@@ -882,7 +882,7 @@ export default function CustomReportsPage() {
                           handleExportReport(report.id, 'CSV');
                           (e.currentTarget.parentElement as HTMLElement).classList.add('hidden');
                         }}
-                        className="w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-b-lg"
+                        className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-b-lg"
                       >
                         CSV
                       </button>
@@ -892,7 +892,7 @@ export default function CustomReportsPage() {
                   {report.creator?.id === user?.id && (
                     <button
                       onClick={() => handleDeleteReport(report.id)}
-                      className="px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors"
+                      className="px-3 py-2 bg-red-600 text-white text-xs sm:text-sm rounded-lg hover:bg-red-700 transition-colors"
                     >
                       حذف
                     </button>
@@ -902,19 +902,19 @@ export default function CustomReportsPage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="text-center py-8 sm:py-12">
+            <svg className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+            <h3 className="mt-2 text-sm sm:text-base font-medium text-gray-900 dark:text-white">
               گزارشی یافت نشد
             </h3>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
               برای شروع، یک گزارش سفارشی جدید ایجاد کنید
             </p>
             <button
               onClick={() => setShowCreateForm(true)}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
             >
               ایجاد اولین گزارش
             </button>
@@ -924,37 +924,37 @@ export default function CustomReportsPage() {
 
       {/* Edit Report Modal */}
       {showEditForm && editingReport && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
                 ویرایش گزارش
               </h3>
               <button
                 onClick={() => setShowEditForm(false)}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Report Templates */}
               <div>
-                <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                <h4 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3">
                   قالب‌های آماده گزارش
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {reportTemplates.map((template, index) => (
                     <div
                       key={index}
                       onClick={() => handleEditSelectTemplate(template)}
                       className="p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                     >
-                      <h5 className="font-medium text-gray-900 dark:text-white">{template.name}</h5>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{template.description}</p>
+                      <h5 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">{template.name}</h5>
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">{template.description}</p>
                       <div className="text-xs text-blue-600 dark:text-blue-400 mt-2">
                         {template.fields.length} فیلد
                       </div>
@@ -964,7 +964,7 @@ export default function CustomReportsPage() {
               </div>
 
               {/* Basic Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     نام گزارش *
@@ -973,7 +973,7 @@ export default function CustomReportsPage() {
                     type="text"
                     value={editReport.name}
                     onChange={(e) => setEditReport({ ...editReport, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
                     placeholder="نام گزارش را وارد کنید"
                   />
                 </div>
@@ -985,7 +985,7 @@ export default function CustomReportsPage() {
                   <select
                     value={editReport.reportType}
                     onChange={(e) => setEditReport({ ...editReport, reportType: e.target.value as 'TABULAR' | 'CHART' | 'DASHBOARD' | 'PIVOT' })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
                   >
                     <option value="TABULAR">جدولی</option>
                     <option value="CHART">نمودار</option>
@@ -1002,7 +1002,7 @@ export default function CustomReportsPage() {
                 <textarea
                   value={editReport.description}
                   onChange={(e) => setEditReport({ ...editReport, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
                   placeholder="توضیحات گزارش"
                   rows={3}
                 />
@@ -1010,10 +1010,10 @@ export default function CustomReportsPage() {
 
               {/* Field Selection */}
               <div>
-                <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                <h4 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3">
                   انتخاب فیلدها ({editReport.selectedFields.length} انتخاب شده)
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {Object.entries(
                     availableFields.reduce((acc, field) => {
                       if (!acc[field.category]) acc[field.category] = [];
@@ -1022,7 +1022,7 @@ export default function CustomReportsPage() {
                     }, {} as Record<string, typeof availableFields>)
                   ).map(([category, fields]) => (
                     <div key={category} className="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
-                      <h5 className="font-medium text-gray-900 dark:text-white mb-2">{category}</h5>
+                      <h5 className="font-medium text-gray-900 dark:text-white mb-2 text-sm sm:text-base">{category}</h5>
                       <div className="space-y-2">
                         {fields.map(field => (
                           <label key={field.id} className="flex items-center space-x-2 space-x-reverse">
@@ -1032,7 +1032,7 @@ export default function CustomReportsPage() {
                               onChange={() => handleEditFieldToggle(field.id)}
                               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                             />
-                            <span className="text-sm text-gray-700 dark:text-gray-300">{field.label}</span>
+                            <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">{field.label}</span>
                           </label>
                         ))}
                       </div>
@@ -1044,7 +1044,7 @@ export default function CustomReportsPage() {
               {/* Selected Fields Preview */}
               {editReport.selectedFields.length > 0 && (
                 <div>
-                  <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                  <h4 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3">
                     فیلدهای انتخاب شده
                   </h4>
                   <div className="flex flex-wrap gap-2">
@@ -1053,7 +1053,7 @@ export default function CustomReportsPage() {
                       return (
                         <span
                           key={fieldId}
-                          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
+                          className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400"
                         >
                           {field?.label || fieldId}
                           <button
@@ -1063,7 +1063,7 @@ export default function CustomReportsPage() {
                             }}
                             className="mr-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                           </button>
@@ -1083,22 +1083,22 @@ export default function CustomReportsPage() {
                     onChange={(e) => setEditReport({ ...editReport, isPublic: e.target.checked })}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
-                  <span className="mr-2 text-sm text-gray-900 dark:text-white">گزارش عمومی</span>
+                  <span className="mr-2 text-xs sm:text-sm text-gray-900 dark:text-white">گزارش عمومی</span>
                 </label>
               </div>
             </div>
             
-            <div className="flex justify-end space-x-3 space-x-reverse mt-8">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-3 sm:space-x-reverse mt-6 sm:mt-8">
               <button
                 onClick={() => setShowEditForm(false)}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors text-sm sm:text-base"
               >
                 انصراف
               </button>
               <button
                 onClick={handleUpdateReport}
                 disabled={!editReport.name.trim() || editReport.selectedFields.length === 0}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
               >
                 بروزرسانی گزارش
               </button>
@@ -1109,17 +1109,17 @@ export default function CustomReportsPage() {
 
       {/* Results Modal */}
       {showResultsModal && executionResult && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
                 نتایج اجرای گزارش
               </h3>
               <button
                 onClick={() => setShowResultsModal(false)}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -1128,32 +1128,32 @@ export default function CustomReportsPage() {
             <div className="space-y-4">
               {/* Execution Summary */}
               {executionResult.status === 'SUCCESS' ? (
-                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 sm:p-4">
                   <div className="flex items-center">
-                    <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <h4 className="text-sm font-medium text-green-800 dark:text-green-300">
+                    <h4 className="text-xs sm:text-sm font-medium text-green-800 dark:text-green-300">
                       گزارش با موفقیت اجرا شد
                     </h4>
                   </div>
-                  <div className="mt-2 text-sm text-green-700 dark:text-green-400">
+                  <div className="mt-2 text-xs sm:text-sm text-green-700 dark:text-green-400 space-y-1">
                     <p>تعداد رکوردها: <span className="font-semibold">{executionResult.resultCount.toLocaleString('fa-IR')}</span></p>
                     <p>زمان اجرا: <span className="font-semibold">{executionResult.executionTime.toLocaleString('fa-IR')} میلی‌ثانیه</span></p>
                     <p>زمان اجرا: <span className="font-semibold">{new Date(executionResult.executedAt).toLocaleString('fa-IR')}</span></p>
                   </div>
                 </div>
               ) : (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 sm:p-4">
                   <div className="flex items-center">
-                    <svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <h4 className="text-sm font-medium text-red-800 dark:text-red-300">
+                    <h4 className="text-xs sm:text-sm font-medium text-red-800 dark:text-red-300">
                       خطا در اجرای گزارش
                     </h4>
                   </div>
-                  <div className="mt-2 text-sm text-red-700 dark:text-red-400">
+                  <div className="mt-2 text-xs sm:text-sm text-red-700 dark:text-red-400 space-y-1">
                     <p>پیام خطا: <span className="font-semibold">{executionResult.errorMessage}</span></p>
                     <p>زمان اجرا: <span className="font-semibold">{new Date(executionResult.executedAt).toLocaleString('fa-IR')}</span></p>
                   </div>
@@ -1163,17 +1163,17 @@ export default function CustomReportsPage() {
               {/* Data Preview - Only show for successful executions */}
               {executionResult.status === 'SUCCESS' && executionResult.data && executionResult.data.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <h4 className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     نتایج گزارش ({executionResult.resultCount.toLocaleString('fa-IR')} رکورد)
                   </h4>
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 overflow-x-auto">
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-2 sm:p-4 overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                       <thead className="bg-gray-100 dark:bg-gray-800">
                         <tr>
                           {Object.keys(executionResult.data[0]).map((key) => (
                             <th
                               key={key}
-                              className="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                              className="px-2 sm:px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                             >
                               {key}
                             </th>
@@ -1186,7 +1186,7 @@ export default function CustomReportsPage() {
                             {Object.values(row).map((value: unknown, cellIndex: number) => (
                               <td
                                 key={cellIndex}
-                                className="px-4 py-2 text-sm text-gray-900 dark:text-gray-300"
+                                className="px-2 sm:px-4 py-2 text-xs sm:text-sm text-gray-900 dark:text-gray-300"
                               >
                                 {value != null ? String(value) : '-'}
                               </td>
@@ -1196,7 +1196,7 @@ export default function CustomReportsPage() {
                       </tbody>
                     </table>
                     {executionResult.data.length > 10 && (
-                      <div className="mt-3 text-center text-sm text-gray-500 dark:text-gray-400">
+                      <div className="mt-3 text-center text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                         نمایش ۱۰ رکورد اول از {executionResult.resultCount.toLocaleString('fa-IR')} رکورد
                       </div>
                     )}
@@ -1206,12 +1206,12 @@ export default function CustomReportsPage() {
 
               {/* No Data Message - Only show for successful executions with no data */}
               {executionResult.status === 'SUCCESS' && (!executionResult.data || executionResult.data.length === 0) && (
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 sm:p-4">
                   <div className="flex items-center">
-                    <svg className="w-5 h-5 text-yellow-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
-                    <span className="text-sm text-yellow-800 dark:text-yellow-300">
+                    <span className="text-xs sm:text-sm text-yellow-800 dark:text-yellow-300">
                       هیچ داده‌ای یافت نشد
                     </span>
                   </div>
@@ -1219,21 +1219,21 @@ export default function CustomReportsPage() {
               )}
             </div>
             
-            <div className="flex justify-end space-x-3 space-x-reverse mt-6">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-3 sm:space-x-reverse mt-4 sm:mt-6">
               {/* Export Buttons - Only show for successful executions with data */}
               {executionResult.status === 'SUCCESS' && executionResult.data && executionResult.data.length > 0 && (
-                <div className="flex space-x-2 space-x-reverse mr-auto">
+                <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2 sm:space-x-reverse sm:mr-auto">
                   <button
                     onClick={() => handleExportReport(executionResult.reportId, 'PDF')}
                     disabled={exportingFormat === 'PDF'}
-                    className="px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    className="px-3 py-2 bg-red-600 text-white text-xs sm:text-sm rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
                     {exportingFormat === 'PDF' ? (
-                      <svg className="w-4 h-4 animate-spin ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4 animate-spin ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
                     ) : (
-                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     )}
@@ -1243,14 +1243,14 @@ export default function CustomReportsPage() {
                   <button
                     onClick={() => handleExportReport(executionResult.reportId, 'EXCEL')}
                     disabled={exportingFormat === 'EXCEL'}
-                    className="px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    className="px-3 py-2 bg-green-600 text-white text-xs sm:text-sm rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
                     {exportingFormat === 'EXCEL' ? (
-                      <svg className="w-4 h-4 animate-spin ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4 animate-spin ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
                     ) : (
-                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     )}
@@ -1260,14 +1260,14 @@ export default function CustomReportsPage() {
                   <button
                     onClick={() => handleExportReport(executionResult.reportId, 'CSV')}
                     disabled={exportingFormat === 'CSV'}
-                    className="px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    className="px-3 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
                     {exportingFormat === 'CSV' ? (
-                      <svg className="w-4 h-4 animate-spin ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4 animate-spin ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
                     ) : (
-                      <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     )}
@@ -1278,7 +1278,7 @@ export default function CustomReportsPage() {
               
               <button
                 onClick={() => setShowResultsModal(false)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
               >
                 بستن
               </button>

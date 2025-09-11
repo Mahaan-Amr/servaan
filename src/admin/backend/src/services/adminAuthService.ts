@@ -4,7 +4,7 @@
 import { prisma } from '../lib/prisma';
 import { compareAdminPassword, generateAdminToken, hashAdminPassword } from '../utils/admin';
 import { adminConfig } from '../config/admin';
-import { AdminLoginRequest, AdminLoginResponse, AdminUser } from '../types/admin';
+import { AdminLoginRequest, AdminLoginResponse, AdminUser, AdminRole } from '../types/admin';
 
 /**
  * Admin Login Service
@@ -56,7 +56,10 @@ export const adminLogin = async (loginData: AdminLoginRequest): Promise<AdminLog
     // }
 
     // Generate JWT token
-    const token = generateAdminToken(adminUser);
+    const token = generateAdminToken({
+      ...adminUser,
+      role: adminUser.role as AdminRole,
+    } as AdminUser);
 
     // Update last login time
     await prisma.adminUser.update({
@@ -85,7 +88,7 @@ export const adminLogin = async (loginData: AdminLoginRequest): Promise<AdminLog
       user: {
         id: adminUser.id,
         email: adminUser.email,
-        role: adminUser.role,
+        role: adminUser.role as AdminRole,
         isActive: adminUser.isActive,
         twoFactorSecret: adminUser.twoFactorSecret,
         lastLogin: adminUser.lastLogin,
@@ -152,7 +155,7 @@ export const getAdminProfile = async (adminUserId: string): Promise<AdminUser | 
     return {
       id: adminUser.id,
       email: adminUser.email,
-      role: adminUser.role,
+      role: adminUser.role as AdminRole,
       isActive: adminUser.isActive,
       twoFactorSecret: adminUser.twoFactorSecret,
       lastLogin: adminUser.lastLogin,

@@ -8,12 +8,8 @@ import { TableFilterOptions } from '../../../../services/orderingService';
 import TableLayoutDesigner from './components/TableLayoutDesigner';
 import { ReservationManager } from './components/ReservationManager';
 import { TableStatusManager } from './components/TableStatusManager';
-import { TableQRManager } from './components/TableQRManager';
-import { BulkOperationsManager } from './components/BulkOperationsManager';
-import TableAnalyticsDashboard from './components/TableAnalyticsDashboard';
-import AdvancedAnalyticsDashboard from './components/AdvancedAnalyticsDashboard';
 import TableForm from './components/TableForm';
-import { FaTh, FaList, FaMap, FaCalendarAlt, FaCog, FaQrcode, FaChartLine, FaLayerGroup, FaChartBar, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaTh, FaList, FaMap, FaCalendarAlt, FaCog, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import { OrderService } from '../../../../services/orderingService';
 import { OrderStatus } from '../../../../types/ordering';
 import { io } from 'socket.io-client';
@@ -73,10 +69,6 @@ export default function TablesPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'layout'>('grid');
   const [isReservationModalOpen, setIsReservationModalOpen] = useState(false);
   const [isStatusManagerOpen, setIsStatusManagerOpen] = useState(false);
-  const [isQRManagerOpen, setIsQRManagerOpen] = useState(false);
-  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
-  const [isAdvancedAnalyticsOpen, setIsAdvancedAnalyticsOpen] = useState(false);
-  const [isBulkOperationsOpen, setIsBulkOperationsOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<TableStatus | 'all'>('all');
   const [sectionFilter, setSectionFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -409,20 +401,21 @@ export default function TablesPage() {
     <div className="p-6">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
               مدیریت میزها
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
               مدیریت وضعیت میزها، رزروها و انتقال سفارشات
             </p>
           </div>
-          {/* Action Buttons */}
+          
+          {/* View Mode Buttons */}
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setViewMode('grid')}
-              className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+              className={`px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
                 viewMode === 'grid'
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
@@ -433,7 +426,7 @@ export default function TablesPage() {
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+              className={`px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
                 viewMode === 'list'
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
@@ -444,7 +437,7 @@ export default function TablesPage() {
             </button>
             <button
               onClick={() => setViewMode('layout')}
-              className={`px-3 py-2 text-sm rounded-lg transition-colors ${
+              className={`px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
                 viewMode === 'layout'
                   ? 'bg-blue-500 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
@@ -453,150 +446,126 @@ export default function TablesPage() {
               <FaMap className="inline ml-1" />
               نقشه
             </button>
-            <button
-              onClick={() => setIsReservationModalOpen(true)}
-              className="px-3 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-            >
-              <FaCalendarAlt className="inline ml-1" />
-              رزرو میز
-            </button>
-            <button
-              onClick={() => setIsStatusManagerOpen(true)}
-              className="px-3 py-2 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
-            >
-              <FaCog className="inline ml-1" />
-              مدیریت وضعیت
-            </button>
-            <button
-              onClick={() => setIsQRManagerOpen(true)}
-              className="px-3 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-            >
-              <FaQrcode className="inline ml-1" />
-              مدیریت QR
-            </button>
-            <button
-              onClick={() => setIsAnalyticsOpen(true)}
-              className="px-3 py-2 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
-            >
-              <FaChartLine className="inline ml-1" />
-              تحلیل میزها
-            </button>
-            <button
-              onClick={() => setIsAdvancedAnalyticsOpen(true)}
-              className="px-3 py-2 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
-            >
-              <FaChartBar className="inline ml-1" />
-              تحلیل پیشرفته
-            </button>
-            <button
-              onClick={() => setIsBulkOperationsOpen(true)}
-              className="px-3 py-2 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
-            >
-              <FaLayerGroup className="inline ml-1" />
-              عملیات گروهی
-            </button>
-            <button
-              onClick={handleCreateTable}
-              className="px-3 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-            >
-              <FaPlus className="inline ml-1" />
-              افزودن میز
-            </button>
           </div>
         </div>
 
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setIsReservationModalOpen(true)}
+            className="px-3 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+          >
+            <FaCalendarAlt className="inline ml-1" />
+            رزرو میز
+          </button>
+          <button
+            onClick={handleCreateTable}
+            className="px-3 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+          >
+            <FaPlus className="inline ml-1" />
+            افزودن میز
+          </button>
+          <button
+            onClick={() => setIsStatusManagerOpen(true)}
+            className="px-3 py-2 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+          >
+            <FaCog className="inline ml-1" />
+            مدیریت وضعیت
+          </button>
+        </div>
+
         {/* Statistics Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <div className="card p-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
+          <div className="card p-2 sm:p-4">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                <svg className="w-6 h-6 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-1 sm:p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                 </svg>
               </div>
-              <div className="mr-3">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">کل میزها</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
+              <div className="mr-2 sm:mr-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">کل میزها</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
               </div>
             </div>
           </div>
 
-          <div className="card p-4">
+          <div className="card p-2 sm:p-4">
             <div className="flex items-center">
-              <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-                <svg className="w-6 h-6 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-1 sm:p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <div className="mr-3">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">آزاد</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.available}</p>
+              <div className="mr-2 sm:mr-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">آزاد</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">{stats.available}</p>
               </div>
             </div>
           </div>
 
-          <div className="card p-4">
+          <div className="card p-2 sm:p-4">
             <div className="flex items-center">
-              <div className="p-2 bg-red-100 dark:bg-red-900 rounded-lg">
-                <svg className="w-6 h-6 text-red-600 dark:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-1 sm:p-2 bg-red-100 dark:bg-red-900 rounded-lg">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-red-600 dark:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="mr-3">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">مشغول</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.occupied}</p>
+              <div className="mr-2 sm:mr-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">مشغول</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">{stats.occupied}</p>
               </div>
             </div>
           </div>
 
-          <div className="card p-4">
+          <div className="card p-2 sm:p-4">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                <svg className="w-6 h-6 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-1 sm:p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
-              <div className="mr-3">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">رزرو شده</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.reserved}</p>
+              <div className="mr-2 sm:mr-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">رزرو شده</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">{stats.reserved}</p>
               </div>
             </div>
           </div>
 
-          <div className="card p-4">
+          <div className="card p-2 sm:p-4">
             <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-                <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-1 sm:p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-yellow-600 dark:text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                 </svg>
               </div>
-              <div className="mr-3">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">در حال تمیزکاری</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.cleaning}</p>
+              <div className="mr-2 sm:mr-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">در حال تمیزکاری</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">{stats.cleaning}</p>
               </div>
             </div>
           </div>
 
-          <div className="card p-4">
+          <div className="card p-2 sm:p-4">
             <div className="flex items-center">
-              <div className="p-2 bg-gray-100 dark:bg-gray-900 rounded-lg">
-                <svg className="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-1 sm:p-2 bg-gray-100 dark:bg-gray-900 rounded-lg">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
-              <div className="mr-3">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">خارج از سرویس</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.outOfOrder}</p>
+              <div className="mr-2 sm:mr-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">خارج از سرویس</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">{stats.outOfOrder}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="card p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="card p-3 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {/* Search */}
-            <div className="lg:col-span-2">
+            <div className="sm:col-span-2 lg:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 جستجو
               </label>
@@ -605,7 +574,7 @@ export default function TablesPage() {
                 placeholder="شماره میز، نام یا بخش..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-gray-700 dark:text-white text-sm"
               />
             </div>
 
@@ -617,7 +586,7 @@ export default function TablesPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as TableStatus | 'all')}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-gray-700 dark:text-white text-sm"
               >
                 <option value="all">همه</option>
                 <option value="AVAILABLE">آزاد</option>
@@ -636,7 +605,7 @@ export default function TablesPage() {
               <select
                 value={sectionFilter}
                 onChange={(e) => setSectionFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-gray-700 dark:text-white text-sm"
               >
                 <option value="all">همه</option>
                 {sections.map(section => (
@@ -686,58 +655,58 @@ export default function TablesPage() {
             <p className="text-gray-600 dark:text-gray-400">هیچ میزی با فیلترهای انتخاب شده یافت نشد.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
             {filteredTables.map((table) => (
-              <div key={table.id} className="card p-6 hover:shadow-lg transition-shadow">
+              <div key={table.id} className="card p-3 sm:p-6 hover:shadow-lg transition-shadow">
                 {/* Table Header */}
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                    <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
                       میز {table.tableNumber}
                     </h3>
                     {table.tableName && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{table.tableName}</p>
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{table.tableName}</p>
                     )}
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(table.status)}`}>
+                  <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(table.status)}`}>
                     {getStatusText(table.status)}
                   </span>
                 </div>
 
                 {/* Table Details */}
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">ظرفیت:</span>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">{table.capacity} نفر</span>
+                    <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">ظرفیت:</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">{table.capacity} نفر</span>
                   </div>
                   
                   {table.section && (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">بخش:</span>
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">{table.section}</span>
+                      <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">بخش:</span>
+                      <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">{table.section}</span>
                     </div>
                   )}
                   
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">طبقه:</span>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">{table.floor}</span>
+                    <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">طبقه:</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">{table.floor}</span>
                   </div>
                 </div>
 
                 {/* Quick Actions */}
-                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <div className="flex flex-wrap gap-2">
+                <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex flex-wrap gap-1 sm:gap-2">
                     {table.status === 'AVAILABLE' && (
                       <>
                         <button
                           onClick={() => handleStatusChange(table.id, 'OCCUPIED' as TableStatus)}
-                          className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
+                          className="px-2 sm:px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
                         >
                           اشغال
                         </button>
                         <button
                           onClick={() => handleStatusChange(table.id, 'RESERVED' as TableStatus)}
-                          className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                          className="px-2 sm:px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
                         >
                           رزرو
                         </button>
@@ -747,7 +716,7 @@ export default function TablesPage() {
                     {table.status === 'OCCUPIED' && (
                       <button
                         onClick={() => handleStatusChange(table.id, 'CLEANING' as TableStatus)}
-                        className="px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700"
+                        className="px-2 sm:px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700"
                       >
                         تمیزکاری
                       </button>
@@ -756,7 +725,7 @@ export default function TablesPage() {
                     {table.status === 'CLEANING' && (
                       <button
                         onClick={() => handleStatusChange(table.id, 'AVAILABLE' as TableStatus)}
-                        className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                        className="px-2 sm:px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
                       >
                         آزاد کردن
                       </button>
@@ -765,7 +734,7 @@ export default function TablesPage() {
                     {table.status !== 'OUT_OF_ORDER' && (
                       <button
                         onClick={() => handleStatusChange(table.id, 'OUT_OF_ORDER' as TableStatus)}
-                        className="px-3 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700"
+                        className="px-2 sm:px-3 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700"
                       >
                         خارج از سرویس
                       </button>
@@ -774,7 +743,7 @@ export default function TablesPage() {
                     {table.status === 'OUT_OF_ORDER' && (
                       <button
                         onClick={() => handleStatusChange(table.id, 'AVAILABLE' as TableStatus)}
-                        className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                        className="px-2 sm:px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
                       >
                         فعال کردن
                       </button>
@@ -782,10 +751,10 @@ export default function TablesPage() {
                   </div>
                   
                   {/* Edit and Delete Actions */}
-                  <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex gap-1 sm:gap-2 mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-200 dark:border-gray-700">
                     <button
                       onClick={() => handleEditTable(table)}
-                      className="flex-1 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 flex items-center justify-center"
+                      className="flex-1 px-2 sm:px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 flex items-center justify-center"
                     >
                       <FaEdit className="ml-1" />
                       ویرایش
@@ -808,7 +777,7 @@ export default function TablesPage() {
                     {table.currentOrder && (
                       <button
                         onClick={() => handleQuickResolve(table)}
-                        className="px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 flex items-center justify-center"
+                        className="px-2 sm:px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 flex items-center justify-center"
                       >
                         <FaPlus className="ml-1" />
                         رفع سفارش
@@ -832,23 +801,6 @@ export default function TablesPage() {
         isOpen={isStatusManagerOpen}
         onClose={() => setIsStatusManagerOpen(false)}
         onStatusChanged={handleStatusChange}
-      />
-      <TableQRManager
-        isOpen={isQRManagerOpen}
-        onClose={() => setIsQRManagerOpen(false)}
-      />
-      <TableAnalyticsDashboard
-        isOpen={isAnalyticsOpen}
-        onClose={() => setIsAnalyticsOpen(false)}
-      />
-      <AdvancedAnalyticsDashboard
-        isOpen={isAdvancedAnalyticsOpen}
-        onClose={() => setIsAdvancedAnalyticsOpen(false)}
-      />
-      <BulkOperationsManager
-        isOpen={isBulkOperationsOpen}
-        onClose={() => setIsBulkOperationsOpen(false)}
-        onTablesUpdated={loadTables}
       />
       <TableForm
         isOpen={isTableFormOpen}

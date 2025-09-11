@@ -369,10 +369,10 @@ export default function AdvancedAnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center h-48 sm:h-64 p-4 sm:p-6">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-500 mx-auto"></div>
-          <p className="text-gray-600 dark:text-gray-400 mt-4">در حال بارگذاری تحلیل‌های پیشرفته...</p>
+          <div className="animate-spin rounded-full h-10 w-10 sm:h-16 sm:w-16 border-b-2 border-purple-500 mx-auto"></div>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-3">در حال بارگذاری تحلیل‌های پیشرفته...</p>
         </div>
       </div>
     );
@@ -380,14 +380,14 @@ export default function AdvancedAnalyticsPage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center h-48 sm:h-64 p-4 sm:p-6">
         <div className="text-center">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">خطا در بارگذاری داده‌ها</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+          <div className="text-red-500 text-4xl sm:text-6xl mb-3 sm:mb-4">⚠️</div>
+          <h2 className="text-base sm:text-xl font-semibold text-gray-900 dark:text-white mb-2">خطا در بارگذاری داده‌ها</h2>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4">{error}</p>
           <button
             onClick={loadAdvancedAnalytics}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            className="px-3 py-2 sm:px-4 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
             تلاش مجدد
           </button>
@@ -450,24 +450,24 @@ export default function AdvancedAnalyticsPage() {
   ];
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-            <Brain className="w-8 h-8 text-purple-600" />
+          <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2 sm:gap-3">
+            <Brain className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" />
             تحلیل‌های پیشرفته
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1 sm:mt-2">
             سفر مشتری، تحلیل‌های پیش‌بینی و تحلیل درآمد
           </p>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value as '30d' | '90d' | '1y')}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            className="px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           >
             <option value="30d">30 روز گذشته</option>
             <option value="90d">90 روز گذشته</option>
@@ -477,7 +477,7 @@ export default function AdvancedAnalyticsPage() {
           <select
             value={selectedSegment}
             onChange={(e) => setSelectedSegment(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            className="px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           >
             <option value="all">همه بخش‌ها</option>
             <option value="NEW">مشتریان جدید</option>
@@ -488,7 +488,7 @@ export default function AdvancedAnalyticsPage() {
           
           <button
             onClick={loadAdvancedAnalytics}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+            className="px-3 py-2 sm:px-4 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 text-xs sm:text-sm"
           >
             <Zap className="w-4 h-4" />
             بروزرسانی
@@ -506,32 +506,32 @@ export default function AdvancedAnalyticsPage() {
       />
 
       {/* Customer Journey Visualization */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4 flex items-center gap-2">
             <Users className="w-5 h-5 text-blue-600" />
             سفر مشتری
           </h3>
           <div className="space-y-4">
             {customerJourneyData.map((stage, index) => (
               <div key={stage.stage} className="relative">
-                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
+                <div className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs sm:text-sm font-medium">
                       {index + 1}
                     </div>
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">{stage.stage}</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <h4 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">{stage.stage}</h4>
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                         {formatNumber(stage.customers)} مشتری • {stage.conversionRate}% تبدیل
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                    <p className="text-sm sm:text-lg font-semibold text-blue-600 dark:text-blue-400">
                       {formatCurrency(stage.revenue).split(' ')[0]}
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">درآمد</p>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">درآمد</p>
                   </div>
                 </div>
                 {index < customerJourneyData.length - 1 && (
@@ -587,10 +587,10 @@ export default function AdvancedAnalyticsPage() {
       </div>
 
       {/* Predictive Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Revenue Forecast */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-green-600" />
             پیش‌بینی درآمد
           </h3>
@@ -604,8 +604,8 @@ export default function AdvancedAnalyticsPage() {
         </div>
 
         {/* Revenue Attribution */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4 flex items-center gap-2">
             <Target className="w-5 h-5 text-purple-600" />
             تحلیل منابع درآمد
           </h3>
@@ -623,10 +623,10 @@ export default function AdvancedAnalyticsPage() {
       </div>
 
       {/* Multi-Metric Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Multi-Metric Chart */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">تحلیل چندبعدی مشتریان</h3>
+        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">تحلیل چندبعدی مشتریان</h3>
           <CustomMultiMetricChart
             data={customerJourneyData.map(stage => ({
               period: stage.stage,
@@ -667,7 +667,7 @@ export default function AdvancedAnalyticsPage() {
         </div>
 
         {/* Insights Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
           <CustomInsightsCard
             insights={data.predictiveInsights}
             title="بینش‌های هوشمند"
@@ -678,10 +678,10 @@ export default function AdvancedAnalyticsPage() {
       </div>
 
       {/* Revenue Attribution Details */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">جزئیات منابع درآمد</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">جزئیات منابع درآمد</h3>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs sm:text-sm">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700">
                 <th className="text-right py-3 font-semibold text-gray-900 dark:text-white">منبع</th>

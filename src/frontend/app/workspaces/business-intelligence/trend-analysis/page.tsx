@@ -173,16 +173,16 @@ export default function TrendAnalysisPage() {
   // Handle loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-6"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-              <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
-              <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
-              <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="h-6 sm:h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2 sm:w-1/4 mb-4 sm:mb-6"></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+              <div className="h-24 sm:h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="h-24 sm:h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="h-24 sm:h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
             </div>
-            <div className="h-96 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="h-64 sm:h-96 bg-gray-200 dark:bg-gray-700 rounded"></div>
           </div>
         </div>
       </div>
@@ -192,15 +192,15 @@ export default function TrendAnalysisPage() {
   // Handle error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center py-12">
-            <div className="text-red-500 text-6xl mb-4">⚠️</div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">خطا در بارگذاری داده‌ها</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
+          <div className="text-center py-8 sm:py-12">
+            <div className="text-red-500 text-4xl sm:text-6xl mb-4">⚠️</div>
+            <h2 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">خطا در بارگذاری داده‌ها</h2>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 sm:mb-6">{error}</p>
           <button
               onClick={loadTrendAnalysis}
-              className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm sm:text-base"
           >
             تلاش مجدد
           </button>
@@ -213,30 +213,30 @@ export default function TrendAnalysisPage() {
   // Handle empty state
   if (!trendData || !trendData.dataPoints || trendData.dataPoints.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center py-12">
-            <div className="text-gray-400 text-6xl mb-4">📊</div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">داده‌ای برای نمایش وجود ندارد</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+          <div className="text-center py-8 sm:py-12">
+            <div className="text-gray-400 text-4xl sm:text-6xl mb-4">📊</div>
+            <h2 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">داده‌ای برای نمایش وجود ندارد</h2>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 sm:mb-6">
               برای دوره انتخاب شده داده‌ای موجود نیست. لطفاً دوره یا معیار دیگری انتخاب کنید.
             </p>
-            <div className="flex flex-wrap justify-center gap-4">
+            <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
               <button
                 onClick={() => setPeriod('7d')}
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm sm:text-base"
               >
                 ۷ روز گذشته
               </button>
               <button
                 onClick={() => setPeriod('30d')}
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm sm:text-base"
               >
                 ۳۰ روز گذشته
               </button>
               <button
                 onClick={() => setPeriod('90d')}
-                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm sm:text-base"
               >
                 ۹۰ روز گذشته
               </button>
@@ -248,23 +248,23 @@ export default function TrendAnalysisPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
               📈 تحلیل پیشرفته روند
                   </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
               تحلیل جامع روند، پیش‌بینی و بینش‌های هوشمند {getMetricLabel(metric)}
             </p>
           </div>
-          <div className="flex items-center space-x-4 space-x-reverse">
+          <div className="flex flex-col sm:flex-row gap-3 sm:space-x-4 sm:space-x-reverse">
             <select
               value={metric}
               onChange={(e) => setMetric(e.target.value as 'revenue' | 'profit' | 'sales_volume' | 'customers')}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white dark:bg-gray-700 dark:text-white"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white dark:bg-gray-700 dark:text-white text-sm sm:text-base"
             >
               <option value="revenue">درآمد</option>
               <option value="profit">سود</option>
@@ -274,7 +274,7 @@ export default function TrendAnalysisPage() {
             <select
               value={granularity}
               onChange={(e) => setGranularity(e.target.value as 'day' | 'week' | 'month')}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white dark:bg-gray-700 dark:text-white"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white dark:bg-gray-700 dark:text-white text-sm sm:text-base"
             >
               <option value="day">روزانه</option>
               <option value="week">هفتگی</option>
@@ -283,7 +283,7 @@ export default function TrendAnalysisPage() {
             <select
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white dark:bg-gray-700 dark:text-white"
+              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white dark:bg-gray-700 dark:text-white text-sm sm:text-base"
             >
               <option value="7d">۷ روز گذشته</option>
               <option value="30d">۳۰ روز گذشته</option>
@@ -292,7 +292,7 @@ export default function TrendAnalysisPage() {
             </select>
             <button
               onClick={loadTrendAnalysis}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm sm:text-base"
             >
               بروزرسانی
             </button>
@@ -303,7 +303,7 @@ export default function TrendAnalysisPage() {
       {/* Navigation Tabs */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
         <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="flex space-x-8 space-x-reverse px-6">
+          <nav className="flex overflow-x-auto space-x-4 sm:space-x-8 space-x-reverse px-4 sm:px-6">
             {[
               { id: 'overview', label: '📊 نمای کلی', icon: '📊' },
               { id: 'forecast', label: '🔮 پیش‌بینی', icon: '🔮' },
@@ -314,7 +314,7 @@ export default function TrendAnalysisPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as 'overview' | 'forecast' | 'multi-metric' | 'insights' | 'scorecard')}
-                className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
+                className={`py-3 sm:py-4 px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'border-purple-500 text-purple-600 dark:text-purple-400'
                     : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
@@ -326,62 +326,62 @@ export default function TrendAnalysisPage() {
           </nav>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {/* Overview Tab */}
           {activeTab === 'overview' && trendData && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4 sm:p-6">
                   <div className="flex items-center">
                     <div className="p-2 bg-blue-500 rounded-lg">
-                      <span className="text-2xl text-white">📊</span>
+                      <span className="text-lg sm:text-2xl text-white">📊</span>
                     </div>
-                    <div className="mr-4">
-                      <p className="text-sm font-medium text-blue-600 dark:text-blue-400">مجموع</p>
-                      <p className="text-xl font-bold text-blue-900 dark:text-blue-100">
+                    <div className="mr-3 sm:mr-4">
+                      <p className="text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400">مجموع</p>
+                      <p className="text-lg sm:text-xl font-bold text-blue-900 dark:text-blue-100">
                         {formatCurrency(trendData.summary.totalValue)} {getMetricUnit(metric)}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg p-6">
+                <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg p-4 sm:p-6">
                   <div className="flex items-center">
                     <div className="p-2 bg-green-500 rounded-lg">
-                      <span className="text-2xl text-white">📈</span>
+                      <span className="text-lg sm:text-2xl text-white">📈</span>
                     </div>
-                    <div className="mr-4">
-                      <p className="text-sm font-medium text-green-600 dark:text-green-400">رشد</p>
-                      <p className="text-xl font-bold text-green-900 dark:text-green-100">
+                    <div className="mr-3 sm:mr-4">
+                      <p className="text-xs sm:text-sm font-medium text-green-600 dark:text-green-400">رشد</p>
+                      <p className="text-lg sm:text-xl font-bold text-green-900 dark:text-green-100">
                         {trendData.summary.growth > 0 ? '+' : ''}{trendData.summary.growth.toFixed(1)}%
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-6">
+                <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-4 sm:p-6">
                   <div className="flex items-center">
                     <div className="p-2 bg-purple-500 rounded-lg">
-                      <span className="text-2xl text-white">🎯</span>
+                      <span className="text-lg sm:text-2xl text-white">🎯</span>
                     </div>
-                    <div className="mr-4">
-                      <p className="text-sm font-medium text-purple-600 dark:text-purple-400">دقت روند</p>
-                      <p className="text-xl font-bold text-purple-900 dark:text-purple-100">
+                    <div className="mr-3 sm:mr-4">
+                      <p className="text-xs sm:text-sm font-medium text-purple-600 dark:text-purple-400">دقت روند</p>
+                      <p className="text-lg sm:text-xl font-bold text-purple-900 dark:text-purple-100">
                         {(trendData.trend.rSquared * 100).toFixed(1)}%
                       </p>
                     </div>
                   </div>
                 </div>
                 
-                <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-6">
+                <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-4 sm:p-6">
                   <div className="flex items-center">
                     <div className="p-2 bg-orange-500 rounded-lg">
-                      <span className="text-2xl text-white">📊</span>
+                      <span className="text-lg sm:text-2xl text-white">📊</span>
                     </div>
-                    <div className="mr-4">
-                      <p className="text-sm font-medium text-orange-600 dark:text-orange-400">میانگین</p>
-                      <p className="text-xl font-bold text-orange-900 dark:text-orange-100">
+                    <div className="mr-3 sm:mr-4">
+                      <p className="text-xs sm:text-sm font-medium text-orange-600 dark:text-orange-400">میانگین</p>
+                      <p className="text-lg sm:text-xl font-bold text-orange-900 dark:text-orange-100">
                         {formatCurrency(trendData.summary.averageValue)} {getMetricUnit(metric)}
                       </p>
                     </div>
@@ -393,8 +393,8 @@ export default function TrendAnalysisPage() {
               {/* CustomAreaChart component was removed, so this section is now a placeholder */}
               {/* You would need to re-add the CustomAreaChart component or a similar chart */}
               {/* For now, we'll just show a placeholder message */}
-              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-6 text-center">
-                <p className="text-gray-600 dark:text-gray-400">
+              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 sm:p-6 text-center">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                   نمودار روند در حال حاضر در دسترس نیست. لطفاً بعداً دوباره تلاش کنید.
                 </p>
               </div>
@@ -403,13 +403,13 @@ export default function TrendAnalysisPage() {
 
           {/* Forecast Tab */}
           {activeTab === 'forecast' && trendData && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Rich Forecast Visualization */}
               {/* CustomForecastChart component was removed, so this section is now a placeholder */}
               {/* You would need to re-add the CustomForecastChart component or a similar chart */}
               {/* For now, we'll just show a placeholder message */}
-              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-6 text-center">
-                <p className="text-gray-600 dark:text-gray-400">
+              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 sm:p-6 text-center">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                   پیش‌بینی روند در حال حاضر در دسترس نیست. لطفاً بعداً دوباره تلاش کنید.
                 </p>
               </div>
@@ -418,13 +418,13 @@ export default function TrendAnalysisPage() {
 
           {/* Multi-Metric Tab */}
           {activeTab === 'multi-metric' && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Rich Multi-Metric Visualization */}
               {/* CustomMultiMetricChart component was removed, so this section is now a placeholder */}
               {/* You would need to re-add the CustomMultiMetricChart component or a similar chart */}
               {/* For now, we'll just show a placeholder message */}
-              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-6 text-center">
-                <p className="text-gray-600 dark:text-gray-400">
+              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 sm:p-6 text-center">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                   چندمعیاره روند در حال حاضر در دسترس نیست. لطفاً بعداً دوباره تلاش کنید.
                 </p>
               </div>
@@ -433,13 +433,13 @@ export default function TrendAnalysisPage() {
 
           {/* Insights Tab */}
           {activeTab === 'insights' && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Rich Insights Display */}
               {/* CustomInsightsCard component was removed, so this section is now a placeholder */}
               {/* You would need to re-add the CustomInsightsCard component or a similar display */}
               {/* For now, we'll just show a placeholder message */}
-              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-6 text-center">
-                <p className="text-gray-600 dark:text-gray-400">
+              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 sm:p-6 text-center">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                   بینش‌های هوشمند در حال حاضر در دسترس نیست. لطفاً بعداً دوباره تلاش کنید.
                 </p>
               </div>
@@ -448,13 +448,13 @@ export default function TrendAnalysisPage() {
 
           {/* Scorecard Tab */}
           {activeTab === 'scorecard' && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Rich Scorecard Display */}
               {/* CustomKPIScorecard component was removed, so this section is now a placeholder */}
               {/* You would need to re-add the CustomKPIScorecard component or a similar display */}
               {/* For now, we'll just show a placeholder message */}
-              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-6 text-center">
-                <p className="text-gray-600 dark:text-gray-400">
+              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 sm:p-6 text-center">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                   کارت امتیاز در حال حاضر در دسترس نیست. لطفاً بعداً دوباره تلاش کنید.
                 </p>
               </div>

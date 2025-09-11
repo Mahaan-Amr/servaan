@@ -182,15 +182,15 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-8"></div>
+          <div className="h-6 sm:h-8 bg-gray-200 dark:bg-gray-700 rounded w-2/3 sm:w-1/3 mb-3 sm:mb-4"></div>
+          <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 sm:w-1/2 mb-6 sm:mb-8"></div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg p-6 animate-pulse">
-              <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 animate-pulse">
+              <div className="h-16 sm:h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
             </div>
           ))}
         </div>
@@ -200,16 +200,16 @@ export default function AnalyticsPage() {
 
   if (error) {
     return (
-      <div className="space-y-6">
-        <div className="text-center py-12">
-          <svg className="w-16 h-16 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+        <div className="text-center py-8 sm:py-12">
+          <svg className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">خطا در بارگذاری داده‌ها</h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">خطا در بارگذاری داده‌ها</h3>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4">{error}</p>
           <button
             onClick={fetchAnalyticsData}
-            className="inline-flex items-center px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-lg transition-colors"
+            className="inline-flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 bg-pink-600 hover:bg-pink-700 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors"
           >
             تلاش مجدد
           </button>
@@ -219,21 +219,21 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">تحلیل‌های CRM</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">تحلیل‌های CRM</h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
             گزارش‌ها و آمارهای جامع مشتریان
           </p>
         </div>
-        <div className="flex items-center space-x-4 space-x-reverse">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 sm:space-x-reverse">
           <Link
             href="/workspaces/customer-relationship-management/analytics/advanced"
-            className="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors"
+            className="inline-flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors"
           >
-            <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-4 sm:h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
             تحلیل‌های پیشرفته
@@ -241,7 +241,7 @@ export default function AnalyticsPage() {
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value as '7d' | '30d' | '90d' | '1y')}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+            className="px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
             <option value="7d">7 روز گذشته</option>
             <option value="30d">30 روز گذشته</option>
@@ -252,13 +252,13 @@ export default function AnalyticsPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-4 sm:p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-sm font-medium">کل مشتریان</p>
-              <p className="text-3xl font-bold">{data.customerStats?.total || 0}</p>
-              <p className="text-blue-100 text-sm mt-1">
+              <p className="text-blue-100 text-xs sm:text-sm font-medium">کل مشتریان</p>
+              <p className="text-2xl sm:text-3xl font-bold">{data.customerStats?.total || 0}</p>
+              <p className="text-blue-100 text-xs sm:text-sm mt-1">
                 {data.customerStats?.newThisMonth || 0} مشتری جدید این ماه
               </p>
             </div>
@@ -270,12 +270,12 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white">
+        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-4 sm:p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-green-100 text-sm font-medium">مشتریان فعال</p>
-              <p className="text-3xl font-bold">{data.customerStats?.active || 0}</p>
-              <p className="text-green-100 text-sm mt-1">
+              <p className="text-green-100 text-xs sm:text-sm font-medium">مشتریان فعال</p>
+              <p className="text-2xl sm:text-3xl font-bold">{data.customerStats?.active || 0}</p>
+              <p className="text-green-100 text-xs sm:text-sm mt-1">
                 {data.customerStats ? Math.round((data.customerStats.active / data.customerStats.total) * 100) : 0}% از کل مشتریان
               </p>
             </div>
@@ -287,12 +287,12 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-6 text-white">
+        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-4 sm:p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-purple-100 text-sm font-medium">امتیازات فعال</p>
-              <p className="text-3xl font-bold">{data.loyaltyStats?.activePoints?.toLocaleString('fa-IR') || 0}</p>
-              <p className="text-purple-100 text-sm mt-1">
+              <p className="text-purple-100 text-xs sm:text-sm font-medium">امتیازات فعال</p>
+              <p className="text-2xl sm:text-3xl font-bold">{data.loyaltyStats?.activePoints?.toLocaleString('fa-IR') || 0}</p>
+              <p className="text-purple-100 text-xs sm:text-sm mt-1">
                 {data.loyaltyStats?.averagePointsPerCustomer?.toLocaleString('fa-IR') || 0} امتیاز به ازای هر مشتری
               </p>
             </div>
@@ -304,12 +304,12 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg p-6 text-white">
+        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg p-4 sm:p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-orange-100 text-sm font-medium">میانگین ارزش مشتری</p>
-              <p className="text-3xl font-bold">{formatCurrency(data.customerStats?.averageLifetimeValue || 0).split(' ')[0]}</p>
-              <p className="text-orange-100 text-sm mt-1">
+              <p className="text-orange-100 text-xs sm:text-sm font-medium">میانگین ارزش مشتری</p>
+              <p className="text-2xl sm:text-3xl font-bold">{formatCurrency(data.customerStats?.averageLifetimeValue || 0).split(' ')[0]}</p>
+              <p className="text-orange-100 text-xs sm:text-sm mt-1">
                 {data.customerStats?.averageVisits || 0} بازدید به طور متوسط
               </p>
             </div>
@@ -323,25 +323,25 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Charts Row 1 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Customer Segment Distribution */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">توزیع بخش‌های مشتری</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">توزیع بخش‌های مشتری</h3>
           {segmentDistributionData.length > 0 ? (
             <CustomDonutChart
               data={segmentDistributionData}
 
             />
           ) : (
-            <div className="flex items-center justify-center h-64">
-              <p className="text-gray-500 dark:text-gray-400">داده‌ای برای نمایش وجود ندارد</p>
+            <div className="flex items-center justify-center h-48 sm:h-64">
+              <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">داده‌ای برای نمایش وجود ندارد</p>
             </div>
           )}
         </div>
 
         {/* Loyalty Tier Distribution */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">توزیع سطوح وفاداری</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">توزیع سطوح وفاداری</h3>
           {tierDistributionData.length > 0 ? (
             <CustomBarChart
               data={tierDistributionData.map(item => ({
@@ -355,18 +355,18 @@ export default function AnalyticsPage() {
               yAxisLabel="تعداد مشتریان"
             />
           ) : (
-            <div className="flex items-center justify-center h-64">
-              <p className="text-gray-500 dark:text-gray-400">داده‌ای برای نمایش وجود ندارد</p>
+            <div className="flex items-center justify-center h-48 sm:h-64">
+              <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">داده‌ای برای نمایش وجود ندارد</p>
             </div>
           )}
         </div>
       </div>
 
       {/* Charts Row 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Customer Growth Trend */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">روند رشد مشتریان</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">روند رشد مشتریان</h3>
           <CustomLineChart
             data={customerGrowthData}
             lines={[
@@ -380,8 +380,8 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Loyalty Points Trend */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">روند امتیازات وفاداری</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">روند امتیازات وفاداری</h3>
           {loyaltyTrendData.length > 0 ? (
             <CustomLineChart
               data={loyaltyTrendData}
@@ -394,8 +394,8 @@ export default function AnalyticsPage() {
               yAxisLabel="امتیاز"
             />
           ) : (
-            <div className="flex items-center justify-center h-64">
-              <p className="text-gray-500 dark:text-gray-400">داده‌ای برای نمایش وجود ندارد</p>
+            <div className="flex items-center justify-center h-48 sm:h-64">
+              <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">داده‌ای برای نمایش وجود ندارد</p>
             </div>
           )}
         </div>
@@ -403,17 +403,17 @@ export default function AnalyticsPage() {
 
       {/* Upcoming Birthdays */}
       {data.upcomingBirthdays.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">تولدهای نزدیک (7 روز آینده)</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">تولدهای نزدیک (7 روز آینده)</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {data.upcomingBirthdays.map((customer) => (
               <div key={customer.id} className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white">{customer.name}</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{customer.phone}</p>
+                    <h4 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">{customer.name}</h4>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{customer.phone}</p>
                     {customer.birthday && (
-                      <p className="text-sm text-yellow-600 dark:text-yellow-400 mt-1">
+                      <p className="text-xs sm:text-sm text-yellow-600 dark:text-yellow-400 mt-1">
                         تولد: {new Date(customer.birthday).toLocaleDateString('fa-IR')}
                       </p>
                     )}
@@ -432,25 +432,25 @@ export default function AnalyticsPage() {
       )}
 
       {/* Additional Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">آمار امتیازات</h4>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+          <h4 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">آمار امتیازات</h4>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">کل امتیازات اعطایی:</span>
-              <span className="font-medium text-gray-900 dark:text-white">
+              <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">کل امتیازات اعطایی:</span>
+              <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
                 {data.loyaltyStats?.totalPointsIssued?.toLocaleString('fa-IR') || 0}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">کل امتیازات استفاده شده:</span>
-              <span className="font-medium text-gray-900 dark:text-white">
+              <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">کل امتیازات استفاده شده:</span>
+              <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
                 {data.loyaltyStats?.totalPointsRedeemed?.toLocaleString('fa-IR') || 0}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">نرخ استفاده:</span>
-              <span className="font-medium text-gray-900 dark:text-white">
+              <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">نرخ استفاده:</span>
+              <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
                 {data.loyaltyStats?.totalPointsIssued ? 
                   Math.round((data.loyaltyStats.totalPointsRedeemed / data.loyaltyStats.totalPointsIssued) * 100) : 0}%
               </span>
@@ -458,49 +458,49 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">آمار بازدیدها</h4>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+          <h4 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">آمار بازدیدها</h4>
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">کل بازدیدها:</span>
-              <span className="font-medium text-gray-900 dark:text-white">
+              <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">کل بازدیدها:</span>
+              <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
                 {data.visitAnalytics?.totalVisits?.toLocaleString('fa-IR') || 0}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">کل درآمد:</span>
-              <span className="font-medium text-gray-900 dark:text-white">
+              <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">کل درآمد:</span>
+              <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
                 {formatCurrency(data.visitAnalytics?.totalRevenue || 0).split(' ')[0]}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">میانگین سفارش:</span>
-              <span className="font-medium text-gray-900 dark:text-white">
+              <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">میانگین سفارش:</span>
+              <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
                 {formatCurrency(data.visitAnalytics?.averageOrderValue || 0).split(' ')[0]}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">مشتریان برتر</h4>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+          <h4 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">مشتریان برتر</h4>
           <div className="space-y-3">
             {data.customerStats?.topSpenders?.slice(0, 3).map((customer, index) => (
               <div key={customer.id} className="flex items-center justify-between">
-                <div className="flex items-center space-x-3 space-x-reverse">
+                <div className="flex items-center space-x-2 sm:space-x-3 space-x-reverse">
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${
                     index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : 'bg-orange-600'
                   }`}>
                     {index + 1}
                   </div>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">{customer.name}</span>
+                  <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">{customer.name}</span>
                 </div>
-                <span className="text-sm text-gray-600 dark:text-gray-400">
+                <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                   {customer.loyalty?.lifetimeSpent ? formatCurrency(Number(customer.loyalty.lifetimeSpent)).split(' ')[0] : '0'}
                 </span>
               </div>
             )) || (
-              <p className="text-sm text-gray-500 dark:text-gray-400">اطلاعاتی موجود نیست</p>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">اطلاعاتی موجود نیست</p>
             )}
           </div>
         </div>

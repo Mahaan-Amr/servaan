@@ -138,20 +138,20 @@ export default function NewCustomerPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">مشتری جدید</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+        <div className="flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">مشتری جدید</h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
             اطلاعات مشتری جدید را وارد کنید
           </p>
         </div>
         <Link
           href="/workspaces/customer-relationship-management/customers"
-          className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-lg transition-colors"
+          className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium rounded-lg transition-colors w-full sm:w-auto justify-center"
         >
-          <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 sm:w-5 sm:h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           بازگشت به فهرست
@@ -160,16 +160,16 @@ export default function NewCustomerPage() {
 
       {/* Form */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           {/* Error Alert */}
           {errors.submit && (
-            <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-4">
+            <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-3 sm:p-4">
               <div className="flex">
-                <svg className="w-5 h-5 text-red-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div className="mr-3">
-                  <p className="text-sm text-red-800 dark:text-red-200">{errors.submit}</p>
+                  <p className="text-xs sm:text-sm text-red-800 dark:text-red-200">{errors.submit}</p>
                 </div>
               </div>
             </div>
@@ -177,11 +177,11 @@ export default function NewCustomerPage() {
 
           {/* Basic Information */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">اطلاعات پایه</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">اطلاعات پایه</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               {/* Phone Number */}
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="phone" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   شماره تلفن <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -190,19 +190,19 @@ export default function NewCustomerPage() {
                   value={formData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
                   placeholder="09123456789"
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm ${
                     errors.phone ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   dir="ltr"
                 />
                 {errors.phone && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone}</p>
+                  <p className="mt-1 text-xs sm:text-sm text-red-600 dark:text-red-400">{errors.phone}</p>
                 )}
               </div>
 
               {/* Name */}
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="name" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   نام مشتری <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -211,19 +211,19 @@ export default function NewCustomerPage() {
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   placeholder="نام و نام خانوادگی"
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm ${
                     errors.name ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   dir="rtl"
                 />
                 {errors.name && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>
+                  <p className="mt-1 text-xs sm:text-sm text-red-600 dark:text-red-400">{errors.name}</p>
                 )}
               </div>
 
               {/* English Name */}
               <div>
-                <label htmlFor="nameEnglish" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="nameEnglish" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   نام انگلیسی (اختیاری)
                 </label>
                 <input
@@ -232,14 +232,14 @@ export default function NewCustomerPage() {
                   value={formData.nameEnglish || ''}
                   onChange={(e) => handleInputChange('nameEnglish', e.target.value)}
                   placeholder="English Name"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
                   dir="ltr"
                 />
               </div>
 
               {/* Email */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="email" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   ایمیل (اختیاری)
                 </label>
                 <input
@@ -248,13 +248,13 @@ export default function NewCustomerPage() {
                   value={formData.email || ''}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   placeholder="customer@example.com"
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm ${
                     errors.email ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                   }`}
                   dir="ltr"
                 />
                 {errors.email && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
+                  <p className="mt-1 text-xs sm:text-sm text-red-600 dark:text-red-400">{errors.email}</p>
                 )}
               </div>
             </div>
@@ -262,11 +262,11 @@ export default function NewCustomerPage() {
 
           {/* Personal Information */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">اطلاعات شخصی</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">اطلاعات شخصی</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               {/* Birthday */}
               <div>
-                <label htmlFor="birthday" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="birthday" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   تاریخ تولد (اختیاری)
                 </label>
                 <input
@@ -274,18 +274,18 @@ export default function NewCustomerPage() {
                   id="birthday"
                   value={formData.birthday || ''}
                   onChange={(e) => handleInputChange('birthday', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm ${
                     errors.birthday ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                   }`}
                 />
                 {errors.birthday && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.birthday}</p>
+                  <p className="mt-1 text-xs sm:text-sm text-red-600 dark:text-red-400">{errors.birthday}</p>
                 )}
               </div>
 
               {/* Anniversary */}
               <div>
-                <label htmlFor="anniversary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="anniversary" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   سالگرد (اختیاری)
                 </label>
                 <input
@@ -293,12 +293,12 @@ export default function NewCustomerPage() {
                   id="anniversary"
                   value={formData.anniversary || ''}
                   onChange={(e) => handleInputChange('anniversary', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm ${
                     errors.anniversary ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
                   }`}
                 />
                 {errors.anniversary && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.anniversary}</p>
+                  <p className="mt-1 text-xs sm:text-sm text-red-600 dark:text-red-400">{errors.anniversary}</p>
                 )}
               </div>
             </div>
@@ -306,18 +306,18 @@ export default function NewCustomerPage() {
 
           {/* Communication Preferences */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">تنظیمات ارتباط</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-3 sm:mb-4">تنظیمات ارتباط</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               {/* Preferred Contact Method */}
               <div>
-                <label htmlFor="preferredContactMethod" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="preferredContactMethod" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   روش ترجیحی تماس
                 </label>
                 <select
                   id="preferredContactMethod"
                   value={formData.preferredContactMethod}
                   onChange={(e) => handleInputChange('preferredContactMethod', e.target.value as 'PHONE' | 'EMAIL' | 'SMS' | 'WHATSAPP')}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
                   dir="rtl"
                 >
                   <option value="PHONE">تلفن</option>
@@ -329,7 +329,7 @@ export default function NewCustomerPage() {
 
               {/* Marketing Permission */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   مجوز بازاریابی
                 </label>
                 <div className="flex items-center">
@@ -340,7 +340,7 @@ export default function NewCustomerPage() {
                     onChange={(e) => handleInputChange('allowMarketing', e.target.checked)}
                     className="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700"
                   />
-                  <label htmlFor="allowMarketing" className="mr-2 text-sm text-gray-700 dark:text-gray-300">
+                  <label htmlFor="allowMarketing" className="mr-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
                     اجازه ارسال پیام‌های تبلیغاتی و اطلاعیه‌ها
                   </label>
                 </div>
@@ -350,7 +350,7 @@ export default function NewCustomerPage() {
 
           {/* Notes */}
           <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="notes" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               یادداشت‌ها (اختیاری)
             </label>
             <textarea
@@ -359,35 +359,35 @@ export default function NewCustomerPage() {
               onChange={(e) => handleInputChange('notes', e.target.value)}
               rows={4}
               placeholder="یادداشت‌ها، ترجیحات خاص، آلرژی‌ها و..."
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
               dir="rtl"
             />
           </div>
 
           {/* Form Actions */}
-          <div className="flex items-center justify-end space-x-4 space-x-reverse pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center sm:justify-end gap-3 sm:gap-4 pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-700">
             <Link
               href="/workspaces/customer-relationship-management/customers"
-              className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-colors"
+              className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-colors text-center"
             >
               انصراف
             </Link>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 bg-pink-600 hover:bg-pink-700 disabled:bg-pink-400 text-white font-medium rounded-lg transition-colors flex items-center"
+              className="px-4 sm:px-6 py-2 bg-pink-600 hover:bg-pink-700 disabled:bg-pink-400 text-white font-medium rounded-lg transition-colors flex items-center justify-center"
             >
               {loading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white ml-2"></div>
-                  در حال ذخیره...
+                  <span className="text-sm sm:text-base">در حال ذخیره...</span>
                 </>
               ) : (
                 <>
-                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  ایجاد مشتری
+                  <span className="text-sm sm:text-base">ایجاد مشتری</span>
                 </>
               )}
             </button>

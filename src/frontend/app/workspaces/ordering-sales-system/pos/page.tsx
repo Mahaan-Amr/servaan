@@ -95,6 +95,8 @@ export default function POSInterface() {
   const [showAddItems, setShowAddItems] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptOrderDate, setReceiptOrderDate] = useState<Date | null>(null);
+  // Mobile cart drawer state
+  const [isCartOpen, setIsCartOpen] = useState(false);
   
   // Menu data state
   const [categories, setCategories] = useState<MenuCategory[]>([]);
@@ -705,7 +707,7 @@ export default function POSInterface() {
   }, [orderItems.length, calculateTotal]); // Run only on mount
 
   return (
-    <div className="h-screen flex bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen flex bg-gray-50 dark:bg-gray-900 overflow-hidden" dir="rtl">
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div 
@@ -717,7 +719,7 @@ export default function POSInterface() {
       {/* Left Sidebar - Categories */}
       <div className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto transform transition-transform duration-300 ease-in-out ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-      } w-64 lg:w-72 xl:w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col flex-shrink-0`}>
+      } w-56 sm:w-60 lg:w-72 xl:w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col flex-shrink-0`}>
         {/* Categories Header */}
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
@@ -796,7 +798,7 @@ export default function POSInterface() {
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center space-x-4 space-x-reverse">
               {/* Mobile Menu Toggle */}
               <button
@@ -835,11 +837,11 @@ export default function POSInterface() {
         </div>
 
         {/* Menu Items Grid */}
-        <div className="flex-1 p-4 overflow-y-auto">
+        <div className="flex-1 p-3 sm:p-4 overflow-y-auto pb-24 sm:pb-4">
           {selectedCategory ? (
             <>
               {/* Selected Category Header */}
-              <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3 space-x-reverse">
                     <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
@@ -853,7 +855,7 @@ export default function POSInterface() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
                 {loading ? (
                   <p className="text-center text-gray-500 dark:text-gray-400">در حال بارگذاری آیتم‌ها...</p>
                 ) : error ? (
@@ -880,13 +882,14 @@ export default function POSInterface() {
                       <div className="space-y-2">
                         {/* Item Image */}
                         {item.imageUrl && (
-                          <div className="w-full h-24 md:h-32 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden mb-2 relative">
+                          <div className="w-full h-24 sm:h-28 md:h-32 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden mb-2 relative">
                             <Image
                               src={item.imageUrl}
                               alt={item.name}
                               fill
                               className="object-cover"
                               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                              loading="lazy"
                               onError={() => {
                                 // Hide the image container on error
                                 const container = document.querySelector(`[data-image-error="${item.id}"]`);
@@ -906,7 +909,7 @@ export default function POSInterface() {
                         
                         {/* Item Description */}
                         {item.description && (
-                          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 break-words">
+                          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 break-words line-clamp-2">
                             {item.description}
                           </p>
                         )}
@@ -949,7 +952,8 @@ export default function POSInterface() {
       </div>
 
       {/* Right Panel - Order Cart */}
-      <div className="w-full md:w-[400px] lg:w-[500px] bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col flex-shrink-0">
+      {/* Desktop/Tablet Cart Panel */}
+      <div className="hidden sm:flex w-full sm:w-[320px] md:w-[380px] lg:w-[480px] bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex-col flex-shrink-0">
         {/* Cart Header */}
         <div className="p-3 md:p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
@@ -1085,7 +1089,7 @@ export default function POSInterface() {
 
         {/* Order Summary & Actions - Fixed at Bottom */}
         {orderItems.length > 0 && (
-          <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 sticky bottom-0 z-10">
             <OrderSummary
               orderItems={orderItems}
               options={orderOptions}
@@ -1142,6 +1146,108 @@ export default function POSInterface() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Mobile Cart Drawer */}
+      {(
+        <div className={`sm:hidden fixed inset-x-0 bottom-0 z-[70] transition-transform duration-300 ${isCartOpen ? 'translate-y-0' : 'translate-y-[85%]'} pointer-events-auto`}>
+          <div className="mx-auto w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 rounded-t-2xl shadow-2xl">
+            {/* Drag handle */}
+            <div className="flex items-center justify-center py-2">
+              <div className="w-10 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
+            </div>
+            <div className="px-3 pb-2 flex items-center justify-between">
+              <h2 className="text-base font-bold text-gray-900 dark:text-white">سفارش جاری</h2>
+              <button onClick={() => setIsCartOpen(!isCartOpen)} className="text-sm text-amber-600 dark:text-amber-400">
+                {isCartOpen ? 'بستن' : 'باز کردن'}
+              </button>
+            </div>
+            {/* Items */}
+            <div className="max-h-[45vh] overflow-y-auto px-3 pb-3">
+              {orderItems.length === 0 ? (
+                <div className="text-center text-gray-500 dark:text-gray-400 py-6">
+                  سبد خالی است
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {orderItems.map((item) => (
+                    <div key={item.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <h4 className="font-medium text-gray-900 dark:text-white text-sm break-words">{item.menuItem.name}</h4>
+                            <span className="text-xs font-bold text-amber-600 dark:text-amber-400">{formatPrice(item.totalPrice)}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2 space-x-reverse">
+                              <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
+                              </button>
+                              <span className="w-8 text-center font-bold text-gray-900 dark:text-white text-sm">{item.quantity}</span>
+                              <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                              </button>
+                            </div>
+                            <button onClick={() => removeFromOrder(item.id)} className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center justify-center">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {/* Summary + Actions */}
+            {orderItems.length > 0 && (
+              <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 space-y-2 pb-[max(12px,env(safe-area-inset-bottom))]">
+                {/* Full order summary with options for mobile */}
+                <OrderSummary
+                  orderItems={orderItems}
+                  options={orderOptions}
+                  calculation={calculation}
+                  onOptionsChange={setOrderOptions}
+                  presets={presets}
+                  onPresetSelect={(preset) => {
+                    setOrderOptions({
+                      discountEnabled: preset.discountEnabled,
+                      discountType: preset.discountType as 'PERCENTAGE' | 'AMOUNT',
+                      discountValue: preset.discountValue,
+                      taxEnabled: preset.taxEnabled,
+                      taxPercentage: preset.taxPercentage,
+                      serviceEnabled: preset.serviceEnabled,
+                      servicePercentage: preset.servicePercentage,
+                      courierEnabled: preset.courierEnabled,
+                      courierAmount: preset.courierAmount,
+                      courierNotes: ''
+                    });
+                  }}
+                  defaultExpanded
+                />
+
+                <div className="mt-2 flex items-center justify-between text-sm text-gray-700 dark:text-gray-300">
+                  <span>مجموع پرداختی</span>
+                  <span className="font-bold text-amber-600 dark:text-amber-400">{formatPrice(calculation.totalAmount)}</span>
+                </div>
+                <button onClick={handleCreateOrder} disabled={isProcessing} className={`w-full py-3 rounded-lg font-medium transition-all ${isProcessing ? 'bg-gray-400 text-gray-200' : 'bg-amber-600 hover:bg-amber-700 text-white'}`}>
+                  {isProcessing ? 'در حال پردازش...' : 'پرداخت و ثبت سفارش'}
+                </button>
+                <button onClick={() => setOrderItems([])} disabled={isProcessing} className={`w-full py-2 rounded-lg ${isProcessing ? 'bg-gray-300 text-gray-500' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}>
+                  پاک کردن سبد
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Floating Toggle */}
+      <div className="sm:hidden fixed bottom-4 left-4 z-[80] pointer-events-auto">
+        <button onClick={() => setIsCartOpen(v => !v)} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-3 rounded-full shadow-lg flex items-center gap-2">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m12-9l2 9M9 22a2 2 0 100-4 2 2 0 000 4zm8 0a2 2 0 100-4 2 2 0 000 4z" /></svg>
+          {orderItems.length > 0 ? `${orderItems.length} آیتم` : 'سبد خرید'}
+        </button>
       </div>
 
       {/* Payment Modal */}

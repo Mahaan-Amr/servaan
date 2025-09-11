@@ -120,10 +120,10 @@ const AdvancedFilters = ({ filters, onFilterChange, onClose }: {
   onFilterChange: (key: keyof CustomerFilter, value: CustomerFilter[keyof CustomerFilter]) => void;
   onClose: () => void;
 }) => (
-  <div className="bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-900/20 border border-gray-200 dark:border-gray-700 rounded-lg p-6 mt-4">
+  <div className="bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-900/20 border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 mt-4">
     <div className="flex items-center justify-between mb-4">
-      <h4 className="font-semibold text-gray-900 dark:text-white flex items-center">
-        <svg className="w-5 h-5 ml-2 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <h4 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white flex items-center">
+        <svg className="w-4 h-4 sm:w-5 sm:h-5 ml-2 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
         </svg>
         فیلترهای پیشرفته
@@ -132,34 +132,34 @@ const AdvancedFilters = ({ filters, onFilterChange, onClose }: {
         onClick={onClose} 
         className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
     </div>
     
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
       {/* Spending Range */}
-      <div className="space-y-4">
-        <h5 className="font-medium text-gray-700 dark:text-gray-300">محدوده خرید (تومان)</h5>
+      <div className="space-y-3 sm:space-y-4">
+        <h5 className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">محدوده خرید (تومان)</h5>
         <div className="space-y-3">
           <div>
-            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">حداقل خرید</label>
+            <label className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">حداقل خرید</label>
             <input
               type="number"
               value={filters.minSpent || ''}
               onChange={(e) => onFilterChange('minSpent', e.target.value ? Number(e.target.value) : undefined)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
               placeholder="0"
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">حداکثر خرید</label>
+            <label className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">حداکثر خرید</label>
             <input
               type="number"
               value={filters.maxSpent || ''}
               onChange={(e) => onFilterChange('maxSpent', e.target.value ? Number(e.target.value) : undefined)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
               placeholder="∞"
             />
           </div>
@@ -167,50 +167,50 @@ const AdvancedFilters = ({ filters, onFilterChange, onClose }: {
       </div>
 
       {/* Date Range Filters */}
-      <div className="space-y-4">
-        <h5 className="font-medium text-gray-700 dark:text-gray-300">محدوده تاریخ</h5>
+      <div className="space-y-3 sm:space-y-4">
+        <h5 className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">محدوده تاریخ</h5>
         <div className="space-y-3">
           <div>
-            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">عضویت از</label>
+            <label className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">عضویت از</label>
             <input
               type="date"
               value={filters.createdFrom || ''}
               onChange={(e) => onFilterChange('createdFrom', e.target.value || undefined)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">عضویت تا</label>
+            <label className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">عضویت تا</label>
             <input
               type="date"
               value={filters.createdTo || ''}
               onChange={(e) => onFilterChange('createdTo', e.target.value || undefined)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
             />
           </div>
         </div>
       </div>
 
       {/* Last Visit Range */}
-      <div className="space-y-4">
-        <h5 className="font-medium text-gray-700 dark:text-gray-300">آخرین بازدید</h5>
+      <div className="space-y-3 sm:space-y-4">
+        <h5 className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">آخرین بازدید</h5>
         <div className="space-y-3">
           <div>
-            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">از تاریخ</label>
+            <label className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">از تاریخ</label>
             <input
               type="date"
               value={filters.lastVisitFrom || ''}
               onChange={(e) => onFilterChange('lastVisitFrom', e.target.value || undefined)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">تا تاریخ</label>
+            <label className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">تا تاریخ</label>
             <input
               type="date"
               value={filters.lastVisitTo || ''}
               onChange={(e) => onFilterChange('lastVisitTo', e.target.value || undefined)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
             />
           </div>
         </div>
@@ -218,24 +218,24 @@ const AdvancedFilters = ({ filters, onFilterChange, onClose }: {
     </div>
 
     {/* Quick Filter Presets */}
-    <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-      <h5 className="font-medium text-gray-700 dark:text-gray-300 mb-3">فیلترهای سریع</h5>
+    <div className="mt-4 sm:mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <h5 className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300 mb-3">فیلترهای سریع</h5>
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => onFilterChange('lastVisitFrom', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])}
-          className="px-3 py-1 text-sm bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg transition-colors"
+          className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg transition-colors"
         >
           بازدید این هفته
         </button>
         <button
           onClick={() => onFilterChange('lastVisitFrom', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])}
-          className="px-3 py-1 text-sm bg-green-100 hover:bg-green-200 text-green-800 rounded-lg transition-colors"
+          className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-green-100 hover:bg-green-200 text-green-800 rounded-lg transition-colors"
         >
           بازدید این ماه
         </button>
         <button
           onClick={() => onFilterChange('createdFrom', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])}
-          className="px-3 py-1 text-sm bg-purple-100 hover:bg-purple-200 text-purple-800 rounded-lg transition-colors"
+          className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-purple-100 hover:bg-purple-200 text-purple-800 rounded-lg transition-colors"
         >
           عضو جدید (ماه اخیر)
         </button>
@@ -244,7 +244,7 @@ const AdvancedFilters = ({ filters, onFilterChange, onClose }: {
             onFilterChange('minSpent', 1000000);
             onFilterChange('maxSpent', undefined);
           }}
-          className="px-3 py-1 text-sm bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-lg transition-colors"
+          className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-yellow-100 hover:bg-yellow-200 text-yellow-800 rounded-lg transition-colors"
         >
           خریداران پرحجم
         </button>
@@ -523,23 +523,23 @@ export default function CustomersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Enhanced Header with Notifications */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">مدیریت مشتریان</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+        <div className="flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">مدیریت مشتریان</h1>
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
             مشاهده و مدیریت اطلاعات مشتریان با قابلیت‌های هوش مصنوعی
           </p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           {/* Notifications indicator */}
           {unreadCount > 0 && (
             <div className="relative">
               <button
                 onClick={() => setShowRecommendations(!showRecommendations)}
-                className="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+                className="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm rounded-lg transition-colors w-full sm:w-auto justify-center"
               >
                 <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5-5-5h5v-12" />
@@ -557,7 +557,7 @@ export default function CustomersPage() {
           {/* Action buttons */}
           <button
             onClick={() => setShowImportExport(true)}
-            className="inline-flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors"
+            className="inline-flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm rounded-lg transition-colors w-full sm:w-auto justify-center"
           >
             <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
@@ -567,7 +567,7 @@ export default function CustomersPage() {
 
           <Link
             href="/workspaces/customer-relationship-management/customers/new"
-            className="inline-flex items-center px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-lg transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-lg transition-colors w-full sm:w-auto justify-center"
           >
             <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -578,17 +578,17 @@ export default function CustomersPage() {
       </div>
 
       {/* Customer Statistics Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-4 sm:mb-6">
         {statsLoading ? (
           // Loading skeleton for stats
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <div key={i} className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
               <div className="animate-pulse">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
-                  <div className="h-8 w-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                  <div className="h-3 sm:h-4 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
+                  <div className="h-6 w-6 sm:h-8 sm:w-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
                 </div>
-                <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
+                <div className="h-6 sm:h-8 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
                 <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
               </div>
             </div>
@@ -596,79 +596,79 @@ export default function CustomersPage() {
         ) : customerStats ? (
           <>
             {/* Total Customers */}
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-6 rounded-lg shadow-sm border border-blue-200 dark:border-blue-800 hover:shadow-md transition-shadow">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 sm:p-6 rounded-lg shadow-sm border border-blue-200 dark:border-blue-800 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300">کل مشتریان</h3>
+                <h3 className="text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300">کل مشتریان</h3>
                 <div className="p-2 bg-blue-500 rounded-lg">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
               </div>
-              <div className="text-3xl font-bold text-blue-900 dark:text-blue-100 mb-1">
+              <div className="text-2xl sm:text-3xl font-bold text-blue-900 dark:text-blue-100 mb-1">
                 {(customerStats.total || 0).toLocaleString('fa-IR')}
               </div>
-              <div className="text-sm text-blue-600 dark:text-blue-400">
+              <div className="text-xs sm:text-sm text-blue-600 dark:text-blue-400">
                 {(customerStats.active || 0).toLocaleString('fa-IR')} مشتری فعال
               </div>
             </div>
 
             {/* New This Month */}
-            <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-6 rounded-lg shadow-sm border border-green-200 dark:border-green-800 hover:shadow-md transition-shadow">
+            <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-4 sm:p-6 rounded-lg shadow-sm border border-green-200 dark:border-green-800 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-green-700 dark:text-green-300">عضو جدید این ماه</h3>
+                <h3 className="text-xs sm:text-sm font-medium text-green-700 dark:text-green-300">عضو جدید این ماه</h3>
                 <div className="p-2 bg-green-500 rounded-lg">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                   </svg>
                 </div>
               </div>
-              <div className="text-3xl font-bold text-green-900 dark:text-green-100 mb-1">
+              <div className="text-2xl sm:text-3xl font-bold text-green-900 dark:text-green-100 mb-1">
                 {(customerStats.newThisMonth || 0).toLocaleString('fa-IR')}
               </div>
-              <div className="text-sm text-green-600 dark:text-green-400">
+              <div className="text-xs sm:text-sm text-green-600 dark:text-green-400">
                 مشتری جدید
               </div>
             </div>
 
             {/* Average Lifetime Value */}
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-6 rounded-lg shadow-sm border border-purple-200 dark:border-purple-800 hover:shadow-md transition-shadow">
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-4 sm:p-6 rounded-lg shadow-sm border border-purple-200 dark:border-purple-800 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-purple-700 dark:text-purple-300">متوسط ارزش مشتری</h3>
+                <h3 className="text-xs sm:text-sm font-medium text-purple-700 dark:text-purple-300">متوسط ارزش مشتری</h3>
                 <div className="p-2 bg-purple-500 rounded-lg">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                   </svg>
                 </div>
               </div>
-              <div className="text-3xl font-bold text-purple-900 dark:text-purple-100 mb-1">
+              <div className="text-2xl sm:text-3xl font-bold text-purple-900 dark:text-purple-100 mb-1">
                 {Math.round(customerStats.averageLifetimeValue || 0).toLocaleString('fa-IR')}
               </div>
-              <div className="text-sm text-purple-600 dark:text-purple-400">
+              <div className="text-xs sm:text-sm text-purple-600 dark:text-purple-400">
                 تومان
               </div>
             </div>
 
             {/* Average Visits */}
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 p-6 rounded-lg shadow-sm border border-orange-200 dark:border-orange-800 hover:shadow-md transition-shadow">
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 p-4 sm:p-6 rounded-lg shadow-sm border border-orange-200 dark:border-orange-800 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-orange-700 dark:text-orange-300">متوسط بازدید</h3>
+                <h3 className="text-xs sm:text-sm font-medium text-orange-700 dark:text-orange-300">متوسط بازدید</h3>
                 <div className="p-2 bg-orange-500 rounded-lg">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
                 </div>
               </div>
-              <div className="text-3xl font-bold text-orange-900 dark:text-orange-100 mb-1">
+              <div className="text-2xl sm:text-3xl font-bold text-orange-900 dark:text-orange-100 mb-1">
                 {(customerStats.averageVisits || 0).toLocaleString('fa-IR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
               </div>
-              <div className="text-sm text-orange-600 dark:text-orange-400">
+              <div className="text-xs sm:text-sm text-orange-600 dark:text-orange-400">
                 بازدید به ازای مشتری
               </div>
             </div>
           </>
         ) : (
-          <div className="col-span-4 text-center py-8 text-gray-500 dark:text-gray-400">
+          <div className="col-span-4 text-center py-6 sm:py-8 text-gray-500 dark:text-gray-400">
             خطا در بارگذاری آمار مشتریان
           </div>
         )}
@@ -711,10 +711,10 @@ export default function CustomersPage() {
       )}
 
       {/* Enhanced Search and Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
         <form onSubmit={handleSearch} className="space-y-4">
           {/* Search Bar with Advanced Options */}
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <label htmlFor="search" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 جستجوی پیشرفته
@@ -726,10 +726,10 @@ export default function CustomersPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="نام، شماره تلفن، ایمیل یا یادداشت مشتری..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm sm:text-base"
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
@@ -739,14 +739,14 @@ export default function CustomersPage() {
             <div className="flex items-end gap-2">
               <button
                 type="submit"
-                className="px-6 py-2 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-lg transition-colors"
+                className="px-4 sm:px-6 py-2 bg-pink-600 hover:bg-pink-700 text-white font-medium rounded-lg transition-colors text-sm sm:text-base"
               >
                 جستجو
               </button>
               <button
                 type="button"
                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors"
+                className="px-3 sm:px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors text-sm sm:text-base"
               >
                 فیلترهای پیشرفته
               </button>
@@ -754,15 +754,15 @@ export default function CustomersPage() {
           </div>
 
           {/* Quick Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 بخش مشتری
               </label>
               <select
                 value={filters.segment || ''}
                 onChange={(e) => handleFilterChange('segment', e.target.value || undefined)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
               >
                 <option value="">همه بخش‌ها</option>
                 <option value="VIP">VIP</option>
@@ -773,13 +773,13 @@ export default function CustomersPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 سطح وفاداری
               </label>
               <select
                 value={filters.tierLevel || ''}
                 onChange={(e) => handleFilterChange('tierLevel', e.target.value || undefined)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
               >
                 <option value="">همه سطوح</option>
                 <option value="PLATINUM">پلاتینیوم</option>
@@ -790,13 +790,13 @@ export default function CustomersPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 وضعیت
               </label>
               <select
                 value={filters.status || ''}
                 onChange={(e) => handleFilterChange('status', e.target.value || undefined)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
               >
                 <option value="">همه وضعیت‌ها</option>
                 <option value="ACTIVE">فعال</option>
@@ -813,7 +813,7 @@ export default function CustomersPage() {
                   setSearchTerm('');
                   setPagination(prev => ({ ...prev, page: 1 }));
                 }}
-                className="w-full px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                className="w-full px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm"
               >
                 پاک کردن فیلترها
               </button>
@@ -863,9 +863,9 @@ export default function CustomersPage() {
 
       {/* Customer Results with Enhanced Cards */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
               مشتریان ({pagination.total.toLocaleString('fa-IR')})
             </h3>
             
@@ -876,22 +876,22 @@ export default function CustomersPage() {
                 onChange={(e) => handleSelectAll(e.target.checked)}
                 className="rounded border-gray-300 text-pink-600 focus:ring-pink-500"
               />
-              <span className="text-sm text-gray-600 dark:text-gray-400">انتخاب همه</span>
+              <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">انتخاب همه</span>
             </div>
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {loading ? (
             <div className="space-y-4">
               {[...Array(5)].map((_, index) => (
                 <div key={index} className="animate-pulse">
                   <div className="flex items-center space-x-4 rtl:space-x-reverse">
                     <div className="flex-shrink-0">
-                      <div className="h-12 w-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                      <div className="h-10 w-10 sm:h-12 sm:w-12 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
                     </div>
                     <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+                      <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
                       <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
                     </div>
                   </div>
@@ -899,17 +899,17 @@ export default function CustomersPage() {
               ))}
             </div>
           ) : customers.length === 0 ? (
-            <div className="text-center py-12">
-              <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="text-center py-8 sm:py-12">
+              <svg className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">مشتری یافت نشد</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">مشتری یافت نشد</h3>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4">
                 با فیلترهای فعلی مشتری یافت نشد. فیلترها را تغییر دهید یا مشتری جدید اضافه کنید.
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {customers.map((customer) => (
                 <CustomerCard
                   key={customer.id}
@@ -927,8 +927,8 @@ export default function CustomersPage() {
 
           {/* Enhanced Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="mt-6 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-6">
-              <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+            <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t border-gray-200 dark:border-gray-700 pt-4 sm:pt-6">
+              <div className="flex items-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                 نمایش {((pagination.page - 1) * pagination.limit + 1).toLocaleString('fa-IR')} تا{' '}
                 {Math.min(pagination.page * pagination.limit, pagination.total).toLocaleString('fa-IR')} از{' '}
                 {pagination.total.toLocaleString('fa-IR')} مشتری
@@ -938,19 +938,19 @@ export default function CustomersPage() {
                 <button
                   onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
                   disabled={pagination.page === 1}
-                  className="px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 text-xs sm:text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   قبلی
                 </button>
                 
-                <span className="px-4 py-2 text-sm bg-pink-600 text-white rounded-lg">
+                <span className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-pink-600 text-white rounded-lg">
                   {pagination.page.toLocaleString('fa-IR')}
                 </span>
                 
                 <button
                   onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
                   disabled={pagination.page === pagination.totalPages}
-                  className="px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 text-xs sm:text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   بعدی
                 </button>

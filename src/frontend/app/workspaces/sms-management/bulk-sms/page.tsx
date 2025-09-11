@@ -161,19 +161,19 @@ const BulkSMSPage = () => {
   const totalCost = validCount * smsCount;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Page Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3 space-x-reverse">
-            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-              <FaBullhorn className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <div className="flex items-center space-x-2 sm:space-x-3 space-x-reverse">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+              <FaBullhorn className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                 ارسال گروهی پیامک
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
                 ارسال پیامک به چندین مخاطب به‌طور همزمان
               </p>
             </div>
@@ -184,11 +184,11 @@ const BulkSMSPage = () => {
       {error && <AlertBox type="error" message={error} />}
       {success && <AlertBox type="success" message={success} />}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Recipients Section */}
         <div className="lg:col-span-2 space-y-6">
           {/* Add Recipients */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 مخاطبین
@@ -219,7 +219,7 @@ const BulkSMSPage = () => {
             </div>
 
             {/* Add New Recipient */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3 sm:mb-4">
               <input
                 type="tel"
                 placeholder="شماره تلفن (09xxxxxxxx)"
@@ -277,11 +277,11 @@ const BulkSMSPage = () => {
                           ) : (
                             <FaTimes className="w-4 h-4 text-red-500" />
                           )}
-                          <span className="font-medium text-gray-900 dark:text-white" dir="ltr">
+                          <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-white" dir="ltr">
                             {recipient.phoneNumber}
                           </span>
                           {recipient.name && (
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                               ({recipient.name})
                             </span>
                           )}
@@ -314,8 +314,8 @@ const BulkSMSPage = () => {
           </div>
 
           {/* Message Composition */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
               متن پیامک
             </h3>
             
@@ -327,7 +327,7 @@ const BulkSMSPage = () => {
               maxLength={500}
             />
             
-            <div className="flex items-center justify-between mt-3 text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex items-center justify-between mt-3 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
               <span>
                 {messageLength}/500 کاراکتر
               </span>
@@ -341,7 +341,7 @@ const BulkSMSPage = () => {
         {/* Summary and Actions */}
         <div className="space-y-6">
           {/* Summary */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               خلاصه ارسال
             </h3>
@@ -387,12 +387,12 @@ const BulkSMSPage = () => {
           </div>
 
           {/* Actions */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
             <div className="space-y-3">
               <button
                 onClick={() => setShowPreview(true)}
                 disabled={validCount === 0 || !message.trim()}
-                className="btn btn-outline w-full"
+                className="btn btn-outline w-full text-sm"
               >
                 <FaEye className="w-4 h-4 ml-2" />
                 پیش‌نمایش
@@ -401,7 +401,7 @@ const BulkSMSPage = () => {
               <button
                 onClick={handleSendBulkSMS}
                 disabled={validCount === 0 || !message.trim() || loading}
-                className="btn btn-primary w-full"
+                className="btn btn-primary w-full text-sm"
               >
                 {loading ? (
                   <Spinner size="small" />

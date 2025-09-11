@@ -475,40 +475,40 @@ export default function InventoryReportsPage() {
   const filteredInventory = getFilteredInventory();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
           <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
           گزارش‌های انبار
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
           گزارش‌گیری از وضعیت موجودی و تراکنش‌ها
         </p>
       </div>
-          <div className="flex space-x-2 space-x-reverse">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => exportReport('PDF')}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              className="px-2 sm:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs sm:text-sm"
             >
               صادرات PDF
             </button>
             <button
               onClick={() => exportReport('EXCEL')}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              className="px-2 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm"
             >
               صادرات Excel
             </button>
             <button
               onClick={() => exportReport('CSV')}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-2 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm"
             >
               صادرات CSV
             </button>
             <Link
               href="/workspaces/inventory-management/inventory"
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              className="px-2 sm:px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-xs sm:text-sm"
             >
               بازگشت
             </Link>
@@ -518,34 +518,34 @@ export default function InventoryReportsPage() {
 
       {/* Summary Cards */}
       {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 sm:p-6 rounded-lg">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
               </div>
-              <div className="mr-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">کل اقلام</p>
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              <div className="mr-3 sm:mr-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">کل اقلام</p>
+                <p className="text-lg sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {summary.totalItems.toLocaleString('fa-IR')}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg">
+          <div className="bg-green-50 dark:bg-green-900/20 p-3 sm:p-6 rounded-lg">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="mr-4 flex-1">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">ارزش کل</p>
-                <div className="flex items-center space-x-2 space-x-reverse">
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+              <div className="mr-3 sm:mr-4 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">ارزش کل</p>
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 sm:space-x-reverse">
+                  <p className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400">
                     {(summary.totalValue / 10).toLocaleString('fa-IR')} تومان
                   </p>
                   {summary.totalValue === 0 && (
@@ -558,32 +558,32 @@ export default function InventoryReportsPage() {
             </div>
           </div>
 
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 p-6 rounded-lg">
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 sm:p-6 rounded-lg">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
-              <div className="mr-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">کم موجودی</p>
-                <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+              <div className="mr-3 sm:mr-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">کم موجودی</p>
+                <p className="text-lg sm:text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                   {summary.lowStockItems.toLocaleString('fa-IR')}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-lg">
+          <div className="bg-red-50 dark:bg-red-900/20 p-3 sm:p-6 rounded-lg">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
-              <div className="mr-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">ناموجود</p>
-                <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+              <div className="mr-3 sm:mr-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">ناموجود</p>
+                <p className="text-lg sm:text-2xl font-bold text-red-600 dark:text-red-400">
                   {summary.outOfStockItems.toLocaleString('fa-IR')}
                 </p>
               </div>
@@ -593,30 +593,30 @@ export default function InventoryReportsPage() {
       )}
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">فیلترها</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">فیلترها</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               جستجو
             </label>
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-2 sm:px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
               placeholder="نام کالا یا دسته‌بندی"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               دسته‌بندی
             </label>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-2 sm:px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
             >
               <option value="">همه دسته‌ها</option>
               {getUniqueCategories().map((category) => (
@@ -628,13 +628,13 @@ export default function InventoryReportsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               وضعیت موجودی
             </label>
             <select
               value={stockStatusFilter}
               onChange={(e) => setStockStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-2 sm:px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm sm:text-base"
             >
               <option value="ALL">همه وضعیت‌ها</option>
               <option value="IN_STOCK">موجود</option>
@@ -650,7 +650,7 @@ export default function InventoryReportsPage() {
                 setCategoryFilter('');
                 setStockStatusFilter('ALL');
               }}
-              className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              className="w-full px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base"
             >
               پاک کردن فیلترها
             </button>
@@ -660,8 +660,8 @@ export default function InventoryReportsPage() {
 
       {/* Inventory Table */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
             گزارش موجودی ({filteredInventory.length} مورد)
           </h3>
         </div>
@@ -671,22 +671,22 @@ export default function InventoryReportsPage() {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     کالا
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden sm:table-cell">
                     دسته‌بندی
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     موجودی فعلی
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
                     کل ورود
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider hidden lg:table-cell">
                     کل خروج
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     وضعیت
                   </th>
                 </tr>
@@ -696,25 +696,28 @@ export default function InventoryReportsPage() {
                   const stockInfo = getStockStatus(item);
                   return (
                     <tr key={item.itemId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                        <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
                           {item.itemName}
                         </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 sm:hidden">
+                          {item.category}
+                        </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-white hidden sm:table-cell">
                         {item.category}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-white">
                         {item.current.toLocaleString('fa-IR')} {item.unit}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-white hidden lg:table-cell">
                         {item.totalIn.toLocaleString('fa-IR')} {item.unit}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-white hidden lg:table-cell">
                         {item.totalOut.toLocaleString('fa-IR')} {item.unit}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`text-sm font-medium ${stockInfo.color}`}>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                        <span className={`text-xs sm:text-sm font-medium ${stockInfo.color}`}>
                           {stockInfo.status}
                         </span>
                       </td>

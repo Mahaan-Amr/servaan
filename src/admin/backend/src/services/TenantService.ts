@@ -1,5 +1,23 @@
 import { prisma } from '../lib/prisma';
+import bcrypt from 'bcryptjs';
 import PDFDocument from 'pdfkit';
+
+// Simple in-memory cache with TTL for expensive aggregations
+type CacheEntry<T> = { value: T; expiresAt: number };
+const metricsCache: Map<string, CacheEntry<any>> = new Map();
+const DEFAULT_TTL_MS = 60_000; // 1 minute
+
+function withCache<T>(key: string, ttlMs: number, compute: () => Promise<T>): Promise<T> {
+  const now = Date.now();
+  const hit = metricsCache.get(key);
+  if (hit && hit.expiresAt > now) {
+    return Promise.resolve(hit.value as T);
+  }
+  return compute().then((val) => {
+    metricsCache.set(key, { value: val, expiresAt: now + ttlMs });
+    return val;
+  });
+}
 
 export interface TenantListParams {
   page: number;
@@ -7,6 +25,9 @@ export interface TenantListParams {
   search?: string;
   status?: string;
   plan?: string;
+  sortBy?: 'createdAt' | 'monthlyRevenue' | 'ordersThisMonth';
+  sortDir?: 'asc' | 'desc';
+  refresh?: boolean;
 }
 
 export interface TenantMetrics {
@@ -60,6 +81,59 @@ export interface PlatformOverview {
 
 export class TenantService {
   /**
+   * Create a new tenant
+   */
+  static async createTenant(data: any) {
+    // Basic normalization
+    const normalizedSubdomain = (data.subdomain || '').toLowerCase().trim();
+
+    // Ensure unique subdomain
+    const existing = await prisma.tenant.findUnique({ where: { subdomain: normalizedSubdomain } });
+    if (existing) {
+      throw new Error('SUBDOMAIN_TAKEN');
+    }
+
+    const tenant = await prisma.tenant.create({
+      data: {
+        subdomain: normalizedSubdomain,
+        name: data.name,
+        displayName: data.displayName || data.name,
+        description: data.description || null,
+        plan: data.plan || 'STARTER',
+        isActive: data.isActive !== false,
+        ownerName: data.ownerName,
+        ownerEmail: data.ownerEmail,
+        ownerPhone: data.ownerPhone || null,
+        businessType: data.businessType || null,
+        city: data.city || null,
+        country: data.country || null,
+        // Optional nested features creation if provided
+        ...(data.features && {
+          features: {
+            create: {
+              hasInventoryManagement: !!data.features.hasInventoryManagement,
+              hasCustomerManagement: !!data.features.hasCustomerManagement,
+              hasAccountingSystem: !!data.features.hasAccountingSystem,
+              hasReporting: !!data.features.hasReporting,
+              hasNotifications: !!data.features.hasNotifications,
+              hasAdvancedReporting: !!data.features.hasAdvancedReporting,
+              hasApiAccess: !!data.features.hasApiAccess,
+              hasCustomBranding: !!data.features.hasCustomBranding,
+              hasMultiLocation: !!data.features.hasMultiLocation,
+              hasAdvancedCRM: !!data.features.hasAdvancedCRM,
+              hasWhatsappIntegration: !!data.features.hasWhatsappIntegration,
+              hasInstagramIntegration: !!data.features.hasInstagramIntegration,
+              hasAnalyticsBI: !!data.features.hasAnalyticsBI,
+            }
+          }
+        })
+      },
+      include: { features: true }
+    });
+
+    return tenant;
+  }
+  /**
    * List all tenants with pagination and search
    */
   static async listTenants(params: TenantListParams) {
@@ -106,8 +180,55 @@ export class TenantService {
       prisma.tenant.count({ where })
     ]);
 
+    // Aggregate monthly revenue for listed tenants (current calendar month)
+    const tenantIds = tenants.map((t: any) => t.id);
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const revenueByTenant = await withCache<Record<string, number>>(
+      `${params.refresh ? 'noCache:' : ''}monthlyRevenue:${tenantIds.sort().join(',')}:${startOfMonth.toISOString()}`,
+      DEFAULT_TTL_MS,
+      async () => {
+        if (tenantIds.length === 0) return {};
+        const rows = await prisma.orderPayment.groupBy({
+          by: ['tenantId'],
+          where: {
+            tenantId: { in: tenantIds },
+            paymentStatus: 'PAID',
+            paymentDate: { gte: startOfMonth },
+          },
+          _sum: { amount: true },
+        });
+        const map: Record<string, number> = {};
+        for (const r of rows as any[]) {
+          map[r.tenantId] = Number(r._sum?.amount || 0);
+        }
+        return map;
+      }
+    );
+
+    // Orders count this month per tenant
+    const ordersByTenant = await withCache<Record<string, number>>(
+      `${params.refresh ? 'noCache:' : ''}ordersThisMonth:${tenantIds.sort().join(',')}:${startOfMonth.toISOString()}`,
+      DEFAULT_TTL_MS,
+      async () => {
+        if (tenantIds.length === 0) return {};
+        const rows = await prisma.order.groupBy({
+          by: ['tenantId'],
+          where: { tenantId: { in: tenantIds }, orderDate: { gte: startOfMonth } },
+          _count: { _all: true },
+        });
+        const map: Record<string, number> = {};
+        for (const r of rows as any[]) {
+          map[r.tenantId] = Number(r._count?._all || 0);
+        }
+        return map;
+      }
+    );
+
     // Transform data for admin view
-    const transformedTenants = tenants.map((tenant: any) => ({
+    let transformedTenants = tenants.map((tenant: any) => ({
       id: tenant.id,
       subdomain: tenant.subdomain,
       name: tenant.name,
@@ -121,14 +242,20 @@ export class TenantService {
       updatedAt: tenant.updatedAt,
       userCount: tenant._count.users,
       features: tenant.features,
-      // Add mock metrics for now (will be replaced with real data)
-      metrics: {
-        userCount: tenant._count.users,
-        customerCount: Math.floor(Math.random() * 1000) + 100,
-        orderCount: Math.floor(Math.random() * 500) + 50,
-        revenue: Math.floor(Math.random() * 10000000) + 1000000
-      }
+      monthlyRevenue: revenueByTenant[tenant.id] || 0,
+      ordersThisMonth: ordersByTenant[tenant.id] || 0
     }));
+
+    // Apply sort if requested (revenue/orders)
+    if (params.sortBy === 'monthlyRevenue') {
+      transformedTenants = transformedTenants.sort((a: any, b: any) =>
+        (params.sortDir === 'asc' ? 1 : -1) * ((a.monthlyRevenue || 0) - (b.monthlyRevenue || 0))
+      );
+    } else if (params.sortBy === 'ordersThisMonth') {
+      transformedTenants = transformedTenants.sort((a: any, b: any) =>
+        (params.sortDir === 'asc' ? 1 : -1) * ((a.ordersThisMonth || 0) - (b.ordersThisMonth || 0))
+      );
+    }
 
     return {
       tenants: transformedTenants,
@@ -201,34 +328,60 @@ export class TenantService {
 
     if (!tenant) return null;
 
-    // For now, return mock metrics (will be replaced with real data)
-    return {
-      users: {
-        total: tenant._count.users,
-        active: Math.floor(tenant._count.users * 0.8),
-        inactive: Math.floor(tenant._count.users * 0.2)
-      },
-      customers: {
-        total: Math.floor(Math.random() * 1000) + 100,
-        newThisMonth: Math.floor(Math.random() * 50) + 10,
-        active: Math.floor(Math.random() * 500) + 50
-      },
-      orders: {
-        total: Math.floor(Math.random() * 500) + 50,
-        thisMonth: Math.floor(Math.random() * 100) + 20,
-        averageValue: Math.floor(Math.random() * 50000) + 25000
-      },
-      revenue: {
-        total: Math.floor(Math.random() * 10000000) + 1000000,
-        thisMonth: Math.floor(Math.random() * 2000000) + 200000,
-        growth: Math.floor(Math.random() * 30) + 5
-      },
-      inventory: {
-        items: Math.floor(Math.random() * 100) + 20,
-        lowStock: Math.floor(Math.random() * 10) + 1,
-        outOfStock: Math.floor(Math.random() * 5)
-      }
-    };
+    // Compute basic metrics with caching
+    const metrics = await withCache<TenantMetrics>(`tenantMetrics:${tenantId}`, DEFAULT_TTL_MS, async () => {
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const [ordersTotal, ordersThisMonth, revenueAgg, revenueMonthAgg, customersTotal, customersVisitedThisMonth] = await Promise.all([
+        prisma.order.count({ where: { tenantId } }),
+        prisma.order.count({ where: { tenantId, orderDate: { gte: startOfMonth } } }),
+        prisma.orderPayment.aggregate({
+          where: { tenantId, paymentStatus: 'PAID' },
+          _sum: { amount: true },
+        }),
+        prisma.orderPayment.aggregate({
+          where: { tenantId, paymentStatus: 'PAID', paymentDate: { gte: startOfMonth } },
+          _sum: { amount: true },
+        }),
+        prisma.customer.count({ where: { tenantId, isActive: true } }),
+        prisma.customerVisit.count({ where: { tenantId, visitDate: { gte: startOfMonth } } }),
+      ]);
+
+      const totalRevenue = Number(revenueAgg._sum.amount || 0);
+      const monthRevenue = Number(revenueMonthAgg._sum.amount || 0);
+
+      return {
+        users: {
+          total: tenant._count.users,
+          active: 0,
+          inactive: 0,
+        },
+        customers: {
+          total: customersTotal,
+          newThisMonth: 0,
+          active: customersVisitedThisMonth,
+        },
+        orders: {
+          total: ordersTotal,
+          thisMonth: ordersThisMonth,
+          averageValue: ordersTotal > 0 ? Math.round(totalRevenue / ordersTotal) : 0,
+        },
+        revenue: {
+          total: totalRevenue,
+          thisMonth: monthRevenue,
+          growth: 0,
+        },
+        inventory: {
+          items: 0,
+          lowStock: 0,
+          outOfStock: 0,
+        },
+      };
+    });
+
+    return metrics;
   }
 
   /**
@@ -580,5 +733,38 @@ export class TenantService {
         }
       ]
     };
+  }
+
+  /**
+   * Reset tenant user password by email
+   */
+  static async resetTenantUserPasswordByEmail(tenantId: string, email: string, newPassword: string): Promise<{ id: string; email: string }> {
+    const user = await prisma.user.findFirst({ where: { tenantId, email } });
+    if (!user) {
+      throw new Error('TENANT_USER_NOT_FOUND');
+    }
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    const updated = await prisma.user.update({ where: { id: user.id }, data: { password: passwordHash } });
+    return { id: updated.id, email: updated.email } as any;
+  }
+
+  /**
+   * List tenant users (minimal fields)
+   */
+  static async listTenantUsers(tenantId: string, search?: string, limit: number = 50): Promise<Array<{ id: string; email: string; name: string | null }>> {
+    const where: any = { tenantId };
+    if (search && search.trim().length > 0) {
+      where.OR = [
+        { email: { contains: search, mode: 'insensitive' } },
+        // If your schema has name/fullName fields, include them; harmless if not present at runtime selection time is controlled below
+      ];
+    }
+    const users = await prisma.user.findMany({
+      where,
+      select: { id: true, email: true, name: true as any },
+      take: limit,
+      orderBy: { email: 'asc' }
+    });
+    return users as any;
   }
 }

@@ -74,8 +74,13 @@ export async function authenticateAdmin(req: Request, res: Response, next: NextF
       });
     }
 
-    // Add admin user to request
-    req.adminUser = adminUser;
+    // Add admin user to request with proper role typing
+    req.adminUser = {
+      id: adminUser.id,
+      email: adminUser.email,
+      role: adminUser.role as AdminRole,
+      isActive: adminUser.isActive,
+    };
     next();
 
   } catch (error) {
@@ -108,7 +113,7 @@ export async function authenticateAdmin(req: Request, res: Response, next: NextF
 /**
  * Require specific admin role(s)
  */
-export function requireRole(roles: string[]) {
+export function requireRole(roles: AdminRole[]) {
   return (req: Request, res: Response, next: NextFunction): Response | void => {
     if (!req.adminUser) {
       return res.status(401).json({
@@ -164,7 +169,12 @@ export async function optionalAuth(req: Request, _res: Response, next: NextFunct
       });
 
       if (adminUser && adminUser.isActive) {
-        req.adminUser = adminUser;
+        req.adminUser = {
+          id: adminUser.id,
+          email: adminUser.email,
+          role: adminUser.role as AdminRole,
+          isActive: adminUser.isActive,
+        };
       }
     }
 

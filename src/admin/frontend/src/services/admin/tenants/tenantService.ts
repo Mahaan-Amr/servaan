@@ -20,6 +20,9 @@ export interface TenantListParams {
   search?: string;
   status?: string;
   plan?: string;
+  sortBy?: 'createdAt' | 'monthlyRevenue' | 'ordersThisMonth';
+  sortDir?: 'asc' | 'desc';
+  refresh?: boolean;
 }
 
 export interface TenantListResponse {
@@ -128,6 +131,36 @@ export interface TenantUpdateData {
   }>;
 }
 
+export interface CreateTenantPayload {
+  name: string;
+  displayName?: string;
+  subdomain: string;
+  description?: string;
+  plan: TenantPlan;
+  ownerName: string;
+  ownerEmail: string;
+  ownerPhone?: string;
+  businessType?: string;
+  city?: string;
+  country?: string;
+  isActive?: boolean;
+  features?: Partial<{
+    hasInventoryManagement: boolean;
+    hasCustomerManagement: boolean;
+    hasAccountingSystem: boolean;
+    hasReporting: boolean;
+    hasNotifications: boolean;
+    hasAdvancedReporting: boolean;
+    hasApiAccess: boolean;
+    hasCustomBranding: boolean;
+    hasMultiLocation: boolean;
+    hasAdvancedCRM: boolean;
+    hasWhatsappIntegration: boolean;
+    hasInstagramIntegration: boolean;
+    hasAnalyticsBI: boolean;
+  }>;
+}
+
 /**
  * Get list of all tenants with pagination and search
  */
@@ -140,6 +173,9 @@ export const getTenants = async (params: TenantListParams): Promise<TenantListRe
     if (params.search) queryParams.append('search', params.search);
     if (params.status) queryParams.append('status', params.status);
     if (params.plan) queryParams.append('plan', params.plan);
+    if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+    if (params.sortDir) queryParams.append('sortDir', params.sortDir);
+    if (params.refresh) queryParams.append('refresh', String(params.refresh));
 
     const response = await adminApi.get(`/admin/tenants?${queryParams.toString()}`);
     return response.data.data;
@@ -185,6 +221,19 @@ export const updateTenant = async (id: string, data: TenantUpdateData): Promise<
   } catch (error: any) {
     console.error('Error updating tenant:', error);
     throw new Error(error.response?.data?.message || 'خطا در به‌روزرسانی مستأجر');
+  }
+};
+
+/**
+ * Create a new tenant
+ */
+export const createTenant = async (payload: CreateTenantPayload): Promise<TenantDetail> => {
+  try {
+    const response = await adminApi.post('/admin/tenants', payload);
+    return response.data.data.tenant as TenantDetail;
+  } catch (error: any) {
+    const message = error.response?.data?.message || 'خطا در ایجاد مستأجر';
+    throw new Error(message);
   }
 };
 
@@ -346,5 +395,30 @@ export const getTenantRevenueAnalytics = async (period: 'daily' | 'weekly' | 'mo
   } catch (error: any) {
     console.error('Error fetching tenant revenue analytics:', error);
     throw new Error(error.response?.data?.message || 'خطا در دریافت تحلیل درآمد مستأجرین');
+  }
+};
+
+/**
+ * Reset a tenant user's password by email
+ */
+export const resetTenantUserPassword = async (tenantId: string, email: string, newPassword: string) => {
+  try {
+    const response = await adminApi.post(`/admin/tenants/${encodeURIComponent(tenantId)}/users/reset-password`, { email, newPassword });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error resetting tenant user password:', error);
+    throw new Error(error.response?.data?.message || 'خطا در بازنشانی رمز عبور کاربر مستأجر');
+  }
+};
+
+export const listTenantUsers = async (tenantId: string, q?: string) => {
+  try {
+    const response = await adminApi.get(`/admin/tenants/${encodeURIComponent(tenantId)}/users`, {
+      params: q ? { q } : undefined,
+    });
+    return response.data?.data as Array<{ id: string; email: string; name?: string | null }>;
+  } catch (error: any) {
+    console.error('Error listing tenant users:', error);
+    throw new Error(error.response?.data?.message || 'خطا در دریافت لیست کاربران مستأجر');
   }
 };

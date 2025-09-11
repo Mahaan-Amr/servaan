@@ -300,20 +300,20 @@ export default function AnalyticsPage() {
     <div className="p-6">
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
               گزارشات و تحلیل
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
               تحلیل فروش، عملکرد و گزارشات تفصیلی سیستم سفارش‌گیری
             </p>
           </div>
           
           {/* Controls */}
-          <div className="flex items-center space-x-4 space-x-reverse">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
             {/* Time Range Selector */}
-            <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+            <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 w-full sm:w-auto">
               {([
                 { value: '7d', label: '7 روز' },
                 { value: '30d', label: '30 روز' },
@@ -323,7 +323,7 @@ export default function AnalyticsPage() {
                 <button
                   key={range.value}
                   onClick={() => setTimeRange(range.value)}
-                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  className={`flex-1 sm:flex-none px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
                     timeRange === range.value
                       ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
                       : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
@@ -335,24 +335,24 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Export Buttons */}
-            <div className="flex space-x-2 space-x-reverse">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <button
                 onClick={exportToPDF}
-                className="px-3 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition-colors"
+                className="flex-1 sm:flex-none px-3 py-2 bg-red-500 text-white text-xs sm:text-sm rounded-lg hover:bg-red-600 transition-colors"
               >
                 <FaDownload className="inline ml-1" />
                 PDF
               </button>
               <button
                 onClick={exportToExcel}
-                className="px-3 py-2 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors"
+                className="flex-1 sm:flex-none px-3 py-2 bg-green-500 text-white text-xs sm:text-sm rounded-lg hover:bg-green-600 transition-colors"
               >
                 <FaDownload className="inline ml-1" />
                 Excel
               </button>
               <button
                 onClick={exportToCSV}
-                className="px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
+                className="flex-1 sm:flex-none px-3 py-2 bg-blue-500 text-white text-xs sm:text-sm rounded-lg hover:bg-blue-600 transition-colors"
               >
                 <FaDownload className="inline ml-1" />
                 CSV
@@ -362,8 +362,8 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Period Display */}
-        <div className="card p-4">
-          <div className="flex items-center justify-center space-x-4 space-x-reverse text-sm text-gray-600 dark:text-gray-400">
+        <div className="card p-3 sm:p-4">
+          <div className="flex items-center justify-center space-x-2 sm:space-x-4 space-x-reverse text-xs sm:text-sm text-gray-600 dark:text-gray-400">
             <FaCalendarAlt />
             <span>دوره تحلیلی: {data.period.startDate} تا {data.period.endDate}</span>
           </div>
@@ -371,20 +371,20 @@ export default function AnalyticsPage() {
 
         {/* Sales Metrics */}
         {data.sales && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="card p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+            <div className="card p-3 sm:p-6">
               <div className="flex items-center">
-                <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                  <FaDollarSign className="w-6 h-6 text-blue-600 dark:text-blue-300" />
+                <div className="p-2 sm:p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                  <FaDollarSign className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-300" />
                 </div>
-                <div className="mr-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">کل درآمد</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <div className="mr-3 sm:mr-4">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">کل درآمد</p>
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                     {formatCurrency(data.sales.totalRevenue)}
                   </p>
                   <div className="flex items-center mt-1">
                     {getGrowthIcon(data.sales.revenueGrowth)}
-                    <span className={`text-sm font-medium mr-1 ${getGrowthColor(data.sales.revenueGrowth)}`}>
+                    <span className={`text-xs sm:text-sm font-medium mr-1 ${getGrowthColor(data.sales.revenueGrowth)}`}>
                       {formatPercentage(Math.abs(data.sales.revenueGrowth))}
                     </span>
                   </div>
@@ -392,19 +392,19 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            <div className="card p-6">
+            <div className="card p-3 sm:p-6">
               <div className="flex items-center">
-                <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
-                  <FaShoppingCart className="w-6 h-6 text-green-600 dark:text-green-300" />
+                <div className="p-2 sm:p-3 bg-green-100 dark:bg-green-900 rounded-lg">
+                  <FaShoppingCart className="w-4 h-4 sm:w-6 sm:h-6 text-green-600 dark:text-green-300" />
                 </div>
-                <div className="mr-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">کل سفارشات</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <div className="mr-3 sm:mr-4">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">کل سفارشات</p>
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                     {data.sales.totalOrders.toLocaleString('fa-IR')}
                   </p>
                   <div className="flex items-center mt-1">
                     {getGrowthIcon(data.sales.orderGrowth)}
-                    <span className={`text-sm font-medium mr-1 ${getGrowthColor(data.sales.orderGrowth)}`}>
+                    <span className={`text-xs sm:text-sm font-medium mr-1 ${getGrowthColor(data.sales.orderGrowth)}`}>
                       {formatPercentage(Math.abs(data.sales.orderGrowth))}
                     </span>
                   </div>
@@ -412,33 +412,33 @@ export default function AnalyticsPage() {
               </div>
             </div>
 
-            <div className="card p-6">
+            <div className="card p-3 sm:p-6">
               <div className="flex items-center">
-                <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                  <FaChartLine className="w-6 h-6 text-purple-600 dark:text-purple-300" />
+                <div className="p-2 sm:p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                  <FaChartLine className="w-4 h-4 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-300" />
                 </div>
-                <div className="mr-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">میانگین سفارش</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <div className="mr-3 sm:mr-4">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">میانگین سفارش</p>
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                     {formatCurrency(data.sales.averageOrderValue)}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="card p-6">
+            <div className="card p-3 sm:p-6">
               <div className="flex items-center">
-                <div className="p-3 bg-orange-100 dark:bg-orange-900 rounded-lg">
-                  <FaUsers className="w-6 h-6 text-orange-600 dark:text-orange-300" />
+                <div className="p-2 sm:p-3 bg-orange-100 dark:bg-orange-900 rounded-lg">
+                  <FaUsers className="w-4 h-4 sm:w-6 sm:h-6 text-orange-600 dark:text-orange-300" />
                 </div>
-                <div className="mr-4">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">مشتریان فعال</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <div className="mr-3 sm:mr-4">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">مشتریان فعال</p>
+                  <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                     {data.customers?.totalCustomers.toLocaleString('fa-IR') || '0'}
                   </p>
                   <div className="flex items-center mt-1">
                     {getGrowthIcon(data.customers?.customerGrowth || 0)}
-                    <span className={`text-sm font-medium mr-1 ${getGrowthColor(data.customers?.customerGrowth || 0)}`}>
+                    <span className={`text-xs sm:text-sm font-medium mr-1 ${getGrowthColor(data.customers?.customerGrowth || 0)}`}>
                       {formatPercentage(Math.abs(data.customers?.customerGrowth || 0))}
                     </span>
                   </div>
@@ -449,11 +449,11 @@ export default function AnalyticsPage() {
         )}
 
         {/* Charts Row 1 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
           {/* Sales Trend Chart */}
           {data.sales && (
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">روند فروش روزانه</h3>
+            <div className="card p-3 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">روند فروش روزانه</h3>
               <CustomLineChart
                 data={data.sales.dailyRevenue}
                 lines={[
@@ -461,7 +461,7 @@ export default function AnalyticsPage() {
                   { dataKey: 'orders', fill: '#10B981', stroke: '#10B981', name: 'سفارشات' }
                 ]}
                 xAxisKey="date"
-                height={300}
+                height={250}
                 yAxisLabel="درآمد (ریال)"
               />
             </div>
@@ -469,13 +469,13 @@ export default function AnalyticsPage() {
 
           {/* Top Selling Items */}
           {data.sales && (
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">محصولات پرفروش</h3>
+            <div className="card p-3 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">محصولات پرفروش</h3>
               <CustomBarChart
                 data={data.sales.topSellingItems.slice(0, 10)}
                 bars={[{ dataKey: 'revenue', fill: '#8B5CF6', name: 'درآمد' }]}
                 xAxisKey="itemName"
-                height={300}
+                height={250}
                 yAxisLabel="درآمد (ریال)"
               />
             </div>
@@ -483,11 +483,11 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Charts Row 2 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
           {/* Payment Methods Distribution */}
           {data.sales && (
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">توزیع روش‌های پرداخت</h3>
+            <div className="card p-3 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">توزیع روش‌های پرداخت</h3>
               <CustomDonutChart
                 data={data.sales.paymentMethods.map((method, index) => ({
                   name: method.method,
@@ -496,15 +496,14 @@ export default function AnalyticsPage() {
                   count: method.count,
                   color: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'][index % 5]
                 }))}
-
               />
             </div>
           )}
 
           {/* Hourly Sales Breakdown */}
           {data.sales && (
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">فروش ساعتی</h3>
+            <div className="card p-3 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">فروش ساعتی</h3>
               <CustomAreaChart
                 data={data.sales.hourlyBreakdown}
                 areas={[
@@ -512,7 +511,7 @@ export default function AnalyticsPage() {
                   { dataKey: 'orders', fill: '#10B981', stroke: '#10B981', name: 'سفارشات' }
                 ]}
                 xAxisKey="hour"
-                height={300}
+                height={250}
                 yAxisLabel="مقدار"
               />
             </div>
@@ -521,32 +520,32 @@ export default function AnalyticsPage() {
 
         {/* Kitchen Performance */}
         {data.kitchen && (
-          <div className="card p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">عملکرد آشپزخانه</h3>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="card p-3 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">عملکرد آشپزخانه</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                <div className="text-lg sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {data.kitchen.totalOrders.toLocaleString('fa-IR')}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">کل سفارشات</div>
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">کل سفارشات</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                <div className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400">
                   {data.kitchen.averagePrepTime} دقیقه
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">میانگین زمان آماده‌سازی</div>
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">میانگین زمان آماده‌سازی</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                <div className="text-lg sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
                   {formatPercentage(data.kitchen.onTimeDelivery)}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">تحویل به موقع</div>
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">تحویل به موقع</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                <div className="text-lg sm:text-2xl font-bold text-orange-600 dark:text-orange-400">
                   {formatPercentage(data.kitchen.efficiency)}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">کارایی کلی</div>
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">کارایی کلی</div>
               </div>
             </div>
           </div>
@@ -554,26 +553,26 @@ export default function AnalyticsPage() {
 
         {/* Table Utilization */}
         {data.tables && (
-          <div className="card p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">استفاده از میزها</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="card p-3 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">استفاده از میزها</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                <div className="text-lg sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {data.tables.totalTables}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">کل میزها</div>
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">کل میزها</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                <div className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400">
                   {formatPercentage(data.tables.averageUtilization)}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">میانگین استفاده</div>
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">میانگین استفاده</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                <div className="text-lg sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
                   {data.tables.topPerformingTables.length}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">میزهای برتر</div>
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">میزهای برتر</div>
               </div>
             </div>
           </div>
@@ -581,32 +580,32 @@ export default function AnalyticsPage() {
 
         {/* Customer Analytics */}
         {data.customers && (
-          <div className="card p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">تحلیل مشتریان</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="card p-3 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">تحلیل مشتریان</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
               <div>
-                <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">مشتریان برتر</h4>
+                <h4 className="text-sm sm:text-md font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3">مشتریان برتر</h4>
                 <div className="space-y-2">
                   {data.customers.topCustomers.slice(0, 5).map((customer, index) => (
-                    <div key={customer.customerId} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div key={customer.customerId} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <div className="flex items-center">
-                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400 ml-2">
+                        <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 ml-2">
                           {index + 1}
                         </span>
                         <div>
-                          <div className="font-medium text-gray-900 dark:text-white">
+                          <div className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
                             {customer.customerName}
                           </div>
-                          <div className="text-sm text-gray-600 dark:text-gray-400">
+                          <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                             {customer.orderCount} سفارش
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-medium text-gray-900 dark:text-white">
+                        <div className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
                           {formatCurrency(customer.totalSpent)}
                         </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                           {customer.lastVisit}
                         </div>
                       </div>
@@ -616,7 +615,7 @@ export default function AnalyticsPage() {
               </div>
               
               <div>
-                <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">بخش‌های مشتری</h4>
+                <h4 className="text-sm sm:text-md font-semibold text-gray-900 dark:text-white mb-2 sm:mb-3">بخش‌های مشتری</h4>
                 <CustomPieChart
                   data={data.customers.customerSegments.map((segment, index) => ({
                     name: segment.segment,
@@ -624,7 +623,7 @@ export default function AnalyticsPage() {
                     percentage: segment.percentage,
                     color: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'][index % 5]
                   }))}
-                  height={250}
+                  height={200}
                   showLegend={true}
                 />
               </div>

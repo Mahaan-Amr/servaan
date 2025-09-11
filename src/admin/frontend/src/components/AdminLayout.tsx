@@ -17,26 +17,34 @@ import {
   Search
 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
 const navigation = [
-  { name: 'Dashboard', href: '/admin/dashboard', icon: Home, roles: ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'SUPPORT', 'DEVELOPER'] },
-  { name: 'Tenants', href: '/admin/tenants', icon: Building2, roles: ['SUPER_ADMIN', 'PLATFORM_ADMIN'] },
-  { name: 'Users', href: '/admin/users', icon: Users, roles: ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'SUPPORT'] },
-  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3, roles: ['SUPER_ADMIN', 'PLATFORM_ADMIN'] },
-  { name: 'Security', href: '/admin/security', icon: Shield, roles: ['SUPER_ADMIN', 'PLATFORM_ADMIN'] },
-  { name: 'System', href: '/admin/system', icon: Settings, roles: ['SUPER_ADMIN', 'DEVELOPER'] },
-  { name: 'Support', href: '/admin/support', icon: HelpCircle, roles: ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'SUPPORT'] },
+  { name: 'داشبورد', href: '/admin/dashboard', icon: Home, roles: ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'SUPPORT', 'DEVELOPER'] },
+  { name: 'مستاجران', href: '/admin/tenants', icon: Building2, roles: ['SUPER_ADMIN', 'PLATFORM_ADMIN'] },
+  { name: 'کاربران', href: '/admin/users', icon: Users, roles: ['SUPER_ADMIN', 'PLATFORM_ADMIN'] },
+  { name: 'تحلیل‌ها', href: '/admin/analytics', icon: BarChart3, roles: ['SUPER_ADMIN', 'PLATFORM_ADMIN'] },
+  { name: 'امنیت', href: '/admin/security', icon: Shield, roles: ['SUPER_ADMIN', 'PLATFORM_ADMIN'] },
+  { name: 'سیستم (پشتیبان‌گیری)', href: '/admin/system/backups', icon: Settings, roles: ['SUPER_ADMIN', 'DEVELOPER'] },
+  { name: 'پشتیبانی', href: '/admin/support', icon: HelpCircle, roles: ['SUPER_ADMIN', 'PLATFORM_ADMIN', 'SUPPORT'] },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, logout, hasRole } = useAdminAuth();
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Protect admin routes: redirect unauthenticated users to login, but allow the login route itself
+  if (!user && pathname !== '/admin/login') {
+    // Avoid rendering protected UI while redirecting
+    router.push('/admin/login');
+    return null;
+  }
 
   const handleLogout = async () => {
     try {
@@ -51,7 +59,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   );
 
   return (
-    <div className="h-screen flex overflow-hidden bg-gray-50">
+    <div className="h-screen flex overflow-hidden bg-gray-50" dir="rtl">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 flex z-40 md:hidden">
@@ -71,7 +79,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 <div className="h-8 w-8 bg-admin-primary rounded-lg flex items-center justify-center">
                   <Shield className="h-5 w-5 text-white" />
                 </div>
-                <span className="ml-2 text-xl font-bold text-gray-900">Admin Panel</span>
+                <span className="ml-2 text-xl font-bold text-gray-900">پنل مدیریت</span>
               </div>
               <nav className="mt-5 px-2 space-y-1">
                 {filteredNavigation.map((item) => {
@@ -106,7 +114,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 <div className="h-8 w-8 bg-admin-primary rounded-lg flex items-center justify-center">
                   <Shield className="h-5 w-5 text-white" />
                 </div>
-                <span className="ml-2 text-xl font-bold text-gray-900">Admin Panel</span>
+                <span className="ml-2 text-xl font-bold text-gray-900">پنل مدیریت</span>
               </div>
               <nav className="mt-5 flex-1 px-2 space-y-1">
                 {filteredNavigation.map((item) => {

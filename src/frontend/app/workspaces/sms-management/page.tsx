@@ -157,21 +157,21 @@ const SMSDashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Page Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
               داشبورد مدیریت پیامک
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
               نمای کلی از عملکرد سیستم پیامک
             </p>
           </div>
           <button
             onClick={loadDashboardData}
-            className="btn btn-outline"
+            className="btn btn-outline text-xs sm:text-sm px-3 py-2 sm:px-4 sm:py-2"
             disabled={loading}
           >
             <FaChartLine className="w-4 h-4 ml-2" />
@@ -190,16 +190,16 @@ const SMSDashboard = () => {
 
       {/* Statistics Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {/* Total Sent */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
                   کل پیامک‌های ارسالی
                 </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {stats.totalSent.toLocaleString('fa-IR')}
+                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                  {(stats?.totalSent ?? 0).toLocaleString('fa-IR')}
                 </p>
               </div>
               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
@@ -209,14 +209,14 @@ const SMSDashboard = () => {
           </div>
 
           {/* Sent Today */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
                   ارسال امروز
                 </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {stats.sentToday.toLocaleString('fa-IR')}
+                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                  {(stats?.sentToday ?? 0).toLocaleString('fa-IR')}
                 </p>
                 <div className="flex items-center mt-1">
                   {stats.trends.sentToday.direction === 'up' ? (
@@ -225,9 +225,9 @@ const SMSDashboard = () => {
                     <FaArrowDown className="w-3 h-3 text-red-500 ml-1" />
                   )}
                   <span className={`text-xs ${
-                    stats.trends.sentToday.direction === 'up' ? 'text-green-500' : 'text-red-500'
+                    stats?.trends?.sentToday?.direction === 'up' ? 'text-green-500' : 'text-red-500'
                   }`}>
-                    {stats.trends.sentToday.value}% نسبت به دیروز
+                    {(stats?.trends?.sentToday?.value ?? 0)}% نسبت به دیروز
                   </span>
                 </div>
               </div>
@@ -238,14 +238,14 @@ const SMSDashboard = () => {
           </div>
 
           {/* Remaining Credit */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
                   اعتبار باقی‌مانده
                 </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {stats.remainingCredit.toLocaleString('fa-IR')}
+                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                  {(stats?.remainingCredit ?? 0).toLocaleString('fa-IR')}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   تعداد پیامک
@@ -258,19 +258,19 @@ const SMSDashboard = () => {
           </div>
 
           {/* Success Rate */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
                   نرخ موفقیت
                 </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                   {stats.successRate}%
                 </p>
                 <div className="flex items-center mt-1">
                   <FaArrowUp className="w-3 h-3 text-green-500 ml-1" />
                   <span className="text-xs text-green-500">
-                    +{stats.trends.successRate.value}% این ماه
+                    +{(stats?.trends?.successRate?.value ?? 0)}% این ماه
                   </span>
                 </div>
               </div>
@@ -283,33 +283,33 @@ const SMSDashboard = () => {
       )}
 
       {/* Quick Actions */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
           اقدامات سریع
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {quickActions.map((action) => {
             const Icon = action.icon;
             return (
               <a
                 key={action.id}
                 href={action.href}
-                className="block p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow"
+                className="block p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow"
               >
-                <div className="flex items-center space-x-3 space-x-reverse">
-                  <div className={`w-10 h-10 ${action.color} rounded-lg flex items-center justify-center relative`}>
-                    <Icon className="w-5 h-5 text-white" />
+                <div className="flex items-center space-x-2 sm:space-x-3 space-x-reverse">
+                  <div className={`w-9 h-9 sm:w-10 sm:h-10 ${action.color} rounded-lg flex items-center justify-center relative`}>
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     {action.count && (
-                      <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                      <span className="absolute -top-2 -right-2 w-4 h-4 sm:w-5 sm:h-5 bg-red-500 text-white text-[10px] sm:text-xs rounded-full flex items-center justify-center">
                         {action.count}
                       </span>
                     )}
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 dark:text-white">
+                    <h4 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white">
                       {action.title}
                     </h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400">
                       {action.description}
                     </p>
                   </div>
@@ -322,17 +322,17 @@ const SMSDashboard = () => {
 
       {/* System Status */}
       {stats && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Recent Activity */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
               وضعیت سیستم
             </h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                 <div className="flex items-center space-x-3 space-x-reverse">
                   <FaCheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
                     سرویس پیامک
                   </span>
                 </div>
@@ -344,7 +344,7 @@ const SMSDashboard = () => {
               <div className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
                 <div className="flex items-center space-x-3 space-x-reverse">
                   <FaExclamationTriangle className="w-5 h-5 text-yellow-500" />
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
                     پیام‌های در انتظار
                   </span>
                 </div>
@@ -357,7 +357,7 @@ const SMSDashboard = () => {
                 <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
                   <div className="flex items-center space-x-3 space-x-reverse">
                     <FaExclamationTriangle className="w-5 h-5 text-red-500" />
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
                       پیام‌های ناموفق
                     </span>
                   </div>
@@ -371,21 +371,21 @@ const SMSDashboard = () => {
 
           {/* Account Info */}
           {accountInfo && (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
                 اطلاعات حساب کاربری
               </h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                     اعتبار باقی‌مانده:
                   </span>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
                     {parseInt(accountInfo.credit || '0').toLocaleString('fa-IR')} پیامک
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                     وضعیت حساب:
                   </span>
                   <span className="text-sm font-medium text-green-600 dark:text-green-400">
@@ -393,10 +393,10 @@ const SMSDashboard = () => {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                     شماره فرستنده:
                   </span>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
                     ۲۰۰۰۶۶۰۱۱۰
                   </span>
                 </div>
