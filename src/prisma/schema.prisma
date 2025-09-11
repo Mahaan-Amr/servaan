@@ -1649,7 +1649,7 @@ model AdminUser {
   id                String      @id @default(cuid())
   email             String      @unique
   passwordHash      String      @map("password_hash")
-  role              String
+  role              AdminRole
   isActive          Boolean     @default(true) @map("is_active")
   twoFactorSecret   String?     @map("two_factor_secret")
   lastLogin         DateTime?   @map("last_login")
@@ -1679,7 +1679,7 @@ model SystemHealthMetric {
   id           String      @id @default(cuid())
   metricName   String      @map("metric_name")
   metricValue  Json        @map("metric_value")
-  status       String
+  status       HealthStatus
   collectedAt  DateTime    @default(now()) @map("collected_at")
 
   @@map("system_health_metrics")
