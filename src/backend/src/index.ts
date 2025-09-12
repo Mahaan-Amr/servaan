@@ -55,11 +55,17 @@ const port = process.env.BACKEND_PORT || 3001;
 app.use(helmet()); // Security headers
 app.use(cors({
   origin: (origin, callback) => {
+    const allowedOrigins = [
+      'https://servaan.com',
+      'https://api.servaan.com',
+      'https://admin.servaan.com'
+    ];
+    
     // Allow requests from any subdomain of servaan.com
     if (!origin || 
         origin.includes('localhost') || 
         origin.endsWith('.servaan.com') ||
-        origin === 'https://servaan.com') {
+        allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
