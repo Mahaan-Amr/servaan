@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { User } from '../types';
+import { API_URL } from '../lib/apiUtils';
 
 // Types
 export interface LoginCredentials {
@@ -16,8 +17,7 @@ export interface RegisterData {
   phoneNumber?: string;
 }
 
-// API URL
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+// API_URL is now imported from apiUtils
 
 // Login user
 export const login = async (credentials: LoginCredentials, rememberMe: boolean = false): Promise<User> => {

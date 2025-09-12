@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { API_URL } from '../lib/apiUtils';
 
 interface Tenant {
   id: string;
@@ -88,10 +89,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-      
       // Fetch tenant information from backend
-      const response = await fetch(`${API_URL}/api/tenants/${subdomainToFetch}`);
+      const response = await fetch(`${API_URL}/tenants/${subdomainToFetch}`);
       
       if (!response.ok) {
         if (response.status === 404) {
