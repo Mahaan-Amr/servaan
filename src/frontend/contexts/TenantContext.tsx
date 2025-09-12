@@ -91,7 +91,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
       
       // Fetch tenant information from backend
-      const response = await fetch(`${API_URL}/tenants/${subdomainToFetch}`);
+      const response = await fetch(`${API_URL}/api/tenants/${subdomainToFetch}`);
       
       if (!response.ok) {
         if (response.status === 404) {
