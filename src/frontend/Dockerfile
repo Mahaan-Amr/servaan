@@ -14,9 +14,11 @@ COPY . .
 # Change to frontend directory for build
 WORKDIR /app/src/frontend
 
-# CRITICAL: Set environment variables for build time
-ENV NEXT_PUBLIC_API_URL=http://localhost:3001/api
-ENV NEXT_PUBLIC_APP_URL=http://localhost:3000
+# CRITICAL: Set environment variables for build time (injected via build args)
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_APP_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
 
 # Build the application
 RUN npm run build
