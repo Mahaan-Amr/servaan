@@ -75,7 +75,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=https://api.servaan.com/api
+      - NEXT_PUBLIC_API_URL=https://api.servaan.com
       - NEXT_PUBLIC_APP_URL=https://servaan.com
     ports:
       - "3000:3000"
