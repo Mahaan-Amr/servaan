@@ -209,7 +209,7 @@ perform_final_health_checks() {
     
     # Test backend API
     print_status "Testing backend API..."
-    if curl -s http://localhost:3001/api/health >/dev/null 2>&1; then
+    if curl -s http://localhost:3001/health >/dev/null 2>&1; then
         print_success "Backend API is accessible"
     else
         print_warning "Backend API accessibility check failed"
@@ -343,8 +343,8 @@ main() {
     echo "📊 Service URLs:"
     echo "- Main Application: https://servaan.com"
     echo "- Admin Panel: https://admin.servaan.com"
-    echo "- Main API: https://servaan.com/api"
-    echo "- Admin API: https://admin.servaan.com/api/admin"
+    echo "- Main API: https://api.servaan.com"
+    echo "- Admin API: https://admin.servaan.com/api"
     echo "- Database: localhost:5432"
     echo "- pgAdmin: http://localhost:5050"
     echo
