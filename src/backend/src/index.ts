@@ -71,7 +71,10 @@ app.use(cors({
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Subdomain'],
+  optionsSuccessStatus: 200
 })); // Enable CORS with subdomain support
 app.use(express.json({ limit: '10MB' })); // Parse JSON bodies with 10MB limit for image uploads
 app.use(express.urlencoded({ extended: true, limit: '10MB' })); // Parse URL-encoded bodies
