@@ -4,6 +4,7 @@ import { Supplier } from '../types';
 import { Modal } from '../components/ui/Modal';
 import { Spinner } from '../components/ui/Spinner';
 import { AlertBox } from '../components/ui/AlertBox';
+import { API_URL } from '../lib/apiUtils';
 
 interface SupplierFormModalProps {
   supplier: Supplier | null;
@@ -54,8 +55,7 @@ export const SupplierFormModal: React.FC<SupplierFormModalProps> = ({ supplier, 
 
     try {
       const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-      const url = `${apiUrl}/suppliers${supplier ? `/${supplier.id}` : ''}`;
+      const url = `${API_URL}/suppliers${supplier ? `/${supplier.id}` : ''}`;
       const method = supplier ? 'put' : 'post';
       
       await axios({
