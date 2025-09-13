@@ -45,8 +45,9 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
       return next();
     }
     
-    // Skip tenant resolution for main domain only (not for API subdomain)
-    if (subdomain === 'www' || subdomain === 'admin') {
+    // Skip tenant resolution for main domain and API subdomain
+    // API subdomain should handle tenant resolution in individual routes
+    if (subdomain === 'www' || subdomain === 'admin' || subdomain === 'api') {
       return next();
     }
 
