@@ -77,9 +77,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('token', response.data.token);
       setUser(response.data.user);
       router.push('/');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Login error:', err);
-      setError(err.response?.data?.message || 'خطا در ورود به سیستم');
+      const errorMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'خطا در ورود به سیستم';
+      setError(errorMessage);
       throw err;
     } finally {
       setLoading(false);

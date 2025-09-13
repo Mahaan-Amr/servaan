@@ -7,7 +7,7 @@ import { CustomPieChart } from '../../../components/charts/PieChart';
 import { CustomLineChart } from '../../../components/charts/LineChart';
 import { getToken } from '../../../services/authService';
 
-import { API_URL } from '../../lib/apiUtils';
+import { API_URL } from '../../../lib/apiUtils';
 
 interface UserSummary {
   totalUsers: number;
