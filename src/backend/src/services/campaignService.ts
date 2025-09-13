@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../../shared/generated/client';
+import { PrismaClient } from '../../shared/generated/client';
 import { z } from 'zod';
 import smsService from './smsService';
 

@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../../shared/generated/client';
+import { PrismaClient } from '../../shared/generated/client';
 import { performanceMonitoringService } from './performanceMonitoringService';
 
 const prisma = new PrismaClient();

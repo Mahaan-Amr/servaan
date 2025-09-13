@@ -1,4 +1,4 @@
-import { PrismaClient, JournalStatus, SourceType } from '../../../shared/generated/client';
+import { PrismaClient, JournalStatus, SourceType } from '../../shared/generated/client';
 
 const prisma = new PrismaClient();
 

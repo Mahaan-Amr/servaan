@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../../shared/generated/client';
+import { PrismaClient } from '../../shared/generated/client';
 import dotenv from 'dotenv';
 
 // Load test environment variables

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { TableService, CreateTableData, UpdateTableData, CreateReservationData, TableFilterOptions, ReservationFilterOptions } from '../services/tableService';
 import { AppError } from '../utils/AppError';
-import { TableStatus } from '../../../shared/generated/client';
+import { TableStatus } from '../../shared/generated/client';
 
 export class TableController {
   /**

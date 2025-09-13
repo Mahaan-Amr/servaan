@@ -1,5 +1,5 @@
 import Kavenegar from 'kavenegar';
-import { PrismaClient } from '../../../shared/generated/client';
+import { PrismaClient } from '../../shared/generated/client';
 import { config } from '../src/config';
 
 const prisma = new PrismaClient();

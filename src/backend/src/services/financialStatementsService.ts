@@ -1,4 +1,4 @@
-import { PrismaClient, AccountType, StatementType } from '../../../shared/generated/client';
+import { PrismaClient, AccountType, StatementType } from '../../shared/generated/client';
 
 const prisma = new PrismaClient();
 
