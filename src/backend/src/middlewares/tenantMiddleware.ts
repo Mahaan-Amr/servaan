@@ -29,9 +29,12 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
     const host = req.get('host') || '';
     let subdomain = extractSubdomain(host);
     
+    console.log(`🔍 DEBUG - Host header: "${host}", extracted subdomain: "${subdomain}"`);
+    
     // If no subdomain from Host header, try custom header (for frontend requests)
     if (!subdomain) {
       const customSubdomain = req.get('X-Tenant-Subdomain');
+      console.log(`🔍 DEBUG - X-Tenant-Subdomain header: "${customSubdomain}"`);
       if (customSubdomain) {
         subdomain = customSubdomain;
         console.log(`🔍 Tenant resolved from X-Tenant-Subdomain header: ${subdomain}`);
@@ -42,6 +45,7 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
     
     // Skip tenant resolution only if no subdomain is found at all
     if (!subdomain) {
+      console.log(`🔍 DEBUG - No subdomain found, skipping tenant resolution`);
       return next();
     }
     
@@ -52,6 +56,7 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
     }
 
     // Find tenant by subdomain
+    console.log(`🔍 DEBUG - Searching for tenant with subdomain: "${subdomain}"`);
     const tenant = await prisma.tenant.findUnique({
       where: { 
         subdomain: subdomain,
@@ -62,7 +67,10 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
       }
     });
 
+    console.log(`🔍 DEBUG - Tenant found:`, tenant ? `ID: ${tenant.id}, Name: ${tenant.name}` : 'NOT FOUND');
+
     if (!tenant) {
+      console.log(`❌ Tenant not found for subdomain: ${subdomain}`);
       return res.status(404).json({
         error: 'مجموعه یافت نشد',
         message: `Tenant with subdomain '${subdomain}' not found`,
