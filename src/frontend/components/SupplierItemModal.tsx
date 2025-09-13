@@ -5,6 +5,7 @@ import { Spinner } from './ui/Spinner';
 import { AlertBox } from './ui/AlertBox';
 import { Button } from './ui/Button';
 import { Item } from '../types';
+import { API_URL } from '../lib/apiUtils';
 
 interface SupplierItemModalProps {
   supplierId: string;
@@ -31,9 +32,8 @@ export const SupplierItemModal: React.FC<SupplierItemModalProps> = ({ supplierId
       setError('');
       
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
         const response = await axios.get(
-          `${apiUrl}/items`, 
+          `${API_URL}/items`, 
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -82,9 +82,8 @@ export const SupplierItemModal: React.FC<SupplierItemModalProps> = ({ supplierId
         unitPrice: formData.unitPrice ? parseFloat(formData.unitPrice) : undefined
       };
       
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
       await axios.post(
-        `${apiUrl}/suppliers/${supplierId}/items`,
+        `${API_URL}/suppliers/${supplierId}/items`,
         payload,
         {
           headers: {

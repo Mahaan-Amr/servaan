@@ -7,6 +7,7 @@ import { AlertBox } from '../../components/ui/AlertBox';
 import { Spinner } from '../../components/ui/Spinner';
 import { FaPhone, FaUserPlus, FaCheck, FaEye, FaEyeSlash } from 'react-icons/fa';
 import * as smsService from '../../services/smsService';
+import { API_URL } from '../../lib/apiUtils';
 
 interface RegistrationFormData {
   name: string;
@@ -133,7 +134,6 @@ function InvitationForm() {
     setError('');
     
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
       
       console.log('🚀 Submitting registration...', {
         name: formData.name,
@@ -144,7 +144,7 @@ function InvitationForm() {
       });
       
       // Create user account
-      const response = await axios.post(`${apiUrl}/auth/register-invitation`, {
+      const response = await axios.post(`${API_URL}/auth/register-invitation`, {
         name: formData.name,
         email: formData.email,
         password: formData.password,

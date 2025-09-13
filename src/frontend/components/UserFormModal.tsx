@@ -4,6 +4,7 @@ import { User } from '../types';
 import { Modal } from './ui/Modal';
 import { Spinner } from './ui/Spinner';
 import { AlertBox } from './ui/AlertBox';
+import { API_URL } from '../lib/apiUtils';
 
 interface UserFormModalProps {
   user: User | null;
@@ -55,8 +56,7 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({ user, onClose }) =
 
     try {
       const token = localStorage.getItem('token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-      const url = `${apiUrl}/users${user ? `/${user.id}` : ''}`;
+      const url = `${API_URL}/users${user ? `/${user.id}` : ''}`;
       const method = user ? 'put' : 'post';
       
       // Remove password if empty and editing existing user

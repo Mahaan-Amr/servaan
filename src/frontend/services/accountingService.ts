@@ -498,7 +498,6 @@ export class AccountingService {
 }
 
 export const getAccountingSummary = async () => {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
   const token = getToken(); // Use getToken() for consistency
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
