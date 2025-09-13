@@ -34,11 +34,19 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
       const customSubdomain = req.get('X-Tenant-Subdomain');
       if (customSubdomain) {
         subdomain = customSubdomain;
+        console.log(`🔍 Tenant resolved from X-Tenant-Subdomain header: ${subdomain}`);
       }
+    } else {
+      console.log(`🔍 Tenant resolved from Host header: ${subdomain}`);
     }
     
-    // Skip tenant resolution for main domain or API endpoints
-    if (!subdomain || subdomain === 'www' || subdomain === 'api' || subdomain === 'admin') {
+    // Skip tenant resolution only if no subdomain is found at all
+    if (!subdomain) {
+      return next();
+    }
+    
+    // Skip tenant resolution for main domain only (not for API subdomain)
+    if (subdomain === 'www' || subdomain === 'admin') {
       return next();
     }
 
@@ -80,6 +88,7 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
       features: tenant.features
     };
 
+    console.log(`✅ Tenant context set: ${tenant.subdomain} (${tenant.name})`);
     next();
   } catch (error) {
     console.error('Tenant resolution error:', error);
