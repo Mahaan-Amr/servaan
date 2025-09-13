@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '../../shared/generated/client';
+import { PrismaClient } from '../../../shared/generated/client';
 
 const prisma = new PrismaClient();
 

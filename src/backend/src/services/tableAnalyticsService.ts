@@ -1,4 +1,4 @@
-import { PrismaClient, TableStatus } from '../../shared/generated/client';
+import { PrismaClient, TableStatus } from '../../../shared/generated/client';
 import { AppError } from '../utils/AppError';
 
 const prisma = new PrismaClient();

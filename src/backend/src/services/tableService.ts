@@ -1,4 +1,4 @@
-import { PrismaClient, TableStatus, Table, TableReservation } from '../../shared/generated/client';
+import { PrismaClient, TableStatus, Table, TableReservation } from '../../../shared/generated/client';
 import { AppError } from '../utils/AppError';
 import { tableCacheService } from './tableCacheService';
 import { tableRealTimeService } from './tableRealTimeService';

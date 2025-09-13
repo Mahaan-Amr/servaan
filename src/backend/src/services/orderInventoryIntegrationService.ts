@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../shared/generated/client';
+import { PrismaClient } from '../../../shared/generated/client';
 import { AppError } from '../utils/AppError';
 import { calculateWeightedAverageCost, calculateCurrentStock, checkStockAvailability } from './inventoryService';
 import { RecipeService } from './recipeService';

@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../shared/generated/client';
+import { PrismaClient } from '../../../shared/generated/client';
 
 /**
  * Generate unique order number for the tenant

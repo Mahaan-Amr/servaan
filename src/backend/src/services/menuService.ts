@@ -1,4 +1,4 @@
-import { PrismaClient, MenuCategory, MenuItem, MenuItemModifier } from '../../shared/generated/client';
+import { PrismaClient, MenuCategory, MenuItem, MenuItemModifier } from '../../../shared/generated/client';
 import { AppError } from '../utils/AppError';
 
 const prisma = new PrismaClient();

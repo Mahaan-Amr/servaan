@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import ChartOfAccountsService from '../services/chartOfAccountsService';
 import JournalEntryService from '../services/journalEntryService';
 import FinancialStatementsService from '../services/financialStatementsService';
-import { AccountType, JournalStatus, SourceType } from '../../shared/generated/client';
+import { AccountType, JournalStatus, SourceType } from '../../../shared/generated/client';
 import { prisma } from '../services/dbService';
 
 /**

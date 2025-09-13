@@ -238,7 +238,7 @@ export class TableBulkOperationsController {
 
       const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
 
-      const { PrismaClient } = require('../../shared/generated/client');
+      const { PrismaClient } = require('../../../shared/generated/client');
       const prisma = new PrismaClient();
 
       const statusHistory = await prisma.tableStatusLog.findMany({

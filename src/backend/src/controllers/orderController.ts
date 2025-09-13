@@ -4,7 +4,7 @@ import { OrderAccountingIntegrationService } from '../services/orderAccountingIn
 import { OrderOptionsService } from '../services/orderOptionsService';
 import { OrderCalculationService, OrderOptions } from '../services/orderCalculationService';
 import { AppError } from '../utils/AppError';
-import { OrderStatus, OrderType } from '../../shared/generated/client';
+import { OrderStatus, OrderType } from '../../../shared/generated/client';
 
 // Create OrderService instance
 const orderService = new OrderService();
