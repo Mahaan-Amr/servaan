@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { getToken } from '../services/authService';
+import { BASE_URL, API_URL } from '../lib/apiUtils';
 import { type Notification, NotificationType, NotificationPriority } from '../../shared/types';
 
 interface NotificationContextType {
@@ -55,7 +56,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       const token = getToken();
       if (!token) return;
 
-      const socket = io(process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:3001', {
+      const socket = io(BASE_URL, {
         auth: {
           token: token
         },
@@ -133,7 +134,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     if (!token) return;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications`, {
+      const response = await fetch(`${API_URL}/notifications`, {
         headers: getAuthHeaders()
       });
 
@@ -153,7 +154,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     if (!token) return;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications/unread/count`, {
+      const response = await fetch(`${API_URL}/notifications/unread/count`, {
         headers: getAuthHeaders()
       });
 
@@ -172,7 +173,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     if (!token) return;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications/${notificationId}/read`, {
+      const response = await fetch(`${API_URL}/notifications/${notificationId}/read`, {
         method: 'PATCH',
         headers: getAuthHeaders()
       });
@@ -198,7 +199,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     if (!token) return;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications/read/all`, {
+      const response = await fetch(`${API_URL}/notifications/read/all`, {
         method: 'PATCH',
         headers: getAuthHeaders()
       });

@@ -13,7 +13,7 @@ import { FaTh, FaList, FaMap, FaCalendarAlt, FaCog, FaPlus, FaEdit, FaTrash } fr
 import { OrderService } from '../../../../services/orderingService';
 import { OrderStatus } from '../../../../types/ordering';
 import { io } from 'socket.io-client';
-import { BASE_URL } from '../../../lib/apiUtils';
+import { BASE_URL } from '../../../../lib/apiUtils';
 
 interface TableWithDetails {
   id: string;

@@ -16,7 +16,7 @@ import FlexiblePaymentModal from './components/FlexiblePaymentModal';
 import AddItemsModal from './components/AddItemsModal';
 import { FaList } from 'react-icons/fa';
 import { useTenant } from '../../../../contexts/TenantContext';
-import { BASE_URL } from '../../../lib/apiUtils';
+import { BASE_URL } from '../../../../lib/apiUtils';
 
 // Simple toast function for now - we'll replace with proper toast library later
 const toast = {

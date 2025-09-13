@@ -6,6 +6,7 @@ import { KitchenService } from '../../../../services/orderingService';
 import { OrderStatus, OrderType } from '../../../../types/ordering';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { io } from 'socket.io-client';
+import { BASE_URL } from '../../../../lib/apiUtils';
 
 interface KitchenDisplayOrder {
   orderId: string;
@@ -95,7 +96,7 @@ export default function KitchenDisplayPage() {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) return;
 
-    const newSocket = io(process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:3001', {
+    const newSocket = io(BASE_URL, {
       auth: { token },
       transports: ['websocket', 'polling']
     });

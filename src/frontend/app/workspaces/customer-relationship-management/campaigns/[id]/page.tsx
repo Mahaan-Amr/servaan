@@ -6,6 +6,7 @@ import { useNotifications } from '../../../../../contexts/NotificationContext';
 import { getToken } from '../../../../../services/authService';
 import { NotificationType, NotificationPriority } from '../../../../../../shared/types';
 import { formatDate, formatCurrency } from '../../../../../utils/dateUtils';
+import { API_URL } from '../../../../../lib/apiUtils';
 
 // Interfaces
 interface CampaignDelivery {
@@ -108,7 +109,7 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
   const fetchCampaign = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/campaigns/${params.id}`, {
+      const response = await fetch(`${API_URL}/campaigns/${params.id}`, {
         headers: {
           'Authorization': `Bearer ${getToken()}`,
           'Content-Type': 'application/json'
@@ -138,7 +139,7 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
 
   const fetchPerformance = useCallback(async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/campaigns/${params.id}/performance`, {
+      const response = await fetch(`${API_URL}/campaigns/${params.id}/performance`, {
         headers: {
           'Authorization': `Bearer ${getToken()}`,
           'Content-Type': 'application/json'
@@ -166,7 +167,7 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
 
     try {
       setSending(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/campaigns/${campaign.id}/send`, {
+      const response = await fetch(`${API_URL}/campaigns/${campaign.id}/send`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${getToken()}`,
