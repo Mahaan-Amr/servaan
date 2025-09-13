@@ -227,10 +227,14 @@ class WorkspaceService implements IWorkspaceService {
       const token = getToken();
       if (!token) throw new Error('No authentication token');
 
+      const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+      const subdomain = hostname === 'localhost' ? 'dima' : hostname.split('.')[0];
+      
       const response = await fetch(`${API_URL}/workspace/analytics/${workspaceId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-Tenant-Subdomain': subdomain
         }
       });
 
