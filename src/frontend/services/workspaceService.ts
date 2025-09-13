@@ -18,8 +18,7 @@ import {
   getWorkspacesByRole
 } from '../constants/workspaces';
 import { getToken } from './authService';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+import { API_URL } from '../lib/apiUtils';
 
 /**
  * Cache entry interface - رابط ورودی کش

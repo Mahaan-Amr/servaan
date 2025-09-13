@@ -1,4 +1,5 @@
 import { getToken } from '../services/authService';
+import { API_URL } from './apiUtils';
 
 /**
  * Centralized API Client for consistent API calls across all services
@@ -8,7 +9,7 @@ export class ApiClient {
   private baseUrl: string;
   
   constructor() {
-    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+    this.baseUrl = API_URL;
   }
 
   /**

@@ -1,9 +1,9 @@
 import { OrderStatus, OrderType, PaymentMethod, TableStatus } from '../types/ordering';
+import { API_URL } from '../lib/apiUtils';
 
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
-const ORDERING_API_BASE = `${API_BASE_URL}/ordering`;
-const INVENTORY_API_BASE = `${API_BASE_URL}/inventory`;
+const ORDERING_API_BASE = `${API_URL}/ordering`;
+const INVENTORY_API_BASE = `${API_URL}/inventory`;
 
 // Utility function for API requests
 async function apiRequest<T>(

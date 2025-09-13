@@ -7,7 +7,7 @@ import { CustomPieChart } from '../../../components/charts/PieChart';
 import { CustomLineChart } from '../../../components/charts/LineChart';
 import { getToken } from '../../../services/authService';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+import { API_URL } from '../../lib/apiUtils';
 
 interface UserSummary {
   totalUsers: number;
