@@ -31,15 +31,15 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
     
     console.log(`🔍 DEBUG - Host header: "${host}", extracted subdomain: "${subdomain}"`);
     
-    // If no subdomain from Host header, try custom header (for frontend requests)
-    if (!subdomain) {
-      const customSubdomain = req.get('X-Tenant-Subdomain');
-      console.log(`🔍 DEBUG - X-Tenant-Subdomain header: "${customSubdomain}"`);
-      if (customSubdomain) {
-        subdomain = customSubdomain;
-        console.log(`🔍 Tenant resolved from X-Tenant-Subdomain header: ${subdomain}`);
-      }
-    } else {
+    // Always check X-Tenant-Subdomain header for API requests
+    const customSubdomain = req.get('X-Tenant-Subdomain');
+    console.log(`🔍 DEBUG - X-Tenant-Subdomain header: "${customSubdomain}"`);
+    
+    // If we have a custom subdomain header, use it (this overrides Host header)
+    if (customSubdomain) {
+      subdomain = customSubdomain;
+      console.log(`🔍 Tenant resolved from X-Tenant-Subdomain header: ${subdomain}`);
+    } else if (subdomain) {
       console.log(`🔍 Tenant resolved from Host header: ${subdomain}`);
     }
     
@@ -49,9 +49,9 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
       return next();
     }
     
-    // Skip tenant resolution for main domain and API subdomain
-    // API subdomain should handle tenant resolution in individual routes
-    if (subdomain === 'www' || subdomain === 'admin' || subdomain === 'api') {
+    // Skip tenant resolution for main domain and API subdomain (but only if no X-Tenant-Subdomain header)
+    if (!customSubdomain && (subdomain === 'www' || subdomain === 'admin' || subdomain === 'api')) {
+      console.log(`🔍 DEBUG - Skipping tenant resolution for subdomain: ${subdomain}`);
       return next();
     }
 
