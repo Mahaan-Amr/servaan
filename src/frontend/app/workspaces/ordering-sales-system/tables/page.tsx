@@ -13,6 +13,7 @@ import { FaTh, FaList, FaMap, FaCalendarAlt, FaCog, FaPlus, FaEdit, FaTrash } fr
 import { OrderService } from '../../../../services/orderingService';
 import { OrderStatus } from '../../../../types/ordering';
 import { io } from 'socket.io-client';
+import { BASE_URL } from '../../../lib/apiUtils';
 
 interface TableWithDetails {
   id: string;
@@ -154,7 +155,7 @@ export default function TablesPage() {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) return;
 
-    const socket = io(process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:3001', {
+    const socket = io(BASE_URL, {
       auth: { token },
       transports: ['websocket', 'polling']
     });

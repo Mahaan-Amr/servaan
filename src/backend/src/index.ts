@@ -58,12 +58,11 @@ app.use(cors({
     const allowedOrigins = [
       'https://servaan.com',
       'https://api.servaan.com',
-      'https://admin.servaan.com'
+      'https://admin.servaan.com',
+      'https://dima.servaan.com' // Added dima.servaan.com
     ];
-    
-    // Allow requests from any subdomain of servaan.com
-    if (!origin || 
-        origin.includes('localhost') || 
+    if (!origin ||
+        origin.includes('localhost') ||
         origin.endsWith('.servaan.com') ||
         allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -71,8 +70,12 @@ app.use(cors({
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true
-})); // Enable CORS with subdomain support
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'], // Added methods
+  allowedHeaders: ['Origin', 'Content-Type', 'Authorization', 'X-Tenant-Subdomain', 'Accept', 'X-Requested-With'], // Added allowedHeaders
+  exposedHeaders: ['Authorization'], // Added exposedHeaders
+  optionsSuccessStatus: 200 // Added optionsSuccessStatus for preflight
+}));
 app.use(express.json({ limit: '10MB' })); // Parse JSON bodies with 10MB limit for image uploads
 app.use(express.urlencoded({ extended: true, limit: '10MB' })); // Parse URL-encoded bodies
 app.use(morgan('dev')); // HTTP request logger

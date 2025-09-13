@@ -16,6 +16,7 @@ import FlexiblePaymentModal from './components/FlexiblePaymentModal';
 import AddItemsModal from './components/AddItemsModal';
 import { FaList } from 'react-icons/fa';
 import { useTenant } from '../../../../contexts/TenantContext';
+import { BASE_URL } from '../../../lib/apiUtils';
 
 // Simple toast function for now - we'll replace with proper toast library later
 const toast = {
@@ -155,7 +156,7 @@ export default function POSInterface() {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) return;
 
-    const newSocket = io(process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:3001', {
+    const newSocket = io(BASE_URL, {
       auth: { token },
       transports: ['websocket', 'polling']
     });
