@@ -8,6 +8,12 @@ import { formatAdminDate, getCurrentPersianTime } from '@/utils/persianDate';
 import { getDashboardStats, getRecentActivities, getSystemMetrics } from '@/services/dashboardService';
 import toast from 'react-hot-toast';
 
+// Import enhanced dashboard components
+import SystemHealthWidget from '@/components/admin/dashboard/SystemHealthWidget';
+import TenantOverviewCards from '@/components/admin/dashboard/TenantOverviewCards';
+import PlatformAnalytics from '@/components/admin/dashboard/PlatformAnalytics';
+import QuickActions from '@/components/admin/dashboard/QuickActions';
+
 // Real data interfaces (will be populated from API)
 interface DashboardStats {
   totalTenants: number;
@@ -249,231 +255,62 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Total Tenants */}
-          <div className="admin-card">
-            <div className="admin-card-body">
-              <div className="flex items-center">
-                <div className="p-2 bg-blue-100 rounded-admin">
-                  <Building className="h-6 w-6 text-admin-primary" />
-                </div>
-                <div className="mr-4">
-                  <p className="text-sm font-medium text-admin-text-light">{t('stats.totalTenants')}</p>
-                  <p className="text-2xl font-bold text-admin-text">{stats.totalTenants.toLocaleString('fa-IR')}</p>
-                </div>
-              </div>
-              <div className="mt-2 flex items-center text-sm">
-                <TrendingUp className="h-4 w-4 text-admin-success ml-1" />
-                <span className="text-admin-success">+۱۲٪</span>
-                <span className="text-admin-text-muted mr-2">از ماه گذشته</span>
-              </div>
-            </div>
-          </div>
+        {/* Enhanced Dashboard Components */}
+        <div className="space-y-8">
+          {/* Tenant Overview Cards */}
+          <TenantOverviewCards autoRefresh={true} refreshInterval={60000} />
 
-          {/* Active Users */}
-          <div className="admin-card">
-            <div className="admin-card-body">
-              <div className="flex items-center">
-                <div className="p-2 bg-green-100 rounded-admin">
-                  <Users className="h-6 w-6 text-admin-success" />
-                </div>
-                <div className="mr-4">
-                  <p className="text-sm font-medium text-admin-text-light">{t('stats.activeUsers')}</p>
-                  <p className="text-2xl font-bold text-admin-text">{stats.totalUsers.toLocaleString('fa-IR')}</p>
-                </div>
-              </div>
-              <div className="mt-2 flex items-center text-sm">
-                <TrendingUp className="h-4 w-4 text-admin-success ml-1" />
-                <span className="text-admin-success">+۸٪</span>
-                <span className="text-admin-text-muted mr-2">از ماه گذشته</span>
-              </div>
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* System Health Widget */}
+            <div className="lg:col-span-1">
+              <SystemHealthWidget autoRefresh={true} refreshInterval={30000} />
             </div>
-          </div>
 
-          {/* Monthly Revenue */}
-          <div className="admin-card">
-            <div className="admin-card-body">
-              <div className="flex items-center">
-                <div className="p-2 bg-yellow-100 rounded-admin">
-                  <DollarSign className="h-6 w-6 text-admin-warning" />
+            {/* Recent Activities */}
+            <div className="lg:col-span-2">
+              <div className="admin-card">
+                <div className="admin-card-header">
+                  <h3 className="text-lg font-semibold text-admin-text">{t('dashboard.recentActivity')}</h3>
                 </div>
-                <div className="mr-4">
-                  <p className="text-sm font-medium text-admin-text-light">{t('stats.monthlyRevenue')}</p>
-                  <p className="text-2xl font-bold text-admin-text">${stats.monthlyRevenue.toLocaleString('fa-IR')}</p>
-                </div>
-              </div>
-              <div className="mt-2 flex items-center text-sm">
-                <TrendingUp className="h-4 w-4 text-admin-success ml-1" />
-                <span className="text-admin-success">+۲۳٪</span>
-                <span className="text-admin-text-muted mr-2">از ماه گذشته</span>
-              </div>
-            </div>
-          </div>
-
-          {/* System Health */}
-          <div className="admin-card">
-            <div className="admin-card-body">
-              <div className="flex items-center">
-                <div className="p-2 bg-purple-100 rounded-admin">
-                  <Activity className="h-6 w-6 text-admin-accent" />
-                </div>
-                <div className="mr-4">
-                  <p className="text-sm font-medium text-admin-text-light">{t('stats.systemHealth')}</p>
-                  <p className="text-2xl font-bold text-admin-text">{stats.systemHealth === 'healthy' ? '۹۹.۹٪' : '۹۵٪'}</p>
-                </div>
-              </div>
-              <div className="mt-2">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(stats.systemHealth)}`}>
-                  {getStatusText(stats.systemHealth)}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Recent Activities */}
-          <div className="lg:col-span-2">
-            <div className="admin-card">
-              <div className="admin-card-header">
-                <h3 className="text-lg font-semibold text-admin-text">{t('dashboard.recentActivity')}</h3>
-              </div>
-              <div className="admin-card-body">
-                {recentActivities.length > 0 ? (
-                  <div className="space-y-4">
-                    {recentActivities.map((activity) => (
-                      <div key={activity.id} className="flex items-start space-x-3 space-x-reverse">
-                        <div className={`p-2 rounded-admin ${getSeverityColor(activity.severity)} bg-opacity-10`}>
-                          {getActivityIcon(activity.type)}
+                <div className="admin-card-body">
+                  {recentActivities.length > 0 ? (
+                    <div className="space-y-4">
+                      {recentActivities.map((activity) => (
+                        <div key={activity.id} className="flex items-start space-x-3 space-x-reverse">
+                          <div className={`p-2 rounded-admin ${getSeverityColor(activity.severity)} bg-opacity-10`}>
+                            {getActivityIcon(activity.type)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-admin-text">{activity.message}</p>
+                            <p className="text-xs text-admin-text-muted mt-1">
+                              {formatAdminDate(activity.timestamp, { format: 'relative' })}
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-admin-text">{activity.message}</p>
-                          <p className="text-xs text-admin-text-muted mt-1">
-                            {formatAdminDate(activity.timestamp, { format: 'relative' })}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-admin-text-muted">
-                    <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>هیچ فعالیتی یافت نشد</p>
-                  </div>
-                )}
-                <div className="mt-4 pt-4 border-t border-admin-border">
-                  <button className="text-admin-primary hover:text-admin-primary-dark text-sm font-medium">
-                    {t('dashboard.viewAll')}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* System Metrics */}
-          <div className="lg:col-span-1">
-            <div className="admin-card">
-              <div className="admin-card-header">
-                <h3 className="text-lg font-semibold text-admin-text">{t('system.monitoring')}</h3>
-              </div>
-              <div className="admin-card-body">
-                <div className="space-y-4">
-                  {/* CPU Usage */}
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-admin-text">{t('stats.cpuUsage')}</span>
-                      <span className="text-admin-text-light">{systemMetrics.cpuUsage}%</span>
+                      ))}
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full ${systemMetrics.cpuUsage > 80 ? 'bg-admin-danger' : systemMetrics.cpuUsage > 60 ? 'bg-admin-warning' : 'bg-admin-success'}`}
-                        style={{ width: `${systemMetrics.cpuUsage}%` }}
-                      ></div>
+                  ) : (
+                    <div className="text-center py-8 text-admin-text-muted">
+                      <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>هیچ فعالیتی یافت نشد</p>
                     </div>
-                  </div>
-
-                  {/* Memory Usage */}
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-admin-text">{t('stats.memoryUsage')}</span>
-                      <span className="text-admin-text-light">{systemMetrics.memoryUsage}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full ${systemMetrics.memoryUsage > 80 ? 'bg-admin-danger' : systemMetrics.memoryUsage > 60 ? 'bg-admin-warning' : 'bg-admin-success'}`}
-                        style={{ width: `${systemMetrics.memoryUsage}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {/* Disk Usage */}
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-admin-text">{t('stats.diskUsage')}</span>
-                      <span className="text-admin-text-light">{systemMetrics.diskUsage}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full ${systemMetrics.diskUsage > 80 ? 'bg-admin-danger' : systemMetrics.diskUsage > 60 ? 'bg-admin-warning' : 'bg-admin-success'}`}
-                        style={{ width: `${systemMetrics.diskUsage}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {/* Network I/O */}
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-admin-text">{t('stats.networkIO')}</span>
-                      <span className="text-admin-text-light">{systemMetrics.networkIO}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full ${systemMetrics.networkIO > 80 ? 'bg-admin-danger' : systemMetrics.networkIO > 60 ? 'bg-admin-warning' : 'bg-admin-success'}`}
-                        style={{ width: `${systemMetrics.networkIO}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-admin-border">
-                  <div className="text-sm text-admin-text-muted">
-                    <div className="flex justify-between mb-1">
-                      <span>{t('stats.uptime')}:</span>
-                      <span>{systemMetrics.uptime}%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>{t('stats.responseTime')}:</span>
-                      <span>{systemMetrics.responseTime}ms</span>
-                    </div>
+                  )}
+                  <div className="mt-4 pt-4 border-t border-admin-border">
+                    <button className="text-admin-primary hover:text-admin-primary-dark text-sm font-medium">
+                      {t('dashboard.viewAll')}
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Quick Actions */}
-        <div className="mt-8">
-          <div className="admin-card">
-            <div className="admin-card-header">
-              <h3 className="text-lg font-semibold text-admin-text">{t('dashboard.quickActions')}</h3>
-            </div>
-            <div className="admin-card-body">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button className="btn-admin-primary py-3 px-4 text-center">
-                  {t('tenants.viewAll')}
-                </button>
-                <button className="btn-admin-secondary py-3 px-4 text-center">
-                  {t('dashboard.systemSettings')}
-                </button>
-                <button className="btn-admin-success py-3 px-4 text-center">
-                  {t('dashboard.generateReport')}
-                </button>
-              </div>
-            </div>
-          </div>
+          {/* Platform Analytics */}
+          <PlatformAnalytics autoRefresh={true} refreshInterval={300000} />
+
+          {/* Quick Actions */}
+          <QuickActions />
         </div>
       </div>
     </div>
