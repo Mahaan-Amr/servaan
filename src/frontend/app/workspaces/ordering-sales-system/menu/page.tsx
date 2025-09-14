@@ -1292,23 +1292,24 @@ export default function MenuManagementPage() {
                           <select
                             value={newIngredient.itemId}
                             onChange={async (e) => {
-                              console.log('Dropdown onChange triggered:', e.target.value);
+                              const selectedValue = e.target.value;
+                              console.log('Dropdown onChange triggered:', selectedValue);
                               console.log('Available inventory items:', inventoryItems);
                               
-                              const selectedItem = inventoryItems.find(item => item.id === e.target.value);
+                              const selectedItem = inventoryItems.find(item => item.id === selectedValue);
                               console.log('Selected item:', selectedItem);
                               
-                              if (e.target.value && selectedItem) {
+                              if (selectedValue && selectedItem) {
                                 try {
-                                  console.log('Fetching price for item:', e.target.value);
+                                  console.log('Fetching price for item:', selectedValue);
                                   // Auto-fetch price when item is selected
-                                  const inventoryPrice = await InventoryPriceService.getInventoryPrice(e.target.value);
+                                  const inventoryPrice = await InventoryPriceService.getInventoryPrice(selectedValue);
                                   console.log('Received price:', inventoryPrice);
                                   
                                   setNewIngredient(prev => {
                                     const updated = {
                                       ...prev,
-                                      itemId: e.target.value,
+                                      itemId: selectedValue,
                                       unit: selectedItem.unit,
                                       unitCost: inventoryPrice.price
                                     };
@@ -1325,7 +1326,7 @@ export default function MenuManagementPage() {
                                   console.error('Failed to auto-fetch inventory price:', error);
                                   setNewIngredient(prev => ({
                                     ...prev,
-                                    itemId: e.target.value,
+                                    itemId: selectedValue,
                                     unit: selectedItem.unit,
                                     unitCost: 0
                                   }));
