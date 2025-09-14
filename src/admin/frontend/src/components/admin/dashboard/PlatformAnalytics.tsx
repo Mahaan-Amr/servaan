@@ -15,8 +15,7 @@ import {
 import { 
   TenantGrowthData, 
   RevenueData, 
-  UserActivityData,
-  ChartData 
+  UserActivityData
 } from '@/types/dashboard';
 import { 
   getTenantGrowthData, 
@@ -94,30 +93,6 @@ export default function PlatformAnalytics({
     return formatCurrencyUtil(amount);
   };
 
-  const formatDate = (date: Date | string) => {
-    // Validate date and handle invalid dates
-    if (!date) {
-      return 'تاریخ نامعتبر';
-    }
-    
-    try {
-      // Convert string to Date object if needed
-      const dateObj = date instanceof Date ? date : new Date(date);
-      
-      // Check if the date is valid
-      if (isNaN(dateObj.getTime())) {
-        return 'تاریخ نامعتبر';
-      }
-      
-      return new Intl.DateTimeFormat('fa-IR', {
-        month: 'short',
-        day: 'numeric'
-      }).format(dateObj);
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return 'تاریخ نامعتبر';
-    }
-  };
 
   const getPeriodText = (period: string) => {
     switch (period) {
@@ -139,10 +114,13 @@ export default function PlatformAnalytics({
   const calculateGrowth = (data: unknown[]) => {
     if (data.length < 2) return { percentage: 0, trend: 'stable' };
     
-    const latest = data[data.length - 1];
-    const previous = data[data.length - 2];
+    const latest = data[data.length - 1] as { count?: number; amount?: number };
+    const previous = data[data.length - 2] as { count?: number; amount?: number };
     
-    const growth = ((latest.count || latest.amount || 0) - (previous.count || previous.amount || 0)) / (previous.count || previous.amount || 1) * 100;
+    const latestValue = latest.count || latest.amount || 0;
+    const previousValue = previous.count || previous.amount || 1;
+    
+    const growth = (latestValue - previousValue) / previousValue * 100;
     
     return {
       percentage: Math.abs(growth),
@@ -154,26 +132,6 @@ export default function PlatformAnalytics({
   const revenueGrowth = calculateGrowth(revenueData);
   const userGrowth = calculateGrowth(userActivityData);
 
-  // Chart data for visualization
-  const generateChartData = (data: unknown[], label: string, color: string): ChartData => {
-    const labels = data.map(item => {
-      // Ensure we have a valid date
-      const date = item.date instanceof Date ? item.date : new Date(item.date);
-      return formatDate(date);
-    });
-    const values = data.map(item => item.count || item.amount || 0);
-    
-    return {
-      labels,
-      datasets: [{
-        label,
-        data: values,
-        backgroundColor: color + '20',
-        borderColor: color,
-        borderWidth: 2
-      }]
-    };
-  };
 
 
   if (loading) {
@@ -212,7 +170,7 @@ export default function PlatformAnalytics({
               <span className="text-sm text-admin-text-muted">نوع نمودار:</span>
               <select
                 value={chartConfig.type}
-                onChange={(e) => setChartConfig(prev => ({ ...prev, type: e.target.value as any }))}
+                onChange={(e) => setChartConfig(prev => ({ ...prev, type: e.target.value as 'line' | 'bar' | 'area' }))}
                 className="text-sm border border-admin-border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-admin-primary"
               >
                 <option value="line">خطی</option>
@@ -225,7 +183,7 @@ export default function PlatformAnalytics({
               <span className="text-sm text-admin-text-muted">دوره:</span>
               <select
                 value={chartConfig.period}
-                onChange={(e) => setChartConfig(prev => ({ ...prev, period: e.target.value as any }))}
+                onChange={(e) => setChartConfig(prev => ({ ...prev, period: e.target.value as '7d' | '30d' | '90d' | '1y' }))}
                 className="text-sm border border-admin-border rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-admin-primary"
               >
                 <option value="7d">۷ روز</option>
