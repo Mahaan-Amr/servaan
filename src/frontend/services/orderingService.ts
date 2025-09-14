@@ -1,5 +1,6 @@
 import { OrderStatus, OrderType, PaymentMethod, TableStatus } from '../types/ordering';
 import { API_URL } from '../lib/apiUtils';
+import { formatCurrency } from '../../shared/utils/currencyUtils';
 
 // API Configuration
 const ORDERING_API_BASE = `${API_URL}/ordering`;
@@ -1461,8 +1462,7 @@ export const OrderingUtils = {
 
   // Format price in Iranian Toman
   formatPrice: (amount: number, includeCurrency = true): string => {
-    const formatted = new Intl.NumberFormat('fa-IR').format(amount);
-    return includeCurrency ? `${formatted} تومان` : formatted;
+    return includeCurrency ? formatCurrency(amount) : formatCurrency(amount, { includeCurrency: false });
   },
 
   // Get status color

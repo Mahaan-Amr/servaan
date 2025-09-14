@@ -36,7 +36,7 @@ model Tenant {
   country            String              @default("Iran") @db.VarChar(100)
   timezone           String              @default("Asia/Tehran") @db.VarChar(50)
   locale             String              @default("fa-IR") @db.VarChar(10)
-  currency           String              @default("IRR") @db.VarChar(3)
+  currency           String              @default("TOMAN") @db.VarChar(10)
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
   items              Item[]

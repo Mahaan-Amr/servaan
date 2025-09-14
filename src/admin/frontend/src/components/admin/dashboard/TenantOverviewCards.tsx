@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { formatCurrency as formatCurrencyUtil } from '../../../../shared/utils/currencyUtils';
 import { 
   Building2, 
   Users, 
@@ -175,21 +176,7 @@ export default function TenantOverviewCards({
   };
 
   const formatCurrency = (amount: number) => {
-    // Validate amount and handle invalid values
-    if (amount === null || amount === undefined || isNaN(amount)) {
-      return '۰ ریال';
-    }
-    
-    try {
-      return new Intl.NumberFormat('fa-IR', {
-        style: 'currency',
-        currency: 'IRR',
-        minimumFractionDigits: 0,
-      }).format(amount);
-    } catch (error) {
-      console.error('Error formatting currency:', error);
-      return '۰ ریال';
-    }
+    return formatCurrencyUtil(amount);
   };
 
   const formatRelativeTime = (date: Date | string) => {

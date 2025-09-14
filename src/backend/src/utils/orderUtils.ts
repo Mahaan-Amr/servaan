@@ -1,4 +1,5 @@
 import { PrismaClient } from '../../../shared/generated/client';
+import { calculateOrderTotals as calculateOrderTotalsUtil } from '../../../shared/utils/currencyUtils';
 
 /**
  * Generate unique order number for the tenant
@@ -78,23 +79,10 @@ export async function generatePaymentNumber(tenantId: string, prisma: any): Prom
 
 /**
  * Calculate order totals with Iranian tax standards
+ * @deprecated Use CurrencyUtils.calculateOrderTotals instead
  */
 export function calculateOrderTotals(subtotal: number, discountAmount: number = 0) {
-  const discountedSubtotal = subtotal - discountAmount;
-  const taxRate = 0.09; // 9% VAT in Iran
-  const serviceChargeRate = 0.10; // 10% service charge for restaurants
-  
-  const taxAmount = discountedSubtotal * taxRate;
-  const serviceCharge = discountedSubtotal * serviceChargeRate;
-  const totalAmount = discountedSubtotal + taxAmount + serviceCharge;
-
-  return {
-    subtotal,
-    discountAmount,
-    taxAmount,
-    serviceCharge,
-    totalAmount
-  };
+  return calculateOrderTotalsUtil(subtotal, discountAmount);
 }
 
 /**

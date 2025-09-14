@@ -110,7 +110,7 @@ export const generateInventoryPDF = (data: ReportData): void => {
   doc.text(`Total Items: ${formatNumber(data.summary.totalItems)}`, 25, 85);
   doc.text(`Low Stock Items: ${formatNumber(data.summary.lowStockCount)}`, 25, 95);
   doc.text(`Recent Transactions: ${formatNumber(data.summary.recentTransactions)}`, 25, 105);
-  doc.text(`Total Inventory Value: ${formatNumber(data.summary.totalInventoryValue)} Rials`, 25, 115);
+  doc.text(`Total Inventory Value: ${formatNumber(data.summary.totalInventoryValue)} Toman`, 25, 115);
   
   // Category Breakdown
   doc.setFontSize(14);
@@ -270,7 +270,7 @@ export const generateEnhancedInventoryPDF = (data: ReportData): void => {
     { title: 'Total Items', value: data.summary.totalItems, color: [59, 130, 246] },
     { title: 'Low Stock Items', value: data.summary.lowStockCount, color: [239, 68, 68] },
     { title: 'Recent Transactions', value: data.summary.recentTransactions, color: [34, 197, 94] },
-    { title: 'Total Inventory Value', value: `${formatNumber(data.summary.totalInventoryValue)} Rials`, color: [168, 85, 247] }
+    { title: 'Total Inventory Value', value: `${formatNumber(data.summary.totalInventoryValue)} Toman`, color: [168, 85, 247] }
   ];
   
   let cardY = 50;

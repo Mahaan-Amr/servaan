@@ -127,5 +127,5 @@ export const getTierBenefits = async (tier: string): Promise<TierBenefits> => {
 
 // Calculate points from amount (utility function)
 export const calculatePointsFromAmount = (amount: number): number => {
-  return Math.floor(amount / 1000); // 1 point per 1000 IRR
+  return Math.floor(amount / 1000); // 1 point per 1000 Toman
 }; 

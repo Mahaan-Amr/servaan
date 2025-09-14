@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { formatCurrency as formatCurrencyUtil } from '../../../../shared/utils/currencyUtils';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -94,11 +95,7 @@ export default function PlatformAnalytics({
   }, [autoRefresh, refreshInterval, chartConfig.period]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fa-IR', {
-      style: 'currency',
-      currency: 'IRR',
-      minimumFractionDigits: 0,
-    }).format(amount);
+    return formatCurrencyUtil(amount);
   };
 
   const formatDate = (date: Date | string) => {

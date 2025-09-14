@@ -1,5 +1,6 @@
 import { getToken } from './authService';
 import { API_URL } from '../lib/apiUtils';
+import { formatCurrency } from '../../shared/utils/currencyUtils';
 
 // ==========================================
 // INTERFACES
@@ -447,12 +448,7 @@ export class AccountingService {
   // ==========================================
 
   static formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('fa-IR', {
-      style: 'currency',
-      currency: 'IRR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
+    return formatCurrency(amount);
   }
 
   static formatNumber(amount: number): string {

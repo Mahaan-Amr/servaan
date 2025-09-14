@@ -379,7 +379,6 @@ export const fa = {
     decimal: 'اعشار',
     fraction: 'کسر',
     currency: 'واحد پول',
-    rial: 'ریال',
     toman: 'تومان',
     dollar: 'دلار',
     euro: 'یورو',

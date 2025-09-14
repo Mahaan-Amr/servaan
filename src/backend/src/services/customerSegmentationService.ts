@@ -77,18 +77,18 @@ export function calculateCustomerSegment(
   let score = 0;
 
   // Base scoring
-  if (lifetimeSpent >= 50000000) { // 50M IRR
+  if (lifetimeSpent >= 5000000) { // 5M Toman
     score += 40;
-    reasons.push('خرید بالای 50 میلیون ریال');
-  } else if (lifetimeSpent >= 20000000) { // 20M IRR
+    reasons.push('خرید بالای 5 میلیون تومان');
+  } else if (lifetimeSpent >= 2000000) { // 2M Toman
     score += 30;
-    reasons.push('خرید بالای 20 میلیون ریال');
-  } else if (lifetimeSpent >= 5000000) { // 5M IRR
+    reasons.push('خرید بالای 2 میلیون تومان');
+  } else if (lifetimeSpent >= 500000) { // 500K Toman
     score += 20;
-    reasons.push('خرید بالای 5 میلیون ریال');
-  } else if (lifetimeSpent >= 1000000) { // 1M IRR
+    reasons.push('خرید بالای 500 هزار تومان');
+  } else if (lifetimeSpent >= 100000) { // 100K Toman
     score += 10;
-    reasons.push('خرید بالای 1 میلیون ریال');
+    reasons.push('خرید بالای 100 هزار تومان');
   }
 
   // Visit frequency scoring

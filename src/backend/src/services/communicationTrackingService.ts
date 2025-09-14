@@ -120,7 +120,7 @@ export async function getCustomerCommunicationHistory(
         type: 'VISIT',
         channel: 'IN_PERSON',
         direction: 'INBOUND',
-        content: `بازدید - مبلغ: ${visit.finalAmount?.toLocaleString()} ریال`,
+        content: `بازدید - مبلغ: ${visit.finalAmount?.toLocaleString()} تومان`,
         status: 'DELIVERED',
         timestamp: new Date(visit.visitDate),
         relatedVisitId: visit.id,

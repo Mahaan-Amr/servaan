@@ -1,3 +1,5 @@
+import { formatCurrency as formatCurrencyUtil } from '../../shared/utils/currencyUtils';
+
 /**
  * Format a date string to a human-readable Persian date format
  * 
@@ -26,21 +28,10 @@ export const formatDate = (dateString: string | Date): string => {
  * 
  * @param amount - The amount to format
  * @returns Formatted currency string
+ * @deprecated Use CurrencyUtils.format instead
  */
 export const formatCurrency = (amount: number): string => {
-  if (amount === null || amount === undefined || isNaN(amount)) {
-    return '۰ تومان';
-  }
-
-  // Use Intl for Persian number formatting
-  const formatter = new Intl.NumberFormat('fa-IR', {
-    style: 'currency',
-    currency: 'IRR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
-
-  return formatter.format(amount);
+  return formatCurrencyUtil(amount);
 };
 
 /**

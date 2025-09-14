@@ -58,7 +58,7 @@ class SMSService {
 
     PAYMENT_CONFIRMATION: `💰 پرداخت شما تایید شد
     
-مبلغ: {amount} ریال
+مبلغ: {amount} تومان
 📄 شماره فاکتور: {invoiceNumber}
 📅 تاریخ: {date}
 

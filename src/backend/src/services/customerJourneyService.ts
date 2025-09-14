@@ -237,7 +237,7 @@ async function collectCustomerTouchpoints(customerId: string): Promise<JourneyTo
       channel: 'IN_PERSON',
       timestamp: visit.visitDate,
       stage: 'ENGAGEMENT',
-      content: `بازدید - مبلغ: ${visit.finalAmount?.toLocaleString()} ریال`,
+      content: `بازدید - مبلغ: ${visit.finalAmount?.toLocaleString()} تومان`,
       value: Number(visit.finalAmount || 0),
       sentiment: visit.feedbackRating && visit.feedbackRating >= 4 ? 'POSITIVE' : 
                 visit.feedbackRating && visit.feedbackRating <= 2 ? 'NEGATIVE' : 'NEUTRAL',
@@ -843,7 +843,7 @@ function analyzeBehaviorPatterns(touchpoints: JourneyTouchpoint[]): BehaviorPatt
       pattern: 'spending-behavior',
       frequency: Math.round(avgSpending),
       impact: avgSpending > 150000 ? 'POSITIVE' : 'NEUTRAL',
-      description: `میانگین خرید: ${Math.round(avgSpending).toLocaleString()} ریال`,
+      description: `میانگین خرید: ${Math.round(avgSpending).toLocaleString()} تومان`,
       examples: spendingTouchpoints.slice(0, 3).map(tp => tp.content)
     });
   }

@@ -216,7 +216,7 @@ export async function createVisit(
               tenantId, // Added tenantId
               transactionType: 'EARNED_PURCHASE',
               pointsChange: earnedPoints,
-              description: `کسب امتیاز از خرید ${finalAmount.toLocaleString()} ریال`,
+              description: `کسب امتیاز از خرید ${finalAmount.toLocaleString()} تومان`,
               visitId: visit.id,
               orderReference: `VISIT-${visitNumber}`,
               relatedAmount: finalAmount,

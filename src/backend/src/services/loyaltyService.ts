@@ -47,7 +47,7 @@ export interface TierBenefits {
  * Calculate points from purchase amount
  */
 export function calculatePointsFromAmount(amount: number): number {
-  // 1 point per 1000 IRR spent (same as SQL function)
+  // 1 point per 1000 Toman spent (same as SQL function)
   return Math.floor(amount / 1000);
 }
 

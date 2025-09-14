@@ -7,6 +7,7 @@ import {
   StageHistoryResponse, 
   BehaviorPatternsResponse 
 } from '../types/customerJourney';
+import { formatCurrency as formatCurrencyUtil } from '../../shared/utils/currencyUtils';
 
 const API_BASE_URL = '/api/customer-journey';
 
@@ -356,9 +357,10 @@ export function getTouchpointIcon(touchpointType: string): string {
 
 /**
  * Helper function to format currency
+ * @deprecated Use CurrencyUtils.format instead
  */
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('fa-IR').format(amount) + ' ریال';
+  return formatCurrencyUtil(amount);
 }
 
 /**

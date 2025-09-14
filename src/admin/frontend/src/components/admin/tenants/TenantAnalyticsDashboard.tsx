@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { formatCurrency as formatCurrencyUtil } from '../../../../shared/utils/currencyUtils';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -80,11 +81,7 @@ export default function TenantAnalyticsDashboard({ className = '' }: TenantAnaly
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fa-IR', {
-      style: 'currency',
-      currency: 'IRR',
-      minimumFractionDigits: 0
-    }).format(amount);
+    return formatCurrencyUtil(amount);
   };
 
   if (loading && !growthData && !revenueData) {
