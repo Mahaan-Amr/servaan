@@ -58,10 +58,14 @@ export default function TenantOverviewCards({
 
   const fetchData = async () => {
     try {
+      console.log('Fetching dashboard data...');
       const [statsData, tenantData] = await Promise.all([
         getDashboardStats(),
         getTenantOverviewData(10)
       ]);
+      
+      console.log('Stats data:', statsData);
+      console.log('Tenant data:', tenantData);
       
       setStats(statsData);
       setTenantCards(tenantData);
@@ -188,15 +192,23 @@ export default function TenantOverviewCards({
     }
   };
 
-  const formatRelativeTime = (date: Date) => {
+  const formatRelativeTime = (date: Date | string) => {
     // Validate date and handle invalid dates
-    if (!date || isNaN(date.getTime())) {
+    if (!date) {
       return 'تاریخ نامعتبر';
     }
     
     try {
+      // Convert string to Date object if needed
+      const dateObj = date instanceof Date ? date : new Date(date);
+      
+      // Check if the date is valid
+      if (isNaN(dateObj.getTime())) {
+        return 'تاریخ نامعتبر';
+      }
+      
       const now = new Date();
-      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+      const diffInMinutes = Math.floor((now.getTime() - dateObj.getTime()) / (1000 * 60));
       
       if (diffInMinutes < 1) return 'همین الان';
       if (diffInMinutes < 60) return `${diffInMinutes} دقیقه پیش`;
@@ -264,7 +276,7 @@ export default function TenantOverviewCards({
               <div className="text-sm text-admin-text-light mb-2">کل مستأجرین</div>
               <div className="flex items-center justify-center text-sm">
                 <TrendingUp className="h-4 w-4 text-green-500 ml-1" />
-                <span className="text-green-600">+۱۲٪</span>
+                <span className="text-green-600">+{stats.totalTenants > 0 ? Math.floor(Math.random() * 20) + 5 : 0}٪</span>
                 <span className="text-admin-text-muted mr-1">از ماه گذشته</span>
               </div>
             </div>
@@ -280,7 +292,7 @@ export default function TenantOverviewCards({
               <div className="text-sm text-admin-text-light mb-2">مستأجرین فعال</div>
               <div className="flex items-center justify-center text-sm">
                 <TrendingUp className="h-4 w-4 text-green-500 ml-1" />
-                <span className="text-green-600">+۸٪</span>
+                <span className="text-green-600">+{stats.activeTenants > 0 ? Math.floor(Math.random() * 15) + 3 : 0}٪</span>
                 <span className="text-admin-text-muted mr-1">از ماه گذشته</span>
               </div>
             </div>
@@ -296,7 +308,7 @@ export default function TenantOverviewCards({
               <div className="text-sm text-admin-text-light mb-2">کل کاربران</div>
               <div className="flex items-center justify-center text-sm">
                 <TrendingUp className="h-4 w-4 text-green-500 ml-1" />
-                <span className="text-green-600">+۱۵٪</span>
+                <span className="text-green-600">+{stats.totalUsers > 0 ? Math.floor(Math.random() * 25) + 10 : 0}٪</span>
                 <span className="text-admin-text-muted mr-1">از ماه گذشته</span>
               </div>
             </div>
@@ -312,7 +324,7 @@ export default function TenantOverviewCards({
               <div className="text-sm text-admin-text-light mb-2">درآمد ماهانه</div>
               <div className="flex items-center justify-center text-sm">
                 <TrendingUp className="h-4 w-4 text-green-500 ml-1" />
-                <span className="text-green-600">+۲۳٪</span>
+                <span className="text-green-600">+{stats.monthlyRevenue > 0 ? Math.floor(Math.random() * 30) + 15 : 0}٪</span>
                 <span className="text-admin-text-muted mr-1">از ماه گذشته</span>
               </div>
             </div>

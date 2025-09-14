@@ -101,17 +101,25 @@ export default function PlatformAnalytics({
     }).format(amount);
   };
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date | string) => {
     // Validate date and handle invalid dates
-    if (!date || isNaN(date.getTime())) {
+    if (!date) {
       return 'تاریخ نامعتبر';
     }
     
     try {
+      // Convert string to Date object if needed
+      const dateObj = date instanceof Date ? date : new Date(date);
+      
+      // Check if the date is valid
+      if (isNaN(dateObj.getTime())) {
+        return 'تاریخ نامعتبر';
+      }
+      
       return new Intl.DateTimeFormat('fa-IR', {
         month: 'short',
         day: 'numeric'
-      }).format(date);
+      }).format(dateObj);
     } catch (error) {
       console.error('Error formatting date:', error);
       return 'تاریخ نامعتبر';
@@ -165,8 +173,8 @@ export default function PlatformAnalytics({
   const revenueGrowth = calculateGrowth(revenueData);
   const userGrowth = calculateGrowth(userActivityData);
 
-  // Mock chart data for visualization
-  const generateMockChartData = (data: any[], label: string, color: string): ChartData => {
+  // Chart data for visualization
+  const generateChartData = (data: any[], label: string, color: string): ChartData => {
     const labels = data.map(item => {
       // Ensure we have a valid date
       const date = item.date instanceof Date ? item.date : new Date(item.date);
@@ -186,9 +194,9 @@ export default function PlatformAnalytics({
     };
   };
 
-  const tenantChartData = generateMockChartData(tenantGrowthData, 'مستأجرین جدید', '#3B82F6');
-  const revenueChartData = generateMockChartData(revenueData, 'درآمد', '#10B981');
-  const userChartData = generateMockChartData(userActivityData, 'کاربران جدید', '#8B5CF6');
+  const tenantChartData = generateChartData(tenantGrowthData, 'مستأجرین جدید', '#3B82F6');
+  const revenueChartData = generateChartData(revenueData, 'درآمد', '#10B981');
+  const userChartData = generateChartData(userActivityData, 'کاربران جدید', '#8B5CF6');
 
   if (loading) {
     return (

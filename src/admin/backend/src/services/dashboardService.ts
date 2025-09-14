@@ -414,6 +414,7 @@ export const getUserActivityData = async (days: number = 30) => {
  */
 export const getTenantOverviewData = async (limit: number = 10) => {
   try {
+    console.log('Getting tenant overview data with limit:', limit);
     const tenants = await prisma.tenant.findMany({
       take: limit,
       orderBy: { createdAt: 'desc' },
@@ -431,6 +432,8 @@ export const getTenantOverviewData = async (limit: number = 10) => {
         }
       }
     });
+    
+    console.log('Found tenants:', tenants.length);
 
     // Get monthly revenue for each tenant
     const tenantRevenues = await Promise.all(
@@ -468,11 +471,12 @@ export const getTenantOverviewData = async (limit: number = 10) => {
       status: tenant.isActive ? 'active' : 'inactive' as 'active' | 'inactive' | 'suspended' | 'maintenance',
       userCount: tenant._count.users,
       monthlyRevenue: tenantRevenues[index]?.monthlyRevenue || 0,
-      lastActivity: tenant.createdAt, // Using createdAt as lastActivity for now
+      lastActivity: new Date(tenant.createdAt), // Ensure it's a proper Date object
       health: 'healthy' as 'healthy' | 'warning' | 'critical', // Default to healthy
       plan: tenant.plan?.toLowerCase() as 'basic' | 'premium' | 'enterprise' || 'basic'
     }));
 
+    console.log('Returning tenant cards:', tenantCards.length);
     return tenantCards;
   } catch (error) {
     console.error('Error getting tenant overview data:', error);
