@@ -29,6 +29,9 @@ import { TenantPlan } from '@/types/admin';
 import { formatAdminDate } from '@/utils/persianDate';
 import { withAdminAuth } from '@/contexts/AdminAuthContext';
 import TenantUsersResetPassword from './TenantUsersResetPassword';
+import TenantMetricsDashboard from '@/components/admin/tenants/TenantMetricsDashboard';
+import TenantActivityTimeline from '@/components/admin/tenants/TenantActivityTimeline';
+import TenantUserManagement from '@/components/admin/tenants/TenantUserManagement';
 
 function TenantDetailPage() {
   const params = useParams();
@@ -397,95 +400,19 @@ function TenantDetailPage() {
           )}
 
           {activeTab === 'metrics' && metrics && (
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-admin-text mb-4">متریک‌های عملکرد</h3>
-              
-              {/* Users Metrics */}
-              <div>
-                <h4 className="text-md font-medium text-admin-text mb-3">کاربران</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 bg-blue-50 rounded-admin">
-                    <p className="text-sm font-medium text-blue-800">کل کاربران</p>
-                    <p className="text-2xl font-bold text-blue-900">{metrics.users.total}</p>
-                  </div>
-                  <div className="p-4 bg-green-50 rounded-admin">
-                    <p className="text-sm font-medium text-green-800">کاربران فعال</p>
-                    <p className="text-2xl font-bold text-green-900">{metrics.users.active}</p>
-                  </div>
-                  <div className="p-4 bg-red-50 rounded-admin">
-                    <p className="text-sm font-medium text-red-800">کاربران غیرفعال</p>
-                    <p className="text-2xl font-bold text-red-900">{metrics.users.inactive}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Revenue Metrics */}
-              <div>
-                <h4 className="text-md font-medium text-admin-text mb-3">درآمد</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 bg-green-50 rounded-admin">
-                    <p className="text-sm font-medium text-green-800">کل درآمد</p>
-                    <p className="text-2xl font-bold text-green-900">{formatToman(metrics.revenue.total)}</p>
-                  </div>
-                  <div className="p-4 bg-blue-50 rounded-admin">
-                    <p className="text-sm font-medium text-blue-800">درآمد این ماه</p>
-                    <p className="text-2xl font-bold text-blue-900">{formatToman(metrics.revenue.thisMonth)}</p>
-                  </div>
-                  <div className="p-4 bg-purple-50 rounded-admin">
-                    <div className="flex items-center">
-                      <p className="text-sm font-medium text-purple-800">رشد</p>
-                      {metrics.revenue.growth > 0 ? (
-                        <TrendingUp className="h-5 w-5 text-green-600 ml-2" />
-                      ) : (
-                        <TrendingDown className="h-5 w-5 text-red-600 ml-2" />
-                      )}
-                    </div>
-                    <p className={`text-2xl font-bold ${metrics.revenue.growth > 0 ? 'text-green-900' : 'text-red-900'}`}>
-                      {metrics.revenue.growth > 0 ? '+' : ''}{metrics.revenue.growth}%
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Inventory Metrics */}
-              <div>
-                <h4 className="text-md font-medium text-admin-text mb-3">موجودی</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 bg-blue-50 rounded-admin">
-                    <p className="text-sm font-medium text-blue-800">کل آیتم‌ها</p>
-                    <p className="text-2xl font-bold text-blue-900">{metrics.inventory.items}</p>
-                  </div>
-                  <div className="p-4 bg-yellow-50 rounded-admin">
-                    <p className="text-sm font-medium text-yellow-800">موجودی کم</p>
-                    <p className="text-2xl font-bold text-yellow-900">{metrics.inventory.lowStock}</p>
-                  </div>
-                  <div className="p-4 bg-red-50 rounded-admin">
-                    <p className="text-sm font-medium text-red-800">ناموجود</p>
-                    <p className="text-2xl font-bold text-red-900">{metrics.inventory.outOfStock}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <TenantMetricsDashboard
+              tenantId={tenantId}
+              metrics={metrics}
+              onRefresh={loadTenantData}
+            />
           )}
 
           {activeTab === 'users' && (
-            <div className="p-4">
-              <h3 className="text-lg font-semibold text-admin-text mb-4">مدیریت کاربران مستأجر</h3>
-              <TenantUsersResetPassword tenantId={tenantId} />
-            </div>
+            <TenantUserManagement tenantId={tenantId} />
           )}
 
           {activeTab === 'activity' && (
-            <div className="text-center py-12">
-              <Activity className="h-16 w-16 text-admin-text-muted mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-admin-text mb-2">فعالیت‌های اخیر</h3>
-              <p className="text-admin-text-light mb-4">
-                این بخش به زودی اضافه خواهد شد
-              </p>
-              <button className="btn-admin-primary">
-                مشاهده فعالیت‌ها
-              </button>
-            </div>
+            <TenantActivityTimeline tenantId={tenantId} />
           )}
         </div>
       </div>
