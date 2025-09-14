@@ -1288,12 +1288,12 @@ export default function MenuManagementPage() {
                                 try {
                                   // Auto-fetch price when item is selected
                                   const inventoryPrice = await InventoryPriceService.getInventoryPrice(e.target.value);
-                                  setNewIngredient({
-                                    ...newIngredient,
+                                  setNewIngredient(prev => ({
+                                    ...prev,
                                     itemId: e.target.value,
                                     unit: selectedItem.unit,
                                     unitCost: inventoryPrice.price
-                                  });
+                                  }));
                                   
                                   if (inventoryPrice.price > 0) {
                                     toast.success(`قیمت ${inventoryPrice.price.toLocaleString('fa-IR')} تومان از موجودی دریافت شد`);
@@ -1302,22 +1302,22 @@ export default function MenuManagementPage() {
                                   }
                                 } catch (error) {
                                   console.warn('Failed to auto-fetch inventory price:', error);
-                                  setNewIngredient({
-                                    ...newIngredient,
+                                  setNewIngredient(prev => ({
+                                    ...prev,
                                     itemId: e.target.value,
                                     unit: selectedItem.unit,
                                     unitCost: 0
-                                  });
+                                  }));
                                   toast.error('خطا در دریافت قیمت از موجودی');
                                 }
                               } else {
                                 // Reset when no item selected
-                                setNewIngredient({
-                                  ...newIngredient,
+                                setNewIngredient(prev => ({
+                                  ...prev,
                                   itemId: '',
                                   unit: '',
                                   unitCost: 0
-                                });
+                                }));
                               }
                             }}
                             className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -1340,7 +1340,7 @@ export default function MenuManagementPage() {
                             min="0"
                             step="0.1"
                             value={newIngredient.quantity}
-                            onChange={(e) => setNewIngredient({...newIngredient, quantity: Number(e.target.value) || 0})}
+                            onChange={(e) => setNewIngredient(prev => ({...prev, quantity: Number(e.target.value) || 0}))}
                             className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                           />
                         </div>
@@ -1382,7 +1382,7 @@ export default function MenuManagementPage() {
                           <input
                             type="checkbox"
                             checked={newIngredient.isOptional}
-                            onChange={(e) => setNewIngredient({...newIngredient, isOptional: e.target.checked})}
+                            onChange={(e) => setNewIngredient(prev => ({...prev, isOptional: e.target.checked}))}
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                           <span className="mr-2 text-sm text-gray-700 dark:text-gray-300">اختیاری</span>
