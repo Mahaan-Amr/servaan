@@ -512,10 +512,17 @@ export default function POSInterface() {
       };
 
       // Create order in backend
-      const createdOrder = await OrderService.createOrder(orderData);
+      const createdOrder = await OrderService.createOrder(orderData) as any;
       
       // Store the order ID for payment processing
-      setCurrentOrderId((createdOrder as { id: string }).id);
+      if (createdOrder && createdOrder.data && createdOrder.data.order && createdOrder.data.order.id) {
+        setCurrentOrderId(createdOrder.data.order.id);
+        console.log('Order created successfully with ID:', createdOrder.data.order.id);
+      } else {
+        console.error('Failed to create order - invalid response structure:', createdOrder);
+        toast.error('خطا در ایجاد سفارش - ساختار پاسخ نامعتبر است');
+        return;
+      }
       
       // Handle immediate payment if selected
       if (data.paymentType === 'IMMEDIATE' && data.paymentMethod && data.amountReceived) {
@@ -635,7 +642,7 @@ export default function POSInterface() {
   const handleStockWarningProceed = (overrides: any[]) => {
     setShowStockWarning(false);
     // Store overrides for order creation
-    setStockValidationData(prev => ({ ...prev, overrides }));
+    setStockValidationData((prev: any) => ({ ...prev, overrides }));
     // Proceed with flexible payment modal
     setShowFlexiblePayment(true);
   };
