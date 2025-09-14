@@ -347,6 +347,16 @@ export class TenantService {
   }
 
   /**
+   * Get tenant by subdomain
+   */
+  static async getTenantBySubdomain(subdomain: string) {
+    return await prisma.tenant.findUnique({
+      where: { subdomain: subdomain.toLowerCase() },
+      include: { features: true }
+    });
+  }
+
+  /**
    * Get tenant by ID
    */
   static async getTenantById(id: string) {

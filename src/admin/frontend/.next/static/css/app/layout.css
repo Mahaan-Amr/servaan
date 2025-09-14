@@ -760,6 +760,12 @@ select {
 .top-full {
   top: 100%;
 }
+.left-12 {
+  left: 3rem;
+}
+.left-3 {
+  left: 0.75rem;
+}
 .z-10 {
   z-index: 10;
 }
@@ -772,6 +778,10 @@ select {
 .mx-auto {
   margin-left: auto;
   margin-right: auto;
+}
+.mx-4 {
+  margin-left: 1rem;
+  margin-right: 1rem;
 }
 .-mr-12 {
   margin-right: -3rem;
@@ -835,6 +845,9 @@ select {
 }
 .mt-8 {
   margin-top: 2rem;
+}
+.mt-3 {
+  margin-top: 0.75rem;
 }
 .line-clamp-2 {
   overflow: hidden;
@@ -913,6 +926,9 @@ select {
 }
 .max-h-\[90vh\] {
   max-height: 90vh;
+}
+.max-h-\[60vh\] {
+  max-height: 60vh;
 }
 .min-h-screen {
   min-height: 100vh;
@@ -1037,6 +1053,9 @@ select {
 }
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+.cursor-pointer {
+  cursor: pointer;
 }
 .grid-cols-1 {
   grid-template-columns: repeat(1, minmax(0, 1fr));
@@ -1219,6 +1238,14 @@ select {
 .border-white {
   --tw-border-opacity: 1;
   border-color: rgb(255 255 255 / var(--tw-border-opacity, 1));
+}
+.border-green-500 {
+  --tw-border-opacity: 1;
+  border-color: rgb(34 197 94 / var(--tw-border-opacity, 1));
+}
+.border-red-500 {
+  --tw-border-opacity: 1;
+  border-color: rgb(239 68 68 / var(--tw-border-opacity, 1));
 }
 .border-t-transparent {
   border-top-color: transparent;
@@ -1497,6 +1524,12 @@ select {
 }
 .pt-6 {
   padding-top: 1.5rem;
+}
+.pr-20 {
+  padding-right: 5rem;
+}
+.pt-3 {
+  padding-top: 0.75rem;
 }
 .text-center {
   text-align: center;

@@ -28,6 +28,7 @@ import TenantEditModal from '@/components/admin/tenants/TenantEditModal';
 import BulkOperationsBar from '@/components/admin/tenants/BulkOperationsBar';
 import TenantAnalyticsDashboard from '@/components/admin/tenants/TenantAnalyticsDashboard';
 import CreateTenantModal from '@/components/admin/tenants/CreateTenantModal';
+import TenantCreationWizard from '@/components/admin/tenants/TenantCreationWizard';
 import AdvancedSearchFilters from '@/components/admin/tenants/AdvancedSearchFilters';
 
 function TenantsPage() {
@@ -51,6 +52,7 @@ function TenantsPage() {
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateWizard, setShowCreateWizard] = useState(false);
   const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
 
   // Load tenants data
@@ -214,7 +216,7 @@ function TenantsPage() {
 
   // Handle new tenant creation
   const handleCreateNewTenant = () => {
-    setShowCreateModal(true);
+    setShowCreateWizard(true);
   };
 
   // Helper functions
@@ -620,6 +622,16 @@ function TenantsPage() {
         onSuccess={() => {
           handleRefresh();
           setShowCreateModal(false);
+        }}
+      />
+
+      {/* Create Tenant Wizard */}
+      <TenantCreationWizard
+        isOpen={showCreateWizard}
+        onClose={() => setShowCreateWizard(false)}
+        onSuccess={() => {
+          handleRefresh();
+          setShowCreateWizard(false);
         }}
       />
     </div>

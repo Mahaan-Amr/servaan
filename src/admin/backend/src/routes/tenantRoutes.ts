@@ -358,6 +358,68 @@ router.delete('/:id', authenticateAdmin, requireRole(['SUPER_ADMIN']), async (re
 });
 
 /**
+ * GET /api/admin/tenants/check-subdomain/:subdomain
+ * Check if subdomain is available
+ */
+router.get('/check-subdomain/:subdomain', authenticateAdmin, async (req, res) => {
+  try {
+    const { subdomain } = req.params;
+    
+    if (!subdomain || subdomain.length < 3) {
+      return res.status(400).json({
+        success: false,
+        error: 'SUBDOMAIN_TOO_SHORT',
+        message: 'زیردامنه باید حداقل ۳ کاراکتر باشد'
+      });
+    }
+
+    // Check if subdomain contains only valid characters
+    if (!/^[a-zA-Z0-9-]+$/.test(subdomain)) {
+      return res.status(400).json({
+        success: false,
+        error: 'INVALID_SUBDOMAIN',
+        message: 'زیردامنه فقط می‌تواند شامل حروف، اعداد و خط تیره باشد'
+      });
+    }
+
+    // Check reserved subdomains
+    const reservedSubdomains = ['admin', 'api', 'www', 'mail', 'ftp', 'blog', 'shop', 'store', 'app', 'dashboard'];
+    if (reservedSubdomains.includes(subdomain.toLowerCase())) {
+      return res.status(400).json({
+        success: false,
+        error: 'SUBDOMAIN_RESERVED',
+        message: 'این زیردامنه رزرو شده است'
+      });
+    }
+
+    // Check if subdomain already exists
+    const existingTenant = await TenantService.getTenantBySubdomain(subdomain);
+    
+    if (existingTenant) {
+      return res.json({
+        success: true,
+        available: false,
+        message: 'این زیردامنه قبلاً استفاده شده است'
+      });
+    }
+
+    return res.json({
+      success: true,
+      available: true,
+      message: 'این زیردامنه در دسترس است'
+    });
+
+  } catch (error) {
+    console.error('Subdomain check error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'خطا در بررسی زیردامنه',
+      message: 'Failed to check subdomain availability'
+    });
+  }
+});
+
+/**
  * GET /api/admin/tenants/overview
  * Get platform-wide tenant overview and statistics
  */

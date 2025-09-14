@@ -425,6 +425,19 @@ export const getTenantRevenueAnalytics = async (period: 'daily' | 'weekly' | 'mo
 };
 
 /**
+ * Check if subdomain is available
+ */
+export const checkSubdomainAvailability = async (subdomain: string) => {
+  try {
+    const response = await adminApi.get(`/admin/tenants/check-subdomain/${encodeURIComponent(subdomain)}`);
+    return response.data;
+  } catch (error: any) {
+    console.error('Error checking subdomain availability:', error);
+    throw new Error(error.response?.data?.message || 'خطا در بررسی زیردامنه');
+  }
+};
+
+/**
  * Reset a tenant user's password by email
  */
 export const resetTenantUserPassword = async (tenantId: string, email: string, newPassword: string) => {
