@@ -28,6 +28,7 @@ import TenantEditModal from '@/components/admin/tenants/TenantEditModal';
 import BulkOperationsBar from '@/components/admin/tenants/BulkOperationsBar';
 import TenantAnalyticsDashboard from '@/components/admin/tenants/TenantAnalyticsDashboard';
 import CreateTenantModal from '@/components/admin/tenants/CreateTenantModal';
+import AdvancedSearchFilters from '@/components/admin/tenants/AdvancedSearchFilters';
 
 function TenantsPage() {
   const router = useRouter();
@@ -41,11 +42,8 @@ function TenantsPage() {
     pages: 0
   });
   
-  // Filters
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [planFilter, setPlanFilter] = useState<string>('all');
-  const [showFilters, setShowFilters] = useState(false);
+  // Enhanced filters
+  const [filters, setFilters] = useState<Partial<TenantListParams>>({});
 
   // Enhanced features
   const [selectedTenants, setSelectedTenants] = useState<string[]>([]);
@@ -64,9 +62,8 @@ function TenantsPage() {
       const queryParams: TenantListParams = {
         page: params.page || pagination.page,
         limit: params.limit || pagination.limit,
-        search: params.search !== undefined ? params.search : search,
-        status: params.status !== undefined ? params.status : statusFilter,
-        plan: params.plan !== undefined ? params.plan : planFilter
+        ...filters,
+        ...params
       };
 
       const response: TenantListResponse = await getTenants(queryParams);
@@ -74,12 +71,9 @@ function TenantsPage() {
       setTenants(response.tenants);
       setPagination(response.pagination);
       
-      // Update local state
+      // Update pagination state
       if (params.page) setPagination(prev => ({ ...prev, page: params.page! }));
       if (params.limit) setPagination(prev => ({ ...prev, limit: params.limit! }));
-      if (params.search !== undefined) setSearch(params.search);
-      if (params.status !== undefined) setStatusFilter(params.status);
-      if (params.plan !== undefined) setPlanFilter(params.plan);
       
     } catch (error: any) {
       setError(error.message);
@@ -94,22 +88,16 @@ function TenantsPage() {
     loadTenants();
   }, []);
 
-  // Handle search
-  const handleSearch = (value: string) => {
-    setSearch(value);
-    loadTenants({ search: value, page: 1 });
+  // Handle filters change
+  const handleFiltersChange = (newFilters: Partial<TenantListParams>) => {
+    setFilters(newFilters);
+    loadTenants({ ...newFilters, page: 1 });
   };
 
-  // Handle status filter
-  const handleStatusFilter = (status: string) => {
-    setStatusFilter(status);
-    loadTenants({ status, page: 1 });
-  };
-
-  // Handle plan filter
-  const handlePlanFilter = (plan: string) => {
-    setPlanFilter(plan);
-    loadTenants({ plan, page: 1 });
+  // Handle clear filters
+  const handleClearFilters = () => {
+    setFilters({});
+    loadTenants({ page: 1 });
   };
 
   // Sorting handlers
@@ -364,95 +352,12 @@ function TenantsPage() {
 
       {/* Main Content */}
       <div className="p-6">
-        {/* Filters Section */}
-        <div className="bg-white rounded-admin border border-admin-border p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-medium text-admin-text">فیلترها و جستجو</h2>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="text-admin-primary hover:text-admin-primary-dark text-sm"
-            >
-              {showFilters ? 'مخفی کردن فیلترها' : 'نمایش فیلترها'}
-            </button>
-          </div>
-
-          {/* Search and Filters */}
-          <div className="flex flex-col lg:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-admin-text-muted" />
-                <input
-                  type="text"
-                  placeholder="جستجو در نام، زیردامنه، یا ایمیل..."
-                  value={search}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-admin-border rounded-admin focus:ring-2 focus:ring-admin-primary focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            {/* Filter Toggle */}
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="btn-admin-secondary flex items-center"
-            >
-              <Filter className="h-4 w-4 ml-2" />
-              فیلترها
-            </button>
-          </div>
-
-          {/* Filters Panel */}
-          {showFilters && (
-            <div className="mt-4 p-4 bg-admin-bg rounded-admin">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Status Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-admin-text mb-2">وضعیت</label>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => handleStatusFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-admin-border rounded-admin focus:ring-2 focus:ring-admin-primary focus:border-transparent"
-                  >
-                    <option value="all">همه</option>
-                    <option value="active">فعال</option>
-                    <option value="inactive">غیرفعال</option>
-                  </select>
-                </div>
-
-                {/* Plan Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-admin-text mb-2">طرح</label>
-                  <select
-                    value={planFilter}
-                    onChange={(e) => handlePlanFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-admin-border rounded-admin focus:ring-2 focus:ring-admin-primary focus:border-transparent"
-                  >
-                    <option value="all">همه</option>
-                    <option value="STARTER">استارتر</option>
-                    <option value="BUSINESS">بیزینس</option>
-                    <option value="ENTERPRISE">انترپرایز</option>
-                  </select>
-                </div>
-
-                {/* Limit Filter */}
-                <div>
-                  <label className="block text-sm font-medium text-admin-text mb-2">تعداد در صفحه</label>
-                  <select
-                    value={pagination.limit}
-                    onChange={(e) => handleLimitChange(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-admin-border rounded-admin focus:ring-2 focus:ring-admin-primary focus:border-transparent"
-                  >
-                    <option value={10}>۱۰</option>
-                    <option value={25}>۲۵</option>
-                    <option value={50}>۵۰</option>
-                    <option value={100}>۱۰۰</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Advanced Search Filters */}
+        <AdvancedSearchFilters
+          onFiltersChange={handleFiltersChange}
+          onClearFilters={handleClearFilters}
+          initialFilters={filters}
+        />
 
         {/* Content */}
         {error ? (

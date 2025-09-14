@@ -23,6 +23,17 @@ export interface TenantListParams {
   sortBy?: 'createdAt' | 'monthlyRevenue' | 'ordersThisMonth';
   sortDir?: 'asc' | 'desc';
   refresh?: boolean;
+  // Enhanced filters
+  businessType?: string;
+  city?: string;
+  country?: string;
+  createdFrom?: string; // ISO date string
+  createdTo?: string; // ISO date string
+  revenueFrom?: number;
+  revenueTo?: number;
+  userCountFrom?: number;
+  userCountTo?: number;
+  hasFeatures?: string[]; // Array of feature names
 }
 
 export interface TenantListResponse {
@@ -170,12 +181,27 @@ export const getTenants = async (params: TenantListParams): Promise<TenantListRe
     queryParams.append('page', params.page.toString());
     queryParams.append('limit', params.limit.toString());
     
+    // Basic filters
     if (params.search) queryParams.append('search', params.search);
     if (params.status) queryParams.append('status', params.status);
     if (params.plan) queryParams.append('plan', params.plan);
     if (params.sortBy) queryParams.append('sortBy', params.sortBy);
     if (params.sortDir) queryParams.append('sortDir', params.sortDir);
     if (params.refresh) queryParams.append('refresh', String(params.refresh));
+
+    // Enhanced filters
+    if (params.businessType) queryParams.append('businessType', params.businessType);
+    if (params.city) queryParams.append('city', params.city);
+    if (params.country) queryParams.append('country', params.country);
+    if (params.createdFrom) queryParams.append('createdFrom', params.createdFrom);
+    if (params.createdTo) queryParams.append('createdTo', params.createdTo);
+    if (params.revenueFrom !== undefined) queryParams.append('revenueFrom', params.revenueFrom.toString());
+    if (params.revenueTo !== undefined) queryParams.append('revenueTo', params.revenueTo.toString());
+    if (params.userCountFrom !== undefined) queryParams.append('userCountFrom', params.userCountFrom.toString());
+    if (params.userCountTo !== undefined) queryParams.append('userCountTo', params.userCountTo.toString());
+    if (params.hasFeatures && params.hasFeatures.length > 0) {
+      queryParams.append('hasFeatures', params.hasFeatures.join(','));
+    }
 
     const response = await adminApi.get(`/admin/tenants?${queryParams.toString()}`);
     return response.data.data;

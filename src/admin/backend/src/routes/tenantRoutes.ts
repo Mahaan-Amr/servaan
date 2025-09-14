@@ -11,7 +11,11 @@ const router = express.Router();
  */
 router.get('/', authenticateAdmin, async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, status, plan, sortBy, sortDir, refresh } = req.query;
+    const { 
+      page = 1, limit = 10, search, status, plan, sortBy, sortDir, refresh,
+      businessType, city, country, createdFrom, createdTo,
+      revenueFrom, revenueTo, userCountFrom, userCountTo, hasFeatures
+    } = req.query;
     
     const result = await TenantService.listTenants({
       page: Number(page),
@@ -21,7 +25,18 @@ router.get('/', authenticateAdmin, async (req, res) => {
       plan: plan as string,
       sortBy: (sortBy as any) || 'createdAt',
       sortDir: (sortDir as any) || 'desc',
-      refresh: refresh === 'true'
+      refresh: refresh === 'true',
+      // Enhanced filters
+      businessType: businessType as string,
+      city: city as string,
+      country: country as string,
+      createdFrom: createdFrom as string,
+      createdTo: createdTo as string,
+      revenueFrom: revenueFrom ? Number(revenueFrom) : undefined,
+      revenueTo: revenueTo ? Number(revenueTo) : undefined,
+      userCountFrom: userCountFrom ? Number(userCountFrom) : undefined,
+      userCountTo: userCountTo ? Number(userCountTo) : undefined,
+      hasFeatures: hasFeatures ? (hasFeatures as string).split(',') : undefined
     });
 
     // Audit log

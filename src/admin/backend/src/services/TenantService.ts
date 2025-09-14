@@ -28,6 +28,17 @@ export interface TenantListParams {
   sortBy?: 'createdAt' | 'monthlyRevenue' | 'ordersThisMonth';
   sortDir?: 'asc' | 'desc';
   refresh?: boolean;
+  // Enhanced filters
+  businessType?: string;
+  city?: string;
+  country?: string;
+  createdFrom?: string; // ISO date string
+  createdTo?: string; // ISO date string
+  revenueFrom?: number;
+  revenueTo?: number;
+  userCountFrom?: number;
+  userCountTo?: number;
+  hasFeatures?: string[]; // Array of feature names
 }
 
 export interface TenantMetrics {
@@ -137,26 +148,74 @@ export class TenantService {
    * List all tenants with pagination and search
    */
   static async listTenants(params: TenantListParams) {
-    const { page, limit, search, status, plan } = params;
+    const { 
+      page, limit, search, status, plan, 
+      businessType, city, country, 
+      createdFrom, createdTo, 
+      revenueFrom, revenueTo, 
+      userCountFrom, userCountTo, 
+      hasFeatures 
+    } = params;
     const skip = (page - 1) * limit;
 
     // Build where clause
     const where: any = {};
     
+    // Text search
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
         { subdomain: { contains: search, mode: 'insensitive' } },
-        { ownerName: { contains: search, mode: 'insensitive' } }
+        { ownerName: { contains: search, mode: 'insensitive' } },
+        { ownerEmail: { contains: search, mode: 'insensitive' } },
+        { businessType: { contains: search, mode: 'insensitive' } },
+        { city: { contains: search, mode: 'insensitive' } },
+        { country: { contains: search, mode: 'insensitive' } }
       ];
     }
 
+    // Basic filters
     if (status && status !== 'all') {
       where.isActive = status === 'active';
     }
 
     if (plan && plan !== 'all') {
       where.plan = plan;
+    }
+
+    // Enhanced filters
+    if (businessType && businessType !== 'all') {
+      where.businessType = businessType;
+    }
+
+    if (city && city !== 'all') {
+      where.city = city;
+    }
+
+    if (country && country !== 'all') {
+      where.country = country;
+    }
+
+    // Date range filters
+    if (createdFrom || createdTo) {
+      where.createdAt = {};
+      if (createdFrom) {
+        where.createdAt.gte = new Date(createdFrom);
+      }
+      if (createdTo) {
+        where.createdAt.lte = new Date(createdTo);
+      }
+    }
+
+    // Feature filters
+    if (hasFeatures && hasFeatures.length > 0) {
+      where.features = {
+        some: {
+          OR: hasFeatures.map(feature => ({
+            [feature]: true
+          }))
+        }
+      };
     }
 
     // Get tenants with features
@@ -245,6 +304,25 @@ export class TenantService {
       monthlyRevenue: revenueByTenant[tenant.id] || 0,
       ordersThisMonth: ordersByTenant[tenant.id] || 0
     }));
+
+    // Apply revenue and user count filters
+    if (revenueFrom !== undefined || revenueTo !== undefined) {
+      transformedTenants = transformedTenants.filter((tenant: any) => {
+        const revenue = tenant.monthlyRevenue || 0;
+        if (revenueFrom !== undefined && revenue < revenueFrom) return false;
+        if (revenueTo !== undefined && revenue > revenueTo) return false;
+        return true;
+      });
+    }
+
+    if (userCountFrom !== undefined || userCountTo !== undefined) {
+      transformedTenants = transformedTenants.filter((tenant: any) => {
+        const userCount = tenant.userCount || 0;
+        if (userCountFrom !== undefined && userCount < userCountFrom) return false;
+        if (userCountTo !== undefined && userCount > userCountTo) return false;
+        return true;
+      });
+    }
 
     // Apply sort if requested (revenue/orders)
     if (params.sortBy === 'monthlyRevenue') {
