@@ -200,4 +200,28 @@ router.get('/health', authenticateAdmin, async (_req: Request, res: Response) =>
   }
 });
 
+/**
+ * GET /api/admin/dashboard/tenant-overview
+ * Get tenant overview data for dashboard cards
+ */
+router.get('/tenant-overview', authenticateAdmin, async (req: Request, res: Response) => {
+  try {
+    const limit = parseInt((req.query as any)['limit'] as string) || 10;
+    const tenantData = await dashboardService.getTenantOverviewData(limit);
+    
+    res.json({
+      success: true,
+      message: 'Tenant overview data retrieved successfully',
+      data: tenantData
+    });
+  } catch (error) {
+    console.error('Dashboard tenant overview route error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'TENANT_OVERVIEW_ERROR',
+      message: 'Failed to load tenant overview data'
+    });
+  }
+});
+
 export default router;

@@ -108,6 +108,19 @@ export const getSystemHealth = async () => {
   }
 };
 
+/**
+ * Get tenant overview data for dashboard cards
+ */
+export const getTenantOverviewData = async (limit: number = 10) => {
+  try {
+    const response = await adminApi.get(`/admin/dashboard/tenant-overview?limit=${limit}`);
+    return response.data.data;
+  } catch (error: any) {
+    console.error('Error fetching tenant overview data:', error);
+    throw new Error(error.response?.data?.message || 'Failed to load tenant overview data');
+  }
+};
+
 export default {
   getDashboardData,
   getDashboardStats,
@@ -117,4 +130,5 @@ export default {
   getRevenueData,
   getUserActivityData,
   getSystemHealth,
+  getTenantOverviewData,
 };

@@ -409,6 +409,77 @@ export const getUserActivityData = async (days: number = 30) => {
   }
 };
 
+/**
+ * Get tenant overview data for dashboard cards
+ */
+export const getTenantOverviewData = async (limit: number = 10) => {
+  try {
+    const tenants = await prisma.tenant.findMany({
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        subdomain: true,
+        isActive: true,
+        plan: true,
+        createdAt: true,
+        _count: {
+          select: {
+            users: true
+          }
+        }
+      }
+    });
+
+    // Get monthly revenue for each tenant
+    const tenantRevenues = await Promise.all(
+      tenants.map(async (tenant) => {
+        const currentMonth = new Date();
+        currentMonth.setDate(1);
+        currentMonth.setHours(0, 0, 0, 0);
+
+        const revenue = await prisma.orderPayment.aggregate({
+          _sum: {
+            amount: true
+          },
+          where: {
+            order: {
+              tenantId: tenant.id
+            },
+            createdAt: {
+              gte: currentMonth
+            }
+          }
+        });
+
+        return {
+          tenantId: tenant.id,
+          monthlyRevenue: Number(revenue._sum.amount || 0)
+        };
+      })
+    );
+
+    // Combine tenant data with revenue data
+    const tenantCards = tenants.map((tenant, index) => ({
+      id: tenant.id,
+      name: tenant.name,
+      subdomain: tenant.subdomain,
+      status: tenant.isActive ? 'active' : 'inactive' as 'active' | 'inactive' | 'suspended' | 'maintenance',
+      userCount: tenant._count.users,
+      monthlyRevenue: tenantRevenues[index]?.monthlyRevenue || 0,
+      lastActivity: tenant.createdAt, // Using createdAt as lastActivity for now
+      health: 'healthy' as 'healthy' | 'warning' | 'critical', // Default to healthy
+      plan: tenant.plan?.toLowerCase() as 'basic' | 'premium' | 'enterprise' || 'basic'
+    }));
+
+    return tenantCards;
+  } catch (error) {
+    console.error('Error getting tenant overview data:', error);
+    throw new Error('Failed to load tenant overview data');
+  }
+};
+
 export default {
   getDashboardData,
   getDashboardStats,
@@ -417,4 +488,5 @@ export default {
   getTenantGrowthData,
   getRevenueData,
   getUserActivityData,
+  getTenantOverviewData,
 };

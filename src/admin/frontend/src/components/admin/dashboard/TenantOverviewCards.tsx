@@ -16,7 +16,7 @@ import {
   MoreHorizontal
 } from 'lucide-react';
 import { DashboardStats } from '@/types/dashboard';
-import { getDashboardStats } from '@/services/dashboardService';
+import { getDashboardStats, getTenantOverviewData } from '@/services/dashboardService';
 import toast from 'react-hot-toast';
 
 interface TenantOverviewCardsProps {
@@ -54,63 +54,24 @@ export default function TenantOverviewCards({
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
-  // Mock tenant data - in real implementation, this would come from API
-  const mockTenants: TenantCardData[] = [
-    {
-      id: '1',
-      name: 'رستوران شایان',
-      subdomain: 'shayan',
-      status: 'active',
-      userCount: 12,
-      monthlyRevenue: 2500000,
-      lastActivity: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      health: 'healthy',
-      plan: 'premium'
-    },
-    {
-      id: '2',
-      name: 'کافه تهران',
-      subdomain: 'tehran-cafe',
-      status: 'active',
-      userCount: 8,
-      monthlyRevenue: 1800000,
-      lastActivity: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
-      health: 'warning',
-      plan: 'basic'
-    },
-    {
-      id: '3',
-      name: 'فست فود زنجیره‌ای',
-      subdomain: 'fastfood-chain',
-      status: 'active',
-      userCount: 25,
-      monthlyRevenue: 4500000,
-      lastActivity: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
-      health: 'healthy',
-      plan: 'enterprise'
-    },
-    {
-      id: '4',
-      name: 'پیتزا پیتزا',
-      subdomain: 'pizza-pizza',
-      status: 'inactive',
-      userCount: 5,
-      monthlyRevenue: 800000,
-      lastActivity: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-      health: 'critical',
-      plan: 'basic'
-    }
-  ];
+  // Real tenant data from API
 
   const fetchData = async () => {
     try {
-      const statsData = await getDashboardStats();
+      const [statsData, tenantData] = await Promise.all([
+        getDashboardStats(),
+        getTenantOverviewData(10)
+      ]);
+      
       setStats(statsData);
-      setTenantCards(mockTenants);
+      setTenantCards(tenantData);
       setLastUpdate(new Date());
     } catch (error: any) {
       console.error('Error fetching tenant overview data:', error);
       toast.error('خطا در دریافت اطلاعات مستأجرین');
+      
+      // Set empty arrays as fallback
+      setTenantCards([]);
     } finally {
       setLoading(false);
     }

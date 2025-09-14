@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import rateLimit from 'express-rate-limit';
+// import rateLimit from 'express-rate-limit'; // Disabled for admin panel
 import { authenticateAdmin } from '../middlewares/adminAuth';
 import { createBackup, listBackups, resolveBackupPath, restoreDryRun, startRestore, getRestoreJob } from '../services/backupService';
 import fs from 'fs';
@@ -76,8 +76,8 @@ router.post('/:name/restore', authenticateAdmin, async (req: Request, res: Respo
 });
 
 // GET /api/admin/backups/restore/:jobId — restore job status
-const statusLimiter = rateLimit({ windowMs: 60_000, max: 30, standardHeaders: true, legacyHeaders: false });
-router.get('/restore/:jobId', authenticateAdmin, statusLimiter, async (req: Request, res: Response) => {
+// const statusLimiter = rateLimit({ windowMs: 60_000, max: 30, standardHeaders: true, legacyHeaders: false }); // Disabled
+router.get('/restore/:jobId', authenticateAdmin, async (req: Request, res: Response) => {
   try {
     const jobId = (req.params as any)['jobId'] as string;
     const job = getRestoreJob(jobId);

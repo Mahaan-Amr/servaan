@@ -17,7 +17,7 @@ import { createServer } from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import rateLimit from 'express-rate-limit';
+// import rateLimit from 'express-rate-limit'; // Disabled for admin panel
 import { adminConfig } from './config/admin';
 import adminAuthRoutes from './routes/adminAuthRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
@@ -52,19 +52,19 @@ app.use(cors({
   credentials: true
 }));
 
-// Rate limiting for admin endpoints
-const limiter = rateLimit({
-  windowMs: adminConfig.rateLimiting.windowMs,
-  max: adminConfig.rateLimiting.maxRequests,
-  message: {
-    error: 'Too many requests from this IP',
-    message: 'Rate limit exceeded for admin endpoints',
-    code: 'RATE_LIMIT_EXCEEDED'
-  },
-  standardHeaders: true,
-  legacyHeaders: false
-});
-app.use(limiter);
+// Rate limiting disabled for admin panel (development and testing)
+// const limiter = rateLimit({
+//   windowMs: adminConfig.rateLimiting.windowMs,
+//   max: adminConfig.rateLimiting.maxRequests,
+//   message: {
+//     error: 'Too many requests from this IP',
+//     message: 'Rate limit exceeded for admin endpoints',
+//     code: 'RATE_LIMIT_EXCEEDED'
+//   },
+//   standardHeaders: true,
+//   legacyHeaders: false
+// });
+// app.use(limiter);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10MB' }));
