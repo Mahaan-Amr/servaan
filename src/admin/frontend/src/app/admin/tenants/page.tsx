@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Plus, 
@@ -61,7 +61,6 @@ function TenantsPage() {
       const queryParams: TenantListParams = {
         page: params.page || pagination.page,
         limit: params.limit || pagination.limit,
-        ...filters,
         ...params
       };
 
@@ -69,10 +68,6 @@ function TenantsPage() {
       
       setTenants(response.tenants);
       setPagination(response.pagination);
-      
-      // Update pagination state
-      if (params.page) setPagination(prev => ({ ...prev, page: params.page! }));
-      if (params.limit) setPagination(prev => ({ ...prev, limit: params.limit! }));
       
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'خطا در بارگذاری داده‌ها';
@@ -88,17 +83,21 @@ function TenantsPage() {
     loadTenants();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Load data when filters change
+  useEffect(() => {
+    loadTenants({ ...filters, page: 1 });
+  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Handle filters change
-  const handleFiltersChange = (newFilters: Partial<TenantListParams>) => {
-    setFilters(newFilters);
-    loadTenants({ ...newFilters, page: 1 });
-  };
+  const handleFiltersChange = useCallback((newFilters: Partial<TenantListParams>) => {
+    const mergedFilters = { ...filters, ...newFilters };
+    setFilters(mergedFilters);
+  }, [filters]);
 
   // Handle clear filters
-  const handleClearFilters = () => {
+  const handleClearFilters = useCallback(() => {
     setFilters({});
-    loadTenants({ page: 1 });
-  };
+  }, []);
 
   // Sorting handlers
   const sortByRevenue = () => loadTenants({ sortBy: 'monthlyRevenue', sortDir: 'desc', page: 1 });

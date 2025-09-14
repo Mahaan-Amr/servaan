@@ -53,7 +53,7 @@ export default function AdvancedSearchFilters({
   // Update filters when they change
   useEffect(() => {
     onFiltersChange(filters);
-  }, [filters, onFiltersChange]);
+  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFilterChange = (key: keyof TenantListParams, value: unknown) => {
     setFilters(prev => ({
