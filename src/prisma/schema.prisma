@@ -58,6 +58,7 @@ model Tenant {
   tableStatusLogs    TableStatusLog[]
   tables             Table[]
   features           TenantFeatures?
+  stockOverrides     StockOverride[]
   
   // CRM System relations
   customers         Customer[]
@@ -729,6 +730,7 @@ model User {
   smsSent                    SmsHistory[]         @relation("SmsHistorySentBy")
   reservationsCreated        TableReservation[]   @relation("ReservationCreatedBy")
   tableStatusChanges         TableStatusLog[]     @relation("TableStatusChangedBy")
+  stockOverrides             StockOverride[]
 
   @@index([email])
 }
@@ -966,6 +968,7 @@ model Order {
   modifications   OrderModification[]
   orderOptions    OrderOptions?
   payments        OrderPayment[]
+  stockOverrides  StockOverride[]
   createdByUser   User                @relation("OrderCreatedBy", fields: [createdBy], references: [id])
   customer        Customer?           @relation(fields: [customerId], references: [id])
   servedByUser    User?               @relation("OrderServedBy", fields: [servedBy], references: [id])
@@ -1724,4 +1727,35 @@ enum HealthStatus {
   WARNING
   CRITICAL
   UNKNOWN
+}
+
+// Stock Override Model for Flexible Stock Validation
+model StockOverride {
+  id               String    @id @default(cuid())
+  tenantId         String    @map("tenant_id")
+  orderId          String    @map("order_id")
+  menuItemId       String    @map("menu_item_id")
+  itemId           String    @map("item_id")
+  itemName         String    @map("item_name")
+  requiredQuantity Float     @map("required_quantity")
+  availableQuantity Float    @map("available_quantity")
+  overrideReason   String    @map("override_reason")
+  overrideType     OverrideType @map("override_type")
+  overriddenBy     String    @map("overridden_by")
+  overriddenAt     DateTime  @default(now()) @map("overridden_at")
+  notes            String?
+  
+  // Relations
+  tenant           Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  order            Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  overriddenByUser User      @relation(fields: [overriddenBy], references: [id], onDelete: Cascade)
+  
+  @@map("stock_overrides")
+}
+
+enum OverrideType {
+  STAFF_DECISION
+  EMERGENCY_PURCHASE
+  SUBSTITUTE_INGREDIENT
+  VIP_CUSTOMER
 }

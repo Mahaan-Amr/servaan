@@ -1064,6 +1064,158 @@ export class InventoryIntegrationService {
     });
   }
 
+  // NEW: Flexible stock validation with warnings and override capabilities
+  static async validateFlexibleStockAvailability(menuItemId: string, quantity: number = 1): Promise<{
+    isAvailable: boolean;
+    hasWarnings: boolean;
+    warnings: Array<{
+      type: 'LOW_STOCK' | 'OUT_OF_STOCK' | 'CRITICAL_STOCK';
+      severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+      itemId: string;
+      itemName: string;
+      requiredQuantity: number;
+      availableQuantity: number;
+      unit: string;
+      message: string;
+      suggestedAction: string;
+    }>;
+    unavailableIngredients: Array<{
+      itemId: string;
+      itemName: string;
+      requiredQuantity: number;
+      availableQuantity: number;
+      unit: string;
+    }>;
+    totalCost: number;
+    profitMargin: number;
+    canProceedWithOverride: boolean;
+    overrideRequired: boolean;
+  }> {
+    return apiRequest(`/inventory/stock-validation/${menuItemId}?quantity=${quantity}`);
+  }
+
+  // NEW: Validate flexible stock for multiple order items with warnings
+  static async validateFlexibleOrderStock(orderItems: { menuItemId: string; quantity: number }[]): Promise<{
+    isValid: boolean;
+    hasWarnings: boolean;
+    validationResults: Array<{
+      menuItemId: string;
+      isAvailable: boolean;
+      hasWarnings: boolean;
+      warnings: Array<{
+        type: 'LOW_STOCK' | 'OUT_OF_STOCK' | 'CRITICAL_STOCK';
+        severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+        itemId: string;
+        itemName: string;
+        requiredQuantity: number;
+        availableQuantity: number;
+        unit: string;
+        message: string;
+        suggestedAction: string;
+      }>;
+      unavailableIngredients: Array<{
+        itemId: string;
+        itemName: string;
+        requiredQuantity: number;
+        availableQuantity: number;
+        unit: string;
+      }>;
+      totalCost: number;
+      profitMargin: number;
+      canProceedWithOverride: boolean;
+      overrideRequired: boolean;
+    }>;
+    totalCOGS: number;
+    totalProfitMargin: number;
+    canProceedWithOverride: boolean;
+    overrideRequired: boolean;
+    criticalWarnings: number;
+    totalWarnings: number;
+  }> {
+    return apiRequest('/inventory/validate-order-stock', {
+      method: 'POST',
+      body: JSON.stringify({ orderItems }),
+    });
+  }
+
+  // NEW: Record stock override when staff proceeds despite warnings
+  static async recordStockOverride(overrideData: {
+    orderId: string;
+    menuItemId: string;
+    itemId: string;
+    itemName: string;
+    requiredQuantity: number;
+    availableQuantity: number;
+    overrideReason: string;
+    overrideType: 'STAFF_DECISION' | 'EMERGENCY_PURCHASE' | 'SUBSTITUTE_INGREDIENT' | 'VIP_CUSTOMER';
+    notes?: string;
+  }): Promise<{
+    id: string;
+    tenantId: string;
+    orderId: string;
+    menuItemId: string;
+    itemId: string;
+    itemName: string;
+    requiredQuantity: number;
+    availableQuantity: number;
+    overrideReason: string;
+    overrideType: string;
+    overriddenBy: string;
+    overriddenAt: string;
+    notes?: string;
+  }> {
+    return apiRequest('/inventory/stock-override', {
+      method: 'POST',
+      body: JSON.stringify(overrideData),
+    });
+  }
+
+  // NEW: Get stock override analytics
+  static async getStockOverrideAnalytics(startDate?: string, endDate?: string): Promise<{
+    totalOverrides: number;
+    overridesByType: Record<string, number>;
+    overridesByItem: Array<{
+      itemId: string;
+      itemName: string;
+      overrideCount: number;
+      totalDeficit: number;
+    }>;
+    overridesByStaff: Array<{
+      staffId: string;
+      staffName: string;
+      overrideCount: number;
+    }>;
+    frequentOverrideItems: Array<{
+      itemId: string;
+      itemName: string;
+      overrideCount: number;
+      avgDeficit: number;
+      lastOverride: string;
+    }>;
+  }> {
+    const queryParams = new URLSearchParams();
+    if (startDate) queryParams.append('startDate', startDate);
+    if (endDate) queryParams.append('endDate', endDate);
+
+    return apiRequest(`/inventory/stock-override-analytics?${queryParams.toString()}`);
+  }
+
+  // NEW: Get stock validation configuration
+  static async getStockValidationConfig(): Promise<{
+    validationMode: 'STRICT' | 'FLEXIBLE' | 'DISABLED';
+    allowStaffOverride: boolean;
+    requireManagerApproval: boolean;
+    autoReserveStock: boolean;
+    warningThresholds: {
+      lowStock: number;
+      criticalStock: number;
+      outOfStock: number;
+    };
+    overrideTypes: string[];
+  }> {
+    return apiRequest('/inventory/stock-validation-config');
+  }
+
   // Update menu item availability based on ingredient stock
   static async updateMenuAvailability(): Promise<MenuAvailabilityUpdate> {
     return apiRequest('/inventory/update-menu-availability', {

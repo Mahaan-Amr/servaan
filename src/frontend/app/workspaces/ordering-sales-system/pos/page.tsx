@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { io } from 'socket.io-client';
 import { useRouter } from 'next/navigation';
 import type { OrderOptions, OrderCalculation, BusinessPreset } from '../../../../services/orderingService';
-import { OrderService, PaymentService, MenuService, TableService } from '../../../../services/orderingService';
+import { OrderService, PaymentService, MenuService, TableService, InventoryIntegrationService } from '../../../../services/orderingService';
 import { OrderType, PaymentMethod } from '../../../../types/ordering';
 import type { MenuCategory as ApiMenuCategory, MenuItem as ApiMenuItem } from '../../../../types/ordering';
 import OrderSummary from './components/OrderSummary';
@@ -14,6 +14,7 @@ import PaymentModal from './components/PaymentModal';
 import ReceiptTemplate from './components/ReceiptTemplate';
 import FlexiblePaymentModal from './components/FlexiblePaymentModal';
 import AddItemsModal from './components/AddItemsModal';
+import StockWarningModal from './components/StockWarningModal';
 import { FaList } from 'react-icons/fa';
 import { useTenant } from '../../../../contexts/TenantContext';
 import { BASE_URL } from '../../../../lib/apiUtils';
@@ -96,6 +97,11 @@ export default function POSInterface() {
   const [showAddItems, setShowAddItems] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptOrderDate, setReceiptOrderDate] = useState<Date | null>(null);
+  
+  // Stock validation state
+  const [showStockWarning, setShowStockWarning] = useState(false);
+  const [stockWarnings, setStockWarnings] = useState<any[]>([]);
+  const [stockValidationData, setStockValidationData] = useState<any>(null);
   // Mobile cart drawer state
   const [isCartOpen, setIsCartOpen] = useState(false);
   
@@ -424,6 +430,27 @@ export default function POSInterface() {
       return;
     }
 
+    // Perform stock validation before proceeding
+    try {
+      const orderItemsForValidation = orderItems.map(item => ({
+        menuItemId: item.menuItem.id,
+        quantity: item.quantity
+      }));
+
+      const stockValidation = await InventoryIntegrationService.validateFlexibleOrderStock(orderItemsForValidation);
+      
+      if (stockValidation.hasWarnings) {
+        // Show stock warning modal
+        setStockWarnings(stockValidation.validationResults.flatMap(result => result.warnings));
+        setStockValidationData(stockValidation);
+        setShowStockWarning(true);
+        return;
+      }
+    } catch (error) {
+      console.error('Stock validation error:', error);
+      // Continue with order creation even if stock validation fails
+    }
+
     // Show flexible payment modal instead of immediate payment
     setShowFlexiblePayment(true);
   };
@@ -602,6 +629,21 @@ export default function POSInterface() {
       return;
     }
     setShowAddItems(true);
+  };
+
+  // Handle stock warning modal
+  const handleStockWarningProceed = (overrides: any[]) => {
+    setShowStockWarning(false);
+    // Store overrides for order creation
+    setStockValidationData(prev => ({ ...prev, overrides }));
+    // Proceed with flexible payment modal
+    setShowFlexiblePayment(true);
+  };
+
+  const handleStockWarningClose = () => {
+    setShowStockWarning(false);
+    setStockWarnings([]);
+    setStockValidationData(null);
   };
 
   // Handle payment completion with backend integration
@@ -1467,6 +1509,17 @@ export default function POSInterface() {
           </button>
         </div>
       )}
+
+      {/* Stock Warning Modal */}
+      <StockWarningModal
+        isOpen={showStockWarning}
+        onClose={handleStockWarningClose}
+        onProceed={handleStockWarningProceed}
+        warnings={stockWarnings}
+        criticalWarnings={stockValidationData?.criticalWarnings || 0}
+        totalWarnings={stockValidationData?.totalWarnings || 0}
+        overrideRequired={stockValidationData?.overrideRequired || false}
+      />
     </div>
   );
 } 

@@ -18,6 +18,49 @@ export interface RecipeStockValidationResult {
   profitMargin: number;
 }
 
+export interface FlexibleStockValidationResult {
+  isAvailable: boolean;
+  hasWarnings: boolean;
+  warnings: {
+    type: 'LOW_STOCK' | 'OUT_OF_STOCK' | 'CRITICAL_STOCK';
+    severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    itemId: string;
+    itemName: string;
+    requiredQuantity: number;
+    availableQuantity: number;
+    unit: string;
+    message: string;
+    suggestedAction: string;
+  }[];
+  unavailableIngredients: {
+    itemId: string;
+    itemName: string;
+    requiredQuantity: number;
+    availableQuantity: number;
+    unit: string;
+  }[];
+  totalCost: number;
+  profitMargin: number;
+  canProceedWithOverride: boolean;
+  overrideRequired: boolean;
+}
+
+export interface StockOverrideRecord {
+  id: string;
+  tenantId: string;
+  orderId: string;
+  menuItemId: string;
+  itemId: string;
+  itemName: string;
+  requiredQuantity: number;
+  availableQuantity: number;
+  overrideReason: string;
+  overrideType: 'STAFF_DECISION' | 'EMERGENCY_PURCHASE' | 'SUBSTITUTE_INGREDIENT' | 'VIP_CUSTOMER';
+  overriddenBy: string;
+  overriddenAt: Date;
+  notes?: string;
+}
+
 export interface OrderItemWithRecipe {
   menuItemId: string;
   quantity: number;
@@ -219,6 +262,400 @@ export class OrderInventoryIntegrationService {
 
     } catch (error) {
       throw new AppError('Failed to validate order stock availability', 500, error);
+    }
+  }
+
+  /**
+   * Flexible stock validation with warnings and override capabilities
+   * Returns warnings instead of blocking orders, allowing staff to proceed with confirmation
+   */
+  static async validateFlexibleStockAvailability(
+    tenantId: string,
+    menuItemId: string,
+    orderQuantity: number
+  ): Promise<FlexibleStockValidationResult> {
+    try {
+      // Get recipe for menu item with ingredients included
+      const recipe = await prisma.recipe.findFirst({
+        where: {
+          menuItemId,
+          tenantId,
+          isActive: true
+        },
+        include: {
+          menuItem: {
+            select: {
+              id: true,
+              displayName: true,
+              menuPrice: true
+            }
+          },
+          ingredients: {
+            include: {
+              item: {
+                select: {
+                  id: true,
+                  name: true,
+                  unit: true,
+                  minStock: true
+                }
+              }
+            },
+            orderBy: {
+              createdAt: 'asc'
+            }
+          }
+        }
+      });
+      
+      if (!recipe || !recipe.ingredients || recipe.ingredients.length === 0) {
+        // No recipe found - treat as non-recipe item (no ingredients to check)
+        return {
+          isAvailable: true,
+          hasWarnings: false,
+          warnings: [],
+          unavailableIngredients: [],
+          totalCost: 0,
+          profitMargin: 0,
+          canProceedWithOverride: true,
+          overrideRequired: false
+        };
+      }
+
+      const warnings = [];
+      const unavailableIngredients = [];
+      let totalCost = 0;
+      let hasCriticalIssues = false;
+
+      // Check each ingredient availability
+      for (const ingredient of recipe.ingredients) {
+        const requiredQuantity = Number(ingredient.quantity) * orderQuantity;
+        const availableStock = await calculateCurrentStock(ingredient.itemId, tenantId);
+        const minStock = Number(ingredient.item?.minStock || 0);
+        
+        // Get current cost from inventory
+        const currentCost = await calculateWeightedAverageCost(ingredient.itemId, tenantId);
+        const ingredientTotalCost = requiredQuantity * currentCost;
+        totalCost += ingredientTotalCost;
+
+        // Determine stock status and create appropriate warnings
+        if (availableStock < requiredQuantity) {
+          const deficit = requiredQuantity - availableStock;
+          const stockPercentage = (availableStock / requiredQuantity) * 100;
+          
+          let warningType: 'LOW_STOCK' | 'OUT_OF_STOCK' | 'CRITICAL_STOCK';
+          let severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+          let message: string;
+          let suggestedAction: string;
+
+          if (availableStock <= 0) {
+            warningType = 'OUT_OF_STOCK';
+            severity = 'CRITICAL';
+            message = `موجودی ${ingredient.item?.name} تمام شده است`;
+            suggestedAction = 'مواد اولیه را از فروشگاه نزدیک تهیه کنید';
+            hasCriticalIssues = true;
+          } else if (stockPercentage <= 25) {
+            warningType = 'CRITICAL_STOCK';
+            severity = 'HIGH';
+            message = `موجودی ${ingredient.item?.name} بسیار کم است (${availableStock} ${ingredient.unit})`;
+            suggestedAction = 'فوری مواد اولیه را تهیه کنید';
+            hasCriticalIssues = true;
+          } else if (stockPercentage <= 50) {
+            warningType = 'LOW_STOCK';
+            severity = 'MEDIUM';
+            message = `موجودی ${ingredient.item?.name} کم است (${availableStock} ${ingredient.unit})`;
+            suggestedAction = 'مواد اولیه را تهیه کنید';
+          } else {
+            warningType = 'LOW_STOCK';
+            severity = 'LOW';
+            message = `موجودی ${ingredient.item?.name} در حد آستانه است`;
+            suggestedAction = 'موجودی را بررسی کنید';
+          }
+
+          warnings.push({
+            type: warningType as 'LOW_STOCK' | 'OUT_OF_STOCK' | 'CRITICAL_STOCK',
+            severity: severity as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL',
+            itemId: ingredient.itemId,
+            itemName: ingredient.item?.name || 'Unknown Item',
+            requiredQuantity,
+            availableQuantity: availableStock,
+            unit: ingredient.unit,
+            message,
+            suggestedAction
+          });
+
+          // Add to unavailable ingredients for reporting
+          unavailableIngredients.push({
+            itemId: ingredient.itemId,
+            itemName: ingredient.item?.name || 'Unknown Item',
+            requiredQuantity,
+            availableQuantity: availableStock,
+            unit: ingredient.unit
+          });
+        } else if (availableStock <= minStock && minStock > 0) {
+          // Low stock warning (below minimum threshold)
+          warnings.push({
+            type: 'LOW_STOCK' as 'LOW_STOCK' | 'OUT_OF_STOCK' | 'CRITICAL_STOCK',
+            severity: 'LOW' as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL',
+            itemId: ingredient.itemId,
+            itemName: ingredient.item?.name || 'Unknown Item',
+            requiredQuantity,
+            availableQuantity: availableStock,
+            unit: ingredient.unit,
+            message: `موجودی ${ingredient.item?.name} زیر حد آستانه است (${availableStock} ${ingredient.unit})`,
+            suggestedAction: 'موجودی را تکمیل کنید'
+          });
+        }
+      }
+
+      // Calculate profit margin
+      const menuPrice = Number(recipe.menuItem?.menuPrice || 0);
+      const profitMargin = menuPrice - (totalCost / orderQuantity);
+
+      return {
+        isAvailable: true, // Always allow orders to proceed
+        hasWarnings: warnings.length > 0,
+        warnings,
+        unavailableIngredients,
+        totalCost,
+        profitMargin: profitMargin * orderQuantity,
+        canProceedWithOverride: true, // Staff can always override
+        overrideRequired: hasCriticalIssues // Override required for critical issues
+      };
+
+    } catch (error) {
+      throw new AppError('Failed to validate flexible stock availability', 500, error);
+    }
+  }
+
+  /**
+   * Validate flexible stock for multiple order items at once
+   * Used during order creation to check all items with warnings
+   */
+  static async validateFlexibleOrderStockAvailability(
+    tenantId: string,
+    orderItems: { menuItemId: string; quantity: number }[]
+  ): Promise<{
+    isValid: boolean;
+    hasWarnings: boolean;
+    validationResults: (FlexibleStockValidationResult & { menuItemId: string })[];
+    totalCOGS: number;
+    totalProfitMargin: number;
+    canProceedWithOverride: boolean;
+    overrideRequired: boolean;
+    criticalWarnings: number;
+    totalWarnings: number;
+  }> {
+    try {
+      const validationResults = [];
+      let totalCOGS = 0;
+      let totalProfitMargin = 0;
+      let hasWarnings = false;
+      let overrideRequired = false;
+      let criticalWarnings = 0;
+      let totalWarnings = 0;
+
+      for (const item of orderItems) {
+        const validation = await this.validateFlexibleStockAvailability(
+          tenantId,
+          item.menuItemId,
+          item.quantity
+        );
+
+        validationResults.push({
+          ...validation,
+          menuItemId: item.menuItemId
+        });
+
+        if (validation.hasWarnings) {
+          hasWarnings = true;
+          totalWarnings += validation.warnings.length;
+          criticalWarnings += validation.warnings.filter(w => w.severity === 'CRITICAL' || w.severity === 'HIGH').length;
+        }
+
+        if (validation.overrideRequired) {
+          overrideRequired = true;
+        }
+
+        totalCOGS += validation.totalCost;
+        totalProfitMargin += validation.profitMargin;
+      }
+
+      return {
+        isValid: true, // Always allow orders to proceed
+        hasWarnings,
+        validationResults,
+        totalCOGS,
+        totalProfitMargin,
+        canProceedWithOverride: true,
+        overrideRequired,
+        criticalWarnings,
+        totalWarnings
+      };
+
+    } catch (error) {
+      throw new AppError('Failed to validate flexible order stock availability', 500, error);
+    }
+  }
+
+  /**
+   * Record stock override when staff proceeds with order despite stock warnings
+   */
+  static async recordStockOverride(
+    tenantId: string,
+    orderId: string,
+    menuItemId: string,
+    itemId: string,
+    itemName: string,
+    requiredQuantity: number,
+    availableQuantity: number,
+    overrideReason: string,
+    overrideType: 'STAFF_DECISION' | 'EMERGENCY_PURCHASE' | 'SUBSTITUTE_INGREDIENT' | 'VIP_CUSTOMER',
+    overriddenBy: string,
+    notes?: string
+  ): Promise<StockOverrideRecord> {
+    try {
+      const overrideRecord = await prisma.$executeRaw`
+        INSERT INTO stock_overrides (
+          id, tenant_id, order_id, menu_item_id, item_id, item_name,
+          required_quantity, available_quantity, override_reason, override_type,
+          overridden_by, overridden_at, notes
+        ) VALUES (
+          gen_random_uuid(), ${tenantId}, ${orderId}, ${menuItemId}, ${itemId}, ${itemName},
+          ${requiredQuantity}, ${availableQuantity}, ${overrideReason}, ${overrideType},
+          ${overriddenBy}, NOW(), ${notes || null}
+        ) RETURNING *
+      `;
+
+      return overrideRecord as unknown as StockOverrideRecord;
+    } catch (error) {
+      throw new AppError('Failed to record stock override', 500, error);
+    }
+  }
+
+  /**
+   * Get stock override analytics for business intelligence
+   */
+  static async getStockOverrideAnalytics(
+    tenantId: string,
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<{
+    totalOverrides: number;
+    overridesByType: Record<string, number>;
+    overridesByItem: Array<{
+      itemId: string;
+      itemName: string;
+      overrideCount: number;
+      totalDeficit: number;
+    }>;
+    overridesByStaff: Array<{
+      staffId: string;
+      staffName: string;
+      overrideCount: number;
+    }>;
+    frequentOverrideItems: Array<{
+      itemId: string;
+      itemName: string;
+      overrideCount: number;
+      avgDeficit: number;
+      lastOverride: Date;
+    }>;
+  }> {
+    try {
+      const whereClause: any = { tenantId };
+      
+      if (startDate || endDate) {
+        whereClause.overriddenAt = {};
+        if (startDate) whereClause.overriddenAt.gte = startDate;
+        if (endDate) whereClause.overriddenAt.lte = endDate;
+      }
+
+      const overrides = await prisma.$queryRaw`
+        SELECT so.*, u.name as overridden_by_name
+        FROM stock_overrides so
+        LEFT JOIN users u ON so.overridden_by = u.id
+        WHERE so.tenant_id = ${tenantId}
+        ${startDate ? `AND so.overridden_at >= ${startDate}` : ''}
+        ${endDate ? `AND so.overridden_at <= ${endDate}` : ''}
+        ORDER BY so.overridden_at DESC
+      ` as any[];
+
+      // Calculate analytics
+      const totalOverrides = overrides.length;
+      
+      const overridesByType = overrides.reduce((acc: Record<string, number>, override: any) => {
+        acc[override.override_type] = (acc[override.override_type] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const overridesByItem = overrides.reduce((acc: Array<{
+        itemId: string;
+        itemName: string;
+        overrideCount: number;
+        totalDeficit: number;
+      }>, override: any) => {
+        const existing = acc.find(item => item.itemId === override.item_id);
+        if (existing) {
+          existing.overrideCount += 1;
+          existing.totalDeficit += (override.required_quantity - override.available_quantity);
+        } else {
+          acc.push({
+            itemId: override.item_id,
+            itemName: override.item_name,
+            overrideCount: 1,
+            totalDeficit: override.required_quantity - override.available_quantity
+          });
+        }
+        return acc;
+      }, [] as Array<{
+        itemId: string;
+        itemName: string;
+        overrideCount: number;
+        totalDeficit: number;
+      }>);
+
+      const overridesByStaff = overrides.reduce((acc: Array<{
+        staffId: string;
+        staffName: string;
+        overrideCount: number;
+      }>, override: any) => {
+        const existing = acc.find(staff => staff.staffId === override.overridden_by);
+        if (existing) {
+          existing.overrideCount += 1;
+        } else {
+          acc.push({
+            staffId: override.overridden_by,
+            staffName: override.overridden_by_name || 'Unknown',
+            overrideCount: 1
+          });
+        }
+        return acc;
+      }, [] as Array<{
+        staffId: string;
+        staffName: string;
+        overrideCount: number;
+      }>);
+
+      const frequentOverrideItems = overridesByItem
+        .sort((a: any, b: any) => b.overrideCount - a.overrideCount)
+        .slice(0, 10)
+        .map((item: any) => ({
+          ...item,
+          avgDeficit: item.totalDeficit / item.overrideCount,
+          lastOverride: overrides.find((o: any) => o.item_id === item.itemId)?.overridden_at || new Date()
+        }));
+
+      return {
+        totalOverrides,
+        overridesByType,
+        overridesByItem,
+        overridesByStaff,
+        frequentOverrideItems
+      };
+
+    } catch (error) {
+      throw new AppError('Failed to get stock override analytics', 500, error);
     }
   }
 

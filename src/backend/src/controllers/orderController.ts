@@ -3,6 +3,7 @@ import { OrderService, CreateOrderData, PaymentData } from '../services/orderSer
 import { OrderAccountingIntegrationService } from '../services/orderAccountingIntegrationService';
 import { OrderOptionsService } from '../services/orderOptionsService';
 import { OrderCalculationService, OrderOptions } from '../services/orderCalculationService';
+import { OrderInventoryIntegrationService } from '../services/orderInventoryIntegrationService';
 import { AppError } from '../utils/AppError';
 import { OrderStatus, OrderType } from '../../../shared/generated/client';
 
@@ -68,6 +69,17 @@ export class OrderController {
         }
       }
 
+      // Perform flexible stock validation
+      const orderItemsForValidation = items.map(item => ({
+        menuItemId: item.itemId,
+        quantity: item.quantity
+      }));
+
+      const stockValidation = await OrderInventoryIntegrationService.validateFlexibleOrderStockAvailability(
+        tenantId,
+        orderItemsForValidation
+      );
+
       const orderData: CreateOrderData = {
         tenantId,
         orderType,
@@ -93,10 +105,40 @@ export class OrderController {
 
       const order = await orderService.createOrderWithTableUpdate(orderData);
 
+      // Record stock overrides if any warnings were present and order was created
+      if (stockValidation.hasWarnings && req.body.stockOverrides) {
+        for (const override of req.body.stockOverrides) {
+          await OrderInventoryIntegrationService.recordStockOverride(
+            tenantId,
+            order.id,
+            override.menuItemId,
+            override.itemId,
+            override.itemName,
+            override.requiredQuantity,
+            override.availableQuantity,
+            override.overrideReason,
+            override.overrideType,
+            createdBy,
+            override.notes
+          );
+        }
+      }
+
       res.status(201).json({
         success: true,
-        data: order,
-        message: 'Order created successfully'
+        data: {
+          order,
+          stockValidation: {
+            hasWarnings: stockValidation.hasWarnings,
+            warnings: stockValidation.validationResults.flatMap(result => result.warnings),
+            criticalWarnings: stockValidation.criticalWarnings,
+            totalWarnings: stockValidation.totalWarnings,
+            overrideRequired: stockValidation.overrideRequired
+          }
+        },
+        message: stockValidation.hasWarnings 
+          ? 'Order created successfully with stock warnings' 
+          : 'Order created successfully'
       });
     } catch (error) {
       next(error);

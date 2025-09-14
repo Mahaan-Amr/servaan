@@ -7,6 +7,7 @@ import { requireTenant } from '../middlewares/tenantMiddleware';
 import { notificationService } from '../services/notificationService';
 import { getStockDeficits, getDeficitSummary } from '../services/inventoryService';
 import { InventoryController } from '../controllers/inventoryController';
+import stockValidationRoutes from './stockValidationRoutes';
 
 const router = Router();
 
@@ -978,5 +979,8 @@ router.get('/deficits/summary', authenticate, requireTenant, async (req, res) =>
     });
   }
 });
+
+// Mount stock validation routes
+router.use('/', stockValidationRoutes);
 
 export { router as inventoryRoutes }; 
