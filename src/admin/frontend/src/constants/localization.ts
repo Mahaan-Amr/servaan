@@ -522,7 +522,7 @@ export const getLocalization = (locale: Locale = 'fa') => {
 export const t = (key: string, locale: Locale = 'fa'): string => {
   const loc = getLocalization(locale);
   const keys = key.split('.');
-  let value: any = loc;
+  let value: unknown = loc;
   
   for (const k of keys) {
     if (value && typeof value === 'object' && k in value) {

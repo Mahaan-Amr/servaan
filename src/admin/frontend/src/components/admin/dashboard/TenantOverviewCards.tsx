@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { formatCurrency as formatCurrencyUtil } from '../../../../shared/utils/currencyUtils';
+import { formatCurrency as formatCurrencyUtil } from '../../../../../shared/utils/currencyUtils';
 import { 
   Building2, 
   Users, 
