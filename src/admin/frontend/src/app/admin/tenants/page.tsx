@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
-  Search, 
-  Filter, 
   Plus, 
   Download, 
   Eye, 
@@ -13,7 +11,6 @@ import {
   Building2,
   Users,
   DollarSign,
-  Activity,
   CheckCircle,
   XCircle,
   AlertTriangle,
@@ -77,9 +74,10 @@ function TenantsPage() {
       if (params.page) setPagination(prev => ({ ...prev, page: params.page! }));
       if (params.limit) setPagination(prev => ({ ...prev, limit: params.limit! }));
       
-    } catch (error: any) {
-      setError(error.message);
-      toast.error(error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'خطا در بارگذاری داده‌ها';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -88,7 +86,7 @@ function TenantsPage() {
   // Load data on mount
   useEffect(() => {
     loadTenants();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle filters change
   const handleFiltersChange = (newFilters: Partial<TenantListParams>) => {
@@ -108,10 +106,10 @@ function TenantsPage() {
   const refreshBypassCache = () => loadTenants({ refresh: true });
 
   // Handle limit change
-  const handleLimitChange = (limit: number) => {
-    setPagination(prev => ({ ...prev, limit }));
-    loadTenants({ limit, page: 1 });
-  };
+  // const handleLimitChange = (limit: number) => {
+  //   setPagination(prev => ({ ...prev, limit }));
+  //   loadTenants({ limit, page: 1 });
+  // };
 
   // Handle page change
   const handlePageChange = (page: number) => {
@@ -173,7 +171,7 @@ function TenantsPage() {
 
   // Toggle tenant status with optimistic update
   const handleToggleStatus = async (tenant: Tenant) => {
-    const targetActive = !tenant.isActive && tenant.status !== 'ACTIVE';
+    // const targetActive = !tenant.isActive && tenant.status !== 'ACTIVE';
     const newIsActive = !(tenant.isActive || tenant.status === 'ACTIVE');
     const tenantId = tenant.id;
     setStatusUpdatingId(tenantId);
@@ -189,10 +187,11 @@ function TenantsPage() {
         await deactivateTenant(tenantId);
         toast.success('مستأجر غیرفعال شد');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // rollback
       setTenants(prevTenants);
-      toast.error(error.message || 'خطا در تغییر وضعیت مستأجر');
+      const errorMessage = error instanceof Error ? error.message : 'خطا در تغییر وضعیت مستأجر';
+      toast.error(errorMessage);
     } finally {
       setStatusUpdatingId(null);
     }
@@ -209,8 +208,9 @@ function TenantsPage() {
     try {
       await exportTenants(format);
       toast.success(`داده‌ها با موفقیت به فرمت ${format} صادر شد`);
-    } catch (error: any) {
-      toast.error(error.message || 'خطا در صادرات داده‌ها');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'خطا در صادرات داده‌ها';
+      toast.error(errorMessage);
     }
   };
 

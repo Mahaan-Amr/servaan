@@ -8,10 +8,8 @@ import {
   DollarSign, 
   Users, 
   MapPin, 
-  Building2,
   X,
-  Save,
-  RotateCcw
+  Save
 } from 'lucide-react';
 import { TenantListParams } from '@/services/admin/tenants/tenantService';
 import toast from 'react-hot-toast';
@@ -57,7 +55,7 @@ export default function AdvancedSearchFilters({
     onFiltersChange(filters);
   }, [filters, onFiltersChange]);
 
-  const handleFilterChange = (key: keyof TenantListParams, value: any) => {
+  const handleFilterChange = (key: keyof TenantListParams, value: unknown) => {
     setFilters(prev => ({
       ...prev,
       [key]: value || undefined

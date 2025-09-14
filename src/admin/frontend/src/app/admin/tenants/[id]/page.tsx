@@ -5,10 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { 
   ArrowLeft, 
   Edit, 
-  MoreHorizontal, 
   Building2, 
   Users, 
-  DollarSign, 
   Activity, 
   CheckCircle, 
   XCircle, 
@@ -19,8 +17,6 @@ import {
   Phone,
   Globe,
   BarChart3,
-  TrendingUp,
-  TrendingDown,
   RefreshCw
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -28,7 +24,7 @@ import { getTenantById, getTenantMetrics, TenantDetail, TenantMetrics, activateT
 import { TenantPlan } from '@/types/admin';
 import { formatAdminDate } from '@/utils/persianDate';
 import { withAdminAuth } from '@/contexts/AdminAuthContext';
-import TenantUsersResetPassword from './TenantUsersResetPassword';
+// import TenantUsersResetPassword from './TenantUsersResetPassword';
 import TenantMetricsDashboard from '@/components/admin/tenants/TenantMetricsDashboard';
 import TenantActivityTimeline from '@/components/admin/tenants/TenantActivityTimeline';
 import TenantUserManagement from '@/components/admin/tenants/TenantUserManagement';
@@ -59,9 +55,10 @@ function TenantDetailPage() {
       setTenant(tenantData);
       setMetrics(metricsData);
       
-    } catch (error: any) {
-      setError(error.message);
-      toast.error(error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'خطا در بارگذاری داده‌ها';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -72,7 +69,7 @@ function TenantDetailPage() {
     if (tenantId) {
       loadTenantData();
     }
-  }, [tenantId]);
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Get plan badge
   const getPlanBadge = (plan: TenantPlan) => {
@@ -110,7 +107,7 @@ function TenantDetailPage() {
   };
 
   // Format currency
-  const formatToman = (amountRial: number) => `${Math.floor((amountRial || 0)/10).toLocaleString('fa-IR')} تومان`;
+  // const formatToman = (amountRial: number) => `${Math.floor((amountRial || 0)/10).toLocaleString('fa-IR')} تومان`;
 
   // Handle refresh
   const handleRefresh = () => {
@@ -131,8 +128,9 @@ function TenantDetailPage() {
         setTenant({ ...tenant, isActive: true });
         toast.success('مستأجر فعال شد');
       }
-    } catch (e: any) {
-      toast.error(e.message || 'خطا در تغییر وضعیت');
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'خطا در تغییر وضعیت';
+      toast.error(errorMessage);
     } finally {
       setStatusLoading(false);
     }
@@ -237,7 +235,7 @@ function TenantDetailPage() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as 'overview' | 'metrics' | 'users' | 'activity')}
                   className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab.id
                       ? 'border-admin-primary text-admin-primary'

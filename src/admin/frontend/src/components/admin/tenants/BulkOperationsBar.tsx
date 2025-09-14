@@ -7,7 +7,6 @@ import {
   Download, 
   Power, 
   PowerOff, 
-  Trash2,
   AlertTriangle,
   CheckCircle,
   XCircle
@@ -21,7 +20,7 @@ interface BulkOperationsBarProps {
   selectedTenants: string[];
   onSelectionChange: (selectedIds: string[]) => void;
   onRefresh: () => void;
-  currentFilters?: any; // Current search/filter state
+  currentFilters?: Record<string, unknown>; // Current search/filter state
 }
 
 export default function BulkOperationsBar({ 
@@ -39,7 +38,7 @@ export default function BulkOperationsBar({
   } | null>(null);
 
   const allSelected = selectedTenants.length === tenants.length && tenants.length > 0;
-  const someSelected = selectedTenants.length > 0 && selectedTenants.length < tenants.length;
+  // const someSelected = selectedTenants.length > 0 && selectedTenants.length < tenants.length;
 
   const handleSelectAll = () => {
     if (allSelected) {
@@ -49,13 +48,13 @@ export default function BulkOperationsBar({
     }
   };
 
-  const handleSelectTenant = (tenantId: string) => {
-    if (selectedTenants.includes(tenantId)) {
-      onSelectionChange(selectedTenants.filter(id => id !== tenantId));
-    } else {
-      onSelectionChange([...selectedTenants, tenantId]);
-    }
-  };
+  // const handleSelectTenant = (tenantId: string) => {
+  //   if (selectedTenants.includes(tenantId)) {
+  //     onSelectionChange(selectedTenants.filter(id => id !== tenantId));
+  //   } else {
+  //     onSelectionChange([...selectedTenants, tenantId]);
+  //   }
+  // };
 
   const handleBulkAction = async (action: 'activate' | 'deactivate' | 'export', format?: 'csv' | 'excel' | 'pdf') => {
     if (selectedTenants.length === 0) {
@@ -93,8 +92,9 @@ export default function BulkOperationsBar({
         onRefresh();
         onSelectionChange([]);
       }
-    } catch (error: any) {
-      toast.error(error.message || 'خطا در انجام عملیات گروهی');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'خطا در انجام عملیات گروهی';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
       setShowConfirm(false);

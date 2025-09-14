@@ -4,14 +4,8 @@
 import adminApi from '../../adminAuthService';
 import { 
   Tenant, 
-  TenantStatus, 
   TenantPlan, 
-  TenantActivityParams,
-  TenantActivityResponse,
-  TenantGrowthAnalytics,
-  TenantRevenueAnalytics,
-  BulkStatusUpdateRequest,
-  BulkStatusUpdateResponse
+  TenantActivityParams
 } from '../../../types/admin';
 
 export interface TenantListParams {
@@ -205,9 +199,10 @@ export const getTenants = async (params: TenantListParams): Promise<TenantListRe
 
     const response = await adminApi.get(`/admin/tenants?${queryParams.toString()}`);
     return response.data.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching tenants:', error);
-    throw new Error(error.response?.data?.message || 'خطا در دریافت لیست مستأجرین');
+    const errorMessage = error instanceof Error ? error.message : 'خطا در دریافت لیست مستأجرین';
+    throw new Error(errorMessage);
   }
 };
 
@@ -218,9 +213,10 @@ export const getTenantById = async (id: string): Promise<TenantDetail> => {
   try {
     const response = await adminApi.get(`/admin/tenants/${id}`);
     return response.data.data.tenant;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching tenant details:', error);
-    throw new Error(error.response?.data?.message || 'خطا در دریافت جزئیات مستأجر');
+    const errorMessage = error instanceof Error ? error.message : 'خطا در دریافت جزئیات مستأجر';
+    throw new Error(errorMessage);
   }
 };
 
@@ -231,9 +227,10 @@ export const getTenantMetrics = async (id: string): Promise<TenantMetrics> => {
   try {
     const response = await adminApi.get(`/admin/tenants/${id}/metrics`);
     return response.data.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching tenant metrics:', error);
-    throw new Error(error.response?.data?.message || 'خطا در دریافت متریک‌های مستأجر');
+    const errorMessage = error instanceof Error ? error.message : 'خطا در دریافت متریک‌های مستأجر';
+    throw new Error(errorMessage);
   }
 };
 
@@ -244,9 +241,10 @@ export const updateTenant = async (id: string, data: TenantUpdateData): Promise<
   try {
     const response = await adminApi.put(`/admin/tenants/${id}`, data);
     return response.data.data.tenant;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating tenant:', error);
-    throw new Error(error.response?.data?.message || 'خطا در به‌روزرسانی مستأجر');
+    const errorMessage = error instanceof Error ? error.message : 'خطا در به‌روزرسانی مستأجر';
+    throw new Error(errorMessage);
   }
 };
 
