@@ -16,13 +16,30 @@ export class PersianDate {
   private options: PersianDateOptions;
 
   constructor(date: Date | string | number, options: PersianDateOptions = {}) {
-    this.date = typeof date === 'string' ? parseISO(date) : new Date(date);
-    this.options = {
-      locale: 'fa',
-      format: 'short',
-      timezone: 'Asia/Tehran',
-      ...options,
-    };
+    try {
+      this.date = typeof date === 'string' ? parseISO(date) : new Date(date);
+      
+      // Validate the date
+      if (isNaN(this.date.getTime())) {
+        this.date = new Date(); // Fallback to current date
+      }
+      
+      this.options = {
+        locale: 'fa',
+        format: 'short',
+        timezone: 'Asia/Tehran',
+        ...options,
+      };
+    } catch (error) {
+      console.error('Error creating PersianDate:', error);
+      this.date = new Date(); // Fallback to current date
+      this.options = {
+        locale: 'fa',
+        format: 'short',
+        timezone: 'Asia/Tehran',
+        ...options,
+      };
+    }
   }
 
   /**
@@ -234,8 +251,18 @@ export const formatAdminDate = (
   date: Date | string | number,
   options: PersianDateOptions = {}
 ): string => {
-  const persianDate = new PersianDate(date, options);
-  return persianDate.format();
+  try {
+    // Validate input date
+    if (!date) {
+      return 'تاریخ نامعتبر';
+    }
+    
+    const persianDate = new PersianDate(date, options);
+    return persianDate.format();
+  } catch (error) {
+    console.error('Error formatting admin date:', error);
+    return 'تاریخ نامعتبر';
+  }
 };
 
 /**
@@ -282,8 +309,13 @@ export const getCurrentPersianDate = (): string => {
  * Get current time in Persian format
  */
 export const getCurrentPersianTime = (): string => {
-  const now = new Date();
-  return format(now, 'HH:mm:ss');
+  try {
+    const now = new Date();
+    return format(now, 'HH:mm:ss');
+  } catch (error) {
+    console.error('Error getting current Persian time:', error);
+    return new Date().toLocaleTimeString('fa-IR');
+  }
 };
 
 /**

@@ -210,25 +210,45 @@ export default function TenantOverviewCards({
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fa-IR', {
-      style: 'currency',
-      currency: 'IRR',
-      minimumFractionDigits: 0,
-    }).format(amount);
+    // Validate amount and handle invalid values
+    if (amount === null || amount === undefined || isNaN(amount)) {
+      return '۰ ریال';
+    }
+    
+    try {
+      return new Intl.NumberFormat('fa-IR', {
+        style: 'currency',
+        currency: 'IRR',
+        minimumFractionDigits: 0,
+      }).format(amount);
+    } catch (error) {
+      console.error('Error formatting currency:', error);
+      return '۰ ریال';
+    }
   };
 
   const formatRelativeTime = (date: Date) => {
-    const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    // Validate date and handle invalid dates
+    if (!date || isNaN(date.getTime())) {
+      return 'تاریخ نامعتبر';
+    }
     
-    if (diffInMinutes < 1) return 'همین الان';
-    if (diffInMinutes < 60) return `${diffInMinutes} دقیقه پیش`;
-    
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `${diffInHours} ساعت پیش`;
-    
-    const diffInDays = Math.floor(diffInHours / 24);
-    return `${diffInDays} روز پیش`;
+    try {
+      const now = new Date();
+      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+      
+      if (diffInMinutes < 1) return 'همین الان';
+      if (diffInMinutes < 60) return `${diffInMinutes} دقیقه پیش`;
+      
+      const diffInHours = Math.floor(diffInMinutes / 60);
+      if (diffInHours < 24) return `${diffInHours} ساعت پیش`;
+      
+      const diffInDays = Math.floor(diffInHours / 24);
+      return `${diffInDays} روز پیش`;
+    } catch (error) {
+      console.error('Error formatting relative time:', error);
+      return 'تاریخ نامعتبر';
+    }
   };
 
   if (loading) {

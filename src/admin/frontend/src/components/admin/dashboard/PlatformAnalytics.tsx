@@ -64,13 +64,19 @@ export default function PlatformAnalytics({
         getUserActivityData(days)
       ]);
 
-      setTenantGrowthData(growthData);
-      setRevenueData(revenueData);
-      setUserActivityData(activityData);
+      // Ensure we have valid data arrays
+      setTenantGrowthData(Array.isArray(growthData) ? growthData : []);
+      setRevenueData(Array.isArray(revenueData) ? revenueData : []);
+      setUserActivityData(Array.isArray(activityData) ? activityData : []);
       setLastUpdate(new Date());
     } catch (error: any) {
       console.error('Error fetching analytics data:', error);
       toast.error('خطا در دریافت اطلاعات تحلیل‌ها');
+      
+      // Set empty arrays as fallback
+      setTenantGrowthData([]);
+      setRevenueData([]);
+      setUserActivityData([]);
     } finally {
       setLoading(false);
     }
@@ -96,10 +102,20 @@ export default function PlatformAnalytics({
   };
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('fa-IR', {
-      month: 'short',
-      day: 'numeric'
-    }).format(date);
+    // Validate date and handle invalid dates
+    if (!date || isNaN(date.getTime())) {
+      return 'تاریخ نامعتبر';
+    }
+    
+    try {
+      return new Intl.DateTimeFormat('fa-IR', {
+        month: 'short',
+        day: 'numeric'
+      }).format(date);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'تاریخ نامعتبر';
+    }
   };
 
   const getPeriodText = (period: string) => {
@@ -151,7 +167,11 @@ export default function PlatformAnalytics({
 
   // Mock chart data for visualization
   const generateMockChartData = (data: any[], label: string, color: string): ChartData => {
-    const labels = data.map(item => formatDate(item.date));
+    const labels = data.map(item => {
+      // Ensure we have a valid date
+      const date = item.date instanceof Date ? item.date : new Date(item.date);
+      return formatDate(date);
+    });
     const values = data.map(item => item.count || item.amount || 0);
     
     return {
