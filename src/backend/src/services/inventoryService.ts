@@ -415,7 +415,7 @@ export async function checkStockAvailability(itemId: string, requestedQuantity: 
  * Get current inventory price for an item (WAC)
  * Used by recipe system to fetch ingredient prices
  */
-export async function getInventoryPrice(itemId: string): Promise<{
+export async function getInventoryPrice(itemId: string, tenantId: string): Promise<{
   price: number;
   priceSource: 'WAC' | 'MANUAL' | 'NONE';
   lastUpdated: Date;
@@ -427,7 +427,7 @@ export async function getInventoryPrice(itemId: string): Promise<{
 }> {
   try {
     // Get current WAC
-    const currentPrice = await calculateWeightedAverageCost(itemId, 'defaultTenantId'); // Assuming a default tenantId for this context
+    const currentPrice = await calculateWeightedAverageCost(itemId, tenantId);
     
     // Get price history from recent IN transactions
     const priceHistory = await prisma.inventoryEntry.findMany({

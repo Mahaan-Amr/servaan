@@ -40,7 +40,7 @@ export class InventoryController {
         throw new AppError('Item not found', 404);
       }
 
-      const priceInfo = await getInventoryPrice(itemId);
+      const priceInfo = await getInventoryPrice(itemId, tenantId);
 
       res.json({
         success: true,

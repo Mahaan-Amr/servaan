@@ -411,33 +411,12 @@ export default function MenuManagementPage() {
     });
   };
 
-    // Add ingredient to recipe with auto-fetch price
+  // Add ingredient to recipe (price is already fetched automatically)
   const addIngredient = async () => {
     if (newIngredient.itemId && newIngredient.quantity > 0 && newIngredient.unit) {
       try {
-        // Always try to fetch the latest price from inventory for consistency
-        let finalUnitCost = newIngredient.unitCost;
-        try {
-          const inventoryPrice = await InventoryPriceService.getInventoryPrice(newIngredient.itemId);
-          finalUnitCost = inventoryPrice.price;
-          if (newIngredient.unitCost === 0) {
-            toast.success(`قیمت ${inventoryPrice.price.toLocaleString('fa-IR')} تومان از موجودی دریافت شد`);
-          } else if (newIngredient.unitCost !== inventoryPrice.price) {
-            toast.success(`قیمت به‌روزرسانی شد: ${inventoryPrice.price.toLocaleString('fa-IR')} تومان`);
-          }
-        } catch (error) {
-          console.warn('Failed to fetch inventory price:', error);
-          if (finalUnitCost === 0) {
-            toast.error('قیمت از موجودی دریافت نشد. لطفاً قیمت را به صورت دستی وارد کنید.');
-          }
-        }
-
-        const ingredientWithPrice = {
-          ...newIngredient,
-          unitCost: finalUnitCost
-        };
-
-        setIngredients([...ingredients, ingredientWithPrice]);
+        // Price and unit are already set when item was selected
+        setIngredients([...ingredients, newIngredient]);
         setNewIngredient({
           itemId: '',
           quantity: 1,
@@ -445,6 +424,8 @@ export default function MenuManagementPage() {
           unitCost: 0,
           isOptional: false
         });
+        
+        toast.success('ماده اولیه با موفقیت افزوده شد');
       } catch (error) {
         toast.error('خطا در افزودن ماده اولیه');
         console.error('Failed to add ingredient:', error);
@@ -457,31 +438,49 @@ export default function MenuManagementPage() {
     setIngredients(ingredients.filter((_, i) => i !== index));
   };
 
-  // Sync all ingredient prices from inventory
-  const syncIngredientPrices = async () => {
-    try {
-      setLoading(true);
-      const result = await InventoryPriceService.syncIngredientPrices();
-      toast.success(`تعداد ${result.synced} قیمت با موفقیت همگام‌سازی شد`);
-      
-      // Update local ingredients with synced prices
-      if (result.changes.length > 0) {
-        const updatedIngredients = ingredients.map(ingredient => {
-          const change = result.changes.find(c => c.itemName === ingredient.itemId);
-          if (change) {
-            return { ...ingredient, unitCost: change.newPrice };
-          }
-          return ingredient;
-        });
-        setIngredients(updatedIngredients);
+  // Auto-update ingredient prices when inventory prices change
+  const updateIngredientPrices = useCallback(async () => {
+    if (ingredients.length > 0) {
+      try {
+        const updatedIngredients = await Promise.all(
+          ingredients.map(async (ingredient) => {
+            try {
+              const inventoryPrice = await InventoryPriceService.getInventoryPrice(ingredient.itemId);
+              return {
+                ...ingredient,
+                unitCost: inventoryPrice.price
+              };
+            } catch (error) {
+              console.warn(`Failed to update price for ingredient ${ingredient.itemId}:`, error);
+              return ingredient; // Keep original price if update fails
+            }
+          })
+        );
+        
+        // Only update if prices actually changed
+        const hasChanges = updatedIngredients.some((updated, index) => 
+          updated.unitCost !== ingredients[index].unitCost
+        );
+        
+        if (hasChanges) {
+          setIngredients(updatedIngredients);
+        }
+      } catch (error) {
+        console.warn('Failed to update ingredient prices:', error);
       }
-    } catch (error) {
-      toast.error('خطا در همگام‌سازی قیمت‌ها');
-      console.error('Failed to sync prices:', error);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [ingredients]);
+
+  useEffect(() => {
+    // Update prices every 30 seconds to catch inventory changes
+    const interval = setInterval(updateIngredientPrices, 30000);
+    
+    // Also update immediately when ingredients change
+    updateIngredientPrices();
+
+    return () => clearInterval(interval);
+  }, [updateIngredientPrices]);
+
 
   const stats = getStats();
 
@@ -1095,16 +1094,6 @@ export default function MenuManagementPage() {
                     دستور پخت و مواد اولیه (اختیاری)
                   </h3>
                   <div className="flex items-center space-x-2 space-x-reverse">
-                    {showIngredientsSection && ingredients.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={syncIngredientPrices}
-                        disabled={loading}
-                        className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                      >
-                        {loading ? 'در حال همگام‌سازی...' : 'همگام‌سازی قیمت‌ها'}
-                      </button>
-                    )}
                     <button
                       type="button"
                       onClick={() => setShowIngredientsSection(!showIngredientsSection)}
@@ -1184,26 +1173,41 @@ export default function MenuManagementPage() {
                             value={newIngredient.itemId}
                             onChange={async (e) => {
                               const selectedItem = inventoryItems.find(item => item.id === e.target.value);
-                              setNewIngredient({
-                                ...newIngredient, 
-                                itemId: e.target.value,
-                                unit: selectedItem?.unit || ''
-                              });
                               
-                              // Auto-fetch price when item is selected
-                              if (e.target.value) {
+                              if (e.target.value && selectedItem) {
                                 try {
+                                  // Auto-fetch price when item is selected
                                   const inventoryPrice = await InventoryPriceService.getInventoryPrice(e.target.value);
-                                  setNewIngredient(prev => ({
-                                    ...prev,
+                                  setNewIngredient({
+                                    ...newIngredient,
                                     itemId: e.target.value,
-                                    unit: selectedItem?.unit || '',
+                                    unit: selectedItem.unit,
                                     unitCost: inventoryPrice.price
-                                  }));
-                                  toast.success(`قیمت ${inventoryPrice.price.toLocaleString('fa-IR')} تومان از موجودی دریافت شد`);
+                                  });
+                                  
+                                  if (inventoryPrice.price > 0) {
+                                    toast.success(`قیمت ${inventoryPrice.price.toLocaleString('fa-IR')} تومان از موجودی دریافت شد`);
+                                  } else {
+                                    toast.error('قیمت این کالا در موجودی تعریف نشده است');
+                                  }
                                 } catch (error) {
                                   console.warn('Failed to auto-fetch inventory price:', error);
+                                  setNewIngredient({
+                                    ...newIngredient,
+                                    itemId: e.target.value,
+                                    unit: selectedItem.unit,
+                                    unitCost: 0
+                                  });
+                                  toast.error('خطا در دریافت قیمت از موجودی');
                                 }
+                              } else {
+                                // Reset when no item selected
+                                setNewIngredient({
+                                  ...newIngredient,
+                                  itemId: '',
+                                  unit: '',
+                                  unitCost: 0
+                                });
                               }
                             }}
                             className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -1235,53 +1239,23 @@ export default function MenuManagementPage() {
                           <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                             واحد
                           </label>
-                          <input
-                            type="text"
-                            value={newIngredient.unit}
-                            onChange={(e) => setNewIngredient({...newIngredient, unit: e.target.value})}
-                            placeholder="کیلوگرم، گرم، لیتر..."
-                            className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                          />
+                          <div className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300">
+                            {newIngredient.unit || 'انتخاب کالا برای نمایش واحد'}
+                          </div>
                         </div>
                         
                         <div>
                           <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                             قیمت واحد (تومان)
                           </label>
-                          <div className="flex items-center space-x-2 space-x-reverse">
-                            <input
-                              type="number"
-                              min="0"
-                              value={newIngredient.unitCost}
-                              onChange={(e) => setNewIngredient({...newIngredient, unitCost: Number(e.target.value) || 0})}
-                              className="flex-1 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                              placeholder="خودکار از موجودی"
-                            />
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                if (newIngredient.itemId) {
-                                  try {
-                                    const inventoryPrice = await InventoryPriceService.getInventoryPrice(newIngredient.itemId);
-                                    setNewIngredient({...newIngredient, unitCost: inventoryPrice.price});
-                                    toast.success(`قیمت ${inventoryPrice.price.toLocaleString('fa-IR')} تومان از موجودی دریافت شد`);
-                                  } catch (error) {
-                                    toast.error('خطا در دریافت قیمت از موجودی');
-                                    console.error('Failed to fetch inventory price:', error);
-                                  }
-                                }
-                              }}
-                              disabled={!newIngredient.itemId}
-                              className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                              title="دریافت قیمت از موجودی"
-                            >
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                              </svg>
-                            </button>
+                          <div className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300">
+                            {newIngredient.unitCost > 0 
+                              ? `${newIngredient.unitCost.toLocaleString('fa-IR')} تومان` 
+                              : 'انتخاب کالا برای نمایش قیمت'
+                            }
                           </div>
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            قیمت به صورت خودکار از موجودی دریافت می‌شود
+                            قیمت به صورت خودکار از موجودی محاسبه می‌شود
                           </p>
                         </div>
                       </div>
