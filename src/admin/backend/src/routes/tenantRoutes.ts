@@ -114,25 +114,54 @@ router.post('/', authenticateAdmin, requireRole(['SUPER_ADMIN', 'PLATFORM_ADMIN'
 
 /**
  * GET /api/admin/tenants/export
- * Export tenants data in various formats
+ * Export tenants data in various formats with enhanced filtering
  */
 router.get('/export', authenticateAdmin, async (req, res) => {
   try {
-    const { format = 'csv', search, status, plan } = req.query;
+    const { 
+      format = 'csv', 
+      search, 
+      status, 
+      plan,
+      businessType,
+      city,
+      country,
+      createdFrom,
+      createdTo,
+      revenueFrom,
+      revenueTo,
+      userCountFrom,
+      userCountTo,
+      hasFeatures,
+      selectedTenants
+    } = req.query;
     
     const exportData = await TenantService.exportTenants({
       format: format as 'csv' | 'excel' | 'pdf',
       search: search as string,
       status: status as string,
-      plan: plan as string
+      plan: plan as string,
+      businessType: businessType as string,
+      city: city as string,
+      country: country as string,
+      createdFrom: createdFrom as string,
+      createdTo: createdTo as string,
+      revenueFrom: revenueFrom ? Number(revenueFrom) : undefined,
+      revenueTo: revenueTo ? Number(revenueTo) : undefined,
+      userCountFrom: userCountFrom ? Number(userCountFrom) : undefined,
+      userCountTo: userCountTo ? Number(userCountTo) : undefined,
+      hasFeatures: hasFeatures ? (hasFeatures as string).split(',') : undefined,
+      selectedTenants: selectedTenants ? (selectedTenants as string).split(',') : undefined
     });
 
     // Set appropriate headers for file download
-    const filename = `tenants-export-${new Date().toISOString().split('T')[0]}.${format}`;
+    const timestamp = new Date().toISOString().split('T')[0];
+    const tenantCount = selectedTenants ? (selectedTenants as string).split(',').length : 'all';
+    const filename = `tenants-export-${tenantCount}-${timestamp}.${format}`;
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     
     if (format === 'csv') {
-      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     } else if (format === 'excel') {
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     } else if (format === 'pdf') {
@@ -143,7 +172,23 @@ router.get('/export', authenticateAdmin, async (req, res) => {
     await auditLog({
       adminUserId: req.adminUser!.id,
       action: 'TENANTS_EXPORTED',
-      details: { format, search, status, plan },
+      details: { 
+        format, 
+        search, 
+        status, 
+        plan,
+        businessType,
+        city,
+        country,
+        createdFrom,
+        createdTo,
+        revenueFrom,
+        revenueTo,
+        userCountFrom,
+        userCountTo,
+        hasFeatures,
+        selectedTenants: selectedTenants ? (selectedTenants as string).split(',').length : 'all'
+      },
       ipAddress: req.ip || 'unknown'
     });
 
@@ -655,53 +700,6 @@ router.get('/analytics/revenue', authenticateAdmin, async (req, res) => {
       success: false,
       error: 'خطا در دریافت تحلیل درآمد مستأجرین',
       message: 'Failed to fetch tenant revenue analytics'
-    });
-  }
-});
-
-/**
- * GET /api/admin/tenants/export
- * Export tenants data in various formats
- */
-router.get('/export', authenticateAdmin, async (req, res) => {
-  try {
-    const { format = 'csv', search, status, plan } = req.query;
-    
-    const exportData = await TenantService.exportTenants({
-      format: format as 'csv' | 'excel' | 'pdf',
-      search: search as string,
-      status: status as string,
-      plan: plan as string
-    });
-
-    // Set appropriate headers for file download
-    const filename = `tenants-export-${new Date().toISOString().split('T')[0]}.${format}`;
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    
-    if (format === 'csv') {
-      res.setHeader('Content-Type', 'text/csv');
-    } else if (format === 'excel') {
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    } else if (format === 'pdf') {
-      res.setHeader('Content-Type', 'application/pdf');
-    }
-
-    // Audit log
-    await auditLog({
-      adminUserId: req.adminUser!.id,
-      action: 'TENANTS_EXPORTED',
-      details: { format, search, status, plan },
-      ipAddress: req.ip || 'unknown'
-    });
-
-    return res.send(exportData);
-
-  } catch (error) {
-    console.error('Admin tenants export error:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'خطا در صادرات داده‌های مستأجرین',
-      message: 'Failed to export tenants data'
     });
   }
 });

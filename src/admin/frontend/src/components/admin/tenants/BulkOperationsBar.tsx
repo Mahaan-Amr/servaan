@@ -21,13 +21,15 @@ interface BulkOperationsBarProps {
   selectedTenants: string[];
   onSelectionChange: (selectedIds: string[]) => void;
   onRefresh: () => void;
+  currentFilters?: any; // Current search/filter state
 }
 
 export default function BulkOperationsBar({ 
   tenants, 
   selectedTenants, 
   onSelectionChange, 
-  onRefresh 
+  onRefresh,
+  currentFilters
 }: BulkOperationsBarProps) {
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -77,8 +79,8 @@ export default function BulkOperationsBar({
       setLoading(true);
 
       if (pendingAction.type === 'export' && pendingAction.format) {
-        // Get current filters from parent component
-        await exportTenants(pendingAction.format);
+        // Pass current filters and selected tenants to export function
+        await exportTenants(pendingAction.format, currentFilters, selectedTenants);
         toast.success(`صادرات ${selectedTenants.length} مستأجر با موفقیت انجام شد`);
       } else if (pendingAction.type === 'activate' || pendingAction.type === 'deactivate') {
         const isActive = pendingAction.type === 'activate';

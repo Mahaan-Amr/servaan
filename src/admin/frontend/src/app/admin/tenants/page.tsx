@@ -350,6 +350,7 @@ function TenantsPage() {
         selectedTenants={selectedTenants}
         onSelectionChange={setSelectedTenants}
         onRefresh={handleRefresh}
+        currentFilters={filters}
       />
 
       {/* Main Content */}

@@ -318,26 +318,48 @@ export const getPlatformOverview = async () => {
 /**
  * Export tenants data
  */
-export const exportTenants = async (format: 'csv' | 'excel' | 'pdf', filters?: Partial<TenantListParams>) => {
+export const exportTenants = async (format: 'csv' | 'excel' | 'pdf', filters?: Partial<TenantListParams>, selectedTenants?: string[]) => {
   try {
     const queryParams = new URLSearchParams();
     queryParams.append('format', format);
     
+    // Add all enhanced filters
     if (filters) {
       if (filters.search) queryParams.append('search', filters.search);
       if (filters.status) queryParams.append('status', filters.status);
       if (filters.plan) queryParams.append('plan', filters.plan);
+      if (filters.businessType) queryParams.append('businessType', filters.businessType);
+      if (filters.city) queryParams.append('city', filters.city);
+      if (filters.country) queryParams.append('country', filters.country);
+      if (filters.createdFrom) queryParams.append('createdFrom', filters.createdFrom);
+      if (filters.createdTo) queryParams.append('createdTo', filters.createdTo);
+      if (filters.revenueFrom !== undefined) queryParams.append('revenueFrom', filters.revenueFrom.toString());
+      if (filters.revenueTo !== undefined) queryParams.append('revenueTo', filters.revenueTo.toString());
+      if (filters.userCountFrom !== undefined) queryParams.append('userCountFrom', filters.userCountFrom.toString());
+      if (filters.userCountTo !== undefined) queryParams.append('userCountTo', filters.userCountTo.toString());
+      if (filters.hasFeatures && filters.hasFeatures.length > 0) {
+        queryParams.append('hasFeatures', filters.hasFeatures.join(','));
+      }
+    }
+
+    // Add selected tenants if provided
+    if (selectedTenants && selectedTenants.length > 0) {
+      queryParams.append('selectedTenants', selectedTenants.join(','));
     }
 
     const response = await adminApi.get(`/admin/tenants/export?${queryParams.toString()}`, {
       responseType: 'blob'
     });
 
-    // Create download link
+    // Create download link with better filename
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `tenants-export-${new Date().toISOString().split('T')[0]}.${format}`);
+    
+    const timestamp = new Date().toISOString().split('T')[0];
+    const tenantCount = selectedTenants ? selectedTenants.length : 'all';
+    link.setAttribute('download', `tenants-export-${tenantCount}-${timestamp}.${format}`);
+    
     document.body.appendChild(link);
     link.click();
     link.remove();
