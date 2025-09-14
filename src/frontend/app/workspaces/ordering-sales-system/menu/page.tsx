@@ -1246,17 +1246,24 @@ export default function MenuManagementPage() {
                         
                         <div>
                           <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            قیمت واحد (تومان)
+                            قیمت تمام شده ماده در آیتم (تومان)
                           </label>
                           <div className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300">
-                            {newIngredient.unitCost > 0 
-                              ? `${newIngredient.unitCost.toLocaleString('fa-IR')} تومان` 
-                              : 'انتخاب کالا برای نمایش قیمت'
+                            {newIngredient.unitCost > 0 && newIngredient.quantity > 0
+                              ? `${(newIngredient.quantity * newIngredient.unitCost).toLocaleString('fa-IR')} تومان` 
+                              : 'انتخاب کالا و مقدار برای نمایش قیمت'
                             }
                           </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            قیمت به صورت خودکار از موجودی محاسبه می‌شود
-                          </p>
+                          {newIngredient.unitCost > 0 && newIngredient.quantity > 0 && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              {newIngredient.quantity} × {newIngredient.unitCost.toLocaleString('fa-IR')} = {(newIngredient.quantity * newIngredient.unitCost).toLocaleString('fa-IR')} تومان
+                            </p>
+                          )}
+                          {(!newIngredient.unitCost || !newIngredient.quantity) && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              قیمت به صورت خودکار از موجودی محاسبه می‌شود
+                            </p>
+                          )}
                         </div>
                       </div>
                       
