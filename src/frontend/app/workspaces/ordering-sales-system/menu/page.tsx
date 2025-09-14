@@ -81,6 +81,16 @@ export default function MenuManagementPage() {
     loadData();
   }, []);
 
+  // Debug newIngredient state
+  useEffect(() => {
+    console.log('newIngredient state changed:', newIngredient);
+  }, [newIngredient]);
+
+  // Debug inventoryItems state
+  useEffect(() => {
+    console.log('inventoryItems loaded:', inventoryItems);
+  }, [inventoryItems]);
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -1282,18 +1292,29 @@ export default function MenuManagementPage() {
                           <select
                             value={newIngredient.itemId}
                             onChange={async (e) => {
+                              console.log('Dropdown onChange triggered:', e.target.value);
+                              console.log('Available inventory items:', inventoryItems);
+                              
                               const selectedItem = inventoryItems.find(item => item.id === e.target.value);
+                              console.log('Selected item:', selectedItem);
                               
                               if (e.target.value && selectedItem) {
                                 try {
+                                  console.log('Fetching price for item:', e.target.value);
                                   // Auto-fetch price when item is selected
                                   const inventoryPrice = await InventoryPriceService.getInventoryPrice(e.target.value);
-                                  setNewIngredient(prev => ({
-                                    ...prev,
-                                    itemId: e.target.value,
-                                    unit: selectedItem.unit,
-                                    unitCost: inventoryPrice.price
-                                  }));
+                                  console.log('Received price:', inventoryPrice);
+                                  
+                                  setNewIngredient(prev => {
+                                    const updated = {
+                                      ...prev,
+                                      itemId: e.target.value,
+                                      unit: selectedItem.unit,
+                                      unitCost: inventoryPrice.price
+                                    };
+                                    console.log('Updated newIngredient:', updated);
+                                    return updated;
+                                  });
                                   
                                   if (inventoryPrice.price > 0) {
                                     toast.success(`قیمت ${inventoryPrice.price.toLocaleString('fa-IR')} تومان از موجودی دریافت شد`);
@@ -1301,7 +1322,7 @@ export default function MenuManagementPage() {
                                     toast.error('قیمت این کالا در موجودی تعریف نشده است');
                                   }
                                 } catch (error) {
-                                  console.warn('Failed to auto-fetch inventory price:', error);
+                                  console.error('Failed to auto-fetch inventory price:', error);
                                   setNewIngredient(prev => ({
                                     ...prev,
                                     itemId: e.target.value,
