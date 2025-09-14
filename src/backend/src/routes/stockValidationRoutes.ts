@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { StockValidationController } from '../controllers/stockValidationController';
-import { authenticate, authorize, requireTenant } from '../middleware/auth';
+import { authenticate, authorize } from '../middlewares/authMiddleware';
+import { requireTenant } from '../middlewares/tenantMiddleware';
 
 const router = Router();
 
