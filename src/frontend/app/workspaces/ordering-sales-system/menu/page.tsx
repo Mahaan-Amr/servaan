@@ -67,6 +67,7 @@ export default function MenuManagementPage() {
   // Recipe/Ingredients state
   const [showIngredientsSection, setShowIngredientsSection] = useState(false);
   const [ingredients, setIngredients] = useState<RecipeIngredient[]>([]);
+  const [editingIngredientIndex, setEditingIngredientIndex] = useState<number | null>(null);
   const [newIngredient, setNewIngredient] = useState({
     itemId: '',
     quantity: 1,
@@ -413,10 +414,40 @@ export default function MenuManagementPage() {
 
   // Add ingredient to recipe (price is already fetched automatically)
   const addIngredient = async () => {
-    if (newIngredient.itemId && newIngredient.quantity > 0 && newIngredient.unit) {
+    if (newIngredient.itemId && newIngredient.quantity > 0 && newIngredient.unitCost > 0) {
       try {
-        // Price and unit are already set when item was selected
-        setIngredients([...ingredients, newIngredient]);
+        // If editing existing ingredient, update it
+        if (editingIngredientIndex !== null) {
+          await updateIngredient();
+          return;
+        }
+
+        // Check if ingredient already exists (only for new ingredients)
+        const existingIngredient = ingredients.find(ing => ing.itemId === newIngredient.itemId);
+        if (existingIngredient) {
+          toast.error('این کالا قبلاً به دستور پخت افزوده شده است');
+          return;
+        }
+
+        // Validate that we have all required data
+        const selectedItem = inventoryItems.find(item => item.id === newIngredient.itemId);
+        if (!selectedItem) {
+          toast.error('کالای انتخاب شده یافت نشد');
+          return;
+        }
+
+        // Create the ingredient with all required data
+        const ingredientToAdd = {
+          ...newIngredient,
+          unit: selectedItem.unit, // Ensure unit is set from inventory
+          itemName: selectedItem.name, // Add item name for display
+          totalCost: newIngredient.quantity * newIngredient.unitCost
+        };
+
+        // Add to ingredients list
+        setIngredients([...ingredients, ingredientToAdd]);
+        
+        // Reset form
         setNewIngredient({
           itemId: '',
           quantity: 1,
@@ -425,17 +456,83 @@ export default function MenuManagementPage() {
           isOptional: false
         });
         
-        toast.success('ماده اولیه با موفقیت افزوده شد');
+        toast.success(`ماده اولیه "${selectedItem.name}" با موفقیت افزوده شد`);
       } catch (error) {
         toast.error('خطا در افزودن ماده اولیه');
         console.error('Failed to add ingredient:', error);
       }
+    } else {
+      toast.error('لطفاً تمام فیلدهای مورد نیاز را پر کنید');
     }
   };
 
   // Remove ingredient from recipe
   const removeIngredient = (index: number) => {
     setIngredients(ingredients.filter((_, i) => i !== index));
+  };
+
+  // Edit ingredient
+  const editIngredient = (index: number) => {
+    const ingredient = ingredients[index];
+    setNewIngredient({
+      itemId: ingredient.itemId,
+      quantity: ingredient.quantity,
+      unit: ingredient.unit,
+      unitCost: ingredient.unitCost,
+      isOptional: ingredient.isOptional
+    });
+    setEditingIngredientIndex(index);
+  };
+
+  // Update ingredient
+  const updateIngredient = async () => {
+    if (editingIngredientIndex !== null && newIngredient.itemId && newIngredient.quantity > 0 && newIngredient.unitCost > 0) {
+      try {
+        const selectedItem = inventoryItems.find(item => item.id === newIngredient.itemId);
+        if (!selectedItem) {
+          toast.error('کالای انتخاب شده یافت نشد');
+          return;
+        }
+
+        const updatedIngredient = {
+          ...newIngredient,
+          unit: selectedItem.unit,
+          itemName: selectedItem.name,
+          totalCost: newIngredient.quantity * newIngredient.unitCost
+        };
+
+        const updatedIngredients = [...ingredients];
+        updatedIngredients[editingIngredientIndex] = updatedIngredient;
+        setIngredients(updatedIngredients);
+        
+        // Reset form
+        setNewIngredient({
+          itemId: '',
+          quantity: 1,
+          unit: '',
+          unitCost: 0,
+          isOptional: false
+        });
+        setEditingIngredientIndex(null);
+        
+        toast.success(`ماده اولیه "${selectedItem.name}" با موفقیت ویرایش شد`);
+      } catch (error) {
+        toast.error('خطا در ویرایش ماده اولیه');
+        console.error('Failed to update ingredient:', error);
+      }
+    }
+  };
+
+  // Cancel editing ingredient
+  const cancelEditIngredient = () => {
+    setNewIngredient({
+      itemId: '',
+      quantity: 1,
+      unit: '',
+      unitCost: 0,
+      isOptional: false
+    });
+    setEditingIngredientIndex(null);
   };
 
   // Auto-update ingredient prices when inventory prices change
@@ -1146,15 +1243,28 @@ export default function MenuManagementPage() {
                                   {ingredient.isOptional && ' - اختیاری'}
                                 </span>
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => removeIngredient(index)}
-                                className="text-red-500 hover:text-red-700 p-1"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              </button>
+                              <div className="flex space-x-1 space-x-reverse">
+                                <button
+                                  type="button"
+                                  onClick={() => editIngredient(index)}
+                                  className="text-blue-500 hover:text-blue-700 p-1"
+                                  title="ویرایش"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                  </svg>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => removeIngredient(index)}
+                                  className="text-red-500 hover:text-red-700 p-1"
+                                  title="حذف"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              </div>
                             </div>
                           );
                         })}
@@ -1278,14 +1388,36 @@ export default function MenuManagementPage() {
                           <span className="mr-2 text-sm text-gray-700 dark:text-gray-300">اختیاری</span>
                         </label>
                         
-                        <button
-                          type="button"
-                          onClick={addIngredient}
-                          disabled={!newIngredient.itemId || newIngredient.quantity <= 0 || !newIngredient.unit}
-                          className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                        >
-                          افزودن
-                        </button>
+                        <div className="flex space-x-2 space-x-reverse">
+                          {editingIngredientIndex !== null ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={updateIngredient}
+                                disabled={!newIngredient.itemId || newIngredient.quantity <= 0 || newIngredient.unitCost <= 0}
+                                className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                              >
+                                ذخیره تغییرات
+                              </button>
+                              <button
+                                type="button"
+                                onClick={cancelEditIngredient}
+                                className="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600"
+                              >
+                                انصراف
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={addIngredient}
+                              disabled={!newIngredient.itemId || newIngredient.quantity <= 0 || newIngredient.unitCost <= 0}
+                              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            >
+                              افزودن
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
 
