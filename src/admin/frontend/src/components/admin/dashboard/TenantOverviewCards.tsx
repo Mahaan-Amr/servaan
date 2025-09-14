@@ -1,16 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { formatCurrency as formatCurrencyUtil } from '../../../../../shared/utils/currencyUtils';
+import { formatCurrency as formatCurrencyUtil } from '../../../../../../shared/utils/currencyUtils';
 import { 
   Building2, 
   Users, 
   DollarSign, 
   TrendingUp, 
-  TrendingDown, 
-  Activity, 
   Clock,
-  AlertTriangle,
   CheckCircle,
   Eye,
   Settings,
@@ -71,7 +68,7 @@ export default function TenantOverviewCards({
       setStats(statsData);
       setTenantCards(tenantData);
       setLastUpdate(new Date());
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching tenant overview data:', error);
       toast.error('خطا در دریافت اطلاعات مستأجرین');
       
