@@ -9,7 +9,8 @@ import {
   DollarSign,
   Users,
   Download,
-  Building2
+  Building2,
+  Activity
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { 
@@ -35,10 +36,6 @@ export default function TenantAnalyticsDashboard({ className = '' }: TenantAnaly
   const [revenuePeriod, setRevenuePeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly');
   const [revenueYear, setRevenueYear] = useState<number>(new Date().getFullYear());
 
-  useEffect(() => {
-    loadAnalytics();
-  }, [loadAnalytics]);
-
   const loadAnalytics = useCallback(async () => {
     try {
       setLoading(true);
@@ -52,19 +49,25 @@ export default function TenantAnalyticsDashboard({ className = '' }: TenantAnaly
       setGrowthData(growth);
       setRevenueData(revenue);
     } catch (error: unknown) {
-      setError(error.message);
+      const errorMessage = error instanceof Error ? error.message : 'خطا در بارگذاری داده‌های تحلیلی';
+      setError(errorMessage);
       toast.error('خطا در بارگذاری داده‌های تحلیلی');
     } finally {
       setLoading(false);
     }
   }, [growthPeriod, growthGroupBy, revenuePeriod, revenueYear]);
 
+  useEffect(() => {
+    loadAnalytics();
+  }, [loadAnalytics]);
+
   const handleExport = async (format: 'csv' | 'excel' | 'pdf') => {
     try {
       await exportTenants(format);
       toast.success(`صادرات داده‌های تحلیلی با موفقیت انجام شد`);
     } catch (error: unknown) {
-      toast.error(error.message || 'خطا در صادرات داده‌ها');
+      const errorMessage = error instanceof Error ? error.message : 'خطا در صادرات داده‌ها';
+      toast.error(errorMessage);
     }
   };
 
