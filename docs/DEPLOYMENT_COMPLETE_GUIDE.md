@@ -103,40 +103,39 @@ ufw status
 
 ### **Phase 2: Application Deployment**
 
-#### **Step 1: Deploy with Auto-Deploy Script**
+#### **Step 1: Deploy with Complete Deployment Script**
 ```bash
-./auto-deploy.sh deploy
+chmod +x deploy-server.sh
+./deploy-server.sh
 ```
 
 **What This Script Does:**
-- ✅ Creates optimized environment files
-- ✅ Fixes Puppeteer configuration issues
-- ✅ Optimizes Docker build context
-- ✅ Builds and starts all containers
-- ✅ Performs health checks
-- ✅ Shows deployment status
+- ✅ **Zero-downtime deployment** with blue-green strategy
+- ✅ **Automatic backup** before deployment
+- ✅ **Health checks** for all services
+- ✅ **Rollback capability** on failure
+- ✅ **Prisma migrations** execution
+- ✅ **Service-by-service updates** (backend → admin-backend → frontend → admin-frontend)
+- ✅ **Comprehensive health verification**
 
 #### **Step 2: Verify Deployment**
 ```bash
 # Check all services
-./auto-deploy.sh status
+docker-compose --env-file .env.production -f docker-compose.prod.yml ps
 
 # View logs if needed
-./auto-deploy.sh logs
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs -f
 ```
 
 ### **Phase 3: Post-Deployment Setup**
 
 #### **Step 1: Generate Prisma Client**
 ```bash
-# Navigate to prisma directory
-cd /opt/servaan/app/src/prisma
-
 # Generate client in Docker container (recommended)
-docker exec -it servaan-backend-prod npx prisma generate
+docker exec -it servaan-backend-prod npx prisma generate --schema=../../../prisma/schema.prisma
 
-# Copy to host for scripts
-docker cp servaan-backend-prod:/app/src/shared/generated/client /opt/servaan/app/src/shared/
+# Verify client generation
+docker exec -it servaan-backend-prod ls -la /app/src/shared/generated/client
 ```
 
 #### **Step 2: Create Initial Tenants**
@@ -155,35 +154,76 @@ node create-tenant.js
 
 ## 🔧 **Troubleshooting Guide**
 
-### **Issue 1: Nginx Shows Default Page**
-**Symptoms**: Accessing server IP shows "Welcome to nginx!"
-**Cause**: Nginx not configured for Servaan
-**Solution**: Run `servaan-server-setup.sh` script
+### **Issue 1: CORS Duplicate Headers**
+**Symptoms**: `Access-Control-Allow-Origin` header appears twice in responses
+**Cause**: Both Nginx and backend are setting CORS headers
+**Solution**: Remove explicit CORS headers from Nginx configuration
+```bash
+# Remove these lines from /etc/nginx/sites-enabled/servaan:
+# add_header Access-Control-Allow-Origin *;
+# add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS";
+# add_header Access-Control-Allow-Headers "Origin, Content-Type, Authorization";
+```
 
 ### **Issue 2: 502 Bad Gateway Error**
 **Symptoms**: Page loads but shows "502 Bad Gateway"
-**Cause**: Upstream services not responding
-**Solution**: Check Docker containers with `docker ps`
+**Cause**: Backend service not responding or crashed
+**Solution**: 
+```bash
+# Check backend container status
+docker ps | grep servaan-backend-prod
 
-### **Issue 3: Frontend Container Restarting**
-**Symptoms**: `servaan-frontend-prod` shows "Restarting (127)"
-**Cause**: Missing Next.js CLI in production container
-**Solution**: Rebuild frontend with updated Dockerfile
+# Check backend logs
+docker logs servaan-backend-prod
 
-### **Issue 4: Prisma Client Not Found**
-**Symptoms**: `Error: Cannot find module '@prisma/client'`
-**Cause**: Prisma client not generated on host system
-**Solution**: Generate client in Docker container and copy to host
+# Restart backend if needed
+docker-compose --env-file .env.production -f docker-compose.prod.yml restart backend
+```
 
-### **Issue 5: Node.js Version Incompatibility**
-**Symptoms**: Engine warnings about Node.js version
-**Cause**: Host system has Node.js < 18.18
-**Solution**: Upgrade to Node.js 18+ using NodeSource repository
+### **Issue 3: 400 Bad Request - Tenant Context Required**
+**Symptoms**: All API calls return `{"error":"نیاز به شناسایی مجموعه","message":"Tenant context required"}`
+**Cause**: Tenant middleware not resolving tenant from `X-Tenant-Subdomain` header
+**Solution**: This is fixed in the current codebase - tenant middleware now properly handles API subdomain requests
 
-### **Issue 6: Redis Configuration Error**
-**Symptoms**: `FATAL CONFIG FILE ERROR (Redis) - wrong number of arguments`
-**Cause**: Missing `REDIS_PASSWORD` environment variable
-**Solution**: Add `REDIS_PASSWORD=your-password` to `.env` file
+### **Issue 4: Prisma Client Import Path Errors**
+**Symptoms**: Backend crashes with `Cannot find module '../../../shared/generated/client'`
+**Cause**: Incorrect Prisma client import paths in backend files
+**Solution**: All import paths have been corrected to `../../../shared/generated/client`
+
+### **Issue 5: WebSocket URL Malformation**
+**Symptoms**: WebSocket connections fail with `ws://https/socket.io/` errors
+**Cause**: Frontend incorrectly constructing WebSocket URLs
+**Solution**: Fixed in `src/frontend/lib/apiUtils.ts` - `getBaseUrl()` now preserves HTTPS protocol
+
+### **Issue 6: Double API Path Issues**
+**Symptoms**: API calls to `https://api.servaan.com/api/api/...` (double `/api`)
+**Cause**: Frontend adding `/api` to already complete API URLs
+**Solution**: Fixed in `src/frontend/lib/apiUtils.ts` - centralized URL construction
+
+### **Issue 7: Nginx API Routing Issues**
+**Symptoms**: 404 errors for `/api/auth/login` endpoints
+**Cause**: Nginx stripping `/api` prefix from requests
+**Solution**: Fixed Nginx configuration to preserve `/api` prefix:
+```nginx
+location /api/ {
+    proxy_pass http://127.0.0.1:3001/api/;
+}
+```
+
+### **Issue 8: Disk Space Exhaustion**
+**Symptoms**: Docker builds fail with "no space left on device"
+**Cause**: Server running out of disk space during builds
+**Solution**: 
+```bash
+# Clean up Docker
+docker system prune -a -f
+
+# Clean up Docker logs
+docker system prune --volumes -f
+
+# Clean up system logs
+sudo journalctl --vacuum-time=7d
+```
 
 ---
 

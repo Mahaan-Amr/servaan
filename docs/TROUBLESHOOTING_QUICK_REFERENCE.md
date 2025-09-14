@@ -4,57 +4,93 @@
 
 ### **Check Service Status**
 ```bash
-./auto-deploy.sh status
-docker ps
+# Check all containers
+docker-compose --env-file .env.production -f docker-compose.prod.yml ps
+
+# Check individual containers
+docker ps | grep servaan
+
+# Check Nginx status
 systemctl status nginx
+
+# Check firewall status
 ufw status
 ```
 
 ### **View Logs**
 ```bash
-./auto-deploy.sh logs
+# View all service logs
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs -f
+
+# View specific service logs
 docker logs servaan-frontend-prod
 docker logs servaan-backend-prod
+docker logs servaan-admin-backend-prod
 docker logs servaan-postgres-prod
+
+# View recent logs with filtering
+docker logs --tail 100 servaan-backend-prod | grep -E "(ERROR|WARN|🔍|✅|❌)"
 ```
 
 ### **Restart Everything**
 ```bash
-./auto-deploy.sh deploy
+# Use the complete deployment script
+./deploy-server.sh
+
+# Or restart specific services
+docker-compose --env-file .env.production -f docker-compose.prod.yml restart backend
+docker-compose --env-file .env.production -f docker-compose.prod.yml restart frontend
 ```
 
 ---
 
 ## 🚨 **Common Issues & Quick Fixes**
 
-### **1. 502 Bad Gateway**
+### **1. CORS Duplicate Headers**
+**Symptoms**: `Access-Control-Allow-Origin` appears twice
+**Quick Fix**: Remove CORS headers from Nginx
+```bash
+# Edit Nginx config
+sudo nano /etc/nginx/sites-enabled/servaan
+# Remove lines starting with "add_header Access-Control"
+sudo systemctl reload nginx
+```
+
+### **2. 502 Bad Gateway**
 **Quick Fix**: Check if containers are running
 ```bash
 docker ps | grep servaan
-```
-
-### **2. Frontend Not Loading**
-**Quick Fix**: Rebuild frontend container
-```bash
-docker-compose -f docker-compose.prod.yml up -d --build frontend
-```
-
-### **3. Backend API Errors**
-**Quick Fix**: Check backend logs
-```bash
 docker logs servaan-backend-prod
 ```
 
-### **4. Database Connection Issues**
+### **3. 400 Bad Request - Tenant Context Required**
+**Symptoms**: All API calls return tenant context errors
+**Quick Fix**: This is fixed in current codebase - tenant middleware now handles API subdomain properly
+
+### **4. WebSocket URL Errors (ws://https/socket.io/)**
+**Quick Fix**: Fixed in `src/frontend/lib/apiUtils.ts` - `getBaseUrl()` preserves HTTPS protocol
+
+### **5. Double API Path Issues**
+**Symptoms**: API calls to `https://api.servaan.com/api/api/...`
+**Quick Fix**: Fixed in `src/frontend/lib/apiUtils.ts` - centralized URL construction
+
+### **6. Prisma Client Import Errors**
+**Quick Fix**: All import paths corrected to `../../../shared/generated/client`
+```bash
+docker exec -it servaan-backend-prod npx prisma generate --schema=../../../prisma/schema.prisma
+```
+
+### **7. Database Connection Issues**
 **Quick Fix**: Check PostgreSQL container
 ```bash
 docker exec -it servaan-postgres-prod pg_isready -U servaan
 ```
 
-### **5. Prisma Client Errors**
-**Quick Fix**: Generate client in container
+### **8. Disk Space Issues**
+**Quick Fix**: Clean up Docker
 ```bash
-docker exec -it servaan-backend-prod npx prisma generate
+docker system prune -a -f
+docker system prune --volumes -f
 ```
 
 ---

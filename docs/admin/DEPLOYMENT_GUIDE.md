@@ -57,24 +57,41 @@ sudo certbot --nginx -d admin.servaan.com
 
 ### **3. Environment Setup**
 ```bash
-# Create deployment directory
-mkdir -p /opt/servaan-admin
-cd /opt/servaan-admin
+# Navigate to project directory
+cd /opt/servaan/app
 
-# Create environment file
-nano .env.production
+# Ensure environment file exists
+ls -la .env.production
 ```
 
-### **4. Deploy Services**
+### **4. Deploy Services with Zero-Downtime**
 ```bash
-# Start services
-docker-compose -f docker-compose.prod.yml up -d
+# Use the complete deployment script
+chmod +x deploy-server.sh
+./deploy-server.sh
 
-# Check status
-docker-compose ps
+# This script provides:
+# ✅ Zero-downtime deployment
+# ✅ Automatic backup before deployment
+# ✅ Health checks for all services
+# ✅ Rollback capability on failure
+# ✅ Service-by-service updates
+# ✅ Prisma migrations execution
+```
 
-# View logs
-docker-compose logs -f
+### **5. Verify Deployment**
+```bash
+# Check all services status
+docker-compose --env-file .env.production -f docker-compose.prod.yml ps
+
+# Test admin panel accessibility
+curl -I https://admin.servaan.com
+
+# Test admin API
+curl -I https://admin.servaan.com/api/admin/health
+
+# View logs if needed
+docker-compose --env-file .env.production -f docker-compose.prod.yml logs -f admin-backend
 ```
 
 ## 📊 Post-Deployment Verification
