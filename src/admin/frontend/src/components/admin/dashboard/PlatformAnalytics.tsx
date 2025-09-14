@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { formatCurrency as formatCurrencyUtil } from '../../../../../../shared/utils/currencyUtils';
 import { 
   BarChart3, 
@@ -9,10 +9,8 @@ import {
   Users, 
   Building2, 
   DollarSign,
-  Calendar,
   Download,
-  RefreshCw,
-  Filter
+  RefreshCw
 } from 'lucide-react';
 import { 
   TenantGrowthData, 
@@ -47,13 +45,12 @@ export default function PlatformAnalytics({
   const [revenueData, setRevenueData] = useState<RevenueData[]>([]);
   const [userActivityData, setUserActivityData] = useState<UserActivityData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [chartConfig, setChartConfig] = useState<ChartConfig>({
     type: 'line',
     period: '30d'
   });
 
-  const fetchAnalyticsData = async () => {
+  const fetchAnalyticsData = useCallback(async () => {
     try {
       const days = chartConfig.period === '7d' ? 7 : 
                    chartConfig.period === '30d' ? 30 : 
@@ -69,8 +66,7 @@ export default function PlatformAnalytics({
       setTenantGrowthData(Array.isArray(growthData) ? growthData : []);
       setRevenueData(Array.isArray(revenueData) ? revenueData : []);
       setUserActivityData(Array.isArray(activityData) ? activityData : []);
-      setLastUpdate(new Date());
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching analytics data:', error);
       toast.error('خطا در دریافت اطلاعات تحلیل‌ها');
       
@@ -81,18 +77,18 @@ export default function PlatformAnalytics({
     } finally {
       setLoading(false);
     }
-  };
+  }, [chartConfig.period]);
 
   useEffect(() => {
     fetchAnalyticsData();
-  }, [chartConfig.period]);
+  }, [fetchAnalyticsData]);
 
   useEffect(() => {
     if (!autoRefresh) return;
 
     const interval = setInterval(fetchAnalyticsData, refreshInterval);
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, chartConfig.period]);
+  }, [autoRefresh, refreshInterval, fetchAnalyticsData]);
 
   const formatCurrency = (amount: number) => {
     return formatCurrencyUtil(amount);
@@ -138,21 +134,9 @@ export default function PlatformAnalytics({
     }
   };
 
-  const getChartTypeText = (type: string) => {
-    switch (type) {
-      case 'line':
-        return 'خطی';
-      case 'bar':
-        return 'ستونی';
-      case 'area':
-        return 'ناحیه‌ای';
-      default:
-        return 'خطی';
-    }
-  };
 
   // Calculate growth percentages
-  const calculateGrowth = (data: any[]) => {
+  const calculateGrowth = (data: unknown[]) => {
     if (data.length < 2) return { percentage: 0, trend: 'stable' };
     
     const latest = data[data.length - 1];
@@ -171,7 +155,7 @@ export default function PlatformAnalytics({
   const userGrowth = calculateGrowth(userActivityData);
 
   // Chart data for visualization
-  const generateChartData = (data: any[], label: string, color: string): ChartData => {
+  const generateChartData = (data: unknown[], label: string, color: string): ChartData => {
     const labels = data.map(item => {
       // Ensure we have a valid date
       const date = item.date instanceof Date ? item.date : new Date(item.date);
@@ -191,9 +175,6 @@ export default function PlatformAnalytics({
     };
   };
 
-  const tenantChartData = generateChartData(tenantGrowthData, 'مستأجرین جدید', '#3B82F6');
-  const revenueChartData = generateChartData(revenueData, 'درآمد', '#10B981');
-  const userChartData = generateChartData(userActivityData, 'کاربران جدید', '#8B5CF6');
 
   if (loading) {
     return (

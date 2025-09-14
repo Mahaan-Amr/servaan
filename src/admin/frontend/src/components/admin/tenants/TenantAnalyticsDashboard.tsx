@@ -1,16 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { formatCurrency as formatCurrencyUtil } from '../../../../../../shared/utils/currencyUtils';
 import { 
   TrendingUp, 
   TrendingDown, 
   BarChart3, 
-  PieChart, 
-  Calendar,
   DollarSign,
   Users,
-  Activity,
   Download,
   Building2
 } from 'lucide-react';
@@ -40,9 +37,9 @@ export default function TenantAnalyticsDashboard({ className = '' }: TenantAnaly
 
   useEffect(() => {
     loadAnalytics();
-  }, [growthPeriod, growthGroupBy, revenuePeriod, revenueYear]);
+  }, [loadAnalytics]);
 
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -54,31 +51,23 @@ export default function TenantAnalyticsDashboard({ className = '' }: TenantAnaly
 
       setGrowthData(growth);
       setRevenueData(revenue);
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError(error.message);
       toast.error('خطا در بارگذاری داده‌های تحلیلی');
     } finally {
       setLoading(false);
     }
-  };
+  }, [growthPeriod, growthGroupBy, revenuePeriod, revenueYear]);
 
   const handleExport = async (format: 'csv' | 'excel' | 'pdf') => {
     try {
       await exportTenants(format);
       toast.success(`صادرات داده‌های تحلیلی با موفقیت انجام شد`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'خطا در صادرات داده‌ها');
     }
   };
 
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1) + 'M';
-    } else if (num >= 1000) {
-      return (num / 1000).toFixed(1) + 'K';
-    }
-    return num.toLocaleString();
-  };
 
   const formatCurrency = (amount: number) => {
     return formatCurrencyUtil(amount);
