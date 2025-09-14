@@ -46,6 +46,65 @@ interface MenuItem {
   isAvailable: boolean;
 }
 
+interface StockWarning {
+  type: 'LOW_STOCK' | 'OUT_OF_STOCK' | 'CRITICAL_STOCK';
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  itemId: string;
+  itemName: string;
+  requiredQuantity: number;
+  availableQuantity: number;
+  unit: string;
+  message: string;
+  suggestedAction: string;
+}
+
+interface StockValidationData {
+  isValid: boolean;
+  hasWarnings: boolean;
+  validationResults: Array<{
+    menuItemId: string;
+    isAvailable: boolean;
+    hasWarnings: boolean;
+    warnings: StockWarning[];
+    unavailableIngredients: Array<{
+      itemId: string;
+      itemName: string;
+      requiredQuantity: number;
+      availableQuantity: number;
+      unit: string;
+    }>;
+    totalCost: number;
+    profitMargin: number;
+    canProceedWithOverride: boolean;
+    overrideRequired: boolean;
+  }>;
+  criticalWarnings: number;
+  totalWarnings: number;
+  overrideRequired: boolean;
+  overrides?: Array<{
+    menuItemId: string;
+    itemId: string;
+    itemName: string;
+    requiredQuantity: number;
+    availableQuantity: number;
+    overrideReason: string;
+    overrideType: string;
+    notes?: string;
+  }>;
+}
+
+interface OrderCreationResponse {
+  success: boolean;
+  data: {
+    order: {
+      id: string;
+      [key: string]: unknown;
+    };
+    stockValidation: StockValidationData;
+  };
+  message: string;
+}
+
 interface OrderItem {
   id: string;
   menuItem: MenuItem;
@@ -100,8 +159,8 @@ export default function POSInterface() {
   
   // Stock validation state
   const [showStockWarning, setShowStockWarning] = useState(false);
-  const [stockWarnings, setStockWarnings] = useState<any[]>([]);
-  const [stockValidationData, setStockValidationData] = useState<any>(null);
+  const [stockWarnings, setStockWarnings] = useState<StockWarning[]>([]);
+  const [stockValidationData, setStockValidationData] = useState<StockValidationData | null>(null);
   // Mobile cart drawer state
   const [isCartOpen, setIsCartOpen] = useState(false);
   
@@ -512,7 +571,7 @@ export default function POSInterface() {
       };
 
       // Create order in backend
-      const createdOrder = await OrderService.createOrder(orderData) as any;
+      const createdOrder = await OrderService.createOrder(orderData) as OrderCreationResponse;
       
       // Store the order ID for payment processing
       if (createdOrder && createdOrder.data && createdOrder.data.order && createdOrder.data.order.id) {
@@ -549,7 +608,7 @@ export default function POSInterface() {
         // Process partial payment immediately
         try {
           await PaymentService.processPayment({
-            orderId: (createdOrder as { id: string }).id,
+            orderId: createdOrder.data.order.id,
             amount: selectedItemsAmount,
             paymentMethod: data.paymentMethod as PaymentMethod,
             cashReceived: data.paymentMethod === 'CASH' ? selectedItemsAmount : undefined
@@ -617,7 +676,7 @@ export default function POSInterface() {
         specialRequest: item.specialRequest
       }));
 
-      const updatedOrder = await OrderService.addItemToOrder(currentOrderId, apiItems[0]); // API expects single item
+      const updatedOrder = await OrderService.addItemToOrder(currentOrderId, apiItems[0]) as unknown as { id: string }; // API expects single item
       toast.success('آیتم‌ها با موفقیت به سفارش اضافه شدند');
       
       // Refresh order data if needed
@@ -639,10 +698,13 @@ export default function POSInterface() {
   };
 
   // Handle stock warning modal
-  const handleStockWarningProceed = (overrides: any[]) => {
+  const handleStockWarningProceed = (overrides: StockValidationData['overrides']) => {
     setShowStockWarning(false);
     // Store overrides for order creation
-    setStockValidationData((prev: any) => ({ ...prev, overrides }));
+    setStockValidationData((prev: StockValidationData | null) => {
+      if (!prev) return null;
+      return { ...prev, overrides };
+    });
     // Proceed with flexible payment modal
     setShowFlexiblePayment(true);
   };
