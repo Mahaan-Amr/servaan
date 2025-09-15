@@ -75,7 +75,7 @@ class NotificationService {
         LEFT JOIN (
           SELECT 
             "itemId",
-            SUM(CASE WHEN type = 'IN' THEN quantity ELSE -quantity END) as current_stock
+            SUM(quantity) as current_stock
           FROM "InventoryEntry"
           GROUP BY "itemId"
         ) inv ON i.id = inv."itemId"

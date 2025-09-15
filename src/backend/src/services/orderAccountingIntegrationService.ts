@@ -261,6 +261,16 @@ export class OrderAccountingIntegrationService {
         });
       }
 
+      // Safety: if we don't have enough lines (missing COA setup), skip journal creation gracefully
+      if (lines.length < 2) {
+        return {
+          id: 'SKIPPED',
+          lines: [],
+          note: 'Journal skipped: insufficient chart of accounts, less than 2 lines',
+          orderId: orderData.orderId
+        } as any;
+      }
+
       // Create journal entry
       const journalEntry = await JournalEntryService.createJournalEntry({
         entryDate: new Date(),
@@ -682,6 +692,9 @@ export class OrderAccountingIntegrationService {
     taxCalculation: IranianTaxCalculation;
   }> {
     try {
+      // Temporary config toggle (future: tenant setting)
+      const inventoryDeductionMode: 'ON_COMPLETION' | 'DISABLED' = 'ON_COMPLETION';
+
       // Get order details
       const order = await prisma.order.findFirst({
         where: { id: orderId, tenantId },
@@ -720,12 +733,14 @@ export class OrderAccountingIntegrationService {
         throw new AppError('Order not found', 404);
       }
 
-      // 1. Process stock deductions
-      const stockDeductions = await OrderInventoryIntegrationService.processRecipeStockDeduction(
-        tenantId,
-        orderId,
-        completedBy
-      );
+      // 1. Process stock deductions (if enabled)
+      const stockDeductions = inventoryDeductionMode === 'ON_COMPLETION'
+        ? await OrderInventoryIntegrationService.processRecipeStockDeduction(
+            tenantId,
+            orderId,
+            completedBy
+          )
+        : [];
 
       // 2. Calculate COGS and prepare journal entry data
       const orderItems = order.items.map(item => {

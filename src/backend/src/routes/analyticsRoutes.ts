@@ -128,7 +128,12 @@ router.get('/inventory-trends', authenticate, authorize(['ADMIN', 'MANAGER']), a
         _sum: { quantity: true }
       });
 
-      const currentStock = (totalIn._sum.quantity || 0) - (totalOut._sum.quantity || 0);
+      // OUT entries are already negative. Current stock should be SUM(quantity) across all entries.
+      const sumAll = await prisma.inventoryEntry.aggregate({
+        where: whereClause,
+        _sum: { quantity: true }
+      });
+      const currentStock = sumAll._sum.quantity || 0;
 
       data.push({
         date: periodEnd.toISOString().split('T')[0],

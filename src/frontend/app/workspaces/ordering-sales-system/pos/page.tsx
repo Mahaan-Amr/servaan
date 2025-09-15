@@ -93,17 +93,20 @@ interface StockValidationData {
   }>;
 }
 
-interface OrderCreationResponse {
+// API wrapper may return unwrapped data ({ order, stockValidation })
+// or full envelope ({ success, data: { order, stockValidation }, message })
+type UnwrappedOrderCreation = {
+  order: { id: string; [key: string]: unknown };
+  stockValidation: StockValidationData;
+};
+
+type WrappedOrderCreation = {
   success: boolean;
-  data: {
-    order: {
-      id: string;
-      [key: string]: unknown;
-    };
-    stockValidation: StockValidationData;
-  };
+  data: UnwrappedOrderCreation;
   message: string;
-}
+};
+
+type OrderCreationResponse = UnwrappedOrderCreation | WrappedOrderCreation;
 
 interface OrderItem {
   id: string;
@@ -572,16 +575,26 @@ export default function POSInterface() {
 
       // Create order in backend
       const createdOrder = await OrderService.createOrder(orderData) as OrderCreationResponse;
-      
-      // Store the order ID for payment processing
-      if (createdOrder && createdOrder.data && createdOrder.data.order && createdOrder.data.order.id) {
-        setCurrentOrderId(createdOrder.data.order.id);
-        console.log('Order created successfully with ID:', createdOrder.data.order.id);
-      } else {
+
+      // Normalize response shape from API wrapper
+      const normalized = ((): UnwrappedOrderCreation | null => {
+        if ((createdOrder as WrappedOrderCreation).data && (createdOrder as WrappedOrderCreation).data.order) {
+          return (createdOrder as WrappedOrderCreation).data;
+        }
+        if ((createdOrder as UnwrappedOrderCreation).order) {
+          return createdOrder as UnwrappedOrderCreation;
+        }
+        return null;
+      })();
+
+      if (!normalized || !normalized.order?.id) {
         console.error('Failed to create order - invalid response structure:', createdOrder);
         toast.error('خطا در ایجاد سفارش - ساختار پاسخ نامعتبر است');
         return;
       }
+
+      setCurrentOrderId(normalized.order.id);
+      console.log('Order created successfully with ID:', normalized.order.id);
       
       // Handle immediate payment if selected
       if (data.paymentType === 'IMMEDIATE' && data.paymentMethod && data.amountReceived) {
@@ -608,7 +621,7 @@ export default function POSInterface() {
         // Process partial payment immediately
         try {
           await PaymentService.processPayment({
-            orderId: createdOrder.data.order.id,
+            orderId: normalized.order.id,
             amount: selectedItemsAmount,
             paymentMethod: data.paymentMethod as PaymentMethod,
             cashReceived: data.paymentMethod === 'CASH' ? selectedItemsAmount : undefined

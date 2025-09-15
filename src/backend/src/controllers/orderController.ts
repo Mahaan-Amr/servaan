@@ -515,9 +515,20 @@ export class OrderController {
         throw new AppError('Valid order status is required', 400);
       }
 
-      // If status is COMPLETED, use the enhanced completeOrder method
+      // If status is COMPLETED, run full accounting completion (includes stock deduction)
       if (status === 'COMPLETED') {
-        const result = await orderService.completeOrder(
+        // Ensure idempotency: if already completed, short-circuit
+        // We reuse orderService.getOrder to check status quickly
+        const existingOrder = await orderService.getOrder(orderId);
+        if (existingOrder && existingOrder.status === 'COMPLETED') {
+          return res.json({
+            success: true,
+            data: existingOrder,
+            message: 'Order already completed'
+          });
+        }
+
+        const accountingResult = await OrderAccountingIntegrationService.processOrderCompletion(
           tenantId,
           orderId,
           updatedBy
@@ -525,7 +536,7 @@ export class OrderController {
 
         res.json({
           success: true,
-          data: result,
+          data: accountingResult,
           message: 'Order completed successfully'
         });
       } else {
@@ -1038,7 +1049,18 @@ export class OrderController {
         throw new AppError('Order ID is required', 400);
       }
 
-      const result = await orderService.completeOrder(
+      // Idempotency: if already completed, short-circuit
+      const existingOrder = await orderService.getOrder(orderId);
+      if (existingOrder && existingOrder.status === 'COMPLETED') {
+        return res.json({
+          success: true,
+          data: existingOrder,
+          message: 'Order already completed'
+        });
+      }
+
+      // Run full accounting completion (includes stock deduction + COGS)
+      const result = await OrderAccountingIntegrationService.processOrderCompletion(
         tenantId,
         orderId,
         completedBy

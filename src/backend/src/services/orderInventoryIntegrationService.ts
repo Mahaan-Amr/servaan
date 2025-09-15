@@ -766,6 +766,19 @@ export class OrderInventoryIntegrationService {
     userId: string
   ): Promise<RecipeBasedStockDeduction[]> {
     try {
+      // Idempotency: if we already created OUT entries for this order, skip
+      // We detect by matching note prefix containing the order number
+      const existing = await prisma.inventoryEntry.findFirst({
+        where: {
+          tenantId,
+          type: 'OUT',
+          note: { contains: orderId }
+        }
+      });
+      if (existing) {
+        return [];
+      }
+
       // Get order with items and menu items
       const order = await prisma.order.findFirst({
         where: { id: orderId, tenantId },
@@ -793,12 +806,21 @@ export class OrderInventoryIntegrationService {
 
       // Process each order item
       for (const orderItem of order.items) {
-        // Check if this order item has an associated item with menu items
-        if (!orderItem.item || !orderItem.item.menuItems || orderItem.item.menuItems.length === 0) {
-          continue; // Skip items without menu item association
+        // Resolve the menu item for this order line in two ways:
+        // 1) Through the linked inventory item relation (item.menuItems)
+        // 2) Directly via orderItem.menuItemId when there is no linked inventory item
+        let menuItem: any | null = null;
+        if (orderItem.item && orderItem.item.menuItems && orderItem.item.menuItems.length > 0) {
+          menuItem = orderItem.item.menuItems[0];
+        } else if ((orderItem as any).menuItemId) {
+          menuItem = await prisma.menuItem.findFirst({
+            where: { id: (orderItem as any).menuItemId, tenantId, isActive: true },
+          });
         }
-        
-        const menuItem = orderItem.item.menuItems[0];
+
+        if (!menuItem) {
+          continue; // No resolvable menu item → cannot deduct by recipe
+        }
         
         // Get recipe for this menu item with ingredients included
         const recipe = await prisma.recipe.findFirst({
@@ -846,7 +868,7 @@ export class OrderInventoryIntegrationService {
               itemId: ingredient.itemId,
               quantity: -quantityToDeduct, // Negative for OUT transaction
               type: 'OUT',
-              note: `Order ${order.orderNumber} - Recipe ingredient: ${ingredient.item?.name}`,
+              note: `Order ${order.orderNumber} (${order.id}) - Recipe ingredient: ${ingredient.item?.name}`,
               userId,
               tenantId,
             }

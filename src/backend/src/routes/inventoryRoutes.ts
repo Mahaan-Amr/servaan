@@ -122,7 +122,7 @@ router.get('/current', authenticate, requireTenant, async (req, res) => {
       }
     });
 
-    // Build final result
+    // Build final result using single-source-of-truth for current stock
     const inventoryStatus = items.map(item => {
       const inventory = inventoryMap.get(item.id) || { totalIn: 0, totalOut: 0 };
       return {
@@ -132,7 +132,8 @@ router.get('/current', authenticate, requireTenant, async (req, res) => {
         unit: item.unit,
         totalIn: inventory.totalIn,
         totalOut: inventory.totalOut,
-        current: inventory.totalIn - inventory.totalOut
+        // OUT totals are negative; current = totalIn + totalOut (sum of raw quantities)
+        current: inventory.totalIn + inventory.totalOut
       };
     });
     
@@ -191,10 +192,10 @@ router.get('/low-stock/count', authenticate, requireTenant, async (req, res) => 
       }
     });
 
-    // Count items below their minStock threshold
+    // Count items below their minStock threshold using current = totalIn + totalOut
     const lowStockCount = items.filter(item => {
       const inventory = inventoryMap.get(item.id) || { totalIn: 0, totalOut: 0 };
-      const current = inventory.totalIn - inventory.totalOut;
+      const current = inventory.totalIn + inventory.totalOut;
       const threshold = item.minStock || 10;
       return current < threshold;
     }).length;
@@ -259,11 +260,11 @@ router.get('/low-stock', authenticate, requireTenant, async (req, res) => {
       }
     });
 
-    // Build inventory status and filter low stock items
+    // Build inventory status and filter low stock items using current = totalIn + totalOut
     const lowStockItems = items
       .map(item => {
         const inventory = inventoryMap.get(item.id) || { totalIn: 0, totalOut: 0 };
-        const current = inventory.totalIn - inventory.totalOut;
+        const current = inventory.totalIn + inventory.totalOut;
         return {
           itemId: item.id,
           itemName: item.name,
@@ -671,9 +672,9 @@ router.post('/', authenticate, requireTenant, async (req, res) => {
       return res.status(500).json({ message: 'خطا در ایجاد تراکنش انبار' });
     }
 
-    // Calculate final stock state after successful transaction using optimized query
-    const finalStockSummary = await prisma.inventoryEntry.groupBy({
-      by: ['type'],
+    // Calculate final stock using single-source-of-truth rule:
+    // OUT entries are already negative → current stock = SUM(quantity)
+    const stockAgg = await prisma.inventoryEntry.aggregate({
       where: {
         itemId: validatedData.itemId
       },
@@ -681,21 +682,9 @@ router.post('/', authenticate, requireTenant, async (req, res) => {
         quantity: true
       }
     });
-
-    let finalTotalIn = 0;
-    let finalTotalOut = 0;
-    
-    finalStockSummary.forEach(summary => {
-      if (summary.type === 'IN') {
-        finalTotalIn = summary._sum.quantity || 0;
-      } else if (summary.type === 'OUT') {
-        finalTotalOut = summary._sum.quantity || 0;
-      }
-    });
-    const newCurrentStock = finalTotalIn - finalTotalOut;
-    const previousStock = validatedData.type === 'IN' ? 
-      newCurrentStock - validatedData.quantity : 
-      newCurrentStock + validatedData.quantity;
+    const newCurrentStock = stockAgg._sum.quantity || 0;
+    // Previous stock is simply current minus this change (works for both IN and OUT)
+    const previousStock = newCurrentStock - validatedData.quantity;
 
     // Send inventory update notification (non-blocking)
     setImmediate(async () => {

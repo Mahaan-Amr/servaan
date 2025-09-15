@@ -300,14 +300,7 @@ export class BiService {
 
       let lowStockCount = 0;
       for (const item of itemsWithStock) {
-        let currentStock = 0;
-        for (const entry of item.inventoryEntries) {
-          if (entry.type === 'IN') {
-            currentStock += entry.quantity;
-          } else if (entry.type === 'OUT') {
-            currentStock -= entry.quantity;
-          }
-        }
+        const currentStock = item.inventoryEntries.reduce((sum, e) => sum + e.quantity, 0);
         if (currentStock <= (item.minStock || 0)) {
           lowStockCount++;
         }
@@ -349,11 +342,8 @@ export class BiService {
       // Calculate current stock for each item
       for (const entry of inventoryItems) {
         const currentStock = itemStockMap.get(entry.item.name) || 0;
-        if (entry.type === 'IN') {
-          itemStockMap.set(entry.item.name, currentStock + entry.quantity);
-        } else if (entry.type === 'OUT') {
-          itemStockMap.set(entry.item.name, Math.max(0, currentStock - entry.quantity));
-        }
+        // OUT entries are stored as negative; sum raw quantities
+        itemStockMap.set(entry.item.name, currentStock + entry.quantity);
       }
 
       // Calculate total value

@@ -21,16 +21,8 @@ router.get('/inventory-valuation', authenticate, authorize(['ADMIN', 'MANAGER'])
     const itemValuations = [];
 
     for (const item of items) {
-      // Calculate current stock
-      const totalIn = item.inventoryEntries
-        .filter(entry => entry.type === 'IN')
-        .reduce((sum, entry) => sum + entry.quantity, 0);
-      
-      const totalOut = item.inventoryEntries
-        .filter(entry => entry.type === 'OUT')
-        .reduce((sum, entry) => sum + entry.quantity, 0);
-      
-      const currentStock = totalIn - totalOut;
+      // Calculate current stock using single-source-of-truth: SUM of raw quantities
+      const currentStock = item.inventoryEntries.reduce((sum, entry) => sum + entry.quantity, 0);
 
       if (currentStock > 0) {
         // Calculate weighted average cost
