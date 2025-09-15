@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { Shield, Users, Building, DollarSign, Activity, TrendingUp, Clock, AlertTriangle, CheckCircle, Server, RefreshCw } from 'lucide-react';
+import { Shield, Users, Building, Activity, Clock, AlertTriangle, Server, RefreshCw } from 'lucide-react';
 import { t } from '@/constants/localization';
 import { formatAdminDate, getCurrentPersianTime } from '@/utils/persianDate';
 import { getDashboardStats, getRecentActivities, getSystemMetrics } from '@/services/dashboardService';
@@ -53,7 +53,7 @@ export default function AdminDashboard() {
     lastUpdated: new Date(),
   });
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
-  const [systemMetrics, setSystemMetrics] = useState<SystemMetrics>({
+  const [, setSystemMetrics] = useState<SystemMetrics>({
     cpuUsage: 0,
     memoryUsage: 0,
     diskUsage: 0,
@@ -75,7 +75,7 @@ export default function AdminDashboard() {
   }, []);
 
   // Load dashboard data
-  const loadDashboardData = async (showToast: boolean = false) => {
+  const loadDashboardData = useCallback(async (showToast: boolean = false) => {
     if (!isAuthenticated) {
       setError('Authentication required');
       setLoading(false);
@@ -101,9 +101,13 @@ export default function AdminDashboard() {
       if (showToast) {
         toast.success('داده‌های داشبورد به‌روزرسانی شد');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'خطا در بارگذاری داده‌ها';
       console.error('Error loading dashboard data:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'خطا در بارگذاری داده‌ها';
+      const errorMessage = (typeof error === 'object' && error !== null && 'response' in error)
+        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (((error as unknown) as { response?: { data?: { message?: string } } }).response?.data?.message || message)
+        : message;
       setError(errorMessage);
       
       if (showToast) {
@@ -112,14 +116,14 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated]);
 
   // Load data on mount and when authentication changes
   useEffect(() => {
     if (isAuthenticated) {
       loadDashboardData();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, loadDashboardData]);
 
   // Auto-refresh data every 5 minutes
   useEffect(() => {
@@ -130,41 +134,15 @@ export default function AdminDashboard() {
     }, 5 * 60 * 1000); // 5 minutes
 
     return () => clearInterval(interval);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, loadDashboardData]);
 
   const handleRefresh = () => {
     loadDashboardData(true);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'healthy':
-        return 'text-admin-healthy bg-green-100';
-      case 'warning':
-        return 'text-admin-warning bg-yellow-100';
-      case 'critical':
-        return 'text-admin-critical bg-red-100';
-      case 'maintenance':
-        return 'text-admin-maintenance bg-purple-100';
-      default:
-        return 'text-admin-text-muted bg-gray-100';
-    }
-  };
+  // removed unused getStatusColor
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'healthy':
-        return t('status.healthy');
-      case 'warning':
-        return t('status.warning');
-      case 'critical':
-        return t('status.critical');
-      case 'maintenance':
-        return t('status.maintenance');
-      default:
-        return t('status.unknown');
-    }
-  };
+  // removed unused getStatusText
 
   const getActivityIcon = (type: string) => {
     switch (type) {

@@ -413,7 +413,7 @@ export class RecipeService {
       
       if (!unitCost || unitCost === 0) {
         try {
-          const inventoryPrice = await getInventoryPrice(ingredientData.itemId);
+          const inventoryPrice = await getInventoryPrice(ingredientData.itemId, tenantId);
           unitCost = inventoryPrice.price;
           priceSource = inventoryPrice.priceSource;
           
@@ -497,7 +497,7 @@ export class RecipeService {
       let unitCost = updateData.unitCost;
       if (updateData.unitCost !== undefined && (updateData.unitCost === 0 || updateData.unitCost === null)) {
         try {
-          const inventoryPrice = await getInventoryPrice(existingIngredient.itemId);
+          const inventoryPrice = await getInventoryPrice(existingIngredient.itemId, tenantId);
           unitCost = inventoryPrice.price;
           console.log(`📊 Auto-synced price for ${existingIngredient.item.name}: ${unitCost}`);
         } catch (error) {
@@ -775,7 +775,7 @@ export class RecipeService {
 
       for (const ingredient of ingredients) {
         try {
-          const inventoryPrice = await getInventoryPrice(ingredient.itemId);
+          const inventoryPrice = await getInventoryPrice(ingredient.itemId, tenantId);
           const oldPrice = Number(ingredient.unitCost);
           const newPrice = inventoryPrice.price;
 

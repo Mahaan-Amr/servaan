@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { InventoryIntegrationService } from '../../../../services/orderingService';
 
 interface StockWarning {
   type: 'LOW_STOCK' | 'OUT_OF_STOCK' | 'CRITICAL_STOCK';

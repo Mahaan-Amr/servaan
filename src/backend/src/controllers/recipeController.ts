@@ -458,7 +458,7 @@ export class RecipeController {
 
       // Get inventory price
       const { getInventoryPrice } = await import('../services/inventoryService');
-      const inventoryPrice = await getInventoryPrice(ingredient.itemId);
+      const inventoryPrice = await getInventoryPrice(ingredient.itemId, tenantId);
 
       if (inventoryPrice.price === 0 && !forceSync) {
         throw new AppError('No inventory price available for this item', 400);

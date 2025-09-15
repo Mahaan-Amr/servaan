@@ -364,7 +364,7 @@ export default function ReceiptTemplate({
         generateReceipt();
       }, 100);
     }
-  }, [generateReceipt]);
+  }, [generateReceipt, orderItems]);
 
   const handlePrint = () => {
     console.log('🖨️ Starting DIRECT print process...');

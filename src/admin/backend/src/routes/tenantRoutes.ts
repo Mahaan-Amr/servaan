@@ -23,8 +23,8 @@ router.get('/', authenticateAdmin, async (req, res) => {
       search: search as string,
       status: status as string,
       plan: plan as string,
-      sortBy: (sortBy as any) || 'createdAt',
-      sortDir: (sortDir as any) || 'desc',
+      sortBy: (sortBy as 'createdAt' | 'monthlyRevenue' | 'ordersThisMonth') || 'createdAt',
+      sortDir: (sortDir as 'asc' | 'desc') || 'desc',
       refresh: refresh === 'true',
       // Enhanced filters
       businessType: businessType as string,
@@ -32,7 +32,7 @@ router.get('/', authenticateAdmin, async (req, res) => {
       country: country as string,
       createdFrom: createdFrom as string,
       createdTo: createdTo as string,
-      revenueFrom: revenueFrom ? Number(revenueFrom) : undefined,
+      revenueFrom: revenueFrom !== undefined ? Number(revenueFrom) : undefined,
       revenueTo: revenueTo ? Number(revenueTo) : undefined,
       userCountFrom: userCountFrom ? Number(userCountFrom) : undefined,
       userCountTo: userCountTo ? Number(userCountTo) : undefined,
@@ -141,15 +141,7 @@ router.get('/export', authenticateAdmin, async (req, res) => {
       search: search as string,
       status: status as string,
       plan: plan as string,
-      businessType: businessType as string,
-      city: city as string,
-      country: country as string,
-      createdFrom: createdFrom as string,
-      createdTo: createdTo as string,
-      revenueFrom: revenueFrom ? Number(revenueFrom) : undefined,
-      revenueTo: revenueTo ? Number(revenueTo) : undefined,
-      userCountFrom: userCountFrom ? Number(userCountFrom) : undefined,
-      userCountTo: userCountTo ? Number(userCountTo) : undefined,
+      // Only pass fields allowed by the export signature
       hasFeatures: hasFeatures ? (hasFeatures as string).split(',') : undefined,
       selectedTenants: selectedTenants ? (selectedTenants as string).split(',') : undefined
     });

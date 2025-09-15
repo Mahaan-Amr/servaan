@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Activity, 
   Server, 
@@ -8,7 +8,6 @@ import {
   Cpu, 
   HardDrive, 
   Wifi, 
-  AlertTriangle, 
   CheckCircle, 
   Clock,
   RefreshCw,
@@ -52,7 +51,7 @@ export default function SystemHealthWidget({
     network: 'stable',
   });
 
-  const fetchMetrics = async () => {
+  const fetchMetrics = useCallback(async () => {
     try {
       const newMetrics = await getSystemMetrics();
       setMetrics(newMetrics);
@@ -65,24 +64,25 @@ export default function SystemHealthWidget({
         disk: newMetrics.diskUsage > 85 ? 'up' : 'stable',
         network: newMetrics.networkIO > 60 ? 'up' : 'stable',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'خطا در دریافت اطلاعات سیستم';
       console.error('Error fetching system metrics:', error);
-      toast.error('خطا در دریافت اطلاعات سیستم');
+      toast.error(message);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchMetrics();
-  }, []);
+  }, [fetchMetrics]);
 
   useEffect(() => {
     if (!autoRefresh) return;
 
     const interval = setInterval(fetchMetrics, refreshInterval);
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval]);
+  }, [autoRefresh, refreshInterval, fetchMetrics]);
 
   const getStatusColor = (value: number, thresholds: { warning: number; critical: number }) => {
     if (value >= thresholds.critical) return 'text-red-600 bg-red-50';

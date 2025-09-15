@@ -38,8 +38,9 @@ export default function AdminLoginPage() {
       setLoading(true);
       await login(formData);
       toast.success(t('messages.loginSuccess'));
-    } catch (error: any) {
-      toast.error(error.message || t('messages.loginFailed'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : t('messages.loginFailed');
+      toast.error(message);
     } finally {
       setLoading(false);
     }

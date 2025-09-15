@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { withAdminAuth } from '@/contexts/AdminAuthContext';
 import { listAdminUsers, createAdminUser, updateAdminUserRole, setAdminUserActive, resetAdminUserPassword, AdminUser, AdminUserRole } from '@/services/admin/users/userService';
 import { Plus, Search, Shield, CheckCircle, XCircle, Edit, Lock, Unlock, KeyRound } from 'lucide-react';
@@ -17,21 +17,22 @@ function AdminUsersPage() {
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(0);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       const res = await listAdminUsers({ page, limit, search, role, isActive });
       setUsers(res.users);
       setTotal(res.pagination.total);
       setPages(res.pagination.pages);
-    } catch (e: any) {
-      toast.error(e.message || 'خطا در بارگذاری کاربران');
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'خطا در بارگذاری کاربران';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, limit, search, role, isActive]);
 
-  useEffect(() => { load(); }, [page, limit, role, isActive]);
+  useEffect(() => { load(); }, [load]);
 
   const handleCreate = async () => {
     const email = prompt('ایمیل کاربر جدید را وارد کنید');
@@ -43,7 +44,7 @@ function AdminUsersPage() {
       await createAdminUser(email, password, roleSel);
       toast.success('کاربر ایجاد شد');
       load();
-    } catch (e: any) { toast.error(e.message || 'خطا در ایجاد کاربر'); }
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'خطا در ایجاد کاربر'); }
   };
 
   const handleToggleActive = async (u: AdminUser) => {
@@ -51,7 +52,7 @@ function AdminUsersPage() {
       await setAdminUserActive(u.id, !u.isActive);
       toast.success(!u.isActive ? 'فعال شد' : 'غیرفعال شد');
       load();
-    } catch (e: any) { toast.error(e.message || 'خطا در تغییر وضعیت'); }
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'خطا در تغییر وضعیت'); }
   };
 
   const [roleModal, setRoleModal] = useState<{ open: boolean; user?: AdminUser; role: AdminUserRole }>(() => ({ open: false, role: 'SUPPORT' }));
@@ -65,7 +66,7 @@ function AdminUsersPage() {
       toast.success('نقش کاربر به‌روزرسانی شد');
       closeRoleModal();
       load();
-    } catch (e: any) { toast.error(e.message || 'خطا در تغییر نقش'); }
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'خطا در تغییر نقش'); }
   };
 
   const handleResetPassword = async (u: AdminUser) => {
@@ -74,7 +75,7 @@ function AdminUsersPage() {
     try {
       await resetAdminUserPassword(u.id, newPassword);
       toast.success('رمز عبور بازنشانی شد');
-    } catch (e: any) { toast.error(e.message || 'خطا در بازنشانی رمز عبور'); }
+    } catch (e: unknown) { toast.error(e instanceof Error ? e.message : 'خطا در بازنشانی رمز عبور'); }
   };
 
   return (
@@ -102,14 +103,14 @@ function AdminUsersPage() {
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-admin-text-muted"/>
               <input value={search} onChange={e=>setSearch(e.target.value)} onKeyDown={e=>{ if(e.key==='Enter'){ setPage(1); load(); } }} placeholder="جستجو ایمیل" className="w-full pl-10 pr-4 py-2 border border-admin-border rounded-admin focus:ring-2 focus:ring-admin-primary"/>
             </div>
-            <select value={role} onChange={e=>{ setRole(e.target.value as any); setPage(1); }} className="px-3 py-2 border border-admin-border rounded-admin">
+            <select value={role} onChange={e=>{ setRole(e.target.value as AdminUserRole); setPage(1); }} className="px-3 py-2 border border-admin-border rounded-admin">
               <option value="ALL">همه نقش‌ها</option>
               <option value="SUPER_ADMIN">سوپر ادمین</option>
               <option value="PLATFORM_ADMIN">پلتفرم ادمین</option>
               <option value="SUPPORT">پشتیبانی</option>
               <option value="DEVELOPER">توسعه‌دهنده</option>
             </select>
-            <select value={isActive} onChange={e=>{ setIsActive(e.target.value as any); setPage(1); }} className="px-3 py-2 border border-admin-border rounded-admin">
+            <select value={isActive} onChange={e=>{ setIsActive(e.target.value as 'all' | 'true' | 'false'); setPage(1); }} className="px-3 py-2 border border-admin-border rounded-admin">
               <option value="all">همه وضعیت‌ها</option>
               <option value="true">فعال</option>
               <option value="false">غیرفعال</option>

@@ -636,7 +636,7 @@ export async function getPriceStatistics(tenantId: string): Promise<{
     }> = [];
 
     for (const item of items) {
-      const priceInfo = await getInventoryPrice(item.id);
+      const priceInfo = await getInventoryPrice(item.id, tenantId);
       
       if (priceInfo.price > 0) {
         itemsWithPrices++;
