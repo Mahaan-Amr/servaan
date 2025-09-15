@@ -20,23 +20,23 @@ router.get('/', authenticateAdmin, async (req, res) => {
     const result = await TenantService.listTenants({
       page: Number(page),
       limit: Number(limit),
-      search: search as string,
-      status: status as string,
-      plan: plan as string,
       sortBy: (sortBy as 'createdAt' | 'monthlyRevenue' | 'ordersThisMonth') || 'createdAt',
       sortDir: (sortDir as 'asc' | 'desc') || 'desc',
       refresh: refresh === 'true',
-      // Enhanced filters
-      businessType: businessType as string,
-      city: city as string,
-      country: country as string,
-      createdFrom: createdFrom as string,
-      createdTo: createdTo as string,
-      revenueFrom: revenueFrom !== undefined ? Number(revenueFrom) : undefined,
-      revenueTo: revenueTo ? Number(revenueTo) : undefined,
-      userCountFrom: userCountFrom ? Number(userCountFrom) : undefined,
-      userCountTo: userCountTo ? Number(userCountTo) : undefined,
-      hasFeatures: hasFeatures ? (hasFeatures as string).split(',') : undefined
+      ...(search ? { search: search as string } : {}),
+      ...(status ? { status: status as string } : {}),
+      ...(plan ? { plan: plan as string } : {}),
+      // Enhanced filters (only include when provided)
+      ...(businessType ? { businessType: businessType as string } : {}),
+      ...(city ? { city: city as string } : {}),
+      ...(country ? { country: country as string } : {}),
+      ...(createdFrom ? { createdFrom: createdFrom as string } : {}),
+      ...(createdTo ? { createdTo: createdTo as string } : {}),
+      ...(revenueFrom !== undefined ? { revenueFrom: Number(revenueFrom) } : {}),
+      ...(revenueTo ? { revenueTo: Number(revenueTo) } : {}),
+      ...(userCountFrom ? { userCountFrom: Number(userCountFrom) } : {}),
+      ...(userCountTo ? { userCountTo: Number(userCountTo) } : {}),
+      ...(hasFeatures ? { hasFeatures: (hasFeatures as string).split(',') } : {})
     });
 
     // Audit log
@@ -138,12 +138,9 @@ router.get('/export', authenticateAdmin, async (req, res) => {
     
     const exportData = await TenantService.exportTenants({
       format: format as 'csv' | 'excel' | 'pdf',
-      search: search as string,
-      status: status as string,
-      plan: plan as string,
-      // Only pass fields allowed by the export signature
-      hasFeatures: hasFeatures ? (hasFeatures as string).split(',') : undefined,
-      selectedTenants: selectedTenants ? (selectedTenants as string).split(',') : undefined
+      ...(search ? { search: search as string } : {}),
+      ...(status ? { status: status as string } : {}),
+      ...(plan ? { plan: plan as string } : {})
     });
 
     // Set appropriate headers for file download
