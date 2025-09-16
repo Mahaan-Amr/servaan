@@ -123,7 +123,7 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[80] p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 w-full max-w-md mx-4 max-h-[95vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4 md:mb-6">
           <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">انتخاب نوع پرداخت</h2>
