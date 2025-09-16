@@ -1274,9 +1274,9 @@ export default function POSInterface() {
       </div>
 
       {/* Mobile Cart Drawer */}
-      {(
-        <div className={`sm:hidden fixed inset-x-0 bottom-0 z-[70] transition-transform duration-300 ${isCartOpen ? 'translate-y-0' : 'translate-y-[75%]'} pointer-events-auto`}>
-          <div className={`mx-auto w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 rounded-t-2xl shadow-2xl ${isCartOpen ? 'max-h-[85vh]' : ''}`}>
+      {orderItems.length > 0 && (
+        <div className={`sm:hidden fixed inset-x-0 bottom-0 z-[70] transition-transform duration-300 ${isCartOpen ? 'translate-y-0' : 'translate-y-[80%]'} pointer-events-auto`}>
+          <div className={`mx-auto w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 rounded-t-2xl shadow-2xl ${isCartOpen ? 'max-h-[70vh]' : ''}`}>
             {/* Drag handle */}
             <div className="flex items-center justify-center py-2">
               <div className="w-10 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
@@ -1305,7 +1305,7 @@ export default function POSInterface() {
               </div>
             )}
             {/* Items */}
-            <div className={`overflow-y-auto px-3 pb-3 ${isCartOpen ? 'max-h-[50vh]' : 'max-h-[45vh]'}`}>
+            <div className={`overflow-y-auto px-3 pb-3 ${isCartOpen ? 'max-h-[40vh]' : 'max-h-[30vh]'}`}>
               {orderItems.length === 0 ? (
                 <div className="text-center text-gray-500 dark:text-gray-400 py-6">
                   سبد خالی است
@@ -1342,8 +1342,7 @@ export default function POSInterface() {
               )}
             </div>
             {/* Summary + Actions */}
-            {orderItems.length > 0 && (
-              <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 space-y-2 pb-[max(16px,env(safe-area-inset-bottom))] sticky bottom-0">
+            <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 space-y-2 pb-[max(20px,env(safe-area-inset-bottom))]">
                 {/* Full order summary with options for mobile */}
                 <OrderSummary
                   orderItems={orderItems}
@@ -1379,7 +1378,6 @@ export default function POSInterface() {
                   پاک کردن سبد
                 </button>
               </div>
-            )}
           </div>
         </div>
       )}
