@@ -1275,7 +1275,7 @@ export default function POSInterface() {
 
       {/* Mobile Cart Drawer */}
       {(
-        <div className={`sm:hidden fixed inset-x-0 bottom-0 z-[70] transition-transform duration-300 ${isCartOpen ? 'translate-y-0' : 'translate-y-[85%]'} pointer-events-auto`}>
+        <div className={`sm:hidden fixed inset-x-0 bottom-0 z-[70] transition-transform duration-300 ${isCartOpen ? 'translate-y-0' : 'translate-y-[75%]'} pointer-events-auto`}>
           <div className="mx-auto w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 rounded-t-2xl shadow-2xl">
             {/* Drag handle */}
             <div className="flex items-center justify-center py-2">
@@ -1287,6 +1287,23 @@ export default function POSInterface() {
                 {isCartOpen ? 'بستن' : 'باز کردن'}
               </button>
             </div>
+            
+            {/* Quick Order Summary - Always Visible */}
+            {orderItems.length > 0 && !isCartOpen && (
+              <div className="px-3 pb-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">{orderItems.length} آیتم</span>
+                  <span className="font-bold text-amber-600 dark:text-amber-400">{formatPrice(calculation.totalAmount)}</span>
+                </div>
+                <button 
+                  onClick={handleCreateOrder} 
+                  disabled={isProcessing} 
+                  className={`w-full mt-2 py-2 rounded-lg font-medium transition-all text-sm ${isProcessing ? 'bg-gray-400 text-gray-200' : 'bg-amber-600 hover:bg-amber-700 text-white'}`}
+                >
+                  {isProcessing ? 'در حال پردازش...' : 'پرداخت و ثبت سفارش'}
+                </button>
+              </div>
+            )}
             {/* Items */}
             <div className="max-h-[45vh] overflow-y-auto px-3 pb-3">
               {orderItems.length === 0 ? (
