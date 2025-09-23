@@ -705,7 +705,7 @@ export class MenuService {
   }
 
   // Get menu items
-  static async getMenuItems(options: { categoryId?: string; isActive?: boolean; isAvailable?: boolean; search?: string } = {}) {
+  static async getMenuItems(options: { categoryId?: string; isActive?: boolean; isAvailable?: boolean; search?: string; page?: number; limit?: number; sortBy?: string; sortOrder?: 'asc' | 'desc' } = {}) {
     const queryParams = new URLSearchParams();
     Object.entries(options).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {

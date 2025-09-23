@@ -98,7 +98,7 @@ export default function MenuManagementPage() {
       
       const [categoriesData, menuItemsData, inventoryData] = await Promise.all([
         MenuService.getCategories(),
-        MenuService.getMenuItems(),
+        MenuService.getMenuItems({ limit: 1000, isActive: true }),
         getItems()
       ]);
       
@@ -114,28 +114,38 @@ export default function MenuManagementPage() {
     }
   };
 
-  // Filter menu items
+  // Server-side filtering: refetch items when selectedCategory, searchTerm, or showAvailableOnly changes
   useEffect(() => {
-    let filtered = menuItems.filter(item => item.isActive);
-    
-    if (selectedCategory) {
-      filtered = filtered.filter(item => item.categoryId === selectedCategory);
-    }
-    
-    if (searchTerm) {
-      filtered = filtered.filter(item => 
-        item.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.displayNameEn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.description?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    if (showAvailableOnly) {
-      filtered = filtered.filter(item => item.isAvailable);
-    }
-    
-    setFilteredMenuItems(filtered);
-  }, [menuItems, selectedCategory, searchTerm, showAvailableOnly]);
+    const fetchFiltered = async () => {
+      try {
+        setLoading(true);
+        const items = await MenuService.getMenuItems({
+          limit: 1000,
+          isActive: true,
+          categoryId: selectedCategory || undefined,
+          isAvailable: showAvailableOnly ? true : undefined,
+          search: searchTerm || undefined,
+          sortBy: 'displayOrder',
+          sortOrder: 'asc'
+        });
+        setMenuItems(items as MenuItem[]);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'خطا در دریافت آیتم‌ها';
+        setError(errorMessage);
+        toast.error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Avoid running before initial categories load finishes
+    fetchFiltered();
+  }, [selectedCategory, searchTerm, showAvailableOnly]);
+
+  // Remove client-only filtering; derive filteredMenuItems directly from menuItems
+  useEffect(() => {
+    setFilteredMenuItems(menuItems);
+  }, [menuItems]);
 
   // Calculate stats
   const getStats = useCallback((): MenuStats => {
