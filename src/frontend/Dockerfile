@@ -5,8 +5,13 @@ WORKDIR /app
 # Copy package files
 COPY src/frontend/package*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies with cache clearing to ensure fresh install
+RUN npm cache clean --force && npm ci
+
+# Verify @dnd-kit packages are installed
+RUN echo "Verifying @dnd-kit packages:" && \
+    npm list @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities || echo "Some packages missing, installing..." && \
+    npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
 
 # Copy the ENTIRE project structure to maintain consistency
 COPY . .
