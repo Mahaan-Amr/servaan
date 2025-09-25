@@ -67,8 +67,6 @@ function SortableCategory({ category, onEdit, onDelete, onToggleActive }: {
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
       className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm hover:shadow-md transition-all duration-200 ${
         isDragging ? 'shadow-lg' : ''
       }`}
@@ -160,7 +158,11 @@ function SortableCategory({ category, onEdit, onDelete, onToggleActive }: {
       
       <div className="mt-3 flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
         <span>{category.items?.length || 0} آیتم</span>
-        <div className="flex items-center space-x-2 space-x-reverse">
+        <div 
+          className="flex items-center space-x-2 space-x-reverse cursor-grab active:cursor-grabbing"
+          {...attributes}
+          {...listeners}
+        >
           <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
           </svg>
