@@ -899,18 +899,13 @@ export default function POSInterface() {
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-xs leading-tight" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{category.name}</span>
+                      <span className="font-medium text-sm leading-tight" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{category.name}</span>
                       {selectedCategory === category.id && (
                         <svg className="w-3 h-3 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                         </svg>
                       )}
                     </div>
-                    {category.items && category.items.length > 0 && (
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {category.items.length} آیتم
-                      </div>
-                    )}
                   </button>
                 ))}
               </div>
