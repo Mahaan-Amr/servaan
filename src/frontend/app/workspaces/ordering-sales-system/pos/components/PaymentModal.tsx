@@ -20,7 +20,7 @@ interface PaymentModalProps {
     paymentMethod: 'CASH' | 'CARD';
     amountReceived: number;
     notes?: string;
-  }) => void;
+  }, showReceipt?: boolean) => void;
   onClose: () => void;
 }
 
@@ -38,7 +38,7 @@ export default function PaymentModal({
     return new Intl.NumberFormat('fa-IR').format(amount);
   };
 
-  const handlePaymentComplete = () => {
+  const handlePaymentComplete = (showReceipt: boolean = true) => {
     if (amountReceived < calculation.totalAmount) {
       alert('مبلغ دریافتی نمی‌تواند کمتر از مبلغ کل باشد');
       return;
@@ -48,7 +48,7 @@ export default function PaymentModal({
       paymentMethod,
       amountReceived,
       notes: notes.trim() || undefined
-    });
+    }, showReceipt);
   };
 
   const changeAmount = calculation.totalAmount - amountReceived;
@@ -169,16 +169,22 @@ export default function PaymentModal({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 sm:space-x-reverse">
+        <div className="flex flex-col space-y-2">
           <button
-            onClick={handlePaymentComplete}
-            className="flex-1 bg-green-500 text-white py-2 md:py-3 px-4 rounded-lg hover:bg-green-600 font-medium transition-colors text-sm md:text-base"
+            onClick={() => handlePaymentComplete(true)}
+            className="w-full bg-green-500 text-white py-2 md:py-3 px-4 rounded-lg hover:bg-green-600 font-medium transition-colors text-sm md:text-base"
           >
             ثبت پرداخت و چاپ رسید
           </button>
           <button
+            onClick={() => handlePaymentComplete(false)}
+            className="w-full bg-blue-500 text-white py-2 md:py-3 px-4 rounded-lg hover:bg-blue-600 font-medium transition-colors text-sm md:text-base"
+          >
+            ثبت پرداخت
+          </button>
+          <button
             onClick={onClose}
-            className="px-4 py-2 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors text-sm md:text-base"
+            className="w-full px-4 py-2 md:py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors text-sm md:text-base"
           >
             انصراف
           </button>

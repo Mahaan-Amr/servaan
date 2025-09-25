@@ -733,7 +733,7 @@ export default function POSInterface() {
     paymentMethod: 'CASH' | 'CARD';
     amountReceived: number;
     notes?: string;
-  }) => {
+  }, showReceipt: boolean = true) => {
     if (!currentOrderId) {
       toast.error('خطا: شناسه سفارش یافت نشد');
       return;
@@ -752,22 +752,24 @@ export default function POSInterface() {
       // Set payment data for receipt
       setPaymentData(paymentData);
       setShowPayment(false);
-      setReceiptOrderDate(new Date());
-      setShowReceipt(true);
+      
+      // Only show receipt if requested
+      if (showReceipt) {
+        setReceiptOrderDate(new Date());
+        setShowReceipt(true);
+      } else {
+        // Clear order data immediately if no receipt
+        setOrderItems([]);
+        setCurrentOrderId(null);
+        setCustomer({});
+        setSelectedTable(null);
+        setOrderNotes('');
+      }
 
       // Log integration results
       console.log('Payment processed:', paymentResult);
 
       toast.success('پرداخت با موفقیت انجام شد و سفارش تکمیل شد');
-
-      // DON'T clear orderItems here - let the receipt template handle it
-      // Only clear other form data
-      setCustomer({});
-      setSelectedTable(null);
-      setOrderNotes('');
-      // Keep currentOrderId for receipt display
-
-      // Don't auto-redirect - let user finish manually
 
     } catch (error) {
       console.error('Error processing payment:', error);
