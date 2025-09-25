@@ -140,51 +140,42 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             نوع پرداخت
           </label>
-          <div className="space-y-3">
-            <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
-              <input
-                type="radio"
-                name="paymentType"
-                value="IMMEDIATE"
-                checked={paymentType === 'IMMEDIATE'}
-                onChange={(e) => setPaymentType(e.target.value as 'IMMEDIATE' | 'PAY_AFTER_SERVICE' | 'PARTIAL')}
-                className="mr-3"
-              />
-              <div>
-                <div className="font-medium text-gray-900 dark:text-white">پرداخت فوری</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">پرداخت کامل در زمان سفارش</div>
-              </div>
-            </label>
-
-            <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
-              <input
-                type="radio"
-                name="paymentType"
-                value="PAY_AFTER_SERVICE"
-                checked={paymentType === 'PAY_AFTER_SERVICE'}
-                onChange={(e) => setPaymentType(e.target.value as 'IMMEDIATE' | 'PAY_AFTER_SERVICE' | 'PARTIAL')}
-                className="mr-3"
-              />
-              <div>
-                <div className="font-medium text-gray-900 dark:text-white">پرداخت پس از سرویس</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">پرداخت پس از اتمام غذا</div>
-              </div>
-            </label>
-
-            <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
-              <input
-                type="radio"
-                name="paymentType"
-                value="PARTIAL"
-                checked={paymentType === 'PARTIAL'}
-                onChange={(e) => setPaymentType(e.target.value as 'IMMEDIATE' | 'PAY_AFTER_SERVICE' | 'PARTIAL')}
-                className="mr-3"
-              />
-              <div>
-                <div className="font-medium text-gray-900 dark:text-white">پرداخت جزئی</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">پرداخت در چند مرحله</div>
-              </div>
-            </label>
+          <div className="relative bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+            <div className="flex">
+              <button
+                type="button"
+                onClick={() => setPaymentType('IMMEDIATE')}
+                className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all duration-200 ${
+                  paymentType === 'IMMEDIATE'
+                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                پرداخت فوری
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentType('PAY_AFTER_SERVICE')}
+                className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all duration-200 ${
+                  paymentType === 'PAY_AFTER_SERVICE'
+                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                پرداخت پس از سرویس
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentType('PARTIAL')}
+                className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all duration-200 ${
+                  paymentType === 'PARTIAL'
+                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                پرداخت جزئی
+              </button>
+            </div>
           </div>
         </div>
 
