@@ -40,7 +40,7 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD'>('CASH');
+  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD'>('CARD');
   const [amountReceived, setAmountReceived] = useState<number>(totalAmount);
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [showCustomerDetails, setShowCustomerDetails] = useState(false);
