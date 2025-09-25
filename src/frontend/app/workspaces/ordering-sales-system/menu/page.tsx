@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
+import Image from 'next/image';
 import {
   DndContext,
   closestCenter,
@@ -75,9 +76,11 @@ function SortableMenuItem({ item, onEdit, onDelete, onToggleActive, categories }
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3 space-x-reverse">
           {item.thumbnailUrl && (
-            <img
+            <Image
               src={item.thumbnailUrl}
               alt={item.displayName}
+              width={48}
+              height={48}
               className="w-12 h-12 rounded-lg object-cover"
             />
           )}
