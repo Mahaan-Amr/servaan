@@ -98,27 +98,31 @@ export default function PaymentModal({
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             روش پرداخت
           </label>
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 sm:space-x-reverse">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                value="CASH"
-                checked={paymentMethod === 'CASH'}
-                onChange={(e) => setPaymentMethod(e.target.value as 'CASH' | 'CARD')}
-                className="ml-2 w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 focus:ring-amber-500 dark:focus:ring-amber-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-              />
-              <span className="text-sm text-gray-700 dark:text-gray-300">نقدی</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                value="CARD"
-                checked={paymentMethod === 'CARD'}
-                onChange={(e) => setPaymentMethod(e.target.value as 'CASH' | 'CARD')}
-                className="ml-2 w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 focus:ring-amber-500 dark:focus:ring-amber-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-              />
-              <span className="text-sm text-gray-700 dark:text-gray-300">کارت</span>
-            </label>
+          <div className="relative bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+            <div className="flex">
+              <button
+                type="button"
+                onClick={() => setPaymentMethod('CASH')}
+                className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all duration-200 ${
+                  paymentMethod === 'CASH'
+                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                نقدی
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentMethod('CARD')}
+                className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all duration-200 ${
+                  paymentMethod === 'CARD'
+                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                کارت
+              </button>
+            </div>
           </div>
         </div>
 

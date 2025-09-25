@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FaTimes, FaCreditCard, FaMoneyBillWave, FaUser, FaPhone, FaStickyNote } from 'react-icons/fa';
+import { FaTimes, FaUser, FaPhone, FaStickyNote } from 'react-icons/fa';
 
 interface FlexiblePaymentModalProps {
   isOpen: boolean;
@@ -246,32 +246,31 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               روش پرداخت
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="CASH"
-                  checked={paymentMethod === 'CASH'}
-                  onChange={(e) => setPaymentMethod(e.target.value as 'CASH' | 'CARD')}
-                  className="mr-2"
-                />
-                <FaMoneyBillWave className="mr-2 text-green-500" />
-                <span className="text-sm">نقدی</span>
-              </label>
-
-              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="CARD"
-                  checked={paymentMethod === 'CARD'}
-                  onChange={(e) => setPaymentMethod(e.target.value as 'CASH' | 'CARD')}
-                  className="mr-2"
-                />
-                <FaCreditCard className="mr-2 text-blue-500" />
-                <span className="text-sm">کارت</span>
-              </label>
+            <div className="relative bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+              <div className="flex">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('CASH')}
+                  className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all duration-200 ${
+                    paymentMethod === 'CASH'
+                      ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                >
+                  نقدی
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('CARD')}
+                  className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all duration-200 ${
+                    paymentMethod === 'CARD'
+                      ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  }`}
+                >
+                  کارت
+                </button>
+              </div>
             </div>
 
             <div className="mt-4">
@@ -413,36 +412,31 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     روش پرداخت
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="CASH"
-                        checked={paymentMethod === 'CASH'}
-                        onChange={(e) => setPaymentMethod(e.target.value as 'CASH' | 'CARD')}
-                        className="mr-2"
-                      />
-                      <div>
-                        <div className="font-medium text-gray-900 dark:text-white">نقدی</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">پرداخت نقدی</div>
-                      </div>
-                    </label>
-                    
-                    <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="CARD"
-                        checked={paymentMethod === 'CARD'}
-                        onChange={(e) => setPaymentMethod(e.target.value as 'CASH' | 'CARD')}
-                        className="mr-2"
-                      />
-                      <div>
-                        <div className="font-medium text-gray-900 dark:text-white">کارت</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">پرداخت با کارت</div>
-                      </div>
-                    </label>
+                  <div className="relative bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                    <div className="flex">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('CASH')}
+                        className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all duration-200 ${
+                          paymentMethod === 'CASH'
+                            ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                        }`}
+                      >
+                        نقدی
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('CARD')}
+                        className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all duration-200 ${
+                          paymentMethod === 'CARD'
+                            ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                        }`}
+                      >
+                        کارت
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
