@@ -2,6 +2,25 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { MenuService, RecipeService, InventoryPriceService } from '../../../../services/orderingService';
 import { getItems } from '../../../../services/itemService';
 import { MenuCategory, MenuItem } from '../../../../types/ordering';
@@ -22,6 +41,136 @@ interface RecipeIngredient {
   isOptional: boolean;
 }
 
+// Sortable Category Component
+function SortableCategory({ category, onEdit, onDelete, onToggleActive }: {
+  category: MenuCategory;
+  onEdit: (category: MenuCategory) => void;
+  onDelete: (id: string) => void;
+  onToggleActive: (id: string) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: category.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm hover:shadow-md transition-all duration-200 ${
+        isDragging ? 'shadow-lg' : ''
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3 space-x-reverse">
+          <div
+            className="w-4 h-4 rounded-full"
+            style={{ backgroundColor: category.color }}
+          />
+          <div>
+            <h3 className="font-medium text-gray-900 dark:text-white">
+              {category.name}
+            </h3>
+            {category.nameEn && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {category.nameEn}
+              </p>
+            )}
+            {category.description && (
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                {category.description}
+              </p>
+            )}
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-2 space-x-reverse">
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+            category.isActive
+              ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+              : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+          }`}>
+            {category.isActive ? 'فعال' : 'غیرفعال'}
+          </span>
+          
+          <div className="flex items-center space-x-1 space-x-reverse">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleActive(category.id);
+              }}
+              className={`p-1 rounded-md transition-colors ${
+                category.isActive
+                  ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20'
+                  : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'
+              }`}
+              title={category.isActive ? 'غیرفعال کردن' : 'فعال کردن'}
+            >
+              {category.isActive ? (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </button>
+            
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(category);
+              }}
+              className="p-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
+              title="ویرایش"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(category.id);
+              }}
+              className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+              title="حذف"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div className="mt-3 flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+        <span>{category.items?.length || 0} آیتم</span>
+        <div className="flex items-center space-x-2 space-x-reverse">
+          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+          </svg>
+          <span className="text-xs">کشیدن برای تغییر ترتیب</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MenuManagementPage() {
   // Core state
   const [loading, setLoading] = useState(true);
@@ -34,6 +183,42 @@ export default function MenuManagementPage() {
   const [showAvailableOnly, setShowAvailableOnly] = useState(false);
   const [activeTab, setActiveTab] = useState<'categories' | 'items'>('categories');
   const [error, setError] = useState<string | null>(null);
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handle drag end for categories
+  const handleCategoryDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = categories.findIndex((category) => category.id === active.id);
+      const newIndex = categories.findIndex((category) => category.id === over.id);
+
+      const newCategories = arrayMove(categories, oldIndex, newIndex);
+      setCategories(newCategories);
+
+      // Update display order in backend
+      try {
+        await Promise.all(
+          newCategories.map((category, index) =>
+            MenuService.updateCategory(category.id, { displayOrder: index })
+          )
+        );
+        toast.success('ترتیب دسته‌بندی‌ها به‌روزرسانی شد');
+      } catch (error) {
+        console.error('Error updating category order:', error);
+        toast.error('خطا در به‌روزرسانی ترتیب دسته‌بندی‌ها');
+        // Revert on error
+        setCategories(categories);
+      }
+    }
+  };
 
   // Category form state
   const [showCategoryForm, setShowCategoryForm] = useState(false);
@@ -221,6 +406,22 @@ export default function MenuManagementPage() {
     } catch (error) {
       console.error('Error deleting category:', error);
       toast.error('خطا در حذف دسته‌بندی');
+    }
+  };
+
+  const handleToggleCategoryActive = async (categoryId: string) => {
+    try {
+      const category = categories.find(cat => cat.id === categoryId);
+      if (!category) return;
+
+      await MenuService.updateCategory(categoryId, { isActive: !category.isActive });
+      setCategories(categories.map(cat => 
+        cat.id === categoryId ? { ...cat, isActive: !cat.isActive } : cat
+      ));
+      toast.success(`دسته‌بندی ${!category.isActive ? 'فعال' : 'غیرفعال'} شد`);
+    } catch (error) {
+      console.error('Error toggling category active status:', error);
+      toast.error('خطا در تغییر وضعیت دسته‌بندی');
     }
   };
 
@@ -746,56 +947,28 @@ export default function MenuManagementPage() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {categories.filter(cat => cat.isActive).map(category => (
-              <div key={category.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center">
-                    <div 
-                      className="w-4 h-4 rounded-full ml-3" 
-                      style={{ backgroundColor: category.color }}
-                    ></div>
-                    <h3 className="font-medium text-gray-900 dark:text-white">
-                      {category.name}
-                    </h3>
-                  </div>
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <button
-                      onClick={() => handleEditCategory(category)}
-                      className="text-blue-600 hover:text-blue-800 p-1"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteCategory(category.id, category.name)}
-                      className="text-red-600 hover:text-red-800 p-1"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-                {category.description && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    {category.description}
-                  </p>
-                )}
-                <div className="flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
-                  <span>
-                    آیتم‌ها: {menuItems.filter(item => item.categoryId === category.id && item.isActive).length}
-                  </span>
-                  {category.availableFrom && category.availableTo && (
-                    <span>
-                      {category.availableFrom} - {category.availableTo}
-                    </span>
-                  )}
-                </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleCategoryDragEnd}
+          >
+            <SortableContext
+              items={categories.filter(cat => cat.isActive).map(cat => cat.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-4">
+                {categories.filter(cat => cat.isActive).map(category => (
+                  <SortableCategory
+                    key={category.id}
+                    category={category}
+                    onEdit={handleEditCategory}
+                    onDelete={(id) => handleDeleteCategory(id, category.name)}
+                    onToggleActive={handleToggleCategoryActive}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
         </div>
       )}
 

@@ -641,6 +641,7 @@ export interface CreateCategoryRequest {
   availableFrom?: string;
   availableTo?: string;
   availableDays?: string[];
+  isActive?: boolean;
 }
 
 export interface CreateMenuItemRequest {
