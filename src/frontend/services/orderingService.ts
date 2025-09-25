@@ -667,6 +667,7 @@ export interface CreateMenuItemRequest {
   maxOrderQty?: number;
   calories?: number;
   allergens?: string[];
+  isActive?: boolean;
 }
 
 export class MenuService {

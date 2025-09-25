@@ -41,6 +41,163 @@ interface RecipeIngredient {
   isOptional: boolean;
 }
 
+// Sortable Menu Item Component
+function SortableMenuItem({ item, onEdit, onDelete, onToggleActive, categories }: {
+  item: MenuItem;
+  onEdit: (item: MenuItem) => void;
+  onDelete: (id: string) => void;
+  onToggleActive: (id: string) => void;
+  categories: MenuCategory[];
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm hover:shadow-md transition-all duration-200 ${
+        isDragging ? 'shadow-lg' : ''
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3 space-x-reverse">
+          {item.thumbnailUrl && (
+            <img
+              src={item.thumbnailUrl}
+              alt={item.displayName}
+              className="w-12 h-12 rounded-lg object-cover"
+            />
+          )}
+          <div>
+            <h3 className="font-medium text-gray-900 dark:text-white">
+              {item.displayName}
+            </h3>
+            {item.displayNameEn && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {item.displayNameEn}
+              </p>
+            )}
+            {item.description && (
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                {item.description}
+              </p>
+            )}
+            <div className="flex items-center space-x-2 space-x-reverse mt-1">
+              <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                {new Intl.NumberFormat('fa-IR').format(item.menuPrice)} تومان
+              </span>
+              {item.originalPrice && item.originalPrice !== item.menuPrice && (
+                <span className="text-sm text-gray-500 line-through">
+                  {new Intl.NumberFormat('fa-IR').format(item.originalPrice)} تومان
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-2 space-x-reverse">
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+            item.isActive
+              ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+              : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+          }`}>
+            {item.isActive ? 'فعال' : 'غیرفعال'}
+          </span>
+          
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+            item.isAvailable
+              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+              : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+          }`}>
+            {item.isAvailable ? 'موجود' : 'ناموجود'}
+          </span>
+          
+          <div className="flex items-center space-x-1 space-x-reverse">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleActive(item.id);
+              }}
+              className={`p-1 rounded-md transition-colors ${
+                item.isActive
+                  ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20'
+                  : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'
+              }`}
+              title={item.isActive ? 'غیرفعال کردن' : 'فعال کردن'}
+            >
+              {item.isActive ? (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </button>
+            
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(item);
+              }}
+              className="p-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
+              title="ویرایش"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(item.id);
+              }}
+              className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+              title="حذف"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div className="mt-3 flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+        <div className="flex items-center space-x-4 space-x-reverse">
+          <span>دسته: {categories.find(cat => cat.id === item.categoryId)?.name || 'نامشخص'}</span>
+          {item.prepTime && <span>زمان آماده‌سازی: {item.prepTime} دقیقه</span>}
+        </div>
+        <div 
+          className="flex items-center space-x-2 space-x-reverse cursor-grab active:cursor-grabbing"
+          {...attributes}
+          {...listeners}
+        >
+          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+          </svg>
+          <span className="text-xs">کشیدن برای تغییر ترتیب</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Sortable Category Component
 function SortableCategory({ category, onEdit, onDelete, onToggleActive }: {
   category: MenuCategory;
@@ -218,6 +375,36 @@ export default function MenuManagementPage() {
         toast.error('خطا در به‌روزرسانی ترتیب دسته‌بندی‌ها');
         // Revert on error
         setCategories(categories);
+      }
+    }
+  };
+
+  // Handle drag end for menu items
+  const handleMenuItemDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = filteredMenuItems.findIndex((item) => item.id === active.id);
+      const newIndex = filteredMenuItems.findIndex((item) => item.id === over.id);
+
+      const newItems = arrayMove(filteredMenuItems, oldIndex, newIndex);
+      setFilteredMenuItems(newItems);
+      setMenuItems(newItems);
+
+      // Update display order in backend
+      try {
+        await Promise.all(
+          newItems.map((item, index) =>
+            MenuService.updateMenuItem(item.id, { displayOrder: index })
+          )
+        );
+        toast.success('ترتیب آیتم‌های منو به‌روزرسانی شد');
+      } catch (error) {
+        console.error('Error updating menu item order:', error);
+        toast.error('خطا در به‌روزرسانی ترتیب آیتم‌های منو');
+        // Revert on error
+        setFilteredMenuItems(filteredMenuItems);
+        setMenuItems(menuItems);
       }
     }
   };
@@ -600,14 +787,22 @@ export default function MenuManagementPage() {
     }
   };
 
-  const toggleItemAvailability = async (itemId: string, currentAvailability: boolean) => {
+  const handleToggleMenuItemActive = async (itemId: string) => {
     try {
-      await MenuService.toggleItemAvailability(itemId, !currentAvailability);
-      toast.success(`وضعیت موجودی ${currentAvailability ? 'غیرفعال' : 'فعال'} شد`);
-      loadData();
+      const item = menuItems.find(item => item.id === itemId);
+      if (!item) return;
+
+      await MenuService.updateMenuItem(itemId, { isActive: !item.isActive });
+      setMenuItems(menuItems.map(menuItem => 
+        menuItem.id === itemId ? { ...menuItem, isActive: !menuItem.isActive } : menuItem
+      ));
+      setFilteredMenuItems(filteredMenuItems.map(menuItem => 
+        menuItem.id === itemId ? { ...menuItem, isActive: !menuItem.isActive } : menuItem
+      ));
+      toast.success(`آیتم منو ${!item.isActive ? 'فعال' : 'غیرفعال'} شد`);
     } catch (error) {
-      console.error('Error toggling item availability:', error);
-      toast.error('خطا در تغییر وضعیت موجودی');
+      console.error('Error toggling menu item active status:', error);
+      toast.error('خطا در تغییر وضعیت آیتم منو');
     }
   };
 
@@ -1038,116 +1233,30 @@ export default function MenuManagementPage() {
             </div>
           </div>
 
-          {/* Menu Items Table */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    نام آیتم
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    دسته‌بندی
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    قیمت
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    وضعیت
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    عملیات
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredMenuItems.map((item) => {
-                  const category = categories.find(cat => cat.id === item.categoryId);
-                  return (
-                    <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {item.displayName}
-                            </div>
-                            {item.displayNameEn && (
-                              <div className="text-sm text-gray-500 dark:text-gray-400">
-                                {item.displayNameEn}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                          {category?.name}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        {item.menuPrice?.toLocaleString('fa-IR')} تومان
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-col space-y-1">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            item.isAvailable
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                              : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                          }`}>
-                            {item.isAvailable ? 'موجود' : 'ناموجود'}
-                          </span>
-                          {item.isFeatured && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">
-                              ویژه
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex items-center space-x-2 space-x-reverse">
-                          <button
-                            onClick={() => toggleItemAvailability(item.id, item.isAvailable)}
-                            className={`p-2 rounded-md ${
-                              item.isAvailable
-                                ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20'
-                                : 'text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'
-                            }`}
-                            title={item.isAvailable ? 'ناموجود کردن' : 'موجود کردن'}
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              {item.isAvailable ? (
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18 12a9 9 0 00-9-9m12.728 12.728L12 18.001a9 9 0 009-9" />
-                              ) : (
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              )}
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => handleEditMenuItem(item)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md"
-                            title="ویرایش"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => handleDeleteMenuItem(item.id, item.displayName)}
-                            className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md"
-                            title="حذف"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          {/* Menu Items List with Drag and Drop */}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleMenuItemDragEnd}
+          >
+            <SortableContext
+              items={filteredMenuItems.map(item => item.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-4">
+                {filteredMenuItems.map((item) => (
+                  <SortableMenuItem
+                    key={item.id}
+                    item={item}
+                    categories={categories}
+                    onEdit={handleEditMenuItem}
+                    onDelete={(id) => handleDeleteMenuItem(id, item.displayName)}
+                    onToggleActive={handleToggleMenuItemActive}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         </div>
       )}
 
