@@ -43,6 +43,7 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
   const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD'>('CASH');
   const [amountReceived, setAmountReceived] = useState<number>(totalAmount);
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const [showCustomerDetails, setShowCustomerDetails] = useState(false);
 
   const handleSubmit = () => {
     // Customer information is now truly optional for all payment types
@@ -179,56 +180,79 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
           </div>
         </div>
 
-        {/* Customer Information */}
+        {/* Customer Information - Collapsible */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            نام مشتری <span className="text-gray-500 text-xs">(اختیاری)</span>
-          </label>
-          <div className="relative">
-            <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              className="w-full pr-10 pl-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
-              placeholder="نام مشتری (اختیاری)"
-            />
-          </div>
-          <p className="text-xs text-gray-500 mt-1">اطلاعات مشتری اختیاری است</p>
-        </div>
+          <button
+            type="button"
+            onClick={() => setShowCustomerDetails(!showCustomerDetails)}
+            className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+          >
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              اطلاعات مشتری و یادداشت (اختیاری)
+            </span>
+            <svg
+              className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
+                showCustomerDetails ? 'rotate-180' : ''
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          
+          {showCustomerDetails && (
+            <div className="mt-3 space-y-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  نام مشتری
+                </label>
+                <div className="relative">
+                  <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="w-full pr-10 pl-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="نام مشتری (اختیاری)"
+                  />
+                </div>
+              </div>
 
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            شماره تلفن <span className="text-gray-500 text-xs">(اختیاری)</span>
-          </label>
-          <div className="relative">
-            <FaPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="tel"
-              value={customerPhone}
-              onChange={(e) => setCustomerPhone(e.target.value)}
-              className="w-full pr-10 pl-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
-              placeholder="شماره تلفن (اختیاری)"
-            />
-          </div>
-          <p className="text-xs text-gray-500 mt-1">شماره تلفن اختیاری است</p>
-        </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  شماره تلفن
+                </label>
+                <div className="relative">
+                  <FaPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="tel"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    className="w-full pr-10 pl-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="شماره تلفن (اختیاری)"
+                  />
+                </div>
+              </div>
 
-        {/* Order Notes */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            یادداشت سفارش
-          </label>
-          <div className="relative">
-            <FaStickyNote className="absolute left-3 top-3 text-gray-400" />
-            <textarea
-              value={orderNotes}
-              onChange={(e) => setOrderNotes(e.target.value)}
-              className="w-full pr-10 pl-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
-              rows={3}
-              placeholder="یادداشت سفارش (اختیاری)"
-            />
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  یادداشت سفارش
+                </label>
+                <div className="relative">
+                  <FaStickyNote className="absolute left-3 top-3 text-gray-400" />
+                  <textarea
+                    value={orderNotes}
+                    onChange={(e) => setOrderNotes(e.target.value)}
+                    className="w-full pr-10 pl-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
+                    rows={3}
+                    placeholder="یادداشت سفارش (اختیاری)"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Immediate Payment Options */}
