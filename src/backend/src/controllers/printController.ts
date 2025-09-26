@@ -43,7 +43,7 @@ export class PrintController {
       for (const oi of order.items) {
         const name = (oi.menuItem?.displayName || oi.item?.name || 'آیتم') as string;
         const qty = oi.quantity;
-        const unit = Number(oi.unitPrice || oi.totalPrice / Math.max(qty, 1));
+        const unit = Number(oi.unitPrice || (oi.totalPrice ? Number(oi.totalPrice) / Math.max(qty, 1) : 0));
         const total = Number(oi.totalPrice);
         const row = `${truncate(name, 14).padEnd(16)}${String(qty).padStart(4)}  ${format(unit).padStart(8)}  ${format(total).padStart(8)}`;
         lines.push(row);
