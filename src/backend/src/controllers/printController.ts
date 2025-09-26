@@ -50,7 +50,7 @@ export class PrintController {
       }
 
       lines.push('-'.repeat(width));
-      lines.push(`جمع کل: ${format(Number(order.totalAmount))}`);
+      lines.push(`جمع کل: ${format(Number(order.totalAmount || 0))}`);
       lines.push(center('با تشکر از خرید شما', width));
 
       const payload = formatPlainReceipt(lines, width);
