@@ -1,0 +1,3 @@
+[33me573622[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m fix(frontend): install missing drag and drop packages
+[33m5fea6d4[m[33m ([m[1;31morigin/master[m[33m)[m fix(menu): replace img with Next.js Image component
+[33m51ea8aa[m feat(menu): implement drag and drop for menu items

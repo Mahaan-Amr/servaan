@@ -12,12 +12,14 @@ import type { MenuCategory as ApiMenuCategory, MenuItem as ApiMenuItem } from '.
 import OrderSummary from './components/OrderSummary';
 import PaymentModal from './components/PaymentModal';
 import ReceiptTemplate from './components/ReceiptTemplate';
+import { printImageDataUrl } from '../../../../utils/qz';
 import FlexiblePaymentModal from './components/FlexiblePaymentModal';
 import AddItemsModal from './components/AddItemsModal';
 import StockWarningModal from './components/StockWarningModal';
-import { FaList } from 'react-icons/fa';
+import { FaList, FaCog } from 'react-icons/fa';
 import { useTenant } from '../../../../contexts/TenantContext';
 import { BASE_URL } from '../../../../lib/apiUtils';
+import PrinterSettingsModal from './components/PrinterSettingsModal';
 
 // Simple toast function for now - we'll replace with proper toast library later
 const toast = {
@@ -155,6 +157,9 @@ export default function POSInterface() {
   
   // Enhanced POS state
   const [showPayment, setShowPayment] = useState(false);
+  const [showPrinterSettings, setShowPrinterSettings] = useState(false);
+  const [defaultPrinter, setDefaultPrinter] = useState<string | null>(null);
+  const [alwaysSilent, setAlwaysSilent] = useState<boolean>(false);
   const [showFlexiblePayment, setShowFlexiblePayment] = useState(false);
   const [showAddItems, setShowAddItems] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
@@ -298,6 +303,16 @@ export default function POSInterface() {
     loadTables();
     initializeWebSocket();
   }, [initializeWebSocket]);
+
+  // Load persisted printer settings on mount
+  useEffect(() => {
+    try {
+      const p = localStorage.getItem('pos.defaultPrinter');
+      const s = localStorage.getItem('pos.alwaysSilent');
+      if (p) setDefaultPrinter(p);
+      if (s) setAlwaysSilent(s === 'true');
+    } catch {}
+  }, []);
 
   const loadMenuData = async () => {
     try {
@@ -728,6 +743,115 @@ export default function POSInterface() {
     setStockValidationData(null);
   };
 
+  // Generate receipt data URL for silent printing
+  const generateReceiptDataUrl = async (): Promise<string | null> => {
+    try {
+      // Create a temporary canvas to render the receipt
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+
+      // Set canvas size (typical receipt width)
+      canvas.width = 300;
+      canvas.height = 600;
+
+      // White background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Black text
+      ctx.fillStyle = '#000000';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'center';
+
+      // Header
+      ctx.fillText('کافه دیما', canvas.width / 2, 30);
+      ctx.fillText('---', canvas.width / 2, 50);
+
+      // Date and time
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('fa-IR');
+      const timeStr = now.toLocaleTimeString('fa-IR');
+      ctx.fillText(`تاریخ: ${dateStr}`, canvas.width / 2, 80);
+      ctx.fillText(`ساعت: ${timeStr}`, canvas.width / 2, 100);
+
+      // Order type
+      const orderTypeText = {
+        'DINE_IN': 'سالن',
+        'TAKEAWAY': 'بیرون بر',
+        'DELIVERY': 'تحویل',
+        'ONLINE': 'آنلاین'
+      }[orderType] || 'نامشخص';
+      ctx.fillText(`نوع سفارش: ${orderTypeText}`, canvas.width / 2, 120);
+
+      ctx.fillText('---', canvas.width / 2, 140);
+
+      // Items
+      let yPos = 170;
+      orderItems.forEach(item => {
+        ctx.textAlign = 'right';
+        ctx.fillText(item.menuItem.name, canvas.width - 10, yPos);
+        ctx.textAlign = 'left';
+        ctx.fillText(`${item.quantity} × ${formatPrice(item.menuItem.price)}`, 10, yPos);
+        yPos += 20;
+      });
+
+      ctx.fillText('---', canvas.width / 2, yPos + 10);
+
+      // Totals
+      yPos += 40;
+      ctx.textAlign = 'right';
+      ctx.fillText(`جمع: ${formatPrice(calculation.subtotal)}`, canvas.width - 10, yPos);
+      yPos += 20;
+      
+      if (calculation.discountAmount > 0) {
+        ctx.fillText(`تخفیف: ${formatPrice(calculation.discountAmount)}`, canvas.width - 10, yPos);
+        yPos += 20;
+      }
+      
+      if (calculation.taxAmount > 0) {
+        ctx.fillText(`مالیات: ${formatPrice(calculation.taxAmount)}`, canvas.width - 10, yPos);
+        yPos += 20;
+      }
+      
+      if (calculation.serviceAmount > 0) {
+        ctx.fillText(`خدمات: ${formatPrice(calculation.serviceAmount)}`, canvas.width - 10, yPos);
+        yPos += 20;
+      }
+
+      ctx.fillText('---', canvas.width / 2, yPos + 10);
+      yPos += 30;
+      
+      ctx.font = '14px Arial';
+      ctx.fillText(`مجموع: ${formatPrice(calculation.totalAmount)}`, canvas.width - 10, yPos);
+      yPos += 30;
+
+      // Payment method
+      ctx.font = '12px Arial';
+      const paymentMethodText = paymentData?.paymentMethod === 'CASH' ? 'نقدی' : 'کارت';
+      ctx.fillText(`پرداخت: ${paymentMethodText}`, canvas.width / 2, yPos);
+      yPos += 20;
+      
+      if (paymentData?.amountReceived) {
+        ctx.fillText(`دریافتی: ${formatPrice(paymentData.amountReceived)}`, canvas.width / 2, yPos);
+        yPos += 20;
+      }
+
+      // Footer
+      yPos += 20;
+      ctx.fillText('---', canvas.width / 2, yPos);
+      yPos += 20;
+      ctx.fillText('با تشکر از خرید شما', canvas.width / 2, yPos);
+      yPos += 20;
+      ctx.fillText('--- پایان رسید ---', canvas.width / 2, yPos);
+
+      return canvas.toDataURL('image/png');
+    } catch (error) {
+      console.error('Error generating receipt data URL:', error);
+      return null;
+    }
+  };
+
   // Handle payment completion with backend integration
   const handlePaymentComplete = async (paymentData: {
     paymentMethod: 'CASH' | 'CARD';
@@ -753,10 +877,60 @@ export default function POSInterface() {
       setPaymentData(paymentData);
       setShowPayment(false);
       
-      // Only show receipt if requested
+      // Check if QZ Tray is available and we have a default printer
+      const canSilentPrint = alwaysSilent && defaultPrinter;
+      let silentPrintSuccess = false;
+
+      if (canSilentPrint && showReceipt) {
+        // Try silent printing first
+        try {
+          // Generate receipt data URL directly
+          const receiptDataUrl = await generateReceiptDataUrl();
+          if (receiptDataUrl) {
+            silentPrintSuccess = await printImageDataUrl(receiptDataUrl, defaultPrinter);
+            if (silentPrintSuccess) {
+              // Silent print successful - skip preview and clear order
+              toast.success('پرداخت با موفقیت انجام شد و رسید چاپ شد');
+              setOrderItems([]);
+              setCurrentOrderId(null);
+              setCustomer({});
+              setSelectedTable(null);
+              setOrderNotes('');
+              return;
+            }
+          }
+        } catch (e) {
+          console.log('QZ Tray silent print failed:', e);
+        }
+      }
+
+      // Fallback to normal flow (preview or no receipt)
       if (showReceipt) {
         setReceiptOrderDate(new Date());
         setShowReceipt(true);
+
+        // If silent print was attempted but failed, try again after receipt renders
+        if (canSilentPrint && !silentPrintSuccess) {
+          setTimeout(async () => {
+            try {
+              const canvas = document.querySelector<HTMLCanvasElement>('canvas');
+              if (canvas) {
+                const dataUrl = canvas.toDataURL('image/png');
+                const ok = await printImageDataUrl(dataUrl, defaultPrinter);
+                if (ok) {
+                  setShowReceipt(false);
+                  setOrderItems([]);
+                  setCurrentOrderId(null);
+                  setCustomer({});
+                  setSelectedTable(null);
+                  setOrderNotes('');
+                }
+              }
+            } catch (e) {
+              console.log('QZ Tray fallback print unavailable:', e);
+            }
+          }, 500);
+        }
       } else {
         // Clear order data immediately if no receipt
         setOrderItems([]);
@@ -769,7 +943,9 @@ export default function POSInterface() {
       // Log integration results
       console.log('Payment processed:', paymentResult);
 
-      toast.success('پرداخت با موفقیت انجام شد و سفارش تکمیل شد');
+      if (!silentPrintSuccess) {
+        toast.success('پرداخت با موفقیت انجام شد و سفارش تکمیل شد');
+      }
 
     } catch (error) {
       console.error('Error processing payment:', error);
@@ -954,6 +1130,23 @@ export default function POSInterface() {
                   سفارش‌ها
                 </button>
               </Link>
+            </div>
+            
+            {/* Printer settings quick access */}
+            <div className="flex items-center space-x-2 space-x-reverse">
+              {defaultPrinter && (
+                <span className="hidden sm:inline text-xs text-gray-500 dark:text-gray-400">
+                  چاپگر: {defaultPrinter} {alwaysSilent ? '• بی‌صدا' : ''}
+                </span>
+              )}
+              <button
+                onClick={() => setShowPrinterSettings(true)}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                title="تنظیمات چاپگر"
+              >
+                <FaCog className="w-4 h-4" />
+                <span className="text-sm">تنظیمات چاپگر</span>
+              </button>
             </div>
           </div>
         </div>
@@ -1588,6 +1781,23 @@ export default function POSInterface() {
           </div>
         </div>
       )}
+
+      {/* Printer Settings Modal */}
+      <PrinterSettingsModal
+        isOpen={showPrinterSettings}
+        onClose={() => setShowPrinterSettings(false)}
+        defaultPrinter={defaultPrinter}
+        alwaysSilent={alwaysSilent}
+        onSave={(s: { defaultPrinter: string | null; alwaysSilent: boolean }) => {
+          setDefaultPrinter(s.defaultPrinter);
+          setAlwaysSilent(s.alwaysSilent);
+          try {
+            if (s.defaultPrinter) localStorage.setItem('pos.defaultPrinter', s.defaultPrinter); else localStorage.removeItem('pos.defaultPrinter');
+            localStorage.setItem('pos.alwaysSilent', String(s.alwaysSilent));
+          } catch {}
+          setShowPrinterSettings(false);
+        }}
+      />
 
       {/* Add Items Button */}
       {currentOrderId && (

@@ -8,6 +8,7 @@ import { MenuController } from '../controllers/menuController';
 import { RecipeController } from '../controllers/recipeController';
 import { TableAnalyticsController } from '../controllers/tableAnalyticsController';
 import { TableAdvancedAnalyticsController } from '../controllers/tableAdvancedAnalyticsController';
+import { PrintController } from '../controllers/printController';
 import { KitchenDisplayService } from '../services/kitchenDisplayService';
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../utils/AppError';
@@ -143,6 +144,9 @@ router.get('/menu/featured', MenuController.getFeaturedItems);
 router.get('/menu/new', MenuController.getNewItems);
 router.get('/menu/search', MenuController.searchMenuItems);
 router.get('/menu/out-of-stock', MenuController.getOutOfStockItems);
+
+// ===================== PRINT ROUTES =====================
+router.post('/print/receipt', PrintController.printReceipt);
 router.get('/menu/statistics', MenuController.getMenuStatistics);
 router.get('/menu/categories/:categoryId/items', MenuController.getItemsByCategory);
 router.put('/menu/items/:id', MenuController.updateMenuItem);
