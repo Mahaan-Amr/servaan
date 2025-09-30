@@ -10,6 +10,7 @@ import {
   Mail, 
   Phone, 
   Calendar,
+  Clock,
   Shield,
   UserCheck,
   UserX,

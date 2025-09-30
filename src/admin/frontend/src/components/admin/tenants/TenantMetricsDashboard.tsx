@@ -9,11 +9,11 @@ import {
   DollarSign, 
   Package, 
   ShoppingCart,
-  Calendar,
+  // Calendar,
   Activity,
   RefreshCw,
   Download,
-  Filter
+  // Filter
 } from 'lucide-react';
 import { TenantMetrics } from '@/services/admin/tenants/tenantService';
 import { formatAdminDate } from '@/utils/persianDate';
@@ -25,25 +25,26 @@ interface TenantMetricsDashboardProps {
   onRefresh?: () => void;
 }
 
-interface ChartData {
-  labels: string[];
-  datasets: {
-    label: string;
-    data: number[];
-    backgroundColor: string[];
-    borderColor: string[];
-    borderWidth: number;
-  }[];
-}
+// interface ChartData {
+//   labels: string[];
+//   datasets: {
+//     label: string;
+//     data: number[];
+//     backgroundColor: string[];
+//     borderColor: string[];
+//     borderWidth: number;
+//   }[];
+// }
 
-export default function TenantMetricsDashboard({ tenantId, metrics, onRefresh }: TenantMetricsDashboardProps) {
+export default function TenantMetricsDashboard({ metrics, onRefresh }: TenantMetricsDashboardProps) {
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
-  const [loading, setLoading] = useState(false);
-  const [chartData, setChartData] = useState<ChartData | null>(null);
+  // const [loading, setLoading] = useState(false);
+  // const [chartData, setChartData] = useState<ChartData | null>(null);
 
   // Generate mock chart data based on time range
   useEffect(() => {
     generateChartData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange, metrics]);
 
   const generateChartData = () => {
@@ -57,13 +58,8 @@ export default function TenantMetricsDashboard({ tenantId, metrics, onRefresh }:
       const date = new Date();
       date.setDate(date.getDate() - i);
       
-      if (timeRange === '7d') {
-        labels.push(formatAdminDate(date, { format: 'short' }));
-      } else if (timeRange === '30d') {
-        labels.push(formatAdminDate(date, { format: 'day' }));
-      } else {
-        labels.push(formatAdminDate(date, { format: 'month' }));
-      }
+      // Keep label formats within allowed union types ('short' | 'long' | 'relative' | 'jalali')
+      labels.push(formatAdminDate(date, { format: timeRange === '1y' ? 'long' : 'short' }));
 
       // Generate realistic data based on metrics
       revenueData.push(Math.floor(Math.random() * (metrics.revenue.thisMonth / days)) + 100000);
@@ -71,53 +67,35 @@ export default function TenantMetricsDashboard({ tenantId, metrics, onRefresh }:
       userData.push(Math.floor(Math.random() * (metrics.users.total / days)) + 1);
     }
 
-    setChartData({
-      labels,
-      datasets: [
-        {
-          label: 'درآمد (ریال)',
-          data: revenueData,
-          backgroundColor: ['rgba(34, 197, 94, 0.2)'],
-          borderColor: ['rgba(34, 197, 94, 1)'],
-          borderWidth: 2
-        },
-        {
-          label: 'سفارشات',
-          data: orderData,
-          backgroundColor: ['rgba(59, 130, 246, 0.2)'],
-          borderColor: ['rgba(59, 130, 246, 1)'],
-          borderWidth: 2
-        },
-        {
-          label: 'کاربران فعال',
-          data: userData,
-          backgroundColor: ['rgba(168, 85, 247, 0.2)'],
-          borderColor: ['rgba(168, 85, 247, 1)'],
-          borderWidth: 2
-        }
-      ]
-    });
+    // setChartData({ labels, datasets: [...] }) // disabled until charts are implemented
   };
 
-  const formatToman = (amountRial: number) => {
-    const amountToman = Math.floor((amountRial || 0) / 10);
+  const safeNum = (v: unknown, fallback = 0): number => {
+    const n = typeof v === 'number' && isFinite(v) ? v : Number(v);
+    return isFinite(n) && !isNaN(n) ? n : fallback;
+  };
+
+  const formatToman = (amountRial: number | undefined) => {
+    const amountToman = Math.floor(safeNum(amountRial, 0) / 10);
     return `${amountToman.toLocaleString('fa-IR')} تومان`;
   };
 
-  const formatNumber = (num: number) => {
-    return num.toLocaleString('fa-IR');
+  const formatNumber = (num: number | undefined) => {
+    return safeNum(num, 0).toLocaleString('fa-IR');
   };
 
-  const getGrowthIcon = (growth: number) => {
-    return growth > 0 ? (
+  const getGrowthIcon = (growth: number | undefined) => {
+    const g = safeNum(growth, 0);
+    return g > 0 ? (
       <TrendingUp className="h-4 w-4 text-green-600" />
     ) : (
       <TrendingDown className="h-4 w-4 text-red-600" />
     );
   };
 
-  const getGrowthColor = (growth: number) => {
-    return growth > 0 ? 'text-green-600' : 'text-red-600';
+  const getGrowthColor = (growth: number | undefined) => {
+    const g = safeNum(growth, 0);
+    return g > 0 ? 'text-green-600' : 'text-red-600';
   };
 
   const handleExport = () => {
@@ -133,7 +111,7 @@ export default function TenantMetricsDashboard({ tenantId, metrics, onRefresh }:
         <div className="flex items-center space-x-2 space-x-reverse">
           <select
             value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value as any)}
+            onChange={(e) => setTimeRange(e.target.value as '7d' | '30d' | '90d' | '1y')}
             className="px-3 py-1 border border-admin-border rounded-admin text-sm focus:ring-2 focus:ring-admin-primary focus:border-transparent"
           >
             <option value="7d">۷ روز گذشته</option>
@@ -167,11 +145,11 @@ export default function TenantMetricsDashboard({ tenantId, metrics, onRefresh }:
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-green-800">کل درآمد</p>
-              <p className="text-2xl font-bold text-green-900">{formatToman(metrics.revenue.total)}</p>
+              <p className="text-2xl font-bold text-green-900">{formatToman(metrics?.revenue?.total)}</p>
               <div className="flex items-center mt-1">
-                {getGrowthIcon(metrics.revenue.growth)}
-                <span className={`text-sm font-medium ${getGrowthColor(metrics.revenue.growth)} mr-1`}>
-                  {metrics.revenue.growth > 0 ? '+' : ''}{metrics.revenue.growth}%
+                {getGrowthIcon(metrics?.revenue?.growth)}
+                <span className={`text-sm font-medium ${getGrowthColor(metrics?.revenue?.growth)} mr-1`}>
+                  {safeNum(metrics?.revenue?.growth, 0) > 0 ? '+' : ''}{safeNum(metrics?.revenue?.growth, 0)}%
                 </span>
                 <span className="text-xs text-green-600">نسبت به ماه قبل</span>
               </div>
@@ -185,10 +163,10 @@ export default function TenantMetricsDashboard({ tenantId, metrics, onRefresh }:
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-blue-800">سفارشات این ماه</p>
-              <p className="text-2xl font-bold text-blue-900">{formatNumber(metrics.orders.thisMonth)}</p>
+              <p className="text-2xl font-bold text-blue-900">{formatNumber(metrics?.orders?.thisMonth)}</p>
               <div className="flex items-center mt-1">
                 <span className="text-sm font-medium text-blue-600">
-                  میانگین: {formatToman(metrics.orders.averageValue)}
+                  میانگین: {formatToman(metrics?.orders?.averageValue)}
                 </span>
               </div>
             </div>
@@ -201,10 +179,10 @@ export default function TenantMetricsDashboard({ tenantId, metrics, onRefresh }:
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-purple-800">کاربران فعال</p>
-              <p className="text-2xl font-bold text-purple-900">{formatNumber(metrics.users.active)}</p>
+              <p className="text-2xl font-bold text-purple-900">{formatNumber(metrics?.users?.active)}</p>
               <div className="flex items-center mt-1">
                 <span className="text-sm font-medium text-purple-600">
-                  از {formatNumber(metrics.users.total)} کل کاربران
+                  از {formatNumber(metrics?.users?.total)} کل کاربران
                 </span>
               </div>
             </div>
@@ -217,10 +195,10 @@ export default function TenantMetricsDashboard({ tenantId, metrics, onRefresh }:
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-orange-800">موجودی کل</p>
-              <p className="text-2xl font-bold text-orange-900">{formatNumber(metrics.inventory.items)}</p>
+              <p className="text-2xl font-bold text-orange-900">{formatNumber(metrics?.inventory?.items)}</p>
               <div className="flex items-center mt-1">
                 <span className="text-sm font-medium text-orange-600">
-                  {metrics.inventory.lowStock} کم موجود
+                  {safeNum(metrics?.inventory?.lowStock, 0)} کم موجود
                 </span>
               </div>
             </div>
@@ -270,24 +248,24 @@ export default function TenantMetricsDashboard({ tenantId, metrics, onRefresh }:
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-admin-text">کل کاربران</span>
-              <span className="font-medium text-admin-text">{formatNumber(metrics.users.total)}</span>
+              <span className="font-medium text-admin-text">{formatNumber(metrics?.users?.total)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-green-600">کاربران فعال</span>
-              <span className="font-medium text-green-600">{formatNumber(metrics.users.active)}</span>
+              <span className="font-medium text-green-600">{formatNumber(metrics?.users?.active)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-red-600">کاربران غیرفعال</span>
-              <span className="font-medium text-red-600">{formatNumber(metrics.users.inactive)}</span>
+              <span className="font-medium text-red-600">{formatNumber(metrics?.users?.inactive)}</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
               <div 
                 className="bg-green-500 h-2 rounded-full" 
-                style={{ width: `${(metrics.users.active / metrics.users.total) * 100}%` }}
+                style={{ width: `${(safeNum(metrics?.users?.active, 0) / Math.max(safeNum(metrics?.users?.total, 0), 1)) * 100}%` }}
               ></div>
             </div>
             <p className="text-xs text-gray-500 text-center">
-              {Math.round((metrics.users.active / metrics.users.total) * 100)}% فعال
+              {Math.round((safeNum(metrics?.users?.active, 0) / Math.max(safeNum(metrics?.users?.total, 0), 1) ) * 100)}% فعال
             </p>
           </div>
         </div>
@@ -298,26 +276,26 @@ export default function TenantMetricsDashboard({ tenantId, metrics, onRefresh }:
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-admin-text">کل درآمد</span>
-              <span className="font-medium text-admin-text">{formatToman(metrics.revenue.total)}</span>
+              <span className="font-medium text-admin-text">{formatToman(metrics?.revenue?.total)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-blue-600">درآمد این ماه</span>
-              <span className="font-medium text-blue-600">{formatToman(metrics.revenue.thisMonth)}</span>
+              <span className="font-medium text-blue-600">{formatToman(metrics?.revenue?.thisMonth)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-purple-600">رشد</span>
-              <span className={`font-medium ${getGrowthColor(metrics.revenue.growth)}`}>
-                {metrics.revenue.growth > 0 ? '+' : ''}{metrics.revenue.growth}%
+              <span className={`font-medium ${getGrowthColor(metrics?.revenue?.growth)}`}>
+                {safeNum(metrics?.revenue?.growth, 0) > 0 ? '+' : ''}{safeNum(metrics?.revenue?.growth, 0)}%
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
               <div 
                 className="bg-blue-500 h-2 rounded-full" 
-                style={{ width: `${Math.min((metrics.revenue.thisMonth / metrics.revenue.total) * 100, 100)}%` }}
+                style={{ width: `${Math.min((safeNum(metrics?.revenue?.thisMonth, 0) / Math.max(safeNum(metrics?.revenue?.total, 0), 1)) * 100, 100)}%` }}
               ></div>
             </div>
             <p className="text-xs text-gray-500 text-center">
-              {Math.round((metrics.revenue.thisMonth / metrics.revenue.total) * 100)}% از کل درآمد
+              {Math.round((safeNum(metrics?.revenue?.thisMonth, 0) / Math.max(safeNum(metrics?.revenue?.total, 0), 1)) * 100)}% از کل درآمد
             </p>
           </div>
         </div>
@@ -328,24 +306,24 @@ export default function TenantMetricsDashboard({ tenantId, metrics, onRefresh }:
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-admin-text">کل آیتم‌ها</span>
-              <span className="font-medium text-admin-text">{formatNumber(metrics.inventory.items)}</span>
+              <span className="font-medium text-admin-text">{formatNumber(metrics?.inventory?.items)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-yellow-600">موجودی کم</span>
-              <span className="font-medium text-yellow-600">{formatNumber(metrics.inventory.lowStock)}</span>
+              <span className="font-medium text-yellow-600">{formatNumber(metrics?.inventory?.lowStock)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-red-600">ناموجود</span>
-              <span className="font-medium text-red-600">{formatNumber(metrics.inventory.outOfStock)}</span>
+              <span className="font-medium text-red-600">{formatNumber(metrics?.inventory?.outOfStock)}</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
               <div 
                 className="bg-green-500 h-2 rounded-full" 
-                style={{ width: `${((metrics.inventory.items - metrics.inventory.outOfStock) / metrics.inventory.items) * 100}%` }}
+                style={{ width: `${((safeNum(metrics?.inventory?.items, 0) - safeNum(metrics?.inventory?.outOfStock, 0)) / Math.max(safeNum(metrics?.inventory?.items, 0), 1)) * 100}%` }}
               ></div>
             </div>
             <p className="text-xs text-gray-500 text-center">
-              {Math.round(((metrics.inventory.items - metrics.inventory.outOfStock) / metrics.inventory.items) * 100)}% موجود
+              {Math.round(((safeNum(metrics?.inventory?.items, 0) - safeNum(metrics?.inventory?.outOfStock, 0)) / Math.max(safeNum(metrics?.inventory?.items, 0), 1)) * 100)}% موجود
             </p>
           </div>
         </div>
@@ -357,28 +335,28 @@ export default function TenantMetricsDashboard({ tenantId, metrics, onRefresh }:
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="text-center p-4 bg-green-50 rounded-admin">
             <div className="text-2xl font-bold text-green-600">
-              {Math.round((metrics.users.active / metrics.users.total) * 100)}%
+              {Math.round((safeNum(metrics?.users?.active, 0) / Math.max(safeNum(metrics?.users?.total, 0), 1)) * 100)}%
             </div>
             <div className="text-sm text-green-800">نرخ فعال‌سازی کاربران</div>
           </div>
           
           <div className="text-center p-4 bg-blue-50 rounded-admin">
             <div className="text-2xl font-bold text-blue-600">
-              {formatToman(metrics.orders.averageValue)}
+              {formatToman(metrics?.orders?.averageValue)}
             </div>
             <div className="text-sm text-blue-800">میانگین ارزش سفارش</div>
           </div>
           
           <div className="text-center p-4 bg-purple-50 rounded-admin">
             <div className="text-2xl font-bold text-purple-600">
-              {Math.round((metrics.inventory.items - metrics.inventory.outOfStock) / metrics.inventory.items * 100)}%
+              {Math.round(((safeNum(metrics?.inventory?.items, 0) - safeNum(metrics?.inventory?.outOfStock, 0)) / Math.max(safeNum(metrics?.inventory?.items, 0), 1)) * 100)}%
             </div>
             <div className="text-sm text-purple-800">نرخ موجودی</div>
           </div>
           
           <div className="text-center p-4 bg-orange-50 rounded-admin">
             <div className="text-2xl font-bold text-orange-600">
-              {metrics.revenue.growth > 0 ? '+' : ''}{metrics.revenue.growth}%
+              {safeNum(metrics?.revenue?.growth, 0) > 0 ? '+' : ''}{safeNum(metrics?.revenue?.growth, 0)}%
             </div>
             <div className="text-sm text-orange-800">رشد درآمد</div>
           </div>
