@@ -118,6 +118,7 @@ export class TenantService {
         businessType: data.businessType || null,
         city: data.city || null,
         country: data.country || null,
+        currency: 'IRR', // Hotfix: match DB VARCHAR(3) constraint
         // Optional nested features creation if provided
         ...(data.features && {
           features: {
