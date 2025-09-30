@@ -47,7 +47,23 @@ export default function TenantMetricsDashboard({ metrics, onRefresh }: TenantMet
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange, metrics]);
 
+  // Early return if metrics is not available (after hooks)
+  if (!metrics || !metrics.revenue || !metrics.orders || !metrics.users) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <div className="text-gray-500 text-lg">در حال بارگذاری متریک‌ها...</div>
+        </div>
+      </div>
+    );
+  }
+
   const generateChartData = () => {
+    // Early return if metrics is not available
+    if (!metrics || !metrics.revenue || !metrics.orders || !metrics.users) {
+      return;
+    }
+
     const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : timeRange === '90d' ? 90 : 365;
     const labels = [];
     const revenueData = [];
@@ -61,10 +77,14 @@ export default function TenantMetricsDashboard({ metrics, onRefresh }: TenantMet
       // Keep label formats within allowed union types ('short' | 'long' | 'relative' | 'jalali')
       labels.push(formatAdminDate(date, { format: timeRange === '1y' ? 'long' : 'short' }));
 
-      // Generate realistic data based on metrics
-      revenueData.push(Math.floor(Math.random() * (metrics.revenue.thisMonth / days)) + 100000);
-      orderData.push(Math.floor(Math.random() * (metrics.orders.thisMonth / days)) + 1);
-      userData.push(Math.floor(Math.random() * (metrics.users.total / days)) + 1);
+      // Generate realistic data based on metrics with safe fallbacks
+      const revenueBase = safeNum(metrics.revenue?.thisMonth, 100000) / days;
+      const orderBase = safeNum(metrics.orders?.thisMonth, 10) / days;
+      const userBase = safeNum(metrics.users?.total, 5) / days;
+
+      revenueData.push(Math.floor(Math.random() * revenueBase) + 100000);
+      orderData.push(Math.floor(Math.random() * orderBase) + 1);
+      userData.push(Math.floor(Math.random() * userBase) + 1);
     }
 
     // setChartData({ labels, datasets: [...] }) // disabled until charts are implemented
