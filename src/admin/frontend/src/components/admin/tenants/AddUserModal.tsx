@@ -19,7 +19,7 @@ interface NewUserData {
   status: 'active' | 'inactive' | 'pending';
 }
 
-export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModalProps) {
+export default function AddUserModal({ isOpen, onClose, onSuccess, tenantId }: AddUserModalProps) {
   const [formData, setFormData] = useState<NewUserData>({
     name: '',
     email: '',
@@ -40,11 +40,26 @@ export default function AddUserModal({ isOpen, onClose, onSuccess }: AddUserModa
     try {
       setLoading(true);
       
-      // TODO: Replace with actual API call
-      // const response = await createTenantUser(tenantId, formData);
+      // Create real tenant user via API
+      const response = await fetch(`/api/admin/tenants/${tenantId}/users`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone || null,
+          role: formData.role,
+          status: formData.status
+        })
+      });
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create user');
+      }
       
       toast.success('کاربر با موفقیت اضافه شد');
       onSuccess();

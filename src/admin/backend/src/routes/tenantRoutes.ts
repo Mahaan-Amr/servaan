@@ -2,6 +2,7 @@ import express from 'express';
 import { authenticateAdmin, requireRole } from '../middlewares/authMiddleware';
 import { TenantService } from '../services/TenantService';
 import { auditLog } from '../utils/auditLogger';
+import { prisma } from '../lib/prisma';
 
 const router = express.Router();
 
@@ -736,5 +737,94 @@ router.get('/:id/users', authenticateAdmin, requireRole(['SUPER_ADMIN', 'PLATFOR
   } catch (e) {
     console.error('List tenant users error:', e);
     return res.status(500).json({ success: false, message: 'Failed to list tenant users' });
+  }
+});
+
+/**
+ * POST /api/admin/tenants/:id/users
+ * Create a new user for a specific tenant
+ */
+router.post('/:id/users', authenticateAdmin, requireRole(['SUPER_ADMIN', 'PLATFORM_ADMIN']), async (req, res) => {
+  try {
+    const { id } = req.params as { id: string };
+    const { name, email, phone, status } = req.body as { 
+      name?: string; 
+      email?: string; 
+      phone?: string; 
+      status?: string; 
+    };
+
+    // Basic validation
+    if (!name || !email) {
+      return res.status(400).json({
+        success: false,
+        message: 'نام و ایمیل الزامی است'
+      });
+    }
+
+    // Check if tenant exists
+    const tenant = await prisma.tenant.findUnique({ where: { id } });
+    if (!tenant) {
+      return res.status(404).json({
+        success: false,
+        message: 'مستأجر یافت نشد'
+      });
+    }
+
+    // Check if user already exists with this email in this tenant
+    const existingUser = await prisma.user.findFirst({
+      where: { 
+        email: email.toLowerCase(),
+        tenantId: id
+      }
+    });
+
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: 'کاربری با این ایمیل قبلاً در این مستأجر وجود دارد'
+      });
+    }
+
+    // Create the user
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email: email.toLowerCase(),
+        password: 'temp_password_123', // Temporary password - should be changed on first login
+        phoneNumber: phone || null,
+        tenantId: id,
+        active: status !== 'inactive',
+        role: 'STAFF', // Default role
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phoneNumber: true,
+        createdAt: true
+      }
+    });
+
+    // Audit log
+    await auditLog({
+      adminUserId: req.adminUser!.id,
+      action: 'TENANT_USER_CREATED',
+      details: { tenantId: id, userId: newUser.id, email },
+      ipAddress: req.ip || 'unknown'
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'کاربر با موفقیت ایجاد شد',
+      data: newUser
+    });
+
+  } catch (error: any) {
+    console.error('Create tenant user error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'خطا در ایجاد کاربر'
+    });
   }
 });

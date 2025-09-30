@@ -46,64 +46,7 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [showAddUser, setShowAddUser] = useState(false);
 
-  // Mock data - in real implementation, this would come from API
-  const mockUsers: TenantUser[] = [
-    {
-      id: '1',
-      name: 'احمد محمدی',
-      email: 'ahmad@example.com',
-      phone: '09123456789',
-      role: 'admin',
-      status: 'active',
-      lastLogin: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30), // 30 days ago
-      permissions: ['all']
-    },
-    {
-      id: '2',
-      name: 'مریم احمدی',
-      email: 'maryam@example.com',
-      phone: '09123456788',
-      role: 'manager',
-      status: 'active',
-      lastLogin: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 15), // 15 days ago
-      permissions: ['orders', 'customers', 'inventory']
-    },
-    {
-      id: '3',
-      name: 'علی رضایی',
-      email: 'ali@example.com',
-      phone: '09123456787',
-      role: 'staff',
-      status: 'active',
-      lastLogin: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7), // 7 days ago
-      permissions: ['orders', 'customers']
-    },
-    {
-      id: '4',
-      name: 'سارا کریمی',
-      email: 'sara@example.com',
-      phone: '09123456786',
-      role: 'viewer',
-      status: 'pending',
-      lastLogin: undefined,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3), // 3 days ago
-      permissions: ['view']
-    },
-    {
-      id: '5',
-      name: 'حسن نوری',
-      email: 'hasan@example.com',
-      phone: '09123456785',
-      role: 'staff',
-      status: 'inactive',
-      lastLogin: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7), // 7 days ago
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 45), // 45 days ago
-      permissions: ['orders']
-    }
-  ];
+  // Real API data - will be fetched from backend
 
   useEffect(() => {
     loadUsers();
@@ -113,33 +56,50 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
   const loadUsers = async () => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Fetch real tenant users from API
+      const response = await fetch(`/api/admin/tenants/${tenantId}/users${searchTerm ? `?q=${encodeURIComponent(searchTerm)}` : ''}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+          'Content-Type': 'application/json'
+        }
+      });
       
-      let filteredUsers = mockUsers;
-      
-      // Apply search filter
-      if (searchTerm) {
-        filteredUsers = filteredUsers.filter(user => 
-          user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (user.phone && user.phone.includes(searchTerm))
-        );
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
       }
       
-      // Apply status filter
+      const data = await response.json();
+      const apiUsers = data.data || [];
+      
+      // Transform API data to match our interface
+      const transformedUsers: TenantUser[] = apiUsers.map((user: { id: string; name: string | null; email: string; phoneNumber?: string | null; lastLogin?: string; createdAt: string }) => ({
+        id: user.id,
+        name: user.name || 'نام نامشخص',
+        email: user.email,
+        phone: user.phoneNumber || '',
+        role: 'staff', // Default role since API doesn't provide this yet
+        status: 'active', // Default status since API doesn't provide this yet
+        lastLogin: user.lastLogin ? new Date(user.lastLogin) : undefined,
+        createdAt: user.createdAt ? new Date(user.createdAt) : new Date(),
+        permissions: ['view'] // Default permissions
+      }));
+      
+      // Apply client-side filters (status and role) since API doesn't support them yet
+      let filteredUsers = transformedUsers;
+      
       if (statusFilter !== 'all') {
         filteredUsers = filteredUsers.filter(user => user.status === statusFilter);
       }
       
-      // Apply role filter
       if (roleFilter !== 'all') {
         filteredUsers = filteredUsers.filter(user => user.role === roleFilter);
       }
       
       setUsers(filteredUsers);
-    } catch {
+    } catch (error) {
+      console.error('Error loading users:', error);
       toast.error('خطا در بارگذاری کاربران');
+      setUsers([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -489,11 +449,11 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
       {users.length > 0 && (
         <div className="bg-white border border-admin-border rounded-admin p-4">
           <div className="flex items-center justify-between text-sm text-admin-text-muted">
-            <span>نمایش {users.length} کاربر از {mockUsers.length} کل کاربران</span>
+            <span>نمایش {users.length} کاربر</span>
             <div className="flex items-center space-x-4 space-x-reverse">
-              <span>فعال: {mockUsers.filter(u => u.status === 'active').length}</span>
-              <span>غیرفعال: {mockUsers.filter(u => u.status === 'inactive').length}</span>
-              <span>در انتظار: {mockUsers.filter(u => u.status === 'pending').length}</span>
+              <span>فعال: {users.filter(u => u.status === 'active').length}</span>
+              <span>غیرفعال: {users.filter(u => u.status === 'inactive').length}</span>
+              <span>در انتظار: {users.filter(u => u.status === 'pending').length}</span>
             </div>
           </div>
         </div>
