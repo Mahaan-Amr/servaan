@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, UserPlus, Mail, Phone, Shield, UserCheck, Users, Eye } from 'lucide-react';
+import { X, UserPlus, Mail, Phone, Shield, UserCheck, Users, Eye, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import adminApi from '@/services/adminAuthService';
 
@@ -16,6 +16,7 @@ interface NewUserData {
   name: string;
   email: string;
   phone?: string;
+  password: string;
   role: 'admin' | 'manager' | 'staff' | 'viewer';
   status: 'active' | 'inactive' | 'pending';
 }
@@ -25,6 +26,7 @@ export default function AddUserModal({ isOpen, onClose, onSuccess, tenantId }: A
     name: '',
     email: '',
     phone: '',
+    password: '',
     role: 'staff',
     status: 'active'
   });
@@ -33,8 +35,13 @@ export default function AddUserModal({ isOpen, onClose, onSuccess, tenantId }: A
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.email) {
-      toast.error('نام و ایمیل الزامی است');
+    if (!formData.name || !formData.email || !formData.password) {
+      toast.error('نام، ایمیل و رمز عبور الزامی است');
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      toast.error('رمز عبور باید حداقل 8 کاراکتر باشد');
       return;
     }
 
@@ -46,6 +53,7 @@ export default function AddUserModal({ isOpen, onClose, onSuccess, tenantId }: A
         name: formData.name,
         email: formData.email,
         phone: formData.phone || null,
+        password: formData.password,
         role: formData.role,
         status: formData.status
       });
@@ -59,6 +67,7 @@ export default function AddUserModal({ isOpen, onClose, onSuccess, tenantId }: A
         name: '',
         email: '',
         phone: '',
+        password: '',
         role: 'staff',
         status: 'active'
       });
@@ -170,6 +179,29 @@ export default function AddUserModal({ isOpen, onClose, onSuccess, tenantId }: A
                 placeholder="09123456789"
               />
             </div>
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="block text-sm font-medium text-admin-text mb-2">
+              رمز عبور *
+            </label>
+            <div className="relative">
+              <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-admin-text-muted" />
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                className="w-full pl-10 pr-4 py-2 border border-admin-border rounded-admin focus:ring-2 focus:ring-admin-primary focus:border-transparent"
+                placeholder="حداقل 8 کاراکتر"
+                required
+                minLength={8}
+              />
+            </div>
+            <p className="text-xs text-admin-text-muted mt-1">
+              کاربر با این رمز عبور می‌تواند وارد سیستم شود
+            </p>
           </div>
 
           {/* Role */}

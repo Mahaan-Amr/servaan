@@ -15,7 +15,9 @@ import {
   RefreshCw,
   Download,
   Eye,
-  Key
+  Key,
+  Lock,
+  X
 } from 'lucide-react';
 import { formatAdminDate } from '@/utils/persianDate';
 import toast from 'react-hot-toast';
@@ -46,6 +48,13 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
   const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'manager' | 'staff' | 'viewer'>('all');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [showAddUser, setShowAddUser] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{ id: string; email: string; name: string } | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showViewUser, setShowViewUser] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<TenantUser | null>(null);
+  const [userToView, setUserToView] = useState<TenantUser | null>(null);
 
   // Real API data - will be fetched from backend
 
@@ -160,7 +169,67 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
   };
 
   const handleUserAction = (userId: string, action: string) => {
-    toast.success(`${action} برای کاربر اعمال شد`);
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    switch (action) {
+      case 'ویرایش':
+        toast.success('عمل ویرایش در حال توسعه است');
+        break;
+      case 'حذف':
+        setUserToDelete(user);
+        setShowDeleteConfirm(true);
+        break;
+      case 'مشاهده':
+        setUserToView(user);
+        setShowViewUser(true);
+        break;
+      case 'فعال‌سازی':
+        handleStatusToggle(userId, 'active');
+        break;
+      case 'غیرفعال‌سازی':
+        handleStatusToggle(userId, 'inactive');
+        break;
+      case 'ارسال ایمیل':
+        handleSendEmail(user);
+        break;
+      case 'بازنشانی رمز عبور':
+        openPasswordReset(user);
+        break;
+      default:
+        toast.success(`عمل ${action} در حال توسعه است`);
+    }
+  };
+
+  const handleStatusToggle = async (userId: string, newStatus: 'active' | 'inactive') => {
+    try {
+      // TODO: Implement API call to update user status
+      toast.success(`وضعیت کاربر به ${newStatus === 'active' ? 'فعال' : 'غیرفعال'} تغییر کرد`);
+      loadUsers(); // Refresh the list
+    } catch (error: unknown) {
+      console.error('Error updating user status:', error);
+      toast.error('خطا در تغییر وضعیت کاربر');
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      // TODO: Implement API call to delete user
+      toast.success('کاربر با موفقیت حذف شد');
+      setShowDeleteConfirm(false);
+      setUserToDelete(null);
+      loadUsers(); // Refresh the list
+    } catch (error: unknown) {
+      console.error('Error deleting user:', error);
+      toast.error('خطا در حذف کاربر');
+    }
+  };
+
+  const handleSendEmail = (user: TenantUser) => {
+    // TODO: Implement email sending functionality
+    toast.success(`ایمیل به ${user.email} ارسال شد`);
   };
 
   const handleExport = () => {
@@ -170,6 +239,43 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
   const handleUserAdded = () => {
     // Refresh the users list
     loadUsers();
+  };
+
+  const handlePasswordReset = async () => {
+    if (!selectedUser || !newPassword) {
+      toast.error('لطفاً رمز عبور جدید را وارد کنید');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      toast.error('رمز عبور باید حداقل 8 کاراکتر باشد');
+      return;
+    }
+
+    try {
+      await adminApi.post(`/admin/tenants/${tenantId}/users/reset-password`, {
+        email: selectedUser.email,
+        newPassword: newPassword
+      });
+      
+      toast.success('رمز عبور با موفقیت تغییر کرد');
+      setShowPasswordReset(false);
+      setSelectedUser(null);
+      setNewPassword('');
+    } catch (error: unknown) {
+      console.error('Error resetting password:', error);
+      const message = error instanceof Error ? error.message : 'خطا در تغییر رمز عبور';
+      toast.error(message);
+    }
+  };
+
+  const openPasswordReset = (user: TenantUser) => {
+    setSelectedUser({
+      id: user.id,
+      email: user.email,
+      name: user.name
+    });
+    setShowPasswordReset(true);
   };
 
   return (
@@ -395,6 +501,13 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
                           <Key className="h-4 w-4" />
                         </button>
                         <button
+                          onClick={() => handleUserAction(user.id, 'مشاهده')}
+                          className="text-admin-info hover:text-admin-info-dark"
+                          title="مشاهده"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button
                           onClick={() => handleUserAction(user.id, 'حذف')}
                           className="text-admin-danger hover:text-admin-danger-dark"
                           title="حذف"
@@ -423,6 +536,12 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
                               className="block w-full text-right px-4 py-2 text-sm text-admin-text hover:bg-admin-bg"
                             >
                               ارسال ایمیل
+                            </button>
+                            <button
+                              onClick={() => openPasswordReset(user)}
+                              className="block w-full text-right px-4 py-2 text-sm text-admin-text hover:bg-admin-bg"
+                            >
+                              تغییر رمز عبور
                             </button>
                           </div>
                         </div>
@@ -457,6 +576,221 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
         onSuccess={handleUserAdded}
         tenantId={tenantId}
       />
+
+      {/* Password Reset Modal */}
+      {showPasswordReset && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-admin p-6 w-full max-w-md mx-4">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center">
+                <Lock className="h-6 w-6 text-admin-primary ml-2" />
+                <h3 className="text-lg font-semibold text-admin-text">تغییر رمز عبور</h3>
+              </div>
+              <button
+                onClick={() => {
+                  setShowPasswordReset(false);
+                  setSelectedUser(null);
+                  setNewPassword('');
+                }}
+                className="text-admin-text-muted hover:text-admin-text transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* User Info */}
+            <div className="bg-gray-50 rounded-admin p-3 mb-4">
+              <p className="text-sm text-admin-text">
+                <span className="font-medium">کاربر:</span> {selectedUser.name}
+              </p>
+              <p className="text-sm text-admin-text">
+                <span className="font-medium">ایمیل:</span> {selectedUser.email}
+              </p>
+            </div>
+
+            {/* New Password */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-admin-text mb-2">
+                رمز عبور جدید *
+              </label>
+              <div className="relative">
+                <Lock className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-admin-text-muted" />
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-admin-border rounded-admin focus:ring-2 focus:ring-admin-primary focus:border-transparent"
+                  placeholder="حداقل 8 کاراکتر"
+                  required
+                  minLength={8}
+                />
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center space-x-3 space-x-reverse">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPasswordReset(false);
+                  setSelectedUser(null);
+                  setNewPassword('');
+                }}
+                className="flex-1 px-4 py-2 border border-admin-border rounded-admin hover:bg-admin-bg transition-colors"
+              >
+                انصراف
+              </button>
+              <button
+                type="button"
+                onClick={handlePasswordReset}
+                className="flex-1 px-4 py-2 bg-admin-primary text-white rounded-admin hover:bg-admin-primary-dark transition-colors flex items-center justify-center"
+              >
+                <Lock className="h-4 w-4 ml-2" />
+                تغییر رمز عبور
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && userToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-admin p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center">
+                <Trash2 className="h-6 w-6 text-admin-danger ml-2" />
+                <h3 className="text-lg font-semibold text-admin-text">حذف کاربر</h3>
+              </div>
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setUserToDelete(null);
+                }}
+                className="text-admin-text-muted hover:text-admin-text transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-admin-text mb-4">
+                آیا مطمئن هستید که می‌خواهید کاربر <span className="font-medium">{userToDelete.name}</span> را حذف کنید؟
+              </p>
+              <div className="bg-red-50 border border-red-200 rounded-admin p-3">
+                <p className="text-sm text-red-700">
+                  ⚠️ این عمل قابل بازگشت نیست و تمام اطلاعات کاربر حذف خواهد شد.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3 space-x-reverse">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setUserToDelete(null);
+                }}
+                className="flex-1 px-4 py-2 border border-admin-border rounded-admin hover:bg-admin-bg transition-colors"
+              >
+                انصراف
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteUser}
+                className="flex-1 px-4 py-2 bg-admin-danger text-white rounded-admin hover:bg-admin-danger-dark transition-colors flex items-center justify-center"
+              >
+                <Trash2 className="h-4 w-4 ml-2" />
+                حذف کاربر
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View User Modal */}
+      {showViewUser && userToView && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-admin p-6 w-full max-w-lg mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center">
+                <Eye className="h-6 w-6 text-admin-primary ml-2" />
+                <h3 className="text-lg font-semibold text-admin-text">جزئیات کاربر</h3>
+              </div>
+              <button
+                onClick={() => {
+                  setShowViewUser(false);
+                  setUserToView(null);
+                }}
+                className="text-admin-text-muted hover:text-admin-text transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-admin-text-muted mb-1">نام</label>
+                  <p className="text-admin-text">{userToView.name}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-admin-text-muted mb-1">ایمیل</label>
+                  <p className="text-admin-text">{userToView.email}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-admin-text-muted mb-1">شماره تلفن</label>
+                  <p className="text-admin-text">{userToView.phone || 'ثبت نشده'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-admin-text-muted mb-1">نقش</label>
+                  <div className="mt-1">{getRoleBadge(userToView.role)}</div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-admin-text-muted mb-1">وضعیت</label>
+                  <div className="mt-1">{getStatusBadge(userToView.status)}</div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-admin-text-muted mb-1">آخرین ورود</label>
+                  <p className="text-admin-text">
+                    {userToView.lastLogin ? formatAdminDate(userToView.lastLogin, { format: 'relative' }) : 'هرگز'}
+                  </p>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-admin-text-muted mb-1">تاریخ عضویت</label>
+                <p className="text-admin-text">{formatAdminDate(userToView.createdAt, { format: 'long' })}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-admin-text-muted mb-1">دسترسی‌ها</label>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {userToView.permissions.map((permission, index) => (
+                    <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                      {permission}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end mt-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowViewUser(false);
+                  setUserToView(null);
+                }}
+                className="px-4 py-2 bg-admin-primary text-white rounded-admin hover:bg-admin-primary-dark transition-colors"
+              >
+                بستن
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

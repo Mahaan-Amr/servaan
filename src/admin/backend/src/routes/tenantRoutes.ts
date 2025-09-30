@@ -747,10 +747,11 @@ router.get('/:id/users', authenticateAdmin, requireRole(['SUPER_ADMIN', 'PLATFOR
 router.post('/:id/users', authenticateAdmin, requireRole(['SUPER_ADMIN', 'PLATFORM_ADMIN']), async (req, res) => {
   try {
     const { id } = req.params as { id: string };
-    const { name, email, phone, status } = req.body as { 
+    const { name, email, phone, password, status } = req.body as { 
       name?: string; 
       email?: string; 
       phone?: string; 
+      password?: string;
       status?: string; 
     };
 
@@ -759,6 +760,13 @@ router.post('/:id/users', authenticateAdmin, requireRole(['SUPER_ADMIN', 'PLATFO
       return res.status(400).json({
         success: false,
         message: 'نام و ایمیل الزامی است'
+      });
+    }
+
+    if (!password || password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'رمز عبور باید حداقل 8 کاراکتر باشد'
       });
     }
 
@@ -786,12 +794,16 @@ router.post('/:id/users', authenticateAdmin, requireRole(['SUPER_ADMIN', 'PLATFO
       });
     }
 
+    // Hash the password
+    const bcrypt = require('bcryptjs');
+    const passwordHash = await bcrypt.hash(password, 12);
+
     // Create the user
     const newUser = await prisma.user.create({
       data: {
         name,
         email: email.toLowerCase(),
-        password: 'temp_password_123', // Temporary password - should be changed on first login
+        password: passwordHash,
         phoneNumber: phone || null,
         tenantId: id,
         active: status !== 'inactive',
