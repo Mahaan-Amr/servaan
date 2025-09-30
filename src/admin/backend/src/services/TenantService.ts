@@ -840,20 +840,30 @@ export class TenantService {
   /**
    * List tenant users (minimal fields)
    */
-  static async listTenantUsers(tenantId: string, search?: string, limit: number = 50): Promise<Array<{ id: string; email: string; name: string | null }>> {
+  static async listTenantUsers(tenantId: string, search?: string, limit: number = 50): Promise<Array<{ id: string; email: string; name: string | null; phoneNumber: string | null; role: string; active: boolean; lastLogin: Date | null; createdAt: Date }>> {
     const where: any = { tenantId };
     if (search && search.trim().length > 0) {
       where.OR = [
         { email: { contains: search, mode: 'insensitive' } },
-        // If your schema has name/fullName fields, include them; harmless if not present at runtime selection time is controlled below
+        { name: { contains: search, mode: 'insensitive' } },
+        { phoneNumber: { contains: search, mode: 'insensitive' } }
       ];
     }
     const users = await prisma.user.findMany({
       where,
-      select: { id: true, email: true, name: true as any },
+      select: { 
+        id: true, 
+        email: true, 
+        name: true, 
+        phoneNumber: true,
+        role: true,
+        active: true,
+        lastLogin: true,
+        createdAt: true
+      },
       take: limit,
-      orderBy: { email: 'asc' }
+      orderBy: { createdAt: 'desc' }
     });
-    return users as any;
+    return users;
   }
 }

@@ -725,6 +725,120 @@ router.post('/:id/users/reset-password', authenticateAdmin, requireRole(['SUPER_
 });
 
 /**
+ * PUT /api/admin/tenants/:id/users/:userId
+ * Update a user for a specific tenant
+ */
+router.put('/:id/users/:userId', authenticateAdmin, requireRole(['SUPER_ADMIN', 'PLATFORM_ADMIN']), async (req, res) => {
+  try {
+    const { id, userId } = req.params as { id: string; userId: string };
+    const { name, email, phone, role, status } = req.body as { 
+      name?: string; 
+      email?: string; 
+      phone?: string; 
+      role?: string;
+      status?: string; 
+    };
+
+    // Basic validation
+    if (!name || !email) {
+      return res.status(400).json({
+        success: false,
+        message: 'نام و ایمیل الزامی است'
+      });
+    }
+
+    // Check if tenant exists
+    const tenant = await prisma.tenant.findUnique({ where: { id } });
+    if (!tenant) {
+      return res.status(404).json({
+        success: false,
+        message: 'مستأجر یافت نشد'
+      });
+    }
+
+    // Check if user exists in this tenant
+    const existingUser = await prisma.user.findFirst({
+      where: { 
+        id: userId,
+        tenantId: id
+      }
+    });
+
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'کاربر در این مستأجر یافت نشد'
+      });
+    }
+
+    // Check if email is already taken by another user in this tenant
+    if (email !== existingUser.email) {
+      const emailExists = await prisma.user.findFirst({
+        where: { 
+          email: email.toLowerCase(),
+          tenantId: id,
+          id: { not: userId }
+        }
+      });
+
+      if (emailExists) {
+        return res.status(409).json({
+          success: false,
+          message: 'کاربری با این ایمیل قبلاً در این مستأجر وجود دارد'
+        });
+      }
+    }
+
+    // Map role to database role
+    const dbRole = role === 'admin' ? 'ADMIN' : 
+                   role === 'manager' ? 'MANAGER' : 
+                   role === 'staff' ? 'STAFF' : 'STAFF'; // Default to STAFF for viewer
+
+    // Update the user
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        name,
+        email: email.toLowerCase(),
+        phoneNumber: phone || null,
+        role: dbRole,
+        active: status !== 'inactive',
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phoneNumber: true,
+        role: true,
+        active: true,
+        createdAt: true
+      }
+    });
+
+    // Audit log
+    await auditLog({
+      adminUserId: req.adminUser!.id,
+      action: 'TENANT_USER_UPDATED',
+      details: { tenantId: id, userId: updatedUser.id, changes: { name, email, role, status } },
+      ipAddress: req.ip || 'unknown'
+    });
+
+    return res.json({
+      success: true,
+      message: 'اطلاعات کاربر با موفقیت به‌روزرسانی شد',
+      data: updatedUser
+    });
+
+  } catch (error: any) {
+    console.error('Update tenant user error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'خطا در به‌روزرسانی کاربر'
+    });
+  }
+});
+
+/**
  * GET /api/admin/tenants/:id/users
  * List tenant users (minimal) with optional ?q= search
  */

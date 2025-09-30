@@ -22,6 +22,7 @@ import {
 import { formatAdminDate } from '@/utils/persianDate';
 import toast from 'react-hot-toast';
 import AddUserModal from './AddUserModal';
+import EditUserModal from './EditUserModal';
 import adminApi from '@/services/adminAuthService';
 
 interface TenantUser {
@@ -53,8 +54,10 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
   const [newPassword, setNewPassword] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showViewUser, setShowViewUser] = useState(false);
+  const [showEditUser, setShowEditUser] = useState(false);
   const [userToDelete, setUserToDelete] = useState<TenantUser | null>(null);
   const [userToView, setUserToView] = useState<TenantUser | null>(null);
+  const [userToEdit, setUserToEdit] = useState<TenantUser | null>(null);
 
   // Real API data - will be fetched from backend
 
@@ -72,13 +75,22 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
       const apiUsers = response.data.data || [];
       
       // Transform API data to match our interface
-      const transformedUsers: TenantUser[] = apiUsers.map((user: { id: string; name: string | null; email: string; phoneNumber?: string | null; lastLogin?: string; createdAt: string }) => ({
+      const transformedUsers: TenantUser[] = apiUsers.map((user: { 
+        id: string; 
+        name: string | null; 
+        email: string; 
+        phoneNumber?: string | null; 
+        role: string;
+        active: boolean;
+        lastLogin?: string; 
+        createdAt: string 
+      }) => ({
         id: user.id,
         name: user.name || 'نام نامشخص',
         email: user.email,
         phone: user.phoneNumber || '',
-        role: 'staff', // Default role since API doesn't provide this yet
-        status: 'active', // Default status since API doesn't provide this yet
+        role: user.role.toLowerCase() as 'admin' | 'manager' | 'staff' | 'viewer', // Map DB role to frontend role
+        status: user.active ? 'active' : 'inactive',
         lastLogin: user.lastLogin ? new Date(user.lastLogin) : undefined,
         createdAt: user.createdAt ? new Date(user.createdAt) : new Date(),
         permissions: ['view'] // Default permissions
@@ -174,7 +186,8 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
 
     switch (action) {
       case 'ویرایش':
-        toast.success('عمل ویرایش در حال توسعه است');
+        setUserToEdit(user);
+        setShowEditUser(true);
         break;
       case 'حذف':
         setUserToDelete(user);
@@ -237,6 +250,11 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
   };
 
   const handleUserAdded = () => {
+    // Refresh the users list
+    loadUsers();
+  };
+
+  const handleUserUpdated = () => {
     // Refresh the users list
     loadUsers();
   };
@@ -575,6 +593,18 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
         onClose={() => setShowAddUser(false)}
         onSuccess={handleUserAdded}
         tenantId={tenantId}
+      />
+
+      {/* Edit User Modal */}
+      <EditUserModal
+        isOpen={showEditUser}
+        onClose={() => {
+          setShowEditUser(false);
+          setUserToEdit(null);
+        }}
+        onSuccess={handleUserUpdated}
+        tenantId={tenantId}
+        user={userToEdit}
       />
 
       {/* Password Reset Modal */}
