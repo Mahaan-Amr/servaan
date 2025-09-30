@@ -41,23 +41,6 @@ export default function TenantMetricsDashboard({ metrics, onRefresh }: TenantMet
   // const [loading, setLoading] = useState(false);
   // const [chartData, setChartData] = useState<ChartData | null>(null);
 
-  // Generate mock chart data based on time range
-  useEffect(() => {
-    generateChartData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeRange, metrics]);
-
-  // Early return if metrics is not available (after hooks)
-  if (!metrics || !metrics.revenue || !metrics.orders || !metrics.users) {
-    return (
-      <div className="p-6">
-        <div className="text-center py-12">
-          <div className="text-gray-500 text-lg">در حال بارگذاری متریک‌ها...</div>
-        </div>
-      </div>
-    );
-  }
-
   const generateChartData = () => {
     // Early return if metrics is not available
     if (!metrics || !metrics.revenue || !metrics.orders || !metrics.users) {
@@ -89,6 +72,23 @@ export default function TenantMetricsDashboard({ metrics, onRefresh }: TenantMet
 
     // setChartData({ labels, datasets: [...] }) // disabled until charts are implemented
   };
+
+  // Generate mock chart data based on time range
+  useEffect(() => {
+    generateChartData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeRange, metrics]);
+
+  // Early return if metrics is not available (after hooks)
+  if (!metrics || !metrics.revenue || !metrics.orders || !metrics.users) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <div className="text-gray-500 text-lg">در حال بارگذاری متریک‌ها...</div>
+        </div>
+      </div>
+    );
+  }
 
   const safeNum = (v: unknown, fallback = 0): number => {
     const n = typeof v === 'number' && isFinite(v) ? v : Number(v);
