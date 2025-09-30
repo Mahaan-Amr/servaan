@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, UserPlus, Mail, Phone, Shield, UserCheck, Users, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
+import adminApi from '@/services/adminAuthService';
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -40,26 +41,14 @@ export default function AddUserModal({ isOpen, onClose, onSuccess, tenantId }: A
     try {
       setLoading(true);
       
-      // Create real tenant user via API
-      const response = await fetch(`/api/admin/tenants/${tenantId}/users`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone || null,
-          role: formData.role,
-          status: formData.status
-        })
+      // Create real tenant user via API using adminApi
+      await adminApi.post(`/admin/tenants/${tenantId}/users`, {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || null,
+        role: formData.role,
+        status: formData.status
       });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create user');
-      }
       
       toast.success('کاربر با موفقیت اضافه شد');
       onSuccess();

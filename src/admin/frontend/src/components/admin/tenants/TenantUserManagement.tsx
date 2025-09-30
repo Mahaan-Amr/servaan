@@ -20,6 +20,7 @@ import {
 import { formatAdminDate } from '@/utils/persianDate';
 import toast from 'react-hot-toast';
 import AddUserModal from './AddUserModal';
+import adminApi from '@/services/adminAuthService';
 
 interface TenantUser {
   id: string;
@@ -56,20 +57,10 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
   const loadUsers = async () => {
     setLoading(true);
     try {
-      // Fetch real tenant users from API
-      const response = await fetch(`/api/admin/tenants/${tenantId}/users${searchTerm ? `?q=${encodeURIComponent(searchTerm)}` : ''}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Fetch real tenant users from API using adminApi
+      const response = await adminApi.get(`/admin/tenants/${tenantId}/users${searchTerm ? `?q=${encodeURIComponent(searchTerm)}` : ''}`);
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch users');
-      }
-      
-      const data = await response.json();
-      const apiUsers = data.data || [];
+      const apiUsers = response.data.data || [];
       
       // Transform API data to match our interface
       const transformedUsers: TenantUser[] = apiUsers.map((user: { id: string; name: string | null; email: string; phoneNumber?: string | null; lastLogin?: string; createdAt: string }) => ({
