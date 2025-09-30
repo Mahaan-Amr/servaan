@@ -5,11 +5,7 @@ import {
   Users, 
   UserPlus, 
   Search, 
-  Filter, 
   MoreHorizontal, 
-  Mail, 
-  Phone, 
-  Calendar,
   Clock,
   Shield,
   UserCheck,
@@ -23,6 +19,7 @@ import {
 } from 'lucide-react';
 import { formatAdminDate } from '@/utils/persianDate';
 import toast from 'react-hot-toast';
+import AddUserModal from './AddUserModal';
 
 interface TenantUser {
   id: string;
@@ -110,6 +107,7 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
 
   useEffect(() => {
     loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenantId, searchTerm, statusFilter, roleFilter]);
 
   const loadUsers = async () => {
@@ -140,7 +138,7 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
       }
       
       setUsers(filteredUsers);
-    } catch (error) {
+    } catch {
       toast.error('خطا در بارگذاری کاربران');
     } finally {
       setLoading(false);
@@ -218,6 +216,11 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
     toast.success('گزارش کاربران در حال آماده‌سازی...');
   };
 
+  const handleUserAdded = () => {
+    // Refresh the users list
+    loadUsers();
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -264,7 +267,7 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
           {/* Status Filter */}
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
+            onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive' | 'pending')}
             className="px-3 py-2 border border-admin-border rounded-admin focus:ring-2 focus:ring-admin-primary focus:border-transparent"
           >
             <option value="all">همه وضعیت‌ها</option>
@@ -276,7 +279,7 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
           {/* Role Filter */}
           <select
             value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value as any)}
+            onChange={(e) => setRoleFilter(e.target.value as 'all' | 'admin' | 'manager' | 'staff' | 'viewer')}
             className="px-3 py-2 border border-admin-border rounded-admin focus:ring-2 focus:ring-admin-primary focus:border-transparent"
           >
             <option value="all">همه نقش‌ها</option>
@@ -495,6 +498,14 @@ export default function TenantUserManagement({ tenantId }: TenantUserManagementP
           </div>
         </div>
       )}
+
+      {/* Add User Modal */}
+      <AddUserModal
+        isOpen={showAddUser}
+        onClose={() => setShowAddUser(false)}
+        onSuccess={handleUserAdded}
+        tenantId={tenantId}
+      />
     </div>
   );
 }
