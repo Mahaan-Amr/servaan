@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { OrderService } from '../../../../services/orderingService';
-import { OrderStatus } from '../../../../types/ordering';
+import type { OrderStatus } from '../../../../types/ordering';
 import OrderEditModal from '../pos/components/OrderEditModal';
 import { FaUtensils, FaTruck, FaList, FaSearch, FaEdit, FaTrash, FaTable, FaTh, FaList as FaListView } from 'react-icons/fa';
 import Link from 'next/link';
@@ -113,6 +113,8 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkStatus, setBulkStatus] = useState<OrderStatus>('CONFIRMED' as OrderStatus);
 
   // Check for redirect from POS
   useEffect(() => {
@@ -441,6 +443,47 @@ export default function OrdersPage() {
   };
 
   const stats = getStats();
+  // Selection helpers
+  const toggleSelect = (orderId: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(orderId)) next.delete(orderId); else next.add(orderId);
+      return next;
+    });
+  };
+
+  // const selectAllVisible = () => {
+  //   setSelectedIds(new Set(filteredOrders.map(o => o.id)));
+  // };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const allowedBulkStatuses = ['SUBMITTED','CONFIRMED','PREPARING','READY','SERVED','COMPLETED','CANCELLED'] as OrderStatus[];
+
+  const bulkUpdateOrderStatus = async (target: 'selected' | 'all', status: OrderStatus) => {
+    try {
+      const targetIds = target === 'selected' ? Array.from(selectedIds) : filteredOrders.map(o => o.id);
+      if (targetIds.length === 0) {
+        toast.error('هیچ سفارشی انتخاب نشده است');
+        return;
+      }
+
+      const results = await Promise.allSettled(targetIds.map(id => OrderService.updateOrderStatus(id, status)));
+      const successIds: string[] = [];
+      results.forEach((r, idx) => { if (r.status === 'fulfilled') successIds.push(targetIds[idx]); });
+
+      if (successIds.length > 0) {
+        // Update local state (cast to match Order type status union)
+        setOrders(prev => prev.map(o => successIds.includes(o.id) ? { ...o, status: status as OrderStatus } as Order : o));
+        setFilteredOrders(prev => prev.map(o => successIds.includes(o.id) ? { ...o, status: status as OrderStatus } as Order : o));
+      }
+      toast.success(`وضعیت ${successIds.length} سفارش تغییر کرد`);
+      clearSelection();
+    } catch (e) {
+      console.error('Bulk update error:', e);
+      toast.error('خطا در تغییر گروهی وضعیت سفارش‌ها');
+    }
+  };
 
   if (loading) {
     return (
@@ -553,8 +596,8 @@ export default function OrdersPage() {
           </div>
         </div>
 
-       {/* Filters */}
-         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-2 sm:p-4 mb-3 sm:mb-4">
+        {/* Filters + Bulk actions */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-2 sm:p-4 mb-3 sm:mb-4">
            <div className="flex flex-col md:flex-row gap-2 sm:gap-3 items-stretch md:items-center">
             <div className="flex-1">
               <div className="relative">
@@ -570,6 +613,34 @@ export default function OrdersPage() {
             </div>
 
             <div className="flex items-center justify-between md:justify-start space-x-2 sm:space-x-4 space-x-reverse w-full md:w-auto">
+              {/* Bulk actions */}
+              <div className="flex items-center gap-2">
+                <select
+                  value={bulkStatus}
+                  onChange={(e) => setBulkStatus(e.target.value as OrderStatus)}
+                  className="px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-xs sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  {allowedBulkStatuses.map(s => (
+                    <option key={s} value={s}>{getStatusLabel(s)}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => bulkUpdateOrderStatus('selected', bulkStatus)}
+                  className="px-3 py-2 rounded-lg bg-amber-500 text-white text-xs sm:text-sm hover:bg-amber-600 disabled:opacity-50"
+                  disabled={selectedIds.size === 0}
+                  title="تغییر وضعیت سفارش‌های انتخاب‌شده"
+                >
+                  اعمال به انتخاب‌شده‌ها ({selectedIds.size})
+                </button>
+                <button
+                  onClick={() => bulkUpdateOrderStatus('all', bulkStatus)}
+                  className="px-3 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs sm:text-sm hover:bg-gray-300 dark:hover:bg-gray-600"
+                  title="تغییر وضعیت همه سفارش‌های لیست فعلی"
+                >
+                  اعمال به همه
+                </button>
+              </div>
+
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -828,6 +899,12 @@ export default function OrdersPage() {
                    {filteredOrders.map((order) => (
                      <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                         <input
+                           type="checkbox"
+                           checked={selectedIds.has(order.id)}
+                           onChange={() => toggleSelect(order.id)}
+                           className="ml-2 align-middle"
+                         />
                          {order.friendlyOrderNumber}
                        </td>
                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
