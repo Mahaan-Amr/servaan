@@ -148,9 +148,10 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
             </div>
 
             {/* Options presented as labeled cards in a responsive grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {/* Force 2-column grid on all sizes to create two rows with 4 cards */}
+            <div className="grid grid-cols-2 gap-3">
               {/* Discount */}
-              <div className="rounded-lg border border-gray-300 dark:border-gray-600 p-3 bg-gray-50 dark:bg-gray-900/40">
+              <div className="rounded-lg border border-gray-300 dark:border-gray-600 p-3 bg-gray-50 dark:bg-gray-900/40 h-full">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-900 dark:text-gray-100">تخفیف</span>
                   <input
@@ -182,7 +183,7 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
               </div>
 
               {/* Tax */}
-              <div className="rounded-lg border border-gray-300 dark:border-gray-600 p-3 bg-gray-50 dark:bg-gray-900/40">
+              <div className="rounded-lg border border-gray-300 dark:border-gray-600 p-3 bg-gray-50 dark:bg-gray-900/40 h-full">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-900 dark:text-gray-100">مالیات</span>
                   <input
@@ -206,7 +207,7 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
               </div>
 
               {/* Service */}
-              <div className="rounded-lg border border-gray-300 dark:border-gray-600 p-3 bg-gray-50 dark:bg-gray-900/40">
+              <div className="rounded-lg border border-gray-300 dark:border-gray-600 p-3 bg-gray-50 dark:bg-gray-900/40 h-full">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-900 dark:text-gray-100">خدمات</span>
                   <input
@@ -230,7 +231,7 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
               </div>
 
               {/* Courier */}
-              <div className="rounded-lg border border-gray-300 dark:border-gray-600 p-3 bg-gray-50 dark:bg-gray-900/40">
+              <div className="rounded-lg border border-gray-300 dark:border-gray-600 p-3 bg-gray-50 dark:bg-gray-900/40 h-full">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-900 dark:text-gray-100">پیک</span>
                   <input
