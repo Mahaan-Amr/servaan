@@ -55,6 +55,7 @@ async function apiRequest<T>(
       ...defaultHeaders,
       ...options.headers,
     },
+    cache: 'no-store'
   };
 
   try {
@@ -197,6 +198,9 @@ export class OrderService {
         }
       }
     });
+
+    // Cache-busting param to avoid stale 304 responses in critical views
+    queryParams.append('_t', Date.now().toString());
 
     return apiRequest(`/orders?${queryParams.toString()}`);
   }

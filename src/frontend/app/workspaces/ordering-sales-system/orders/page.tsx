@@ -495,6 +495,23 @@ export default function OrdersPage() {
         
         // Reload orders to ensure we have the latest data from server
         await loadOrders();
+
+        // If completing, verify persistence and retry briefly if needed
+        if (status === 'COMPLETED') {
+          const maxRetries = 3;
+          for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            // Small delay before recheck
+            await new Promise(r => setTimeout(r, 400));
+            const latest = await OrderService.getOrders() as unknown as Order[];
+            const notCompleted = latest.filter((o: Order) => successIds.includes(o.id) && o.status !== 'COMPLETED');
+            if (notCompleted.length === 0) break;
+            if (attempt === maxRetries) {
+              // Fallback: force status via PATCH if backend completion is eventual
+              await Promise.allSettled(notCompleted.map((o: Order) => OrderService.updateOrderStatus(o.id, 'COMPLETED' as OrderStatus)));
+              await loadOrders();
+            }
+          }
+        }
       }
       
       if (failedIds.length > 0) {
