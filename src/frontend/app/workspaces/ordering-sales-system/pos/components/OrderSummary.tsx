@@ -150,9 +150,9 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
             {/* Options presented as labeled cards in a responsive grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {/* Discount */}
-              <div className="rounded-md border border-gray-300 dark:border-gray-700 p-3 bg-white dark:bg-gray-800">
+              <div className="rounded-lg border border-gray-300 dark:border-gray-600 p-3 bg-gray-50 dark:bg-gray-900/40">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200">تخفیف</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">تخفیف</span>
                   <input
                     type="checkbox"
                     checked={options.discountEnabled}
@@ -160,12 +160,12 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
                     className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500"
                   />
                 </div>
-                <div className="mt-2 space-x-2 space-x-reverse flex items-center">
+                <div className="mt-3 flex items-center space-x-2 space-x-reverse">
                   <select
                     value={options.discountType}
                     onChange={(e) => onOptionsChange({ ...options, discountType: e.target.value as 'PERCENTAGE' | 'AMOUNT' })}
                     disabled={!options.discountEnabled}
-                    className={`px-2 py-1 rounded text-xs border ${options.discountEnabled ? 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700' : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/40'} text-gray-900 dark:text-white`}
+                    className={`px-2 py-1 rounded text-xs border ${options.discountEnabled ? 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800' : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/40'} text-gray-900 dark:text-white`}
                   >
                     <option value="PERCENTAGE">%</option>
                     <option value="AMOUNT">تومان</option>
@@ -175,16 +175,16 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
                     value={options.discountValue}
                     onChange={(e) => onOptionsChange({ ...options, discountValue: parseFloat(e.target.value) || 0 })}
                     disabled={!options.discountEnabled}
-                    className={`w-20 px-2 py-1 rounded text-xs border ${options.discountEnabled ? 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700' : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/40'} text-gray-900 dark:text-white`}
+                    className={`w-20 px-2 py-1 rounded text-xs border ${options.discountEnabled ? 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800' : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/40'} text-gray-900 dark:text-white`}
                     placeholder="0"
                   />
                 </div>
               </div>
 
               {/* Tax */}
-              <div className="rounded-md border border-gray-300 dark:border-gray-700 p-3 bg-white dark:bg-gray-800">
+              <div className="rounded-lg border border-gray-300 dark:border-gray-600 p-3 bg-gray-50 dark:bg-gray-900/40">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200">مالیات</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">مالیات</span>
                   <input
                     type="checkbox"
                     checked={options.taxEnabled}
@@ -192,23 +192,23 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
                     className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500"
                   />
                 </div>
-                <div className="mt-2 flex items-center space-x-2 space-x-reverse">
+                <div className="mt-3 flex items-center space-x-2 space-x-reverse">
                   <span className="text-xs text-gray-500">%</span>
                   <input
                     type="number"
                     value={options.taxPercentage}
                     onChange={(e) => onOptionsChange({ ...options, taxPercentage: parseFloat(e.target.value) || 0 })}
                     disabled={!options.taxEnabled}
-                    className={`w-20 px-2 py-1 rounded text-xs border ${options.taxEnabled ? 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700' : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/40'} text-gray-900 dark:text-white`}
+                    className={`w-20 px-2 py-1 rounded text-xs border ${options.taxEnabled ? 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800' : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/40'} text-gray-900 dark:text-white`}
                     placeholder="9"
                   />
                 </div>
               </div>
 
               {/* Service */}
-              <div className="rounded-md border border-gray-300 dark:border-gray-700 p-3 bg-white dark:bg-gray-800">
+              <div className="rounded-lg border border-gray-300 dark:border-gray-600 p-3 bg-gray-50 dark:bg-gray-900/40">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200">خدمات</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">خدمات</span>
                   <input
                     type="checkbox"
                     checked={options.serviceEnabled}
@@ -216,23 +216,23 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
                     className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500"
                   />
                 </div>
-                <div className="mt-2 flex items-center space-x-2 space-x-reverse">
+                <div className="mt-3 flex items-center space-x-2 space-x-reverse">
                   <span className="text-xs text-gray-500">%</span>
                   <input
                     type="number"
                     value={options.servicePercentage}
                     onChange={(e) => onOptionsChange({ ...options, servicePercentage: parseFloat(e.target.value) || 0 })}
                     disabled={!options.serviceEnabled}
-                    className={`w-20 px-2 py-1 rounded text-xs border ${options.serviceEnabled ? 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700' : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/40'} text-gray-900 dark:text-white`}
+                    className={`w-20 px-2 py-1 rounded text-xs border ${options.serviceEnabled ? 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800' : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/40'} text-gray-900 dark:text-white`}
                     placeholder="10"
                   />
                 </div>
               </div>
 
               {/* Courier */}
-              <div className="rounded-md border border-gray-300 dark:border-gray-700 p-3 bg-white dark:bg-gray-800">
+              <div className="rounded-lg border border-gray-300 dark:border-gray-600 p-3 bg-gray-50 dark:bg-gray-900/40">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200">پیک</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">پیک</span>
                   <input
                     type="checkbox"
                     checked={options.courierEnabled}
@@ -240,14 +240,14 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
                     className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500"
                   />
                 </div>
-                <div className="mt-2 flex items-center space-x-2 space-x-reverse">
+                <div className="mt-3 flex items-center space-x-2 space-x-reverse">
                   <span className="text-xs text-gray-500">تومان</span>
                   <input
                     type="number"
                     value={options.courierAmount}
                     onChange={(e) => onOptionsChange({ ...options, courierAmount: parseFloat(e.target.value) || 0 })}
                     disabled={!options.courierEnabled}
-                    className={`w-24 px-2 py-1 rounded text-xs border ${options.courierEnabled ? 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700' : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/40'} text-gray-900 dark:text-white`}
+                    className={`w-24 px-2 py-1 rounded text-xs border ${options.courierEnabled ? 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800' : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/40'} text-gray-900 dark:text-white`}
                     placeholder="0"
                   />
                 </div>
