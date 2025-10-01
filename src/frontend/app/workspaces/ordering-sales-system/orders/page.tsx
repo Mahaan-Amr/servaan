@@ -83,6 +83,14 @@ const safeParseFloat = (value: string | number | undefined): number => {
 };
 
 export default function OrdersPage() {
+  const toFriendlyOrderNumber = (raw: string | undefined, id: string): string => {
+    if (!raw) return `#${id.slice(-6)}`;
+    const matches = raw.match(/\d+/g);
+    if (!matches || matches.length === 0) return raw;
+    const last = matches[matches.length - 1];
+    const num = parseInt(last, 10);
+    return isNaN(num) ? raw : String(num);
+  };
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,8 +135,8 @@ export default function OrdersPage() {
           // Keep for potential future use; ensures consistent Date object creation
           // const orderDate = new Date(order.orderDate || new Date());
           
-          // Create a user-friendly order identifier
-          const friendlyOrderNumber = order.orderNumber || `#${order.id.slice(-6)}`;
+          // Create a user-friendly numeric-only order identifier
+          const friendlyOrderNumber = toFriendlyOrderNumber(order.orderNumber, order.id);
           
           // Handle table name display
           let tableDisplayName = '';
