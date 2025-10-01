@@ -203,7 +203,7 @@ export default function POSInterface() {
 
   // Attach non-passive touch listeners to the handle to allow preventDefault()
   useEffect(() => {
-    const el = drawerRef.current || dragHandleRef.current;
+    const el = dragHandleRef.current || drawerRef.current;
     if (!el) return;
 
     const onStart = (e: TouchEvent) => {
@@ -216,6 +216,7 @@ export default function POSInterface() {
       dragActiveRef.current = true;
       setDragStartY(e.touches[0].clientY);
       setDragDelta(0);
+      e.preventDefault();
     };
     const onMove = (e: TouchEvent) => {
       if (!dragActiveRef.current || dragStartY === null) return;
@@ -1533,7 +1534,7 @@ export default function POSInterface() {
 
       {/* Mobile Cart Drawer */}
       {orderItems.length > 0 && (
-        <div ref={drawerRef} className={`sm:hidden fixed inset-x-0 bottom-0 z-[70] transition-transform duration-200 pointer-events-auto`} style={{ transform: `translateY(calc(${isCartOpen ? '0%' : '76%'} + ${dragDelta}px))` }}>
+        <div ref={drawerRef} className={`sm:hidden fixed inset-x-0 bottom-0 z-[70] transition-transform duration-200 pointer-events-auto`} style={{ transform: `translateY(calc(${isCartOpen ? '0%' : '76%'} + ${dragDelta}px))`, touchAction: 'none' }}>
           <div className={`mx-auto w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 rounded-t-2xl shadow-2xl ${isCartOpen ? 'max-h-[75vh]' : ''}`}>
             {/* Drag handle */}
             <div
