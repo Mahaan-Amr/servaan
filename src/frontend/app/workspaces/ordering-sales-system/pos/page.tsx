@@ -1643,13 +1643,7 @@ export default function POSInterface() {
         </div>
       )}
 
-      {/* Mobile Floating Toggle */}
-      <div className="sm:hidden fixed bottom-4 left-4 z-[80] pointer-events-auto">
-        <button onClick={() => setIsCartOpen(v => !v)} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-3 rounded-full shadow-lg flex items-center gap-2">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m12-9l2 9M9 22a2 2 0 100-4 2 2 0 000 4zm8 0a2 2 0 100-4 2 2 0 000 4z" /></svg>
-          {orderItems.length > 0 ? `${orderItems.length} آیتم` : 'سبد خرید'}
-        </button>
-      </div>
+      {/* Mobile Floating Toggle removed per UX request */}
 
       {/* Payment Modal */}
       {showPayment && (
