@@ -1611,6 +1611,7 @@ export default function POSInterface() {
                   calculation={calculation}
                   onOptionsChange={setOrderOptions}
                   presets={presets}
+                  showItemsList={false}
                   onPresetSelect={(preset) => {
                     setOrderOptions({
                       discountEnabled: preset.discountEnabled,
