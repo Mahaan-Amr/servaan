@@ -1531,7 +1531,14 @@ export default function POSInterface() {
             >
               <div className="w-10 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
             </div>
-            <div className="px-3 pb-2 flex items-center justify-between">
+            <div
+              className="px-3 pb-2 flex items-center justify-between"
+              style={{ touchAction: 'none' }}
+              onPointerDown={onHandlePointerDown}
+              onPointerMove={onHandlePointerMove}
+              onPointerUp={onHandlePointerUp}
+              onPointerCancel={onHandlePointerUp}
+            >
               <h2 className="text-base font-bold text-gray-900 dark:text-white">سفارش جاری</h2>
               <button onClick={() => setIsCartOpen(!isCartOpen)} className="text-sm text-amber-600 dark:text-amber-400">
                 {isCartOpen ? 'بستن' : 'باز کردن'}
@@ -1555,7 +1562,13 @@ export default function POSInterface() {
               </div>
             )}
             {/* Items */}
-            <div className={`overflow-y-auto px-3 pb-3 sheet-scroll ${isCartOpen ? 'max-h-[45vh]' : 'max-h-[34vh]'}`}>
+            <div
+              className={`overflow-y-auto px-3 pb-3 sheet-scroll ${isCartOpen ? 'max-h-[45vh]' : 'max-h-[34vh]'}`}
+              onPointerDown={onHandlePointerDown}
+              onPointerMove={onHandlePointerMove}
+              onPointerUp={onHandlePointerUp}
+              onPointerCancel={onHandlePointerUp}
+            >
               {orderItems.length === 0 ? (
                 <div className="text-center text-gray-500 dark:text-gray-400 py-6">
                   سبد خالی است
