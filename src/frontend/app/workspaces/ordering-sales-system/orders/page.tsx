@@ -85,11 +85,20 @@ const safeParseFloat = (value: string | number | undefined): number => {
 export default function OrdersPage() {
   const toFriendlyOrderNumber = (raw: string | undefined, id: string): string => {
     if (!raw) return `#${id.slice(-6)}`;
-    const matches = raw.match(/\d+/g);
-    if (!matches || matches.length === 0) return raw;
-    const last = matches[matches.length - 1];
-    const num = parseInt(last, 10);
-    return isNaN(num) ? raw : String(num);
+    // If it's purely numeric and looks like a date+sequence (e.g., 202510010006),
+    // show only the trailing sequence (last 4 digits), stripped of leading zeros
+    if (/^\d+$/.test(raw)) {
+      const seq = raw.slice(-4); // supports up to 9999 per day
+      const n = parseInt(seq, 10);
+      return isNaN(n) ? raw : String(n);
+    }
+    // Otherwise, extract the final numeric group
+    const matches = raw.match(/\d+(?!.*\d)/);
+    if (matches && matches[0]) {
+      const n = parseInt(matches[0], 10);
+      if (!isNaN(n)) return String(n);
+    }
+    return raw;
   };
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
