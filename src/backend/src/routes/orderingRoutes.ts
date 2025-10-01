@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authenticate } from '../middlewares/authMiddleware';
 import { OrderController } from '../controllers/orderController';
 import { TableController } from '../controllers/tableController';
+import { OrderBulkOperationsController } from '../controllers/orderBulkOperationsController';
 import { TableBulkOperationsController } from '../controllers/tableBulkOperationsController';
 import { PaymentController } from '../controllers/paymentController';
 import { MenuController } from '../controllers/menuController';
@@ -73,6 +74,11 @@ router.post('/tables/:id/occupy', TableController.occupyTable);
 router.post('/tables/:id/clear', TableController.clearTable);
 
 // ===================== BULK OPERATIONS ROUTES =====================
+
+/**
+ * Bulk order operations endpoints
+ */
+router.post('/orders/bulk/status', OrderBulkOperationsController.bulkChangeStatus);
 
 /**
  * Bulk table operations endpoints

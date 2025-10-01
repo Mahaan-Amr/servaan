@@ -244,10 +244,11 @@ export class OrderService {
     });
   }
 
-  // Complete order (preferred endpoint for completion side-effects)
-  static async completeOrder(orderId: string) {
-    return apiRequest(`/orders/${orderId}/complete`, {
-      method: 'POST'
+  // Bulk update order status
+  static async bulkUpdateOrderStatus(orderIds: string[], status: OrderStatus, reason?: string, notes?: string) {
+    return apiRequest('/orders/bulk/status', {
+      method: 'POST',
+      body: JSON.stringify({ orderIds, newStatus: status, reason, notes }),
     });
   }
 

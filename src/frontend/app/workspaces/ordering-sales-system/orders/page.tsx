@@ -470,54 +470,31 @@ export default function OrdersPage() {
 
       console.log(`Bulk updating ${targetIds.length} orders to status: ${status}`);
       
-      const results = await Promise.allSettled(targetIds.map(id => {
-        if (status === 'COMPLETED') {
-          return OrderService.completeOrder(id);
-        }
-        return OrderService.updateOrderStatus(id, status);
-      }));
-      const successIds: string[] = [];
-      const failedIds: string[] = [];
+      // Use the new bulk API endpoint
+      const result = await OrderService.bulkUpdateOrderStatus(targetIds, status) as {
+        summary: { successful: number; failed: number; total: number };
+        results: Array<{ success: boolean; orderId: string; orderNumber?: string; oldStatus?: string; newStatus: string; error?: string }>;
+      };
       
-      results.forEach((result, idx) => {
-        if (result.status === 'fulfilled') {
-          successIds.push(targetIds[idx]);
-        } else {
-          failedIds.push(targetIds[idx]);
-          console.error(`Failed to update order ${targetIds[idx]}:`, result.reason);
-        }
-      });
-
-      if (successIds.length > 0) {
-        // Update local state (cast to match Order type status union)
-        setOrders(prev => prev.map(o => successIds.includes(o.id) ? { ...o, status: status as OrderStatus } as Order : o));
-        setFilteredOrders(prev => prev.map(o => successIds.includes(o.id) ? { ...o, status: status as OrderStatus } as Order : o));
+      if (result.summary.successful > 0) {
+        // Update local state for successful orders
+        const successfulIds = result.results
+          .filter((r) => r.success)
+          .map((r) => r.orderId);
+        
+        setOrders(prev => prev.map(o => successfulIds.includes(o.id) ? { ...o, status: status as OrderStatus } as Order : o));
+        setFilteredOrders(prev => prev.map(o => successfulIds.includes(o.id) ? { ...o, status: status as OrderStatus } as Order : o));
         
         // Reload orders to ensure we have the latest data from server
         await loadOrders();
-
-        // If completing, verify persistence and retry briefly if needed
-        if (status === 'COMPLETED') {
-          const maxRetries = 3;
-          for (let attempt = 1; attempt <= maxRetries; attempt++) {
-            // Small delay before recheck
-            await new Promise(r => setTimeout(r, 400));
-            const latest = await OrderService.getOrders() as unknown as Order[];
-            const notCompleted = latest.filter((o: Order) => successIds.includes(o.id) && o.status !== 'COMPLETED');
-            if (notCompleted.length === 0) break;
-            if (attempt === maxRetries) {
-              // Fallback: force status via PATCH if backend completion is eventual
-              await Promise.allSettled(notCompleted.map((o: Order) => OrderService.updateOrderStatus(o.id, 'COMPLETED' as OrderStatus)));
-              await loadOrders();
-            }
-          }
-        }
       }
       
-      if (failedIds.length > 0) {
-        toast.error(`خطا در تغییر وضعیت ${failedIds.length} سفارش از ${targetIds.length} سفارش`);
+      if (result.summary.failed > 0) {
+        const failedResults = result.results.filter((r) => !r.success);
+        console.error('Failed orders:', failedResults);
+        toast.error(`خطا در تغییر وضعیت ${result.summary.failed} سفارش از ${result.summary.total} سفارش`);
       } else {
-        toast.success(`وضعیت ${successIds.length} سفارش با موفقیت تغییر کرد`);
+        toast.success(`وضعیت ${result.summary.successful} سفارش با موفقیت تغییر کرد`);
       }
       
       clearSelection();
