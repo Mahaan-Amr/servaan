@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { io } from 'socket.io-client';
@@ -174,6 +174,7 @@ export default function POSInterface() {
   const [dragStartY, setDragStartY] = useState<number | null>(null);
   const [dragDelta, setDragDelta] = useState(0);
   const dragThreshold = 80; // px threshold to toggle open/close
+  const dragHandleRef = useRef<HTMLDivElement | null>(null);
 
   // When the mobile drawer is open or being dragged, prevent background page scroll
   useEffect(() => {
@@ -197,6 +198,39 @@ export default function POSInterface() {
       } catch {}
     };
   }, [isCartOpen, dragStartY]);
+
+  // Attach non-passive touch listeners to the handle to allow preventDefault()
+  useEffect(() => {
+    const handle = dragHandleRef.current;
+    if (!handle) return;
+
+    const onStart = (e: TouchEvent) => {
+      setDragStartY(e.touches[0].clientY);
+      setDragDelta(0);
+    };
+    const onMove = (e: TouchEvent) => {
+      if (dragStartY !== null) {
+        const delta = e.touches[0].clientY - dragStartY;
+        setDragDelta(Math.max(-120, Math.min(200, delta)));
+        e.preventDefault(); // allowed because passive: false
+      }
+    };
+    const onEnd = () => {
+      if (Math.abs(dragDelta) > dragThreshold) setIsCartOpen(dragDelta < 0);
+      setDragStartY(null);
+      setDragDelta(0);
+    };
+
+    handle.addEventListener('touchstart', onStart, { passive: false });
+    handle.addEventListener('touchmove', onMove, { passive: false });
+    handle.addEventListener('touchend', onEnd, { passive: true });
+
+    return () => {
+      handle.removeEventListener('touchstart', onStart as EventListener);
+      handle.removeEventListener('touchmove', onMove as EventListener);
+      handle.removeEventListener('touchend', onEnd as EventListener);
+    };
+  }, [dragStartY, dragDelta, dragThreshold]);
   
   // Menu data state
   const [categories, setCategories] = useState<MenuCategory[]>([]);
@@ -1492,28 +1526,8 @@ export default function POSInterface() {
           <div className={`mx-auto w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 rounded-t-2xl shadow-2xl ${isCartOpen ? 'max-h-[75vh]' : ''}`}>
             {/* Drag handle */}
             <div
+              ref={dragHandleRef}
               className="flex items-center justify-center py-2 active:cursor-grabbing"
-              onTouchStart={(e) => {
-                setDragStartY(e.touches[0].clientY);
-                setDragDelta(0);
-                // Prevent the page behind from scrolling on gesture start
-                e.stopPropagation();
-              }}
-              onTouchMove={(e) => {
-                if (dragStartY !== null) {
-                  const delta = e.touches[0].clientY - dragStartY;
-                  setDragDelta(Math.max(-120, Math.min(200, delta)));
-                  // Prevent native scroll while dragging the handle
-                  e.preventDefault();
-                  e.stopPropagation();
-                }
-              }}
-              onTouchEnd={() => {
-                if (Math.abs(dragDelta) > dragThreshold) setIsCartOpen(dragDelta < 0);
-                setDragStartY(null);
-                setDragDelta(0);
-              }}
-              // Disable default touch scrolling on the handle element
               style={{ touchAction: 'none' }}
             >
               <div className="w-10 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
