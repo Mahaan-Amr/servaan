@@ -1561,9 +1561,9 @@ export default function POSInterface() {
                 </button>
               </div>
             )}
-            {/* Items */}
+            {/* Scrollable content: items + summary + actions */}
             <div
-              className={`overflow-y-auto px-3 pb-3 sheet-scroll ${isCartOpen ? 'max-h-[45vh]' : 'max-h-[34vh]'}`}
+              className={`sheet-scroll overflow-y-auto px-3 pb-[max(24px,env(safe-area-inset-bottom))] ${isCartOpen ? 'max-h-[65vh]' : 'max-h-[42vh]'}`}
               onPointerDown={onHandlePointerDown}
               onPointerMove={onHandlePointerMove}
               onPointerUp={onHandlePointerUp}
@@ -1603,10 +1603,8 @@ export default function POSInterface() {
                   ))}
                 </div>
               )}
-            </div>
-            {/* Summary + Actions */}
-            <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 space-y-2 pb-[max(20px,env(safe-area-inset-bottom))] sheet-scroll">
-                {/* Full order summary with options for mobile */}
+
+              <div className="mt-3 border-t border-gray-200 dark:border-gray-700 bg-white/0 dark:bg-gray-800/0 pt-3 space-y-2">
                 <OrderSummary
                   orderItems={orderItems}
                   options={orderOptions}
@@ -1629,7 +1627,6 @@ export default function POSInterface() {
                   }}
                   defaultExpanded
                 />
-
                 <div className="mt-2 flex items-center justify-between text-sm text-gray-700 dark:text-gray-300">
                   <span>مجموع پرداختی</span>
                   <span className="font-bold text-amber-600 dark:text-amber-400">{formatPrice(calculation.totalAmount)}</span>
@@ -1641,6 +1638,7 @@ export default function POSInterface() {
                   پاک کردن سبد
                 </button>
               </div>
+            </div>
           </div>
         </div>
       )}
