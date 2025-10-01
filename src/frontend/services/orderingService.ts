@@ -240,6 +240,13 @@ export class OrderService {
     });
   }
 
+  // Complete order (preferred endpoint for completion side-effects)
+  static async completeOrder(orderId: string) {
+    return apiRequest(`/orders/${orderId}/complete`, {
+      method: 'POST'
+    });
+  }
+
   // Cancel order
   static async cancelOrder(orderId: string, reason: string, refundAmount?: number) {
     return apiRequest(`/orders/${orderId}/cancel`, {

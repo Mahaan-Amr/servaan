@@ -470,7 +470,12 @@ export default function OrdersPage() {
 
       console.log(`Bulk updating ${targetIds.length} orders to status: ${status}`);
       
-      const results = await Promise.allSettled(targetIds.map(id => OrderService.updateOrderStatus(id, status)));
+      const results = await Promise.allSettled(targetIds.map(id => {
+        if (status === 'COMPLETED') {
+          return OrderService.completeOrder(id);
+        }
+        return OrderService.updateOrderStatus(id, status);
+      }));
       const successIds: string[] = [];
       const failedIds: string[] = [];
       
