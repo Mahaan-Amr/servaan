@@ -174,6 +174,29 @@ export default function POSInterface() {
   const [dragStartY, setDragStartY] = useState<number | null>(null);
   const [dragDelta, setDragDelta] = useState(0);
   const dragThreshold = 80; // px threshold to toggle open/close
+
+  // When the mobile drawer is open or being dragged, prevent background page scroll
+  useEffect(() => {
+    const shouldLock = isCartOpen || dragStartY !== null;
+    if (shouldLock) {
+      try {
+        document.body.style.overflow = 'hidden';
+        // Narrow type cast to CSSStyleDeclaration for linter
+        (document.body.style as CSSStyleDeclaration).setProperty('overscroll-behavior', 'contain');
+      } catch {}
+    } else {
+      try {
+        document.body.style.overflow = '';
+        (document.body.style as CSSStyleDeclaration).removeProperty('overscroll-behavior');
+      } catch {}
+    }
+    return () => {
+      try {
+        document.body.style.overflow = '';
+        (document.body.style as CSSStyleDeclaration).removeProperty('overscroll-behavior');
+      } catch {}
+    };
+  }, [isCartOpen, dragStartY]);
   
   // Menu data state
   const [categories, setCategories] = useState<MenuCategory[]>([]);
@@ -1473,11 +1496,16 @@ export default function POSInterface() {
               onTouchStart={(e) => {
                 setDragStartY(e.touches[0].clientY);
                 setDragDelta(0);
+                // Prevent the page behind from scrolling on gesture start
+                e.stopPropagation();
               }}
               onTouchMove={(e) => {
                 if (dragStartY !== null) {
                   const delta = e.touches[0].clientY - dragStartY;
                   setDragDelta(Math.max(-120, Math.min(200, delta)));
+                  // Prevent native scroll while dragging the handle
+                  e.preventDefault();
+                  e.stopPropagation();
                 }
               }}
               onTouchEnd={() => {
@@ -1485,6 +1513,8 @@ export default function POSInterface() {
                 setDragStartY(null);
                 setDragDelta(0);
               }}
+              // Disable default touch scrolling on the handle element
+              style={{ touchAction: 'none' }}
             >
               <div className="w-10 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
             </div>
