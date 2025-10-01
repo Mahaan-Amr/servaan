@@ -201,48 +201,31 @@ export default function POSInterface() {
     };
   }, [isCartOpen, dragStartY]);
 
-  // Attach non-passive touch listeners to the handle to allow preventDefault()
-  useEffect(() => {
-    const el = dragHandleRef.current || drawerRef.current;
-    if (!el) return;
+  // Pointer event handlers for drawer handle
+  const onHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement | null;
+    if (target && target.closest('.sheet-scroll')) return; // don't start drag from scrollable areas
+    dragActiveRef.current = true;
+    setDragStartY(e.clientY);
+    setDragDelta(0);
+    try { (e.currentTarget as unknown as Element).setPointerCapture?.(e.pointerId as number); } catch {}
+  };
 
-    const onStart = (e: TouchEvent) => {
-      const target = e.target as HTMLElement | null;
-      // If user starts touch inside a scrollable area, don't activate drawer drag
-      if (target && target.closest('.sheet-scroll')) {
-        dragActiveRef.current = false;
-        return;
-      }
-      dragActiveRef.current = true;
-      setDragStartY(e.touches[0].clientY);
-      setDragDelta(0);
-      e.preventDefault();
-    };
-    const onMove = (e: TouchEvent) => {
-      if (!dragActiveRef.current || dragStartY === null) return;
-      const delta = e.touches[0].clientY - dragStartY;
-      setDragDelta(Math.max(-160, Math.min(240, delta)));
-      e.preventDefault(); // allowed because passive: false
-    };
-    const onEnd = () => {
-      if (dragActiveRef.current) {
-        if (Math.abs(dragDelta) > dragThreshold) setIsCartOpen(dragDelta < 0);
-      }
-      dragActiveRef.current = false;
-      setDragStartY(null);
-      setDragDelta(0);
-    };
+  const onHandlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragActiveRef.current || dragStartY === null) return;
+    const delta = e.clientY - dragStartY;
+    setDragDelta(Math.max(-160, Math.min(240, delta)));
+  };
 
-    el.addEventListener('touchstart', onStart, { passive: false });
-    el.addEventListener('touchmove', onMove, { passive: false });
-    el.addEventListener('touchend', onEnd, { passive: true });
-
-    return () => {
-      el.removeEventListener('touchstart', onStart as EventListener);
-      el.removeEventListener('touchmove', onMove as EventListener);
-      el.removeEventListener('touchend', onEnd as EventListener);
-    };
-  }, [dragStartY, dragDelta, dragThreshold]);
+  const onHandlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (dragActiveRef.current && Math.abs(dragDelta) > dragThreshold) {
+      setIsCartOpen(dragDelta < 0);
+    }
+    dragActiveRef.current = false;
+    setDragStartY(null);
+    setDragDelta(0);
+    try { (e.currentTarget as unknown as Element).releasePointerCapture?.(e.pointerId as number); } catch {}
+  };
   
   // Menu data state
   const [categories, setCategories] = useState<MenuCategory[]>([]);
@@ -1541,6 +1524,10 @@ export default function POSInterface() {
               ref={dragHandleRef}
               className="flex items-center justify-center py-2 active:cursor-grabbing"
               style={{ touchAction: 'none' }}
+              onPointerDown={onHandlePointerDown}
+              onPointerMove={onHandlePointerMove}
+              onPointerUp={onHandlePointerUp}
+              onPointerCancel={onHandlePointerUp}
             >
               <div className="w-10 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
             </div>
