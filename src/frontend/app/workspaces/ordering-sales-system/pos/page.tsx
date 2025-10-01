@@ -1399,7 +1399,7 @@ export default function POSInterface() {
 
         {/* Order Summary & Actions - Fixed at Bottom */}
         {orderItems.length > 0 && (
-          <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 sticky bottom-0 z-10">
+          <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 sticky bottom-0 z-10 rounded-t-lg shadow-[0_-6px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_-6px_12px_rgba(0,0,0,0.35)]">
             <OrderSummary
               orderItems={orderItems}
               options={orderOptions}
