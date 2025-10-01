@@ -11,7 +11,7 @@ import Link from 'next/link';
 interface Order {
   id: string;
   orderNumber: string;
-  friendlyOrderNumber: string; // User-friendly order identifier
+  friendlyOrderNumber: string; // Display: order number
   customerName?: string;
   customerPhone?: string;
   tableNumber?: string;
@@ -124,18 +124,11 @@ export default function OrdersPage() {
       if (response && Array.isArray(response)) {
         const transformedOrders: Order[] = response.map((order: ApiOrder) => {
           // Generate a more user-friendly order identifier
-          const orderDate = new Date(order.orderDate || new Date());
-          const timeStr = orderDate.toLocaleTimeString('fa-IR', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          });
-          const dateStr = orderDate.toLocaleDateString('fa-IR', { 
-            month: '2-digit', 
-            day: '2-digit' 
-          });
+          // Keep for potential future use; ensures consistent Date object creation
+          // const orderDate = new Date(order.orderDate || new Date());
           
           // Create a user-friendly order identifier
-          const friendlyOrderNumber = `${dateStr} ${timeStr}`;
+          const friendlyOrderNumber = order.orderNumber || `#${order.id.slice(-6)}`;
           
           // Handle table name display
           let tableDisplayName = '';
@@ -723,7 +716,7 @@ export default function OrdersPage() {
                <div key={order.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-2 sm:p-3">
                  <div className="flex items-center justify-between mb-1">
                    <div className="flex items-center space-x-2 space-x-reverse">
-                     <span className="text-sm font-medium text-gray-900 dark:text-white">{order.friendlyOrderNumber}</span>
+                   <span className="text-sm font-medium text-gray-900 dark:text-white">{order.friendlyOrderNumber}</span>
                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                        {getStatusLabel(order.status)}
                      </span>
@@ -821,7 +814,7 @@ export default function OrdersPage() {
                          </span>
                        </td>
                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                         {new Date(order.orderDate).toLocaleDateString('fa-IR')}
+                         {new Date(order.orderDate).toLocaleDateString('fa-IR')} - {new Date(order.orderDate).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}
                        </td>
                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                          <div className="flex space-x-2 space-x-reverse">
