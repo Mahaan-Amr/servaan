@@ -1336,7 +1336,7 @@ export default function POSInterface() {
                 <p className="text-sm">آیتم مورد نظر را انتخاب کنید</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-white">آیتم‌های انتخاب شده</h3>
                   <span className="text-xs md:text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
@@ -1345,53 +1345,48 @@ export default function POSInterface() {
                 </div>
                 
                 {orderItems.map((item) => (
-                  <div key={item.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 md:p-4 border border-gray-200 dark:border-gray-600 shadow-sm">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 dark:text-white text-sm md:text-base mb-2 break-words">{item.menuItem.name}</h4>
-                        <div className="flex items-center justify-between mb-3">
-                          <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                  <div key={item.id} className="py-2 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                    <div className="flex items-center justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium text-gray-900 dark:text-white text-sm truncate">{item.menuItem.name}</h4>
+                          <p className="text-xs font-bold text-amber-600 dark:text-amber-400 ml-3">
+                            {formatPrice(item.totalPrice)} تومان
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between mt-1">
+                          <p className="text-[11px] text-gray-600 dark:text-gray-400">
                             {formatPrice(item.menuItem.price)} × {item.quantity}
                           </p>
-                                                     <p className="text-xs md:text-sm font-bold text-amber-600 dark:text-amber-400">
-                             {formatPrice(item.totalPrice)} تومان
-                           </p>
-                        </div>
-                        
-                        {/* Quantity Controls */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2 md:space-x-3 space-x-reverse">
+                          <div className="flex items-center space-x-1 space-x-reverse">
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors active:scale-95"
+                              className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
                             >
-                              <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                               </svg>
                             </button>
-                            
-                            <span className="w-8 md:w-12 text-center font-bold text-gray-900 dark:text-white text-sm md:text-lg">
+                            <span className="w-8 text-center font-bold text-gray-900 dark:text-white text-xs">
                               {item.quantity}
                             </span>
-                            
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors active:scale-95"
+                              className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
                             >
-                              <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                               </svg>
                             </button>
+                            <button
+                              onClick={() => removeFromOrder(item.id)}
+                              className="w-6 h-6 rounded bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center justify-center hover:bg-red-200 dark:hover:bg-red-900/40 transition-colors"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
                           </div>
-                          
-                          <button
-                            onClick={() => removeFromOrder(item.id)}
-                            className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center justify-center hover:bg-red-200 dark:hover:bg-red-900/40 transition-colors active:scale-95"
-                          >
-                            <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
                         </div>
                       </div>
                     </div>
@@ -1411,6 +1406,8 @@ export default function POSInterface() {
               calculation={calculation}
               onOptionsChange={setOrderOptions}
               presets={presets}
+              defaultExpanded={false}
+              showItemsList={false}
               onPresetSelect={(preset) => {
                 setOrderOptions({
                   discountEnabled: preset.discountEnabled,

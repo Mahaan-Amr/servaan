@@ -20,9 +20,10 @@ interface OrderSummaryProps {
   presets: BusinessPreset[];
   onPresetSelect: (preset: BusinessPreset) => void;
   defaultExpanded?: boolean;
+  showItemsList?: boolean;
 }
 
-export default function OrderSummary({ orderItems, options, calculation, onOptionsChange, presets, onPresetSelect, defaultExpanded }: OrderSummaryProps) {
+export default function OrderSummary({ orderItems, options, calculation, onOptionsChange, presets, onPresetSelect, defaultExpanded, showItemsList = true }: OrderSummaryProps) {
   const [isExpanded, setIsExpanded] = useState(!!defaultExpanded);
 
   const formatPrice = (amount: number) => {
@@ -67,18 +68,20 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
       {isExpanded && (
         <div className="px-4 pb-4 border-t border-gray-200 dark:border-gray-700">
           {/* Order Items Summary */}
-          <div className="mb-4 mt-3">
-            {orderItems.map((item, index) => (
-              <div key={index} className="flex justify-between items-center mb-2 text-sm">
-                <span className="text-gray-700 dark:text-gray-300">
-                  {item.quantity}x {item.menuItem.name}
-                </span>
-                                  <span className="text-gray-900 dark:text-white font-medium">
+          {showItemsList && (
+            <div className="mb-4 mt-3">
+              {orderItems.map((item, index) => (
+                <div key={index} className="flex justify-between items-center mb-2 text-sm">
+                  <span className="text-gray-700 dark:text-gray-300">
+                    {item.quantity}x {item.menuItem.name}
+                  </span>
+                  <span className="text-gray-900 dark:text-white font-medium">
                     {formatPrice(item.totalPrice)} تومان
                   </span>
-              </div>
-            ))}
-          </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Calculation Breakdown */}
           <div className="space-y-2 text-sm mb-4">
