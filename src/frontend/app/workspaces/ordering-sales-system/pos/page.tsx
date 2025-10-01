@@ -171,6 +171,9 @@ export default function POSInterface() {
   const [stockValidationData, setStockValidationData] = useState<StockValidationData | null>(null);
   // Mobile cart drawer state
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [dragStartY, setDragStartY] = useState<number | null>(null);
+  const [dragDelta, setDragDelta] = useState(0);
+  const dragThreshold = 80; // px threshold to toggle open/close
   
   // Menu data state
   const [categories, setCategories] = useState<MenuCategory[]>([]);
@@ -1462,10 +1465,27 @@ export default function POSInterface() {
 
       {/* Mobile Cart Drawer */}
       {orderItems.length > 0 && (
-        <div className={`sm:hidden fixed inset-x-0 bottom-0 z-[70] transition-transform duration-300 ${isCartOpen ? 'translate-y-0' : 'translate-y-[80%]'} pointer-events-auto`}>
-          <div className={`mx-auto w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 rounded-t-2xl shadow-2xl ${isCartOpen ? 'max-h-[70vh]' : ''}`}>
+        <div className={`sm:hidden fixed inset-x-0 bottom-0 z-[70] transition-transform duration-200 pointer-events-auto`} style={{ transform: `translateY(calc(${isCartOpen ? '0%' : '76%'} + ${dragDelta}px))` }}>
+          <div className={`mx-auto w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 rounded-t-2xl shadow-2xl ${isCartOpen ? 'max-h-[75vh]' : ''}`}>
             {/* Drag handle */}
-            <div className="flex items-center justify-center py-2">
+            <div
+              className="flex items-center justify-center py-2 active:cursor-grabbing"
+              onTouchStart={(e) => {
+                setDragStartY(e.touches[0].clientY);
+                setDragDelta(0);
+              }}
+              onTouchMove={(e) => {
+                if (dragStartY !== null) {
+                  const delta = e.touches[0].clientY - dragStartY;
+                  setDragDelta(Math.max(-120, Math.min(200, delta)));
+                }
+              }}
+              onTouchEnd={() => {
+                if (Math.abs(dragDelta) > dragThreshold) setIsCartOpen(dragDelta < 0);
+                setDragStartY(null);
+                setDragDelta(0);
+              }}
+            >
               <div className="w-10 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
             </div>
             <div className="px-3 pb-2 flex items-center justify-between">
@@ -1492,7 +1512,7 @@ export default function POSInterface() {
               </div>
             )}
             {/* Items */}
-            <div className={`overflow-y-auto px-3 pb-3 ${isCartOpen ? 'max-h-[40vh]' : 'max-h-[30vh]'}`}>
+            <div className={`overflow-y-auto px-3 pb-3 ${isCartOpen ? 'max-h-[45vh]' : 'max-h-[34vh]'}`}>
               {orderItems.length === 0 ? (
                 <div className="text-center text-gray-500 dark:text-gray-400 py-6">
                   سبد خالی است
