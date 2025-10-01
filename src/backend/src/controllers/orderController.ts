@@ -614,15 +614,19 @@ export class OrderController {
         throw new AppError('Authentication required', 401);
       }
 
-      // Temporarily get all orders instead of just today's to test data processing
-      const orders = await orderService.getOrders({
-        tenantId
-        // Removed date filtering temporarily to test if data processing works
-        // startDate: startOfDay,
-        // endDate: endOfDay
-      });
+      // Calculate start and end of today (server timezone)
+      const now = new Date();
+      const startOfDay = new Date(now);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(now);
+      endOfDay.setHours(23, 59, 59, 999);
 
-      console.log(`🔍 Found ${orders.length} total orders for tenant ${tenantId}`);
+      // Get only today's orders
+      const orders = await orderService.getOrders({
+        tenantId,
+        startDate: startOfDay,
+        endDate: endOfDay
+      });
 
       // Calculate summary statistics
       const totalRevenue = orders.reduce((sum: number, order: any) => sum + Number(order.totalAmount || 0), 0);
@@ -630,7 +634,8 @@ export class OrderController {
       const pendingOrders = orders.filter((order: any) => ['SUBMITTED', 'CONFIRMED', 'PREPARING', 'READY', 'SERVED'].includes(order.status)).length;
       const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
 
-      console.log(`📊 Calculated stats: ${completedOrders} completed, ${pendingOrders} pending, ${totalRevenue} revenue`);
+      // Debug log kept terse to avoid noisy logs in production
+      // console.log(`📊 Daily stats: ${completedOrders} completed, ${pendingOrders} pending, revenue=${totalRevenue}`);
 
       // Get payment methods breakdown
       const paymentMethods = orders.reduce((acc: any[], order: any) => {
