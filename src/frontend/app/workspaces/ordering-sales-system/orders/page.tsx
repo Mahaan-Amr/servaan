@@ -468,16 +468,36 @@ export default function OrdersPage() {
         return;
       }
 
+      console.log(`Bulk updating ${targetIds.length} orders to status: ${status}`);
+      
       const results = await Promise.allSettled(targetIds.map(id => OrderService.updateOrderStatus(id, status)));
       const successIds: string[] = [];
-      results.forEach((r, idx) => { if (r.status === 'fulfilled') successIds.push(targetIds[idx]); });
+      const failedIds: string[] = [];
+      
+      results.forEach((result, idx) => {
+        if (result.status === 'fulfilled') {
+          successIds.push(targetIds[idx]);
+        } else {
+          failedIds.push(targetIds[idx]);
+          console.error(`Failed to update order ${targetIds[idx]}:`, result.reason);
+        }
+      });
 
       if (successIds.length > 0) {
         // Update local state (cast to match Order type status union)
         setOrders(prev => prev.map(o => successIds.includes(o.id) ? { ...o, status: status as OrderStatus } as Order : o));
         setFilteredOrders(prev => prev.map(o => successIds.includes(o.id) ? { ...o, status: status as OrderStatus } as Order : o));
+        
+        // Reload orders to ensure we have the latest data from server
+        await loadOrders();
       }
-      toast.success(`وضعیت ${successIds.length} سفارش تغییر کرد`);
+      
+      if (failedIds.length > 0) {
+        toast.error(`خطا در تغییر وضعیت ${failedIds.length} سفارش از ${targetIds.length} سفارش`);
+      } else {
+        toast.success(`وضعیت ${successIds.length} سفارش با موفقیت تغییر کرد`);
+      }
+      
       clearSelection();
     } catch (e) {
       console.error('Bulk update error:', e);
