@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { OrderService } from '../../../../services/orderingService';
 import { OrderStatus } from '../../../../types/ordering';
@@ -129,11 +129,7 @@ export default function OrdersPage() {
   }, []);
 
   // Load orders from API
-  useEffect(() => {
-    loadOrders();
-  }, []);
-
-    const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     try {
       setLoading(true);
       const response = await OrderService.getOrders();
@@ -198,11 +194,29 @@ export default function OrdersPage() {
     } finally {
       setLoading(false);
     }
-    };
+    }, []);
+
+  useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
 
   // Filter orders based on current tab and filters
   useEffect(() => {
     let filtered = orders;
+
+    // Show only today's orders plus any previous-day orders that are not completed
+    const now = new Date();
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+    const endOfToday = new Date(now);
+    endOfToday.setHours(23, 59, 59, 999);
+
+    filtered = filtered.filter((order) => {
+      const d = new Date(order.orderDate);
+      const isToday = d >= startOfToday && d <= endOfToday;
+      const isCarryOver = d < startOfToday && order.status !== 'COMPLETED' && order.status !== 'CANCELLED';
+      return isToday || isCarryOver;
+    });
 
     // Filter by order type (tab)
     if (activeTab !== 'all') {
