@@ -402,16 +402,13 @@ export default function OrdersPage() {
     }
   };
 
+  // Show full list so we can jump directly to any status (except invalid transitions)
   const getNextStatusOptions = (currentStatus: string) => {
-    switch (currentStatus) {
-      case 'SUBMITTED': return ['CONFIRMED', 'CANCELLED'];
-      case 'CONFIRMED': return ['PREPARING', 'CANCELLED'];
-      case 'PREPARING': return ['READY', 'CANCELLED'];
-      case 'READY': return ['SERVED', 'COMPLETED'];
-      case 'SERVED': return ['COMPLETED'];
-      case 'PARTIALLY_PAID': return ['CONFIRMED', 'PREPARING', 'READY', 'SERVED', 'COMPLETED'];
-      default: return [];
-    }
+    const all: Array<OrderStatus> = ['SUBMITTED' as OrderStatus,'CONFIRMED' as OrderStatus,'PREPARING' as OrderStatus,'READY' as OrderStatus,'SERVED' as OrderStatus,'COMPLETED' as OrderStatus,'CANCELLED' as OrderStatus];
+    // Cannot transition from COMPLETED/CANCELLED
+    if (currentStatus === 'COMPLETED' || currentStatus === 'CANCELLED') return [];
+    // Allow selecting any different status
+    return all.filter(s => s !== currentStatus);
   };
 
   // Helper function to check if order can be cancelled
@@ -661,7 +658,7 @@ export default function OrdersPage() {
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600 dark:text-gray-400">تاریخ:</span>
                         <span className="text-sm text-gray-900 dark:text-white">
-                          {new Date(order.orderDate).toLocaleDateString('fa-IR')}
+                          {new Date(order.orderDate).toLocaleDateString('fa-IR')} - {new Date(order.orderDate).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
 

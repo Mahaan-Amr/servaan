@@ -475,26 +475,27 @@ export class OrderService {
     });
   }
 
-  // Generate unique order number
+  // Generate numeric order number that resets daily per tenant and starts at 100
   private async generateOrderNumber(tenantId: string): Promise<string> {
     const today = new Date();
-    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
-    
-    const lastOrder = await prisma.order.findFirst({
-      where: {
-        tenantId,
-        orderNumber: { startsWith: `ORD-${dateStr}` }
-      },
-      orderBy: { orderNumber: 'desc' }
+    const dateStr = today.toISOString().slice(0, 10); // YYYY-MM-DD
+    const startOfDay = new Date(dateStr + 'T00:00:00.000Z');
+    const endOfDay = new Date(dateStr + 'T23:59:59.999Z');
+
+    const lastTodayOrder = await prisma.order.findFirst({
+      where: { tenantId, orderDate: { gte: startOfDay, lte: endOfDay } },
+      orderBy: { createdAt: 'desc' }
     });
 
-    let sequence = 1;
-    if (lastOrder) {
-      const lastSequence = parseInt(lastOrder.orderNumber.slice(-4));
-      sequence = lastSequence + 1;
+    // Start at 100 each day
+    let next = 100;
+    if (lastTodayOrder && lastTodayOrder.orderNumber) {
+      const parsed = parseInt(String(lastTodayOrder.orderNumber).replace(/\D/g, ''), 10);
+      if (!isNaN(parsed)) next = parsed + 1;
     }
 
-    return `ORD-${dateStr}-${sequence.toString().padStart(4, '0')}`;
+    // Store as plain number string for simplicity
+    return String(next);
   }
 
   // Generate unique payment number
