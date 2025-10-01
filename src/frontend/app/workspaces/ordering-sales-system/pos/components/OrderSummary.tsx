@@ -54,14 +54,7 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
           </div>
         </div>
         
-        {/* Quick Summary - Always Visible */}
-        <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-          {orderItems.length} آیتم • {formatPrice(calculation.subtotal)} تومان
-          {calculation.discountAmount > 0 && ` • تخفیف: ${formatPrice(calculation.discountAmount)} تومان`}
-          {calculation.taxAmount > 0 && ` • مالیات: ${formatPrice(calculation.taxAmount)} تومان`}
-          {calculation.serviceAmount > 0 && ` • خدمات: ${formatPrice(calculation.serviceAmount)} تومان`}
-          {calculation.courierAmount > 0 && ` • پیک: ${formatPrice(calculation.courierAmount)} تومان`}
-        </div>
+        {/* Quick Summary removed for brevity; breakdown below suffices */}
       </div>
 
       {/* Expandable Content */}
@@ -130,9 +123,9 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
             </div>
           </div>
 
-          {/* Order Options - Enhanced Version */}
+          {/* Order Options - Compact Horizontal Switches */}
           <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
               <h4 className="text-sm font-medium text-gray-900 dark:text-white">تنظیمات سفارش</h4>
               
               {/* Presets Dropdown */}
@@ -154,113 +147,113 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
               </div>
             </div>
 
-            <div className="space-y-4">
-              {/* Discount */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2 space-x-reverse">
+            {/* Horizontal toggles with collapsible inputs */}
+            <div className="flex items-center gap-4 flex-wrap">
+              {/* Discount toggle */}
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={options.discountEnabled}
+                  onChange={(e) => onOptionsChange({ ...options, discountEnabled: e.target.checked })}
+                  className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500"
+                />
+                <span className="text-gray-700 dark:text-gray-300">تخفیف</span>
+              </label>
+
+              {/* Tax toggle */}
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={options.taxEnabled}
+                  onChange={(e) => onOptionsChange({ ...options, taxEnabled: e.target.checked })}
+                  className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500"
+                />
+                <span className="text-gray-700 dark:text-gray-300">مالیات</span>
+              </label>
+
+              {/* Service toggle */}
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={options.serviceEnabled}
+                  onChange={(e) => onOptionsChange({ ...options, serviceEnabled: e.target.checked })}
+                  className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500"
+                />
+                <span className="text-gray-700 dark:text-gray-300">خدمات</span>
+              </label>
+
+              {/* Courier toggle */}
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={options.courierEnabled}
+                  onChange={(e) => onOptionsChange({ ...options, courierEnabled: e.target.checked })}
+                  className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500"
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300">پیک</span>
+              </label>
+            </div>
+
+            {/* Collapsible inputs under the toggles */}
+            <div className="mt-3 space-y-3">
+              {options.discountEnabled && (
+                <div className="flex items-center gap-2">
+                  <select
+                    value={options.discountType}
+                    onChange={(e) => onOptionsChange({ ...options, discountType: e.target.value as 'PERCENTAGE' | 'AMOUNT' })}
+                    className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-amber-500 focus:border-transparent"
+                  >
+                    <option value="PERCENTAGE">%</option>
+                    <option value="AMOUNT">تومان</option>
+                  </select>
                   <input
-                    type="checkbox"
-                    checked={options.discountEnabled}
-                    onChange={(e) => onOptionsChange({...options, discountEnabled: e.target.checked})}
-                    className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500"
+                    type="number"
+                    value={options.discountValue}
+                    onChange={(e) => onOptionsChange({ ...options, discountValue: parseFloat(e.target.value) || 0 })}
+                    className="w-24 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="0"
                   />
-                  <label className="text-sm text-gray-700 dark:text-gray-300">تخفیف</label>
                 </div>
-                {options.discountEnabled && (
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <select
-                      value={options.discountType}
-                      onChange={(e) => onOptionsChange({...options, discountType: e.target.value as 'PERCENTAGE' | 'AMOUNT'})}
-                      className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-amber-500 focus:border-transparent"
-                    >
-                      <option value="PERCENTAGE">%</option>
-                      <option value="AMOUNT">تومان</option>
-                    </select>
-                    <input
-                      type="number"
-                      value={options.discountValue}
-                      onChange={(e) => onOptionsChange({...options, discountValue: parseFloat(e.target.value) || 0})}
-                      className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-amber-500 focus:border-transparent"
-                      placeholder="0"
-                    />
-                  </div>
-                )}
-              </div>
-              
-              {/* Tax */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2 space-x-reverse">
+              )}
+
+              {options.taxEnabled && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">%</span>
                   <input
-                    type="checkbox"
-                    checked={options.taxEnabled}
-                    onChange={(e) => onOptionsChange({...options, taxEnabled: e.target.checked})}
-                    className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500"
+                    type="number"
+                    value={options.taxPercentage}
+                    onChange={(e) => onOptionsChange({ ...options, taxPercentage: parseFloat(e.target.value) || 0 })}
+                    className="w-24 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="9"
                   />
-                  <label className="text-sm text-gray-700 dark:text-gray-300">مالیات</label>
                 </div>
-                {options.taxEnabled && (
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <span className="text-xs text-gray-500">%</span>
-                    <input
-                      type="number"
-                      value={options.taxPercentage}
-                      onChange={(e) => onOptionsChange({...options, taxPercentage: parseFloat(e.target.value) || 0})}
-                      className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-amber-500 focus:border-transparent"
-                      placeholder="9"
-                    />
-                  </div>
-                )}
-              </div>
-              
-              {/* Service */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2 space-x-reverse">
+              )}
+
+              {options.serviceEnabled && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">%</span>
                   <input
-                    type="checkbox"
-                    checked={options.serviceEnabled}
-                    onChange={(e) => onOptionsChange({...options, serviceEnabled: e.target.checked})}
-                    className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500"
+                    type="number"
+                    value={options.servicePercentage}
+                    onChange={(e) => onOptionsChange({ ...options, servicePercentage: parseFloat(e.target.value) || 0 })}
+                    className="w-24 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="10"
                   />
-                  <label className="text-sm text-gray-700 dark:text-gray-300">خدمات</label>
                 </div>
-                {options.serviceEnabled && (
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <span className="text-xs text-gray-500">%</span>
-                    <input
-                      type="number"
-                      value={options.servicePercentage}
-                      onChange={(e) => onOptionsChange({...options, servicePercentage: parseFloat(e.target.value) || 0})}
-                      className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-amber-500 focus:border-transparent"
-                      placeholder="10"
-                    />
-                  </div>
-                )}
-              </div>
-              
-              {/* Courier */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2 space-x-reverse">
+              )}
+
+              {options.courierEnabled && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">تومان</span>
                   <input
-                    type="checkbox"
-                    checked={options.courierEnabled}
-                    onChange={(e) => onOptionsChange({...options, courierEnabled: e.target.checked})}
-                    className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500"
+                    type="number"
+                    value={options.courierAmount}
+                    onChange={(e) => onOptionsChange({ ...options, courierAmount: parseFloat(e.target.value) || 0 })}
+                    className="w-28 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-amber-500 focus:border-transparent"
+                    placeholder="0"
                   />
-                  <label className="text-sm text-gray-700 dark:text-gray-300">پیک</label>
                 </div>
-                {options.courierEnabled && (
-                  <div className="flex items-center space-x-2 space-x-reverse">
-                    <span className="text-xs text-gray-500">تومان</span>
-                    <input
-                      type="number"
-                      value={options.courierAmount}
-                      onChange={(e) => onOptionsChange({...options, courierAmount: parseFloat(e.target.value) || 0})}
-                      className="w-24 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-1 focus:ring-amber-500 focus:border-transparent"
-                      placeholder="0"
-                    />
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
         </div>
