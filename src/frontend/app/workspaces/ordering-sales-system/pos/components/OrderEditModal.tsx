@@ -137,13 +137,13 @@ export default function OrderEditModal({
       console.log('🔍 Menu data received:', menuData);
       
       // Validate and transform menu data
-      const validatedMenuData = Array.isArray(menuData) ? menuData.map((category: { id?: string; name?: string; items?: Array<{ id?: string; name?: string; displayName?: string; price?: number; menuPrice?: number; description?: string; imageUrl?: string; isAvailable?: boolean }> }) => ({
+      const validatedMenuData = Array.isArray(menuData) ? menuData.map((category: { id?: string; name?: string; items?: Array<{ id?: string; name?: string; displayName?: string; price?: number | string; menuPrice?: number | string; description?: string; imageUrl?: string; isAvailable?: boolean }> }) => ({
         id: category.id || '',
         name: category.name || '',
-        items: Array.isArray(category.items) ? category.items.map((item: { id?: string; name?: string; displayName?: string; price?: number; menuPrice?: number; description?: string; imageUrl?: string; isAvailable?: boolean }) => ({
+        items: Array.isArray(category.items) ? category.items.map((item: { id?: string; name?: string; displayName?: string; price?: number | string; menuPrice?: number | string; description?: string; imageUrl?: string; isAvailable?: boolean }) => ({
           id: item.id || '',
           name: item.name || item.displayName || 'Unknown Item',
-          price: item.price || item.menuPrice || 0,
+          price: Number((item.price as number | string | undefined) ?? (item.menuPrice as number | string | undefined) ?? 0),
           category: category.id || '',
           description: item.description || '',
           imageUrl: item.imageUrl || '',
@@ -170,7 +170,7 @@ export default function OrderEditModal({
     if (existingItem) {
       setOrderItems(prev => prev.map(orderItem => 
         orderItem.itemId === item.id 
-          ? { ...orderItem, quantity: orderItem.quantity + 1, totalPrice: (orderItem.quantity + 1) * orderItem.unitPrice }
+          ? { ...orderItem, quantity: orderItem.quantity + 1, totalPrice: (orderItem.quantity + 1) * Number(orderItem.unitPrice) }
           : orderItem
       ));
     } else {
@@ -179,8 +179,8 @@ export default function OrderEditModal({
         itemId: item.id,
         itemName: item.name,
         quantity: 1,
-        unitPrice: item.price,
-        totalPrice: item.price,
+        unitPrice: Number(item.price),
+        totalPrice: Number(item.price),
         modifiers: [],
         specialRequest: ''
       };
@@ -198,7 +198,7 @@ export default function OrderEditModal({
     } else {
       setOrderItems(prev => prev.map(item => 
         item.itemId === itemId 
-          ? { ...item, quantity: newQuantity, totalPrice: newQuantity * item.unitPrice }
+          ? { ...item, quantity: newQuantity, totalPrice: newQuantity * Number(item.unitPrice) }
           : item
       ));
     }
@@ -312,7 +312,7 @@ export default function OrderEditModal({
   };
 
   const calculateTotals = () => {
-    const subtotal = orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
+    const subtotal = orderItems.reduce((sum, item) => sum + Number(item.totalPrice), 0);
     // Discount
     let discountAmount = 0;
     if (orderOptions.discountEnabled && orderOptions.discountValue > 0) {
