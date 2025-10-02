@@ -117,6 +117,7 @@ export default function OrderEditModal({
     breakdown: { subtotal: 0, discount: 0, tax: 0, service: 0, courier: 0, total: 0 }
   });
   const [presets] = useState<BusinessPreset[]>([]);
+  const [orderStatus, setOrderStatus] = useState<string | null>(null);
   
   // Receipt printing state
   const [showReceipt, setShowReceipt] = useState(false);
@@ -143,6 +144,18 @@ export default function OrderEditModal({
         }
       });
       setOrderItems(Array.from(mergedMap.values()));
+
+      // Load order status to prevent editing completed/cancelled
+      (async () => {
+        try {
+          const order = await OrderService.getOrderById(orderId) as { status?: string };
+          if (order && order.status) setOrderStatus(order.status);
+        } catch (e) {
+          // Non-blocking
+          console.warn('Failed to fetch order status', e);
+          setOrderStatus(null);
+        }
+      })();
     }
   }, [isOpen, currentItems]);
 
@@ -230,6 +243,11 @@ export default function OrderEditModal({
   const handleSaveChanges = async () => {
     try {
       setSaving(true);
+      // Guard: prevent modifications to completed/cancelled orders
+      if (orderStatus === 'COMPLETED' || orderStatus === 'CANCELLED') {
+        toast.error('امکان ویرایش سفارش تکمیل‌شده یا لغوشده وجود ندارد');
+        return;
+      }
       
       // Calculate new totals
       const totals = calculateTotals();
@@ -614,14 +632,14 @@ export default function OrderEditModal({
               <div className="space-y-3">
                 <button
                   onClick={handleSaveChanges}
-                  disabled={saving}
+                  disabled={saving || orderStatus === 'COMPLETED' || orderStatus === 'CANCELLED'}
                   className={`w-full py-3 rounded-lg font-semibold text-sm transition-all duration-200 ${
-                    saving
+                    saving || orderStatus === 'COMPLETED' || orderStatus === 'CANCELLED'
                       ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
                       : 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
                   }`}
                 >
-                  {saving ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
+                  {saving ? 'در حال ذخیره...' : (orderStatus === 'COMPLETED' || orderStatus === 'CANCELLED' ? 'ویرایش ممکن نیست' : 'ذخیره تغییرات')}
                 </button>
                 
                 <button
