@@ -91,16 +91,15 @@ export class OrderBulkOperationsService {
         // Handle COMPLETED status with accounting integration
         if (newStatus === 'COMPLETED') {
           try {
-            // First, update the order status to COMPLETED
-            const updatedOrder = await prisma.order.update({
-              where: { id: orderId, tenantId },
-              data: {
-                status: 'COMPLETED',
-                completedAt: new Date(),
-                modifiedBy: updatedBy,
-                updatedAt: new Date()
-              }
-            });
+                 // First, update the order status to COMPLETED
+                 const updatedOrder = await prisma.order.update({
+                   where: { id: orderId, tenantId },
+                   data: {
+                     status: 'COMPLETED',
+                     completedAt: new Date(),
+                     updatedAt: new Date()
+                   }
+                 });
 
             // Then process accounting integration
             const accountingResult = await OrderAccountingIntegrationService.processOrderCompletion(
@@ -131,15 +130,14 @@ export class OrderBulkOperationsService {
             failed++;
           }
         } else {
-          // Handle other status updates
-          const updatedOrder = await prisma.order.update({
-            where: { id: orderId, tenantId },
-            data: {
-              status: newStatus,
-              modifiedBy: updatedBy,
-              updatedAt: new Date()
-            }
-          });
+               // Handle other status updates
+               const updatedOrder = await prisma.order.update({
+                 where: { id: orderId, tenantId },
+                 data: {
+                   status: newStatus,
+                   updatedAt: new Date()
+                 }
+               });
 
           results.push({
             success: true,
