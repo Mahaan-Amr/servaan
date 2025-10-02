@@ -129,7 +129,7 @@ export default function OrderEditModal({
       // Merge duplicate rows with same itemId into a single entry for clean UI/state
       const mergedMap = new Map<string, OrderItem>();
       currentItems.forEach(ci => {
-        const key = ci.itemId;
+        const key = (ci.itemId && ci.itemId.trim()) || ci.itemName.trim().toLowerCase();
         const existing = mergedMap.get(key);
         if (existing) {
           const newQty = existing.quantity + ci.quantity;
@@ -183,7 +183,9 @@ export default function OrderEditModal({
   const handleAddItem = (item: MenuItem) => {
     // Use functional state update to avoid race conditions and ensure merging
     setOrderItems(prev => {
-      const index = prev.findIndex(orderItem => orderItem.itemId === item.id);
+      const index = prev.findIndex(orderItem =>
+        orderItem.itemId === item.id || orderItem.itemName.trim().toLowerCase() === item.name.trim().toLowerCase()
+      );
       if (index !== -1) {
         const updated = [...prev];
         const existing = updated[index];
