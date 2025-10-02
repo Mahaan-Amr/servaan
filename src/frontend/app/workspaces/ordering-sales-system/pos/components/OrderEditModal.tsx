@@ -443,30 +443,30 @@ export default function OrderEditModal({
             {/* Left Panel - Menu Items */}
             <div className="flex-1 overflow-y-auto pr-2 min-h-0" style={{contain: 'paint'}}>
             {/* Search */}
-            <div className="mb-6">
+            <div className="mb-4">
               <div className="relative">
-                <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pr-12 pl-12 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white text-lg"
+                  className="w-full pr-10 pl-10 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white text-sm"
                   placeholder="جستجو در منو..."
                 />
               </div>
             </div>
 
             {/* Categories */}
-            <div className="mb-6">
-              <div className="flex space-x-3 space-x-reverse overflow-x-auto pb-2">
+            <div className="mb-4">
+              <div className="flex space-x-2 space-x-reverse overflow-x-auto pb-1">
                 {filteredCategories.map(category => (
                   <button
                     key={category.id}
                     onClick={() => setSelectedCategory(category.id)}
-                    className={`px-6 py-3 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+                    className={`px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-200 ${
                       selectedCategory === category.id
-                        ? 'bg-amber-500 text-white shadow-lg transform scale-105'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 hover:shadow-md'
+                        ? 'bg-amber-500 text-white shadow-sm'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                     }`}
                   >
                     {category.name}
@@ -476,7 +476,7 @@ export default function OrderEditModal({
             </div>
 
             {/* Menu Items Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pb-3">
               {loading ? (
                 <div className="col-span-full text-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto"></div>
@@ -486,24 +486,24 @@ export default function OrderEditModal({
                 filteredItems.map(item => (
                   <div
                     key={item.id}
-                    className="border border-gray-200 dark:border-gray-600 rounded-xl p-4 hover:shadow-lg transition-all duration-200 cursor-pointer bg-white dark:bg-gray-700 hover:border-amber-300 dark:hover:border-amber-500 group"
+                    className="border-2 border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:shadow-md transition-all duration-150 cursor-pointer bg-white dark:bg-gray-700 hover:border-amber-300 dark:hover:border-amber-500 group"
                     onClick={() => handleAddItem(item)}
                   >
                     {item.imageUrl && (
-                      <div className="relative h-32 mb-4 rounded-lg overflow-hidden">
+                      <div className="relative h-24 mb-2 rounded-md overflow-hidden">
                         <Image
                           src={item.imageUrl}
                           alt={item.name}
                           fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-200"
+                          className="object-cover group-hover:scale-105 transition-transform duration-150"
                         />
                       </div>
                     )}
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2 text-lg">{item.name}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 break-words">
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1 text-sm">{item.name}</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 break-words line-clamp-2">
                       {item.description || 'توضیحات موجود نیست'}
                     </p>
-                    <p className="text-xl font-bold text-amber-600 dark:text-amber-400">
+                    <p className="text-base font-bold text-amber-600 dark:text-amber-400">
                       {formatPrice(item.price)}
                     </p>
                   </div>
@@ -514,12 +514,12 @@ export default function OrderEditModal({
 
             {/* Right Panel - Order Items */}
             <div className="w-96 h-full flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl p-6 overflow-hidden min-h-0" style={{contain: 'paint'}}>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">آیتم‌های سفارش</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">آیتم‌های سفارش</h3>
             
             {/* Scrollable content: items + summary */}
             <div className="flex-1 overflow-y-auto pr-1 -mr-1 space-y-6" style={{overscrollBehavior: 'contain'}}>
             {/* Order Items List */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               {orderItems.length === 0 ? (
                 <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                   <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
@@ -530,39 +530,39 @@ export default function OrderEditModal({
                 </div>
               ) : (
                 orderItems.map(item => (
-                  <div key={item.itemId} className="border border-gray-200 dark:border-gray-600 rounded-xl p-4 bg-white dark:bg-gray-800 shadow-sm">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-semibold text-gray-900 dark:text-white text-lg">{item.itemName}</h4>
+                  <div key={item.itemId} className="border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-800">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">{item.itemName}</h4>
                       <button
                         onClick={() => handleRemoveItem(item.itemId)}
-                        className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        className="text-red-500 hover:text-red-700 p-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                       >
                         <FaTrash size={16} />
                       </button>
                     </div>
                     
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs text-gray-600 dark:text-gray-400">
                         {formatPrice(item.unitPrice)} × {item.quantity}
                       </span>
-                      <span className="font-bold text-gray-900 dark:text-white text-lg">
+                      <span className="font-bold text-gray-900 dark:text-white text-sm">
                         {formatPrice(item.totalPrice)}
                       </span>
                     </div>
                     
-                    <div className="flex items-center justify-center space-x-3 space-x-reverse">
+                    <div className="flex items-center justify-center space-x-2 space-x-reverse">
                       <button
                         onClick={() => handleUpdateQuantity(item.itemId, item.quantity - 1)}
-                        className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                        className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                       >
-                        <FaMinus size={14} />
+                        <FaMinus size={12} />
                       </button>
-                      <span className="w-16 text-center font-semibold text-lg">{item.quantity}</span>
+                      <span className="w-10 text-center font-semibold text-sm">{item.quantity}</span>
                       <button
                         onClick={() => handleUpdateQuantity(item.itemId, item.quantity + 1)}
-                        className="w-10 h-10 bg-amber-500 hover:bg-amber-600 text-white rounded-full flex items-center justify-center transition-colors"
+                        className="w-8 h-8 bg-amber-500 hover:bg-amber-600 text-white rounded-full flex items-center justify-center transition-colors"
                       >
-                        <FaPlus size={14} />
+                        <FaPlus size={12} />
                       </button>
                     </div>
                   </div>
