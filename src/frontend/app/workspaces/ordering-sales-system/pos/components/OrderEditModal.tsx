@@ -372,9 +372,10 @@ export default function OrderEditModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[80]">
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-7xl mx-4 max-h-[95vh] overflow-hidden shadow-2xl">
-        <div className="flex items-center justify-between mb-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[80] p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-7xl max-h-[95vh] shadow-2xl flex flex-col">
+        {/* Header - Fixed */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-600">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">ویرایش سفارش #{orderId}</h2>
           <button
             onClick={onClose}
@@ -384,9 +385,11 @@ export default function OrderEditModal({
           </button>
         </div>
 
-        <div className="flex gap-8 h-[calc(95vh-200px)]">
-          {/* Left Panel - Menu Items */}
-          <div className="flex-1 overflow-hidden">
+        {/* Content - Scrollable */}
+        <div className="flex-1 overflow-hidden">
+          <div className="flex gap-8 h-full p-6">
+            {/* Left Panel - Menu Items */}
+            <div className="flex-1 overflow-y-auto pr-2">
             {/* Search */}
             <div className="mb-6">
               <div className="relative">
@@ -421,7 +424,7 @@ export default function OrderEditModal({
             </div>
 
             {/* Menu Items Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-auto h-full pb-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
               {loading ? (
                 <div className="col-span-full text-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto"></div>
@@ -457,12 +460,12 @@ export default function OrderEditModal({
             </div>
           </div>
 
-          {/* Right Panel - Order Items */}
-          <div className="w-96 flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl p-6">
+            {/* Right Panel - Order Items */}
+            <div className="w-96 flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl p-6 overflow-y-auto">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">آیتم‌های سفارش</h3>
             
             {/* Order Items List */}
-            <div className="flex-1 overflow-y-auto space-y-4">
+            <div className="space-y-4 mb-6">
               {orderItems.length === 0 ? (
                 <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                   <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
@@ -515,7 +518,7 @@ export default function OrderEditModal({
 
             {/* Order Summary - same component as POS */}
             {orderItems.length > 0 && (
-              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
+              <div className="pt-6 border-t border-gray-200 dark:border-gray-600">
                 <OrderSummary
                   orderItems={orderItems.map(i => ({
                     id: i.id,
@@ -546,7 +549,7 @@ export default function OrderEditModal({
                   }}
                 />
 
-                <div className="mt-4 space-y-3">
+                <div className="mt-6 space-y-3">
                   <button
                     onClick={handleSaveChanges}
                     disabled={saving}
@@ -581,6 +584,7 @@ export default function OrderEditModal({
                 </div>
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>
