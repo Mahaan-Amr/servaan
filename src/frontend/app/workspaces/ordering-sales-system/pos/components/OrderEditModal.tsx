@@ -126,7 +126,23 @@ export default function OrderEditModal({
   useEffect(() => {
     if (isOpen) {
       loadMenuData();
-      setOrderItems(currentItems);
+      // Merge duplicate rows with same itemId into a single entry for clean UI/state
+      const mergedMap = new Map<string, OrderItem>();
+      currentItems.forEach(ci => {
+        const key = ci.itemId;
+        const existing = mergedMap.get(key);
+        if (existing) {
+          const newQty = existing.quantity + ci.quantity;
+          mergedMap.set(key, {
+            ...existing,
+            quantity: newQty,
+            totalPrice: Number(existing.unitPrice) * newQty
+          });
+        } else {
+          mergedMap.set(key, { ...ci, unitPrice: Number(ci.unitPrice), totalPrice: Number(ci.totalPrice) });
+        }
+      });
+      setOrderItems(Array.from(mergedMap.values()));
     }
   }, [isOpen, currentItems]);
 
@@ -266,6 +282,24 @@ export default function OrderEditModal({
         totalAmount: totals.totalAmount
       };
       
+      // Remove any duplicate order item rows in backend (if existed originally)
+      const duplicatesToRemove: string[] = [];
+      const currentByItemId = new Map<string, OrderItem[]>();
+      currentItems.forEach(ci => {
+        const arr = currentByItemId.get(ci.itemId) || [];
+        arr.push(ci);
+        currentByItemId.set(ci.itemId, arr);
+      });
+      currentByItemId.forEach(list => {
+        if (list.length > 1) {
+          // keep the first, remove the rest
+          list.slice(1).forEach(li => duplicatesToRemove.push(li.id));
+        }
+      });
+      if (duplicatesToRemove.length > 0) {
+        await OrderService.removeItemsFromOrder(orderId, duplicatesToRemove);
+      }
+
       await OrderService.updateOrder(orderId, updateData);
       
       toast.success('سفارش با موفقیت به‌روزرسانی شد');
