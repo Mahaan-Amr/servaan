@@ -472,7 +472,7 @@ export default function OrderEditModal({
           </div>
 
             {/* Right Panel - Order Items */}
-            <div className="w-96 flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl p-6 overflow-y-auto min-h-0">
+            <div className="w-96 h-full flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl p-6 overflow-y-auto overscroll-contain min-h-0">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">آیتم‌های سفارش</h3>
             
             {/* Order Items List */}
