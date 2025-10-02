@@ -472,11 +472,13 @@ export default function OrderEditModal({
           </div>
 
             {/* Right Panel - Order Items */}
-            <div className="w-96 h-full flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl p-6 overflow-y-auto overscroll-contain min-h-0">
+            <div className="w-96 h-full flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl p-6 overflow-hidden overscroll-contain min-h-0">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">آیتم‌های سفارش</h3>
             
+            {/* Scrollable content: items + summary */}
+            <div className="flex-1 overflow-y-auto pr-1 -mr-1 space-y-6">
             {/* Order Items List */}
-            <div className="space-y-4 mb-6">
+            <div className="space-y-4">
               {orderItems.length === 0 ? (
                 <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                   <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
@@ -560,41 +562,46 @@ export default function OrderEditModal({
                   }}
                 />
 
-                <div className="mt-6 space-y-3">
-                  <button
-                    onClick={handleSaveChanges}
-                    disabled={saving}
-                    className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${
-                      saving
-                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                        : 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
-                    }`}
-                  >
-                    {saving ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
-                  </button>
-                  
-                  <button
-                    onClick={handlePrintReceipt}
-                    disabled={receiptLoading}
-                    className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${
-                      receiptLoading
-                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                        : 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
-                    }`}
-                  >
-                    <FaPrint className="inline ml-2" />
-                    {receiptLoading ? 'در حال چاپ...' : 'چاپ رسید'}
-                  </button>
-
-                  <button
-                    onClick={onClose}
-                    className="w-full py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-semibold"
-                  >
-                    انصراف
-                  </button>
-                </div>
               </div>
             )}
+            </div>
+
+            {/* Sticky action buttons */}
+            <div className="sticky bottom-0 left-0 right-0 pt-3 bg-gray-50 dark:bg-gray-900">
+              <div className="space-y-3">
+                <button
+                  onClick={handleSaveChanges}
+                  disabled={saving}
+                  className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${
+                    saving
+                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                      : 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
+                  }`}
+                >
+                  {saving ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
+                </button>
+                
+                <button
+                  onClick={handlePrintReceipt}
+                  disabled={receiptLoading}
+                  className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${
+                    receiptLoading
+                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                      : 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
+                  }`}
+                >
+                  <FaPrint className="inline ml-2" />
+                  {receiptLoading ? 'در حال چاپ...' : 'چاپ رسید'}
+                </button>
+
+                <button
+                  onClick={onClose}
+                  className="w-full py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-semibold"
+                >
+                  انصراف
+                </button>
+              </div>
+            </div>
             </div>
           </div>
         </div>
