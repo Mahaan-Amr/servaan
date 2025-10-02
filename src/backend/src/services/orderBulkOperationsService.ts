@@ -91,6 +91,18 @@ export class OrderBulkOperationsService {
         // Handle COMPLETED status with accounting integration
         if (newStatus === 'COMPLETED') {
           try {
+            // First, update the order status to COMPLETED
+            const updatedOrder = await prisma.order.update({
+              where: { id: orderId, tenantId },
+              data: {
+                status: 'COMPLETED',
+                completedAt: new Date(),
+                modifiedBy: updatedBy,
+                updatedAt: new Date()
+              }
+            });
+
+            // Then process accounting integration
             const accountingResult = await OrderAccountingIntegrationService.processOrderCompletion(
               tenantId,
               orderId,
