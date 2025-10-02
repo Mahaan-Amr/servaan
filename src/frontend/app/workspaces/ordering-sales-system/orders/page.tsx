@@ -530,6 +530,7 @@ export default function OrdersPage() {
         const failedResults = result.results.filter((r) => !r.success);
         console.error('Failed orders:', failedResults);
         console.error('Failed orders (expanded):', failedResults.map(r => ({ orderId: r.orderId, error: r.error })));
+        console.error('First 3 failed orders with full details:', failedResults.slice(0, 3));
         toast.error(`خطا در تغییر وضعیت ${result.summary.failed} سفارش از ${result.summary.total} سفارش`);
       } else {
         toast.success(`وضعیت ${result.summary.successful} سفارش با موفقیت تغییر کرد`);
