@@ -369,10 +369,21 @@ export default function OrderEditModal({
   // 'totals' retained for compatibility with existing save logic
   const totals = calculation; // eslint-disable-line @typescript-eslint/no-unused-vars
 
+  // Lock background scroll while modal is open
+  useEffect(() => {
+    if (isOpen && typeof document !== 'undefined') {
+      const previous = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = previous || '';
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[80] p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[80] p-4 overscroll-contain">
       <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-7xl max-h-[95vh] shadow-2xl flex flex-col">
         {/* Header - Fixed */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-600">
