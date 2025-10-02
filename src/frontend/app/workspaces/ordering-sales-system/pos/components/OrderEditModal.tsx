@@ -181,15 +181,20 @@ export default function OrderEditModal({
   };
 
   const handleAddItem = (item: MenuItem) => {
-    const existingItem = orderItems.find(orderItem => orderItem.itemId === item.id);
-    
-    if (existingItem) {
-      setOrderItems(prev => prev.map(orderItem => 
-        orderItem.itemId === item.id 
-          ? { ...orderItem, quantity: orderItem.quantity + 1, totalPrice: (orderItem.quantity + 1) * Number(orderItem.unitPrice) }
-          : orderItem
-      ));
-    } else {
+    // Use functional state update to avoid race conditions and ensure merging
+    setOrderItems(prev => {
+      const index = prev.findIndex(orderItem => orderItem.itemId === item.id);
+      if (index !== -1) {
+        const updated = [...prev];
+        const existing = updated[index];
+        const newQuantity = existing.quantity + 1;
+        updated[index] = {
+          ...existing,
+          quantity: newQuantity,
+          totalPrice: newQuantity * Number(existing.unitPrice)
+        };
+        return updated;
+      }
       const newOrderItem: OrderItem = {
         id: `temp-${Date.now()}`,
         itemId: item.id,
@@ -200,8 +205,8 @@ export default function OrderEditModal({
         modifiers: [],
         specialRequest: ''
       };
-      setOrderItems(prev => [...prev, newOrderItem]);
-    }
+      return [...prev, newOrderItem];
+    });
   };
 
   const handleRemoveItem = (itemId: string) => {
