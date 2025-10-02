@@ -500,9 +500,11 @@ export default function OrderEditModal({
                       </div>
                     )}
                     <h3 className="font-semibold text-gray-900 dark:text-white mb-1 text-sm">{item.name}</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 break-words line-clamp-2">
-                      {item.description || 'توضیحات موجود نیست'}
-                    </p>
+                    {item.description && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 break-words line-clamp-2">
+                        {item.description}
+                      </p>
+                    )}
                     <p className="text-base font-bold text-amber-600 dark:text-amber-400">
                       {formatPrice(item.price)}
                     </p>
