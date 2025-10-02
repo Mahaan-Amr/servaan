@@ -218,27 +218,21 @@ export default function OrdersPage() {
   useEffect(() => {
     let filtered = orders;
 
-    // TEMPORARILY: Show all orders to debug the status issue
-    // TODO: Restore proper date filtering after fixing the status display
-    // const now = new Date();
-    // const startOfToday = new Date(now);
-    // startOfToday.setHours(0, 0, 0, 0);
-    // const endOfToday = new Date(now);
-    // endOfToday.setHours(23, 59, 59, 999);
-
-    // filtered = filtered.filter((order) => {
-    //   const d = new Date(order.orderDate);
-    //   const isToday = d >= startOfToday && d <= endOfToday;
-    //   const isCarryOver = d < startOfToday && order.status !== 'COMPLETED' && order.status !== 'CANCELLED';
-    //   return isToday || isCarryOver;
-    // });
+    // Show only orders from last 24 hours, plus any orders that are not
+    // completed/cancelled regardless of date
+    const now = new Date();
+    const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    filtered = filtered.filter((order) => {
+      const d = new Date(order.orderDate);
+      const isInLast24h = d >= cutoff;
+      const isActive = order.status !== 'COMPLETED' && order.status !== 'CANCELLED';
+      return isInLast24h || isActive;
+    });
 
     // Filter by order type (tab)
     if (activeTab !== 'all') {
       filtered = filtered.filter(order => order.orderType === activeTab);
-      
-      // For DINE_IN orders, show all orders including completed ones
-      // (removed the filter that was hiding completed orders)
+      // For DINE_IN orders we keep the same last-24h/active rule
     }
 
     // Filter by status
