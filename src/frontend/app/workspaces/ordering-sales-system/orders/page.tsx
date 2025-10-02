@@ -216,19 +216,20 @@ export default function OrdersPage() {
   useEffect(() => {
     let filtered = orders;
 
-    // Show only today's orders plus any previous-day orders that are not completed
-    const now = new Date();
-    const startOfToday = new Date(now);
-    startOfToday.setHours(0, 0, 0, 0);
-    const endOfToday = new Date(now);
-    endOfToday.setHours(23, 59, 59, 999);
+    // TEMPORARILY: Show all orders to debug the status issue
+    // TODO: Restore proper date filtering after fixing the status display
+    // const now = new Date();
+    // const startOfToday = new Date(now);
+    // startOfToday.setHours(0, 0, 0, 0);
+    // const endOfToday = new Date(now);
+    // endOfToday.setHours(23, 59, 59, 999);
 
-    filtered = filtered.filter((order) => {
-      const d = new Date(order.orderDate);
-      const isToday = d >= startOfToday && d <= endOfToday;
-      const isCarryOver = d < startOfToday && order.status !== 'COMPLETED' && order.status !== 'CANCELLED';
-      return isToday || isCarryOver;
-    });
+    // filtered = filtered.filter((order) => {
+    //   const d = new Date(order.orderDate);
+    //   const isToday = d >= startOfToday && d <= endOfToday;
+    //   const isCarryOver = d < startOfToday && order.status !== 'COMPLETED' && order.status !== 'CANCELLED';
+    //   return isToday || isCarryOver;
+    // });
 
     // Filter by order type (tab)
     if (activeTab !== 'all') {
@@ -255,6 +256,14 @@ export default function OrdersPage() {
       );
     }
 
+    console.log('Filtering result:', {
+      totalOrders: orders.length,
+      filteredCount: filtered.length,
+      activeTab,
+      statusFilter,
+      searchQuery,
+      sampleFiltered: filtered.slice(0, 3).map(o => ({ id: o.id, status: o.status, orderNumber: o.orderNumber }))
+    });
     setFilteredOrders(filtered);
   }, [orders, activeTab, statusFilter, searchQuery]);
 
