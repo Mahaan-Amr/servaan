@@ -139,6 +139,7 @@ export default function OrdersPage() {
       console.log('API response received:', Array.isArray(response) ? response.length : 'not an array', 'orders');
       
       if (response && Array.isArray(response)) {
+        console.log('Raw API order sample:', response.slice(0, 2).map(o => ({ id: o.id, status: o.status, orderNumber: o.orderNumber })));
         const transformedOrders: Order[] = response.map((order: ApiOrder) => {
           // Generate a more user-friendly order identifier
           // Keep for potential future use; ensures consistent Date object creation
@@ -191,6 +192,8 @@ export default function OrdersPage() {
         
         console.log('Setting orders state with', transformedOrders.length, 'orders');
         console.log('Sample transformed orders:', transformedOrders.slice(0, 3).map(o => ({ id: o.id, status: o.status, orderNumber: o.orderNumber })));
+        console.log('Status mapping test - COMPLETED should be:', getStatusLabel('COMPLETED'));
+        console.log('Status mapping test - CONFIRMED should be:', getStatusLabel('CONFIRMED'));
         setOrders(transformedOrders);
         setFilteredOrders(transformedOrders);
         console.log('Orders state updated');
