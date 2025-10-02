@@ -400,7 +400,7 @@ export default function OrderEditModal({
         <div className="flex-1 overflow-hidden min-h-0">
           <div className="flex gap-8 h-full p-6 min-h-0">
             {/* Left Panel - Menu Items */}
-            <div className="flex-1 overflow-y-auto pr-2 min-h-0">
+            <div className="flex-1 overflow-y-auto pr-2 min-h-0" style={{contain: 'paint'}}>
             {/* Search */}
             <div className="mb-6">
               <div className="relative">
@@ -472,11 +472,11 @@ export default function OrderEditModal({
           </div>
 
             {/* Right Panel - Order Items */}
-            <div className="w-96 h-full flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl p-6 overflow-hidden overscroll-contain min-h-0">
+            <div className="w-96 h-full flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl p-6 overflow-hidden min-h-0" style={{contain: 'paint'}}>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">آیتم‌های سفارش</h3>
             
             {/* Scrollable content: items + summary */}
-            <div className="flex-1 overflow-y-auto pr-1 -mr-1 space-y-6">
+            <div className="flex-1 overflow-y-auto pr-1 -mr-1 space-y-6" style={{overscrollBehavior: 'contain'}}>
             {/* Order Items List */}
             <div className="space-y-4">
               {orderItems.length === 0 ? (
@@ -566,8 +566,8 @@ export default function OrderEditModal({
             )}
             </div>
 
-            {/* Sticky action buttons */}
-            <div className="sticky bottom-0 left-0 right-0 pt-3 bg-gray-50 dark:bg-gray-900">
+            {/* Footer buttons (fixed within panel) */}
+            <div className="pt-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
               <div className="space-y-3">
                 <button
                   onClick={handleSaveChanges}
