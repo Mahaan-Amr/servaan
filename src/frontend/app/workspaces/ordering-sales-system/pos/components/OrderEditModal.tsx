@@ -517,7 +517,7 @@ export default function OrderEditModal({
             <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">آیتم‌های سفارش</h3>
             
             {/* Scrollable content: items + summary */}
-            <div className="flex-1 overflow-y-auto pr-1 -mr-1 space-y-4" style={{overscrollBehavior: 'contain'}}>
+            <div className="flex-1 overflow-y-auto overflow-x-hidden pr-1 space-y-4" style={{overscrollBehavior: 'contain'}}>
             {/* Order Items List */}
             <div className="space-y-3">
               {orderItems.length === 0 ? (
