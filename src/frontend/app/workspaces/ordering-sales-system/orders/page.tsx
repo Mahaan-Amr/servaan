@@ -476,6 +476,8 @@ export default function OrdersPage() {
         results: Array<{ success: boolean; orderId: string; orderNumber?: string; oldStatus?: string; newStatus: string; error?: string }>;
       };
       
+      console.log('Bulk update result:', result);
+      
       if (result.summary.successful > 0) {
         // Update local state for successful orders
         const successfulIds = result.results
