@@ -427,11 +427,11 @@ export default function OrderEditModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[80] p-4 overscroll-contain">
       <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-7xl h-[95vh] shadow-2xl flex flex-col min-h-0">
         {/* Header - Fixed */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-600">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">ویرایش سفارش #{orderId}</h2>
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-600">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">ویرایش سفارش #{orderId}</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
             <FaTimes size={20} />
           </button>
@@ -439,7 +439,7 @@ export default function OrderEditModal({
 
         {/* Content - Scrollable */}
         <div className="flex-1 overflow-hidden min-h-0">
-          <div className="flex gap-8 h-full p-6 min-h-0">
+          <div className="flex gap-6 h-full p-4 min-h-0">
             {/* Left Panel - Menu Items */}
             <div className="flex-1 overflow-y-auto pr-2 min-h-0" style={{contain: 'paint'}}>
             {/* Search */}
@@ -513,11 +513,11 @@ export default function OrderEditModal({
           </div>
 
             {/* Right Panel - Order Items */}
-            <div className="w-96 h-full flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl p-6 overflow-hidden min-h-0" style={{contain: 'paint'}}>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">آیتم‌های سفارش</h3>
+            <div className="w-80 h-full flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl p-4 overflow-hidden min-h-0" style={{contain: 'paint'}}>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">آیتم‌های سفارش</h3>
             
             {/* Scrollable content: items + summary */}
-            <div className="flex-1 overflow-y-auto pr-1 -mr-1 space-y-6" style={{overscrollBehavior: 'contain'}}>
+            <div className="flex-1 overflow-y-auto pr-1 -mr-1 space-y-4" style={{overscrollBehavior: 'contain'}}>
             {/* Order Items List */}
             <div className="space-y-3">
               {orderItems.length === 0 ? (
@@ -530,9 +530,9 @@ export default function OrderEditModal({
                 </div>
               ) : (
                 orderItems.map(item => (
-                  <div key={item.itemId} className="border border-gray-200 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-800">
+                  <div key={item.itemId} className="border border-gray-200 dark:border-gray-600 rounded-md p-2.5 bg-white dark:bg-gray-800">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">{item.itemName}</h4>
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-xs">{item.itemName}</h4>
                       <button
                         onClick={() => handleRemoveItem(item.itemId)}
                         className="text-red-500 hover:text-red-700 p-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
@@ -542,10 +542,10 @@ export default function OrderEditModal({
                     </div>
                     
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs text-gray-600 dark:text-gray-400">
+                      <span className="text-[11px] text-gray-600 dark:text-gray-400">
                         {formatPrice(item.unitPrice)} × {item.quantity}
                       </span>
-                      <span className="font-bold text-gray-900 dark:text-white text-sm">
+                      <span className="font-bold text-gray-900 dark:text-white text-xs">
                         {formatPrice(item.totalPrice)}
                       </span>
                     </div>
@@ -553,14 +553,14 @@ export default function OrderEditModal({
                     <div className="flex items-center justify-center space-x-2 space-x-reverse">
                       <button
                         onClick={() => handleUpdateQuantity(item.itemId, item.quantity - 1)}
-                        className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                        className="w-7 h-7 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                       >
                         <FaMinus size={12} />
                       </button>
-                      <span className="w-10 text-center font-semibold text-sm">{item.quantity}</span>
+                      <span className="w-8 text-center font-semibold text-xs">{item.quantity}</span>
                       <button
                         onClick={() => handleUpdateQuantity(item.itemId, item.quantity + 1)}
-                        className="w-8 h-8 bg-amber-500 hover:bg-amber-600 text-white rounded-full flex items-center justify-center transition-colors"
+                        className="w-7 h-7 bg-amber-500 hover:bg-amber-600 text-white rounded-full flex items-center justify-center transition-colors"
                       >
                         <FaPlus size={12} />
                       </button>
@@ -608,12 +608,12 @@ export default function OrderEditModal({
             </div>
 
             {/* Footer buttons (fixed within panel) */}
-            <div className="pt-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+            <div className="pt-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
               <div className="space-y-3">
                 <button
                   onClick={handleSaveChanges}
                   disabled={saving}
-                  className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${
+                  className={`w-full py-3 rounded-lg font-semibold text-sm transition-all duration-200 ${
                     saving
                       ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
                       : 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
@@ -625,7 +625,7 @@ export default function OrderEditModal({
                 <button
                   onClick={handlePrintReceipt}
                   disabled={receiptLoading}
-                  className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 ${
+                  className={`w-full py-3 rounded-lg font-semibold text-sm transition-all duration-200 ${
                     receiptLoading
                       ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
                       : 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
@@ -637,7 +637,7 @@ export default function OrderEditModal({
 
                 <button
                   onClick={onClose}
-                  className="w-full py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-semibold"
+                  className="w-full py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-semibold text-sm"
                 >
                   انصراف
                 </button>
