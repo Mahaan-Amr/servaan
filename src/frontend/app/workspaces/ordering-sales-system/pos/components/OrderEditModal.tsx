@@ -262,7 +262,7 @@ export default function OrderEditModal({
       const updateData = {
         subtotal: totals.subtotal,
         taxAmount: totals.taxAmount,
-        serviceCharge: totals.serviceCharge,
+        serviceCharge: totals.serviceAmount,
         totalAmount: totals.totalAmount
       };
       
@@ -340,12 +340,18 @@ export default function OrderEditModal({
       totalAmount,
       breakdown: { subtotal, discount: discountAmount, tax: taxAmount, service: serviceCharge, courier: courierAmount, total: totalAmount }
     };
-    setCalculation(calc);
-    return { subtotal, taxAmount, serviceCharge, totalAmount };
+    return calc;
   };
 
   // Recalculate when items or options change
-  useEffect(() => { calculateTotals(); }, [orderItems, orderOptions]);
+  useEffect(() => {
+    const calc = calculateTotals();
+    // Guard against unnecessary state updates that could cause extra renders
+    setCalculation(prev => {
+      const same = JSON.stringify(prev) === JSON.stringify(calc);
+      return same ? prev : calc;
+    });
+  }, [orderItems, orderOptions]);
 
   const filteredCategories = categories.filter(category =>
     category.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -359,7 +365,9 @@ export default function OrderEditModal({
     item.name?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
-  const totals = calculateTotals();
+  // Use memoized calculation already in state
+  // 'totals' retained for compatibility with existing save logic
+  const totals = calculation; // eslint-disable-line @typescript-eslint/no-unused-vars
 
   if (!isOpen) return null;
 
@@ -522,6 +530,20 @@ export default function OrderEditModal({
                   presets={presets}
                   showItemsList={false}
                   defaultExpanded
+                  onPresetSelect={(preset) => {
+                    setOrderOptions({
+                      discountEnabled: preset.discountEnabled,
+                      discountType: preset.discountType as 'PERCENTAGE' | 'AMOUNT',
+                      discountValue: preset.discountValue,
+                      taxEnabled: preset.taxEnabled,
+                      taxPercentage: preset.taxPercentage,
+                      serviceEnabled: preset.serviceEnabled,
+                      servicePercentage: preset.servicePercentage,
+                      courierEnabled: preset.courierEnabled,
+                      courierAmount: preset.courierAmount,
+                      courierNotes: ''
+                    });
+                  }}
                 />
 
                 <div className="mt-4 space-y-3">
