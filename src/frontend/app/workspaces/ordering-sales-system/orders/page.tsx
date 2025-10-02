@@ -141,6 +141,7 @@ export default function OrdersPage() {
       if (response && Array.isArray(response)) {
         console.log('Raw API order sample:', response.slice(0, 2).map(o => ({ id: o.id, status: o.status, orderNumber: o.orderNumber })));
         console.log('Raw API order sample (expanded):', response.slice(0, 2));
+        console.log('Raw API order sample - STATUS CHECK:', response.slice(0, 2).map(o => ({ id: o.id, status: o.status, orderNumber: o.orderNumber })));
         const transformedOrders: Order[] = response.map((order: ApiOrder) => {
           // Generate a more user-friendly order identifier
           // Keep for potential future use; ensures consistent Date object creation
@@ -194,6 +195,7 @@ export default function OrdersPage() {
         console.log('Setting orders state with', transformedOrders.length, 'orders');
         console.log('Sample transformed orders:', transformedOrders.slice(0, 3).map(o => ({ id: o.id, status: o.status, orderNumber: o.orderNumber })));
         console.log('Sample transformed orders (expanded):', transformedOrders.slice(0, 3));
+        console.log('Sample transformed orders - STATUS CHECK:', transformedOrders.slice(0, 3).map(o => ({ id: o.id, status: o.status, orderNumber: o.orderNumber })));
         console.log('Status mapping test - COMPLETED should be:', getStatusLabel('COMPLETED'));
         console.log('Status mapping test - CONFIRMED should be:', getStatusLabel('CONFIRMED'));
         setOrders(transformedOrders);
@@ -264,6 +266,7 @@ export default function OrdersPage() {
       searchQuery,
       sampleFiltered: filtered.slice(0, 3).map(o => ({ id: o.id, status: o.status, orderNumber: o.orderNumber }))
     });
+    console.log('Filtering result - STATUS CHECK:', filtered.slice(0, 3).map(o => ({ id: o.id, status: o.status, orderNumber: o.orderNumber })));
     setFilteredOrders(filtered);
   }, [orders, activeTab, statusFilter, searchQuery]);
 
@@ -949,7 +952,13 @@ export default function OrdersPage() {
                    </tr>
                  </thead>
                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                   {filteredOrders.map((order) => (
+                   {filteredOrders.map((order) => {
+                     // Debug: Log the actual status being rendered
+                     if (order.id === '8eaf6254-f84b-49f7-8007-c98f12a401e6') {
+                       console.log('RENDERING ORDER:', { id: order.id, status: order.status, orderNumber: order.orderNumber });
+                       console.log('getStatusLabel result:', getStatusLabel(order.status));
+                     }
+                     return (
                      <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                          <input
@@ -1012,7 +1021,8 @@ export default function OrdersPage() {
                          </div>
                        </td>
                      </tr>
-                   ))}
+                     );
+                   })}
                  </tbody>
                </table>
              </div>

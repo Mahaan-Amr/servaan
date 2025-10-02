@@ -202,7 +202,10 @@ export class OrderService {
     // Cache-busting param to avoid stale 304 responses in critical views
     queryParams.append('_t', Date.now().toString());
 
-    return apiRequest(`/orders?${queryParams.toString()}`);
+    const response = await apiRequest(`/orders?${queryParams.toString()}`);
+    // Backend returns { success: true, data: orders, message: '...' }
+    // Extract the actual orders array from the response
+    return response.data || response;
   }
 
   // Get order by ID
