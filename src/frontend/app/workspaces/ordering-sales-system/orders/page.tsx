@@ -134,7 +134,9 @@ export default function OrdersPage() {
   const loadOrders = useCallback(async () => {
     try {
       setLoading(true);
+      console.log('Loading orders from API...');
       const response = await OrderService.getOrders();
+      console.log('API response received:', Array.isArray(response) ? response.length : 'not an array', 'orders');
       
       if (response && Array.isArray(response)) {
         const transformedOrders: Order[] = response.map((order: ApiOrder) => {
@@ -187,8 +189,11 @@ export default function OrdersPage() {
           };
         });
         
+        console.log('Setting orders state with', transformedOrders.length, 'orders');
+        console.log('Sample transformed orders:', transformedOrders.slice(0, 3).map(o => ({ id: o.id, status: o.status, orderNumber: o.orderNumber })));
         setOrders(transformedOrders);
         setFilteredOrders(transformedOrders);
+        console.log('Orders state updated');
       }
     } catch (error) {
       console.error('Error loading orders:', error);
@@ -484,11 +489,28 @@ export default function OrdersPage() {
           .filter((r) => r.success)
           .map((r) => r.orderId);
         
-        setOrders(prev => prev.map(o => successfulIds.includes(o.id) ? { ...o, status: status as OrderStatus } as Order : o));
-        setFilteredOrders(prev => prev.map(o => successfulIds.includes(o.id) ? { ...o, status: status as OrderStatus } as Order : o));
+        console.log('Successful order IDs:', successfulIds);
+        console.log('Current orders before update:', orders.length);
+        console.log('Current filtered orders before update:', filteredOrders.length);
         
+        setOrders(prev => {
+          const updated = prev.map(o => successfulIds.includes(o.id) ? { ...o, status: status as OrderStatus } as Order : o);
+          console.log('Orders after local update:', updated.length);
+          console.log('Updated orders sample:', updated.slice(0, 3).map(o => ({ id: o.id, status: o.status })));
+          return updated;
+        });
+        
+        setFilteredOrders(prev => {
+          const updated = prev.map(o => successfulIds.includes(o.id) ? { ...o, status: status as OrderStatus } as Order : o);
+          console.log('Filtered orders after local update:', updated.length);
+          console.log('Updated filtered orders sample:', updated.slice(0, 3).map(o => ({ id: o.id, status: o.status })));
+          return updated;
+        });
+        
+        console.log('About to reload orders from server...');
         // Reload orders to ensure we have the latest data from server
         await loadOrders();
+        console.log('Orders reloaded from server');
       }
       
       if (result.summary.failed > 0) {
