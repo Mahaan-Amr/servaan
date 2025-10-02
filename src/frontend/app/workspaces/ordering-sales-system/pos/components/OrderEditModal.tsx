@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { FaTimes, FaSearch, FaPlus, FaMinus, FaTrash, FaPrint } from 'react-icons/fa';
 import Image from 'next/image';
 import { OrderService, MenuService } from '../../../../../services/orderingService';
+import type { OrderOptions, OrderCalculation, BusinessPreset } from '../../../../../services/orderingService';
+import OrderSummary from './OrderSummary';
 import { toast } from 'react-hot-toast';
 import ReceiptTemplate from './ReceiptTemplate';
 
@@ -89,6 +91,32 @@ export default function OrderEditModal({
   const [orderItems, setOrderItems] = useState<OrderItem[]>(currentItems);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Options and calculation to mirror POS create flow
+  const [orderOptions, setOrderOptions] = useState<OrderOptions>({
+    discountEnabled: false,
+    discountType: 'PERCENTAGE',
+    discountValue: 0,
+    taxEnabled: true,
+    taxPercentage: 9.0,
+    serviceEnabled: false,
+    servicePercentage: 10.0,
+    courierEnabled: false,
+    courierAmount: 0,
+    courierNotes: ''
+  });
+  const [calculation, setCalculation] = useState<OrderCalculation>({
+    subtotal: 0,
+    discountAmount: 0,
+    discountPercentage: 0,
+    taxAmount: 0,
+    taxPercentage: 9.0,
+    serviceAmount: 0,
+    servicePercentage: 10.0,
+    courierAmount: 0,
+    totalAmount: 0,
+    breakdown: { subtotal: 0, discount: 0, tax: 0, service: 0, courier: 0, total: 0 }
+  });
+  const [presets] = useState<BusinessPreset[]>([]);
   
   // Receipt printing state
   const [showReceipt, setShowReceipt] = useState(false);
@@ -285,22 +313,39 @@ export default function OrderEditModal({
 
   const calculateTotals = () => {
     const subtotal = orderItems.reduce((sum, item) => sum + item.totalPrice, 0);
-    
-    // Use proper tax and service percentages (matching POS system)
-    const taxPercentage = 9.00; // 9% tax
-    const servicePercentage = 10.00; // 10% service charge
-    
-    const taxAmount = subtotal * (taxPercentage / 100);
-    const serviceCharge = subtotal * (servicePercentage / 100);
-    const totalAmount = subtotal + taxAmount + serviceCharge;
-
-    return {
+    // Discount
+    let discountAmount = 0;
+    if (orderOptions.discountEnabled && orderOptions.discountValue > 0) {
+      discountAmount = orderOptions.discountType === 'PERCENTAGE'
+        ? (subtotal * orderOptions.discountValue) / 100
+        : Math.min(orderOptions.discountValue, subtotal);
+    }
+    const afterDiscount = subtotal - discountAmount;
+    // Tax
+    const taxAmount = orderOptions.taxEnabled ? (afterDiscount * orderOptions.taxPercentage) / 100 : 0;
+    // Service
+    const serviceCharge = orderOptions.serviceEnabled ? (afterDiscount * orderOptions.servicePercentage) / 100 : 0;
+    // Courier
+    const courierAmount = orderOptions.courierEnabled ? orderOptions.courierAmount : 0;
+    const totalAmount = afterDiscount + taxAmount + serviceCharge + courierAmount;
+    const calc: OrderCalculation = {
       subtotal,
+      discountAmount,
+      discountPercentage: orderOptions.discountType === 'PERCENTAGE' ? orderOptions.discountValue : 0,
       taxAmount,
-      serviceCharge,
-      totalAmount
+      taxPercentage: orderOptions.taxPercentage,
+      serviceAmount: serviceCharge,
+      servicePercentage: orderOptions.servicePercentage,
+      courierAmount,
+      totalAmount,
+      breakdown: { subtotal, discount: discountAmount, tax: taxAmount, service: serviceCharge, courier: courierAmount, total: totalAmount }
     };
+    setCalculation(calc);
+    return { subtotal, taxAmount, serviceCharge, totalAmount };
   };
+
+  // Recalculate when items or options change
+  useEffect(() => { calculateTotals(); }, [orderItems, orderOptions]);
 
   const filteredCategories = categories.filter(category =>
     category.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -460,29 +505,26 @@ export default function OrderEditModal({
               )}
             </div>
 
-            {/* Order Summary */}
+            {/* Order Summary - same component as POS */}
             {orderItems.length > 0 && (
               <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">جمع آیتم‌ها:</span>
-                    <span className="text-gray-900 dark:text-white font-medium">{formatPrice(totals.subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">مالیات (۹٪):</span>
-                    <span className="text-gray-900 dark:text-white font-medium">{formatPrice(totals.taxAmount)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">خدمات (۱۰٪):</span>
-                    <span className="text-gray-900 dark:text-white font-medium">{formatPrice(totals.serviceCharge)}</span>
-                  </div>
-                  <div className="flex justify-between font-bold text-xl border-t pt-3">
-                    <span className="text-gray-900 dark:text-white">مجموع کل:</span>
-                    <span className="text-amber-600 dark:text-amber-400">{formatPrice(totals.totalAmount)}</span>
-                  </div>
-                </div>
-                
-                <div className="mt-6 space-y-3">
+                <OrderSummary
+                  orderItems={orderItems.map(i => ({
+                    id: i.id,
+                    menuItem: { id: i.itemId, name: i.itemName, price: i.unitPrice, category: '', isAvailable: true },
+                    quantity: i.quantity,
+                    modifiers: i.modifiers,
+                    totalPrice: i.totalPrice
+                  }))}
+                  options={orderOptions}
+                  calculation={calculation}
+                  onOptionsChange={setOrderOptions}
+                  presets={presets}
+                  showItemsList={false}
+                  defaultExpanded
+                />
+
+                <div className="mt-4 space-y-3">
                   <button
                     onClick={handleSaveChanges}
                     disabled={saving}
