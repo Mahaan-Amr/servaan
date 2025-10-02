@@ -7,7 +7,7 @@ const ORDERING_API_BASE = `${API_URL}/ordering`;
 const INVENTORY_API_BASE = `${API_URL}/inventory`;
 
 // Utility function for API requests
-async function apiRequest<T>(
+async function apiRequest<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
@@ -75,7 +75,7 @@ async function apiRequest<T>(
 }
 
 // Utility function for inventory API requests
-async function inventoryApiRequest<T>(
+async function inventoryApiRequest<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
@@ -186,7 +186,7 @@ export class OrderService {
   }
 
   // Get orders with filtering
-  static async getOrders(options: OrderFilterOptions = {}) {
+  static async getOrders(options: OrderFilterOptions = {}): Promise<any[]> {
     const queryParams = new URLSearchParams();
     
     Object.entries(options).forEach(([key, value]) => {
@@ -202,10 +202,11 @@ export class OrderService {
     // Cache-busting param to avoid stale 304 responses in critical views
     queryParams.append('_t', Date.now().toString());
 
-    const response = await apiRequest(`/orders?${queryParams.toString()}`);
-    // Backend returns { success: true, data: orders, message: '...' }
-    // Extract the actual orders array from the response
-    return response.data || response;
+    const response = await apiRequest<unknown>(`/orders?${queryParams.toString()}`);
+    if (response && typeof response === 'object' && (response as { data?: unknown }).data !== undefined) {
+      return (response as { data: any[] }).data;
+    }
+    return response as any[];
   }
 
   // Get order by ID
