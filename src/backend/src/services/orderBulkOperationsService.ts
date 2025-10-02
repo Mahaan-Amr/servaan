@@ -119,6 +119,7 @@ export class OrderBulkOperationsService {
             successful++;
           } catch (error) {
             console.error(`Failed to complete order ${orderId}:`, error);
+            console.error(`Error details:`, error instanceof Error ? { message: error.message, stack: error.stack } : error);
             results.push({
               success: false,
               orderId,
