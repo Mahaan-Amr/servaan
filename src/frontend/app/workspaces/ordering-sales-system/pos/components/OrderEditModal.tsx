@@ -384,7 +384,7 @@ export default function OrderEditModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[80] p-4 overscroll-contain">
-      <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-7xl max-h-[95vh] shadow-2xl flex flex-col">
+      <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-7xl max-h-[95vh] shadow-2xl flex flex-col min-h-0">
         {/* Header - Fixed */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-600">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">ویرایش سفارش #{orderId}</h2>
@@ -397,10 +397,10 @@ export default function OrderEditModal({
         </div>
 
         {/* Content - Scrollable */}
-        <div className="flex-1 overflow-hidden">
-          <div className="flex gap-8 h-full p-6">
+        <div className="flex-1 overflow-hidden min-h-0">
+          <div className="flex gap-8 h-full p-6 min-h-0">
             {/* Left Panel - Menu Items */}
-            <div className="flex-1 overflow-y-auto pr-2">
+            <div className="flex-1 overflow-y-auto pr-2 min-h-0">
             {/* Search */}
             <div className="mb-6">
               <div className="relative">
@@ -472,7 +472,7 @@ export default function OrderEditModal({
           </div>
 
             {/* Right Panel - Order Items */}
-            <div className="w-96 flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl p-6 overflow-y-auto">
+            <div className="w-96 flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl p-6 overflow-y-auto min-h-0">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">آیتم‌های سفارش</h3>
             
             {/* Order Items List */}
