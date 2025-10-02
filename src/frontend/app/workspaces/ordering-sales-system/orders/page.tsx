@@ -234,12 +234,8 @@ export default function OrdersPage() {
     if (activeTab !== 'all') {
       filtered = filtered.filter(order => order.orderType === activeTab);
       
-      // For DINE_IN orders, show only active orders (not cancelled or completed)
-      if (activeTab === 'DINE_IN') {
-        filtered = filtered.filter(order => 
-          order.status !== 'CANCELLED' && order.status !== 'COMPLETED'
-        );
-      }
+      // For DINE_IN orders, show all orders including completed ones
+      // (removed the filter that was hiding completed orders)
     }
 
     // Filter by status
