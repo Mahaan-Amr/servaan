@@ -155,7 +155,7 @@ export class OrderService {
         return {
           orderId: order.id,
           itemId: hasLinkedInventory ? menuItemDetail.itemId : null, // Use inventory item ID if available
-          menuItemId: hasLinkedInventory ? null : menuItemDetail.id, // Use menu item ID if no inventory
+          menuItemId: menuItemDetail.id, // Always set the menu item ID as fallback
           itemName: menuItemDetail.displayName, // Use the menu item display name
           itemCode: null, // Item model doesn't have a code field, so we set it to null
           quantity: item.quantity,
@@ -273,7 +273,7 @@ export class OrderService {
         return {
           orderId: order.id,
           itemId: hasLinkedInventory ? menuItemDetail.itemId : null, // Use inventory item ID if available
-          menuItemId: hasLinkedInventory ? null : menuItemDetail.id, // Use menu item ID if no inventory
+          menuItemId: menuItemDetail.id, // Always set the menu item ID as fallback
           itemName: menuItemDetail.displayName, // Use the menu item display name
           itemCode: null, // Item model doesn't have a code field, so we set it to null
           quantity: item.quantity,
@@ -579,7 +579,7 @@ export class OrderService {
           return {
             orderId: order.id,
             itemId: hasLinkedInventory ? menuItemDetail.itemId : null, // Use inventory item ID if available
-            menuItemId: hasLinkedInventory ? null : menuItemDetail.id, // Use menu item ID if no inventory
+            menuItemId: menuItemDetail.id, // Always set the menu item ID as fallback
             itemName: menuItemDetail.displayName, // Use the menu item display name
             itemCode: null, // Item model doesn't have a code field, so we set it to null
             quantity: item.quantity,
