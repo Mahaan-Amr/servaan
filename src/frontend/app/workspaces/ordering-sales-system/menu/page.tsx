@@ -981,9 +981,9 @@ export default function MenuManagementPage() {
         );
         
         if (hasChanges) {
-          setIngredients(updatedIngredients);
-        }
-      } catch (error) {
+        setIngredients(updatedIngredients);
+      }
+    } catch (error) {
         console.warn('Failed to update ingredient prices:', error);
       }
     }
@@ -1165,8 +1165,8 @@ export default function MenuManagementPage() {
                     onDelete={(id) => handleDeleteCategory(id, category.name)}
                     onToggleActive={handleToggleCategoryActive}
                   />
-                ))}
-              </div>
+            ))}
+          </div>
             </SortableContext>
           </DndContext>
         </div>
@@ -1257,7 +1257,7 @@ export default function MenuManagementPage() {
                     onToggleActive={handleToggleMenuItemActive}
                   />
                 ))}
-              </div>
+                        </div>
             </SortableContext>
           </DndContext>
         </div>
@@ -1561,16 +1561,16 @@ export default function MenuManagementPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                   </svg>
                                 </button>
-                                <button
-                                  type="button"
-                                  onClick={() => removeIngredient(index)}
-                                  className="text-red-500 hover:text-red-700 p-1"
+                              <button
+                                type="button"
+                                onClick={() => removeIngredient(index)}
+                                className="text-red-500 hover:text-red-700 p-1"
                                   title="حذف"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                  </svg>
-                                </button>
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
                               </div>
                             </div>
                           );
@@ -1605,17 +1605,17 @@ export default function MenuManagementPage() {
                                   
                                   setNewIngredient(prev => {
                                     const updated = {
-                                      ...prev,
+                                    ...prev,
                                       itemId: selectedValue,
                                       unit: selectedItem.unit,
-                                      unitCost: inventoryPrice.price
+                                    unitCost: inventoryPrice.price
                                     };
                                     console.log('Updated newIngredient:', updated);
                                     return updated;
                                   });
                                   
                                   if (inventoryPrice.price > 0) {
-                                    toast.success(`قیمت ${inventoryPrice.price.toLocaleString('fa-IR')} تومان از موجودی دریافت شد`);
+                                  toast.success(`قیمت ${inventoryPrice.price.toLocaleString('fa-IR')} تومان از موجودی دریافت شد`);
                                   } else {
                                     toast.error('قیمت این کالا در موجودی تعریف نشده است');
                                   }
@@ -1684,7 +1684,7 @@ export default function MenuManagementPage() {
                             }
                           </div>
                           {newIngredient.unitCost > 0 && newIngredient.quantity > 0 && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                               {newIngredient.quantity} × {newIngredient.unitCost.toLocaleString('fa-IR')} = {(newIngredient.quantity * newIngredient.unitCost).toLocaleString('fa-IR')} تومان
                             </p>
                           )}
@@ -1727,14 +1727,14 @@ export default function MenuManagementPage() {
                               </button>
                             </>
                           ) : (
-                            <button
-                              type="button"
-                              onClick={addIngredient}
+                        <button
+                          type="button"
+                          onClick={addIngredient}
                               disabled={!newIngredient.itemId || newIngredient.quantity <= 0 || newIngredient.unitCost <= 0}
-                              className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                            >
-                              افزودن
-                            </button>
+                          className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        >
+                          افزودن
+                        </button>
                           )}
                         </div>
                       </div>

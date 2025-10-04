@@ -324,7 +324,7 @@ export default function OrderEditModal({
       if (duplicatesToRemove.length > 0) {
         await OrderService.removeItemsFromOrder(orderId, duplicatesToRemove);
       }
-
+      
       await OrderService.updateOrder(orderId, updateData);
       
       toast.success('سفارش با موفقیت به‌روزرسانی شد');
@@ -458,7 +458,7 @@ export default function OrderEditModal({
         {/* Content - Scrollable */}
         <div className="flex-1 overflow-hidden min-h-0">
           <div className="flex gap-6 h-full p-4 min-h-0">
-            {/* Left Panel - Menu Items */}
+          {/* Left Panel - Menu Items */}
             <div className="flex-1 overflow-y-auto pr-2 min-h-0" style={{contain: 'paint'}}>
             {/* Search */}
             <div className="mb-4">
@@ -532,7 +532,7 @@ export default function OrderEditModal({
             </div>
           </div>
 
-            {/* Right Panel - Order Items */}
+          {/* Right Panel - Order Items */}
             <div className="w-80 h-full flex flex-col bg-gray-50 dark:bg-gray-900 rounded-xl p-4 overflow-hidden min-h-0" style={{contain: 'paint'}}>
             <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">آیتم‌های سفارش</h3>
             
@@ -623,46 +623,46 @@ export default function OrderEditModal({
                   }}
                 />
 
-              </div>
+                  </div>
             )}
-            </div>
-
+                </div>
+                
             {/* Footer buttons (fixed within panel) */}
             <div className="pt-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
               <div className="space-y-3">
-                <button
-                  onClick={handleSaveChanges}
+                  <button
+                    onClick={handleSaveChanges}
                   disabled={saving || orderStatus === 'COMPLETED' || orderStatus === 'CANCELLED'}
                   className={`w-full py-3 rounded-lg font-semibold text-sm transition-all duration-200 ${
                     saving || orderStatus === 'COMPLETED' || orderStatus === 'CANCELLED'
-                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                      : 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
-                  }`}
-                >
+                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                        : 'bg-amber-500 hover:bg-amber-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
+                    }`}
+                  >
                   {saving ? 'در حال ذخیره...' : (orderStatus === 'COMPLETED' || orderStatus === 'CANCELLED' ? 'ویرایش ممکن نیست' : 'ذخیره تغییرات')}
-                </button>
-                
-                <button
-                  onClick={handlePrintReceipt}
-                  disabled={receiptLoading}
+                  </button>
+                  
+                  <button
+                    onClick={handlePrintReceipt}
+                    disabled={receiptLoading}
                   className={`w-full py-3 rounded-lg font-semibold text-sm transition-all duration-200 ${
-                    receiptLoading
-                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                      : 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
-                  }`}
-                >
-                  <FaPrint className="inline ml-2" />
-                  {receiptLoading ? 'در حال چاپ...' : 'چاپ رسید'}
-                </button>
+                      receiptLoading
+                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                        : 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
+                    }`}
+                  >
+                    <FaPrint className="inline ml-2" />
+                    {receiptLoading ? 'در حال چاپ...' : 'چاپ رسید'}
+                  </button>
 
-                <button
-                  onClick={onClose}
+                  <button
+                    onClick={onClose}
                   className="w-full py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-semibold text-sm"
-                >
-                  انصراف
-                </button>
+                  >
+                    انصراف
+                  </button>
+                </div>
               </div>
-            </div>
             </div>
           </div>
         </div>

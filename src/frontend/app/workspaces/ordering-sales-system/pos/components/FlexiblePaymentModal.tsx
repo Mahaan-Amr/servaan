@@ -176,7 +176,7 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
               >
                 پرداخت جزئی
               </button>
-            </div>
+              </div>
           </div>
         </div>
 
@@ -205,51 +205,51 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
           {showCustomerDetails && (
             <div className="mt-3 space-y-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   نام مشتری
-                </label>
-                <div className="relative">
-                  <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full pr-10 pl-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
-                    placeholder="نام مشتری (اختیاری)"
-                  />
-                </div>
-              </div>
+          </label>
+          <div className="relative">
+            <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              className="w-full pr-10 pl-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
+              placeholder="نام مشتری (اختیاری)"
+            />
+          </div>
+        </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   شماره تلفن
-                </label>
-                <div className="relative">
-                  <FaPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="tel"
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="w-full pr-10 pl-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
-                    placeholder="شماره تلفن (اختیاری)"
-                  />
-                </div>
-              </div>
+          </label>
+          <div className="relative">
+            <FaPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="tel"
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
+              className="w-full pr-10 pl-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
+              placeholder="شماره تلفن (اختیاری)"
+            />
+          </div>
+        </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  یادداشت سفارش
-                </label>
-                <div className="relative">
-                  <FaStickyNote className="absolute left-3 top-3 text-gray-400" />
-                  <textarea
-                    value={orderNotes}
-                    onChange={(e) => setOrderNotes(e.target.value)}
-                    className="w-full pr-10 pl-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
-                    rows={3}
-                    placeholder="یادداشت سفارش (اختیاری)"
-                  />
-                </div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            یادداشت سفارش
+          </label>
+          <div className="relative">
+            <FaStickyNote className="absolute left-3 top-3 text-gray-400" />
+            <textarea
+              value={orderNotes}
+              onChange={(e) => setOrderNotes(e.target.value)}
+              className="w-full pr-10 pl-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
+              rows={3}
+              placeholder="یادداشت سفارش (اختیاری)"
+            />
+          </div>
               </div>
             </div>
           )}
@@ -451,7 +451,7 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
                       >
                         کارت
                       </button>
-                    </div>
+                      </div>
                   </div>
                 </div>
               )}

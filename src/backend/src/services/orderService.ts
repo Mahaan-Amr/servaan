@@ -1,8 +1,6 @@
-import { PrismaClient } from '../../../shared/generated/client';
+import { prisma } from './dbService';
 import { AppError } from '../utils/AppError';
 import { TableService } from './tableService';
-
-const prisma = new PrismaClient();
 
 export interface CreateOrderData {
   tenantId: string;
@@ -93,9 +91,10 @@ export class OrderService {
       createdBy
     } = data;
 
+    // Generate order number OUTSIDE transaction to avoid conflicts
+    const orderNumber = await this.generateOrderNumber(tenantId);
+    
     return await prisma.$transaction(async (tx: any) => {
-      // Generate order number
-      const orderNumber = await this.generateOrderNumber(tenantId);
 
       // Create the order
       const order = await tx.order.create({
