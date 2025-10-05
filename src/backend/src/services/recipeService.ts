@@ -1,6 +1,6 @@
 import { PrismaClient, Recipe, RecipeIngredient } from '../../../shared/generated/client';
 import { AppError } from '../utils/AppError';
-import { getInventoryPrice, calculateWeightedAverageCost } from './inventoryService';
+// import { getInventoryPrice, calculateWeightedAverageCost } from './inventoryService';
 
 const prisma = new PrismaClient();
 
@@ -413,6 +413,7 @@ export class RecipeService {
       
       if (!unitCost || unitCost === 0) {
         try {
+          const { getInventoryPrice } = await import('./inventoryService');
           const inventoryPrice = await getInventoryPrice(ingredientData.itemId, tenantId);
           unitCost = inventoryPrice.price;
           priceSource = inventoryPrice.priceSource;
@@ -497,6 +498,7 @@ export class RecipeService {
       let unitCost = updateData.unitCost;
       if (updateData.unitCost !== undefined && (updateData.unitCost === 0 || updateData.unitCost === null)) {
         try {
+          const { getInventoryPrice } = await import('./inventoryService');
           const inventoryPrice = await getInventoryPrice(existingIngredient.itemId, tenantId);
           unitCost = inventoryPrice.price;
           console.log(`📊 Auto-synced price for ${existingIngredient.item.name}: ${unitCost}`);
@@ -775,6 +777,7 @@ export class RecipeService {
 
       for (const ingredient of ingredients) {
         try {
+          const { getInventoryPrice } = await import('./inventoryService');
           const inventoryPrice = await getInventoryPrice(ingredient.itemId, tenantId);
           const oldPrice = Number(ingredient.unitCost);
           const newPrice = inventoryPrice.price;
@@ -870,6 +873,7 @@ export class RecipeService {
 
       for (const ingredient of recipe.ingredients) {
         const recipePrice = Number(ingredient.unitCost);
+        const { calculateWeightedAverageCost } = await import('./inventoryService');
         const inventoryPrice = await calculateWeightedAverageCost(ingredient.itemId, tenantId);
         const priceDifference = Math.abs(recipePrice - inventoryPrice);
         
