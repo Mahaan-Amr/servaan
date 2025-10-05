@@ -512,32 +512,27 @@ export class OrderService {
     });
   }
 
-  // Generate numeric order number that resets daily per tenant and starts at 100 (INSIDE transaction)
+  // Generate globally unique order number per tenant (INSIDE transaction)
   private async generateOrderNumberInTransaction(tx: any, tenantId: string): Promise<string> {
-    console.log('🔢 [ORDER_SERVICE] Generating order number for tenant:', tenantId);
-    const today = new Date();
-    const dateStr = today.toISOString().slice(0, 10); // YYYY-MM-DD
-    const startOfDay = new Date(dateStr + 'T00:00:00.000Z');
-    const endOfDay = new Date(dateStr + 'T23:59:59.999Z');
-    console.log('🔢 [ORDER_SERVICE] Date range:', { startOfDay, endOfDay });
+    console.log('🔢 [ORDER_SERVICE] Generating globally unique order number for tenant:', tenantId);
 
-    // Find the highest order number for today
-    const lastTodayOrder = await tx.order.findFirst({
+    // Find the highest order number for this tenant (globally, not just today)
+    const lastOrder = await tx.order.findFirst({
       where: { 
-        tenantId, 
-        orderDate: { gte: startOfDay, lte: endOfDay }
+        tenantId,
+        orderNumber: { not: null }
       },
       orderBy: { orderNumber: 'desc' }
     });
-    console.log('🔢 [ORDER_SERVICE] Last order today:', { 
-      found: !!lastTodayOrder, 
-      orderNumber: lastTodayOrder?.orderNumber 
+    console.log('🔢 [ORDER_SERVICE] Last order globally:', { 
+      found: !!lastOrder, 
+      orderNumber: lastOrder?.orderNumber 
     });
 
-    // Start at 100 each day
+    // Start at 100 for the first order, then increment from the highest existing number
     let next = 100;
-    if (lastTodayOrder && lastTodayOrder.orderNumber && lastTodayOrder.orderNumber !== null) {
-      const parsed = parseInt(String(lastTodayOrder.orderNumber).replace(/\D/g, ''), 10);
+    if (lastOrder && lastOrder.orderNumber && lastOrder.orderNumber !== null) {
+      const parsed = parseInt(String(lastOrder.orderNumber).replace(/\D/g, ''), 10);
       if (!isNaN(parsed)) next = parsed + 1;
     }
 
