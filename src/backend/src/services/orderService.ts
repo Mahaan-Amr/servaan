@@ -102,13 +102,12 @@ export class OrderService {
       createdBy
     } = data;
 
-    // Generate order number OUTSIDE transaction to avoid conflicts
-    console.log('🔢 [ORDER_SERVICE] Generating order number for tenant:', tenantId);
-    const orderNumber = await this.generateOrderNumber(tenantId);
-    console.log('🔢 [ORDER_SERVICE] Generated order number:', orderNumber);
-    
     console.log('💾 [ORDER_SERVICE] Starting database transaction');
     return await prisma.$transaction(async (tx: any) => {
+      // Generate order number INSIDE transaction to prevent race conditions
+      console.log('🔢 [ORDER_SERVICE] Generating order number for tenant:', tenantId);
+      const orderNumber = await this.generateOrderNumberInTransaction(tx, tenantId);
+      console.log('🔢 [ORDER_SERVICE] Generated order number:', orderNumber);
 
       // Create the order
       console.log('💾 [ORDER_SERVICE] Creating order in database');
@@ -513,7 +512,61 @@ export class OrderService {
     });
   }
 
-  // Generate numeric order number that resets daily per tenant and starts at 100
+  // Generate numeric order number that resets daily per tenant and starts at 100 (INSIDE transaction)
+  private async generateOrderNumberInTransaction(tx: any, tenantId: string): Promise<string> {
+    console.log('🔢 [ORDER_SERVICE] Generating order number for tenant:', tenantId);
+    const today = new Date();
+    const dateStr = today.toISOString().slice(0, 10); // YYYY-MM-DD
+    const startOfDay = new Date(dateStr + 'T00:00:00.000Z');
+    const endOfDay = new Date(dateStr + 'T23:59:59.999Z');
+    console.log('🔢 [ORDER_SERVICE] Date range:', { startOfDay, endOfDay });
+
+    // Find the highest order number for today
+    const lastTodayOrder = await tx.order.findFirst({
+      where: { 
+        tenantId, 
+        orderDate: { gte: startOfDay, lte: endOfDay }
+      },
+      orderBy: { orderNumber: 'desc' }
+    });
+    console.log('🔢 [ORDER_SERVICE] Last order today:', { 
+      found: !!lastTodayOrder, 
+      orderNumber: lastTodayOrder?.orderNumber 
+    });
+
+    // Start at 100 each day
+    let next = 100;
+    if (lastTodayOrder && lastTodayOrder.orderNumber && lastTodayOrder.orderNumber !== null) {
+      const parsed = parseInt(String(lastTodayOrder.orderNumber).replace(/\D/g, ''), 10);
+      if (!isNaN(parsed)) next = parsed + 1;
+    }
+
+    // Check if this order number already exists (race condition protection)
+    let attempts = 0;
+    let finalOrderNumber = next;
+    
+    while (attempts < 10) { // Prevent infinite loop
+      const existingOrder = await tx.order.findFirst({
+        where: { 
+          tenantId,
+          orderNumber: String(finalOrderNumber)
+        }
+      });
+      
+      if (!existingOrder) {
+        break; // Order number is available
+      }
+      
+      console.log('🔢 [ORDER_SERVICE] Order number', finalOrderNumber, 'already exists, trying', finalOrderNumber + 1);
+      finalOrderNumber++;
+      attempts++;
+    }
+
+    console.log('🔢 [ORDER_SERVICE] Final order number:', finalOrderNumber);
+    return String(finalOrderNumber);
+  }
+
+  // Generate numeric order number that resets daily per tenant and starts at 100 (OUTSIDE transaction - for backward compatibility)
   private async generateOrderNumber(tenantId: string): Promise<string> {
     console.log('🔢 [ORDER_SERVICE] Generating order number for tenant:', tenantId);
     const today = new Date();
