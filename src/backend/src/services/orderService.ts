@@ -1,6 +1,8 @@
-import { prisma } from './dbService';
+import { PrismaClient } from '../../../shared/generated/client';
 import { AppError } from '../utils/AppError';
 import { TableService } from './tableService';
+
+const prisma = new PrismaClient();
 
 export interface CreateOrderData {
   tenantId: string;
