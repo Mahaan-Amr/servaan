@@ -1,7 +1,7 @@
 import { PrismaClient } from '../../../shared/generated/client';
 import { AppError } from '../utils/AppError';
-import { calculateWeightedAverageCost, calculateCurrentStock, checkStockAvailability } from './inventoryService';
-import { RecipeService } from './recipeService';
+// import { calculateWeightedAverageCost, calculateCurrentStock, checkStockAvailability } from './inventoryService';
+// import { RecipeService } from './recipeService';
 
 const prisma = new PrismaClient();
 
@@ -173,9 +173,11 @@ export class OrderInventoryIntegrationService {
       // Check each ingredient availability
       for (const ingredient of recipe.ingredients) {
         const requiredQuantity = Number(ingredient.quantity) * orderQuantity;
+        const { calculateCurrentStock } = await import('./inventoryService');
         const availableStock = await calculateCurrentStock(ingredient.itemId, tenantId);
         
         // Get current cost from inventory
+        const { calculateWeightedAverageCost } = await import('./inventoryService');
         const currentCost = await calculateWeightedAverageCost(ingredient.itemId, tenantId);
         const ingredientTotalCost = requiredQuantity * currentCost;
         totalCost += ingredientTotalCost;
@@ -330,10 +332,12 @@ export class OrderInventoryIntegrationService {
       // Check each ingredient availability
       for (const ingredient of recipe.ingredients) {
         const requiredQuantity = Number(ingredient.quantity) * orderQuantity;
+        const { calculateCurrentStock } = await import('./inventoryService');
         const availableStock = await calculateCurrentStock(ingredient.itemId, tenantId);
         const minStock = Number(ingredient.item?.minStock || 0);
         
         // Get current cost from inventory
+        const { calculateWeightedAverageCost } = await import('./inventoryService');
         const currentCost = await calculateWeightedAverageCost(ingredient.itemId, tenantId);
         const ingredientTotalCost = requiredQuantity * currentCost;
         totalCost += ingredientTotalCost;
@@ -718,7 +722,8 @@ export class OrderInventoryIntegrationService {
         if (recipe && recipe.ingredients) {
           // Calculate COGS based on recipe ingredients
           for (const ingredient of recipe.ingredients) {
-            const currentCost = await calculateWeightedAverageCost(ingredient.itemId, tenantId);
+            const { calculateWeightedAverageCost } = await import('./inventoryService');
+        const currentCost = await calculateWeightedAverageCost(ingredient.itemId, tenantId);
             const quantityNeeded = Number(ingredient.quantity) * orderItem.quantity;
             const ingredientTotalCost = quantityNeeded * currentCost;
             
@@ -857,7 +862,8 @@ export class OrderInventoryIntegrationService {
         // Process each ingredient
         for (const ingredient of recipe.ingredients) {
           const quantityToDeduct = Number(ingredient.quantity) * orderItem.quantity;
-          const currentCost = await calculateWeightedAverageCost(ingredient.itemId, tenantId);
+          const { calculateWeightedAverageCost } = await import('./inventoryService');
+        const currentCost = await calculateWeightedAverageCost(ingredient.itemId, tenantId);
           const totalCost = quantityToDeduct * currentCost;
           
           totalCOGS += totalCost;
@@ -954,6 +960,7 @@ export class OrderInventoryIntegrationService {
         if (menuItem.recipe && menuItem.recipe.ingredients) {
           for (const ingredient of menuItem.recipe.ingredients) {
             if (!ingredient.isOptional) {
+              const { calculateCurrentStock } = await import('./inventoryService');
               const currentStock = await calculateCurrentStock(ingredient.itemId, tenantId);
               const minRequired = Number(ingredient.quantity); // For one serving
               const minStock = ingredient.item?.minStock || 10;
@@ -1091,6 +1098,7 @@ export class OrderInventoryIntegrationService {
 
       // Check stock levels for each ingredient
       for (const [itemId, usage] of Array.from(ingredientUsage.entries())) {
+        const { calculateCurrentStock } = await import('./inventoryService');
         const currentStock = await calculateCurrentStock(itemId, tenantId);
         const minStock = usage.item?.minStock || 10; // Default minimum stock
 
@@ -1178,7 +1186,8 @@ export class OrderInventoryIntegrationService {
         // Recalculate total cost from ingredients
         let newTotalCost = 0;
         for (const ingredient of recipe.ingredients) {
-          const currentCost = await calculateWeightedAverageCost(ingredient.itemId, tenantId);
+          const { calculateWeightedAverageCost } = await import('./inventoryService');
+        const currentCost = await calculateWeightedAverageCost(ingredient.itemId, tenantId);
           const ingredientTotalCost = Number(ingredient.quantity) * currentCost;
           newTotalCost += ingredientTotalCost;
         }
