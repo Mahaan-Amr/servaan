@@ -526,8 +526,7 @@ export class OrderService {
     const lastTodayOrder = await prisma.order.findFirst({
       where: { 
         tenantId, 
-        orderDate: { gte: startOfDay, lte: endOfDay },
-        orderNumber: { not: null }
+        orderDate: { gte: startOfDay, lte: endOfDay }
       },
       orderBy: { orderNumber: 'desc' }
     });
@@ -538,7 +537,7 @@ export class OrderService {
 
     // Start at 100 each day
     let next = 100;
-    if (lastTodayOrder && lastTodayOrder.orderNumber) {
+    if (lastTodayOrder && lastTodayOrder.orderNumber && lastTodayOrder.orderNumber !== null) {
       const parsed = parseInt(String(lastTodayOrder.orderNumber).replace(/\D/g, ''), 10);
       if (!isNaN(parsed)) next = parsed + 1;
     }
