@@ -450,6 +450,8 @@ export class OrderInventoryIntegrationService {
     criticalWarnings: number;
     totalWarnings: number;
   }> {
+    console.log('📦 [INVENTORY_SERVICE] Starting flexible stock validation');
+    console.log('📦 [INVENTORY_SERVICE] Input:', { tenantId, orderItemsCount: orderItems.length });
     try {
       const validationResults = [];
       let totalCOGS = 0;

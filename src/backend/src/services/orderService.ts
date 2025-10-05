@@ -70,6 +70,15 @@ export interface PaymentData {
 export class OrderService {
   // Create a new order with flexible payment options
   async createOrder(data: CreateOrderData): Promise<any> {
+    console.log('🏗️ [ORDER_SERVICE] Starting createOrder method');
+    console.log('🏗️ [ORDER_SERVICE] Input data:', {
+      tenantId: data.tenantId,
+      orderType: data.orderType,
+      itemsCount: data.items?.length,
+      totalAmount: data.totalAmount,
+      createdBy: data.createdBy
+    });
+
     const {
             tenantId,
       orderType,
@@ -94,11 +103,15 @@ export class OrderService {
     } = data;
 
     // Generate order number OUTSIDE transaction to avoid conflicts
+    console.log('🔢 [ORDER_SERVICE] Generating order number for tenant:', tenantId);
     const orderNumber = await this.generateOrderNumber(tenantId);
+    console.log('🔢 [ORDER_SERVICE] Generated order number:', orderNumber);
     
+    console.log('💾 [ORDER_SERVICE] Starting database transaction');
     return await prisma.$transaction(async (tx: any) => {
 
       // Create the order
+      console.log('💾 [ORDER_SERVICE] Creating order in database');
       const order = await tx.order.create({
         data: {
               tenantId,
@@ -127,9 +140,17 @@ export class OrderService {
           lastPaymentAt: paidAmount > 0 ? new Date() : null
         }
       });
+      console.log('✅ [ORDER_SERVICE] Order created successfully:', {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        status: order.status
+      });
 
       // Fetch menu item details to get names and linked inventory items
+      console.log('🍽️ [ORDER_SERVICE] Fetching menu item details');
       const itemIds = items.map((item: any) => item.itemId);
+      console.log('🍽️ [ORDER_SERVICE] Item IDs to fetch:', itemIds);
+      
       const menuItemDetails = await tx.menuItem.findMany({
         where: { id: { in: itemIds } },
         select: { 
@@ -139,12 +160,18 @@ export class OrderService {
           menuPrice: true
         }
       });
+      console.log('🍽️ [ORDER_SERVICE] Menu item details fetched:', {
+        count: menuItemDetails.length,
+        items: menuItemDetails.map(item => ({ id: item.id, displayName: item.displayName }))
+      });
 
       // Create a map for quick lookup
       const menuItemMap = new Map(menuItemDetails.map((item: { id: string; displayName: string; itemId?: string; menuPrice: any }) => [item.id, item]));
+      console.log('🍽️ [ORDER_SERVICE] Menu item map created with', menuItemMap.size, 'items');
 
       // Create order items with menu item names
-      const orderItems = items.map((item: any, index: number) => {
+      console.log('📝 [ORDER_SERVICE] Creating order items');
+      const orderItems = items.map((item: { itemId: string; quantity: number; unitPrice: number; modifiers?: any[]; specialRequest?: string }, index: number) => {
         const menuItemDetail = menuItemMap.get(item.itemId) as { id: string; displayName: string; itemId?: string; menuPrice: any } | undefined;
         if (!menuItemDetail) {
           throw new AppError(`Menu item with ID ${item.itemId} not found`, 400);
@@ -169,16 +196,20 @@ export class OrderService {
         };
       });
 
+      console.log('💾 [ORDER_SERVICE] Creating order items in database');
       await tx.orderItem.createMany({
         data: orderItems
       });
+      console.log('✅ [ORDER_SERVICE] Order items created successfully:', orderItems.length, 'items');
 
       // Update table status to OCCUPIED if tableId is provided
       if (tableId) {
+        console.log('🪑 [ORDER_SERVICE] Updating table status to OCCUPIED:', tableId);
         await tx.table.update({
           where: { id: tableId },
           data: { status: 'OCCUPIED' }
         });
+        console.log('✅ [ORDER_SERVICE] Table status updated successfully');
       }
 
       // Create payment record if payment was made
@@ -198,17 +229,21 @@ export class OrderService {
         });
       }
 
+      console.log('✅ [ORDER_SERVICE] Order creation completed successfully');
       return order;
     });
   }
 
   // Add real-time table status update after order creation
   async createOrderWithTableUpdate(data: CreateOrderData): Promise<any> {
+    console.log('🔄 [ORDER_SERVICE] Starting createOrderWithTableUpdate');
     const order = await this.createOrder(data);
+    console.log('✅ [ORDER_SERVICE] Order created, now updating table status');
     
     // Send real-time table status update if tableId is provided
     if (data.tableId) {
       try {
+        console.log('🪑 [ORDER_SERVICE] Updating table status via TableService');
         await TableService.changeTableStatus(
           data.tenantId, 
           data.tableId, 
@@ -216,11 +251,13 @@ export class OrderService {
           'Order created', 
           data.createdBy
         );
+        console.log('✅ [ORDER_SERVICE] Table status updated via TableService');
       } catch (error) {
-        console.error('Failed to update table status:', error);
+        console.error('❌ [ORDER_SERVICE] Failed to update table status:', error);
       }
     }
     
+    console.log('✅ [ORDER_SERVICE] createOrderWithTableUpdate completed');
     return order;
   }
 
@@ -478,14 +515,20 @@ export class OrderService {
 
   // Generate numeric order number that resets daily per tenant and starts at 100
   private async generateOrderNumber(tenantId: string): Promise<string> {
+    console.log('🔢 [ORDER_SERVICE] Generating order number for tenant:', tenantId);
     const today = new Date();
     const dateStr = today.toISOString().slice(0, 10); // YYYY-MM-DD
     const startOfDay = new Date(dateStr + 'T00:00:00.000Z');
     const endOfDay = new Date(dateStr + 'T23:59:59.999Z');
+    console.log('🔢 [ORDER_SERVICE] Date range:', { startOfDay, endOfDay });
 
     const lastTodayOrder = await prisma.order.findFirst({
       where: { tenantId, orderDate: { gte: startOfDay, lte: endOfDay } },
       orderBy: { createdAt: 'desc' }
+    });
+    console.log('🔢 [ORDER_SERVICE] Last order today:', { 
+      found: !!lastTodayOrder, 
+      orderNumber: lastTodayOrder?.orderNumber 
     });
 
     // Start at 100 each day
@@ -495,6 +538,7 @@ export class OrderService {
       if (!isNaN(parsed)) next = parsed + 1;
     }
 
+    console.log('🔢 [ORDER_SERVICE] Generated order number:', next);
     // Store as plain number string for simplicity
     return String(next);
   }

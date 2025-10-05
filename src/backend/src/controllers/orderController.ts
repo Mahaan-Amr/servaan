@@ -39,48 +39,96 @@ export class OrderController {
    */
   static async createOrder(req: Request, res: Response, next: NextFunction) {
     try {
+      console.log('🚀 [ORDER_CREATION] Starting order creation process');
+      console.log('🔐 [ORDER_CREATION] Authentication check:', {
+        tenantId: req.user?.tenantId,
+        createdBy: req.user?.id,
+        hasUser: !!req.user
+      });
+
       const tenantId = req.user?.tenantId;
       const createdBy = req.user?.id;
 
       if (!tenantId || !createdBy) {
+        console.error('❌ [ORDER_CREATION] Authentication failed:', { tenantId, createdBy });
         throw new AppError('Authentication required', 401);
       }
 
+      console.log('✅ [ORDER_CREATION] Authentication successful');
+
       // Validate required fields
+      console.log('📋 [ORDER_CREATION] Validating request body:', {
+        orderType: req.body.orderType,
+        itemsCount: req.body.items?.length,
+        subtotal: req.body.subtotal,
+        totalAmount: req.body.totalAmount,
+        hasItems: !!req.body.items
+      });
+
       const { orderType, items, subtotal, totalAmount } = req.body as CreateOrderData;
 
       if (!orderType || !items || items.length === 0) {
+        console.error('❌ [ORDER_CREATION] Validation failed - missing order type or items:', { orderType, itemsCount: items?.length });
         throw new AppError('Order type and items are required', 400);
       }
 
       if (!subtotal || !totalAmount) {
+        console.error('❌ [ORDER_CREATION] Validation failed - missing amounts:', { subtotal, totalAmount });
         throw new AppError('Subtotal and total amount are required', 400);
       }
 
+      console.log('✅ [ORDER_CREATION] Basic validation passed');
+
       // Validate order type
+      console.log('🔍 [ORDER_CREATION] Validating order type:', { orderType, validTypes: Object.values(OrderType) });
       if (!Object.values(OrderType).includes(orderType)) {
+        console.error('❌ [ORDER_CREATION] Invalid order type:', orderType);
         throw new AppError('Invalid order type', 400);
       }
 
       // Validate items structure
+      console.log('🔍 [ORDER_CREATION] Validating items structure:', { itemsCount: items.length });
       for (const item of items) {
+        console.log('🔍 [ORDER_CREATION] Validating item:', {
+          itemId: item.itemId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          hasItemId: !!item.itemId,
+          hasQuantity: !!item.quantity,
+          hasUnitPrice: !!item.unitPrice
+        });
         if (!item.itemId || !item.quantity || item.quantity <= 0 || !item.unitPrice) {
+          console.error('❌ [ORDER_CREATION] Invalid item structure:', item);
           throw new AppError('Each item must have itemId, valid quantity, and unitPrice', 400);
         }
       }
+      console.log('✅ [ORDER_CREATION] Items validation passed');
 
       // Perform flexible stock validation
+      console.log('📦 [ORDER_CREATION] Starting stock validation');
       const orderItemsForValidation = items.map(item => ({
         menuItemId: item.itemId,
         quantity: item.quantity
       }));
+      console.log('📦 [ORDER_CREATION] Items for validation:', orderItemsForValidation);
 
+      console.log('📦 [ORDER_CREATION] Importing OrderInventoryIntegrationService...');
       const { OrderInventoryIntegrationService } = await import('../services/orderInventoryIntegrationService');
+      console.log('✅ [ORDER_CREATION] OrderInventoryIntegrationService imported successfully');
+
+      console.log('📦 [ORDER_CREATION] Calling validateFlexibleOrderStockAvailability...');
       const stockValidation = await OrderInventoryIntegrationService.validateFlexibleOrderStockAvailability(
         tenantId,
         orderItemsForValidation
       );
+      console.log('📦 [ORDER_CREATION] Stock validation result:', {
+        hasWarnings: stockValidation.hasWarnings,
+        criticalWarnings: stockValidation.criticalWarnings,
+        totalWarnings: stockValidation.totalWarnings,
+        overrideRequired: stockValidation.overrideRequired
+      });
 
+      console.log('📝 [ORDER_CREATION] Preparing order data...');
       const orderData: CreateOrderData = {
         tenantId,
         orderType,
@@ -103,8 +151,21 @@ export class OrderController {
         allergyInfo: req.body.allergyInfo,
         createdBy
       };
+      console.log('📝 [ORDER_CREATION] Order data prepared:', {
+        tenantId: orderData.tenantId,
+        orderType: orderData.orderType,
+        itemsCount: orderData.items.length,
+        totalAmount: orderData.totalAmount,
+        createdBy: orderData.createdBy
+      });
 
+      console.log('🏗️ [ORDER_CREATION] Calling orderService.createOrderWithTableUpdate...');
       const order = await orderService.createOrderWithTableUpdate(orderData);
+      console.log('✅ [ORDER_CREATION] Order created successfully:', {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        status: order.status
+      });
 
       // Record stock overrides if any warnings were present and order was created
       if (stockValidation.hasWarnings && req.body.stockOverrides) {
@@ -125,6 +186,7 @@ export class OrderController {
         }
       }
 
+      console.log('📤 [ORDER_CREATION] Sending success response');
       res.status(201).json({
         success: true,
         data: {
@@ -141,7 +203,13 @@ export class OrderController {
           ? 'Order created successfully with stock warnings' 
           : 'Order created successfully'
       });
+      console.log('✅ [ORDER_CREATION] Order creation completed successfully');
     } catch (error) {
+      console.error('❌ [ORDER_CREATION] Error in order creation:', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        name: error instanceof Error ? error.name : 'Unknown'
+      });
       next(error);
     }
   }
