@@ -162,7 +162,7 @@ export class OrderService {
       });
       console.log('🍽️ [ORDER_SERVICE] Menu item details fetched:', {
         count: menuItemDetails.length,
-        items: menuItemDetails.map(item => ({ id: item.id, displayName: item.displayName }))
+        items: menuItemDetails.map((item: { id: string; displayName: string }) => ({ id: item.id, displayName: item.displayName }))
       });
 
       // Create a map for quick lookup
