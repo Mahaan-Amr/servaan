@@ -3,7 +3,7 @@ import { OrderService, CreateOrderData, PaymentData } from '../services/orderSer
 import { OrderAccountingIntegrationService } from '../services/orderAccountingIntegrationService';
 import { OrderOptionsService } from '../services/orderOptionsService';
 import { OrderCalculationService, OrderOptions } from '../services/orderCalculationService';
-import { OrderInventoryIntegrationService } from '../services/orderInventoryIntegrationService';
+// import { OrderInventoryIntegrationService } from '../services/orderInventoryIntegrationService';
 import { AppError } from '../utils/AppError';
 import { OrderStatus, OrderType } from '../../../shared/generated/client';
 
@@ -75,6 +75,7 @@ export class OrderController {
         quantity: item.quantity
       }));
 
+      const { OrderInventoryIntegrationService } = await import('../services/orderInventoryIntegrationService');
       const stockValidation = await OrderInventoryIntegrationService.validateFlexibleOrderStockAvailability(
         tenantId,
         orderItemsForValidation
