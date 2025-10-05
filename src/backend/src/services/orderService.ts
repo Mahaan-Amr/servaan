@@ -522,9 +522,14 @@ export class OrderService {
     const endOfDay = new Date(dateStr + 'T23:59:59.999Z');
     console.log('🔢 [ORDER_SERVICE] Date range:', { startOfDay, endOfDay });
 
+    // Find the highest order number for today
     const lastTodayOrder = await prisma.order.findFirst({
-      where: { tenantId, orderDate: { gte: startOfDay, lte: endOfDay } },
-      orderBy: { createdAt: 'desc' }
+      where: { 
+        tenantId, 
+        orderDate: { gte: startOfDay, lte: endOfDay },
+        orderNumber: { not: null }
+      },
+      orderBy: { orderNumber: 'desc' }
     });
     console.log('🔢 [ORDER_SERVICE] Last order today:', { 
       found: !!lastTodayOrder, 
@@ -538,9 +543,29 @@ export class OrderService {
       if (!isNaN(parsed)) next = parsed + 1;
     }
 
-    console.log('🔢 [ORDER_SERVICE] Generated order number:', next);
-    // Store as plain number string for simplicity
-    return String(next);
+    // Check if this order number already exists (race condition protection)
+    let attempts = 0;
+    let finalOrderNumber = next;
+    
+    while (attempts < 10) { // Prevent infinite loop
+      const existingOrder = await prisma.order.findFirst({
+        where: { 
+          tenantId,
+          orderNumber: String(finalOrderNumber)
+        }
+      });
+      
+      if (!existingOrder) {
+        break; // Order number is available
+      }
+      
+      console.log('🔢 [ORDER_SERVICE] Order number', finalOrderNumber, 'already exists, trying', finalOrderNumber + 1);
+      finalOrderNumber++;
+      attempts++;
+    }
+
+    console.log('🔢 [ORDER_SERVICE] Final order number:', finalOrderNumber);
+    return String(finalOrderNumber);
   }
 
   // Generate unique payment number
