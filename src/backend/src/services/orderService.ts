@@ -519,8 +519,7 @@ export class OrderService {
     // Find the highest order number for this tenant (globally, not just today)
     const lastOrder = await tx.order.findFirst({
       where: { 
-        tenantId,
-        orderNumber: { not: null }
+        tenantId
       },
       orderBy: { orderNumber: 'desc' }
     });
