@@ -157,7 +157,7 @@ export default function OrderEditModal({
         }
       })();
     }
-  }, [isOpen, currentItems]);
+  }, [isOpen, currentItems, orderId]);
 
   const loadMenuData = async () => {
     try {
@@ -410,7 +410,7 @@ export default function OrderEditModal({
       const same = JSON.stringify(prev) === JSON.stringify(calc);
       return same ? prev : calc;
     });
-  }, [orderItems, orderOptions]);
+  }, [orderItems, orderOptions, calculateTotals]);
 
   const filteredCategories = categories.filter(category =>
     category.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||

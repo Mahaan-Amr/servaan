@@ -22,7 +22,6 @@ import {
   FaCalendarAlt,
   FaArrowUp,
   FaClock,
-  FaTimes,
   FaArrowDown,
   FaMinus
 } from 'react-icons/fa';
@@ -137,11 +136,6 @@ type ApiResponse<T> = {
   message: string;
 }
 
-type SalesApiResponse = ApiResponse<SalesAnalytics>;
-type CustomerApiResponse = ApiResponse<CustomerAnalytics>;
-type KitchenApiResponse = ApiResponse<KitchenPerformance>;
-type TableApiResponse = ApiResponse<TableUtilization>;
-
 export default function AnalyticsPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -237,7 +231,7 @@ export default function AnalyticsPage() {
         endDate: dateRange.endDate
       }
     }));
-  }, []); // Run only on mount
+  }, [getDateRange]); // Include getDateRange dependency
 
   const fetchAnalyticsData = useCallback(async () => {
     if (!user) {
@@ -297,17 +291,18 @@ export default function AnalyticsPage() {
       }
 
       // Extract data with fallback handling
-      const extractData = (response: any) => {
+      const extractData = (response: unknown) => {
         if (!response) return null;
         // Try different possible response structures
-        return response.data || response.result || response;
+        const res = response as { data?: unknown; result?: unknown };
+        return res.data || res.result || response;
       };
 
-      const analyticsData = {
-        sales: salesRes.status === 'fulfilled' ? extractData(salesRes.value) : null,
-        customers: customersRes.status === 'fulfilled' ? extractData(customersRes.value) : null,
-        kitchen: kitchenRes.status === 'fulfilled' ? extractData(kitchenRes.value) : null,
-        tables: tablesRes.status === 'fulfilled' ? extractData(tablesRes.value) : null,
+      const analyticsData: AnalyticsData = {
+        sales: salesRes.status === 'fulfilled' ? extractData(salesRes.value) as SalesAnalytics | null : null,
+        customers: customersRes.status === 'fulfilled' ? extractData(customersRes.value) as CustomerAnalytics | null : null,
+        kitchen: kitchenRes.status === 'fulfilled' ? extractData(kitchenRes.value) as KitchenPerformance | null : null,
+        tables: tablesRes.status === 'fulfilled' ? extractData(tablesRes.value) as TableUtilization | null : null,
         period: {
           startDate: dateRange.startDate,
           endDate: dateRange.endDate
