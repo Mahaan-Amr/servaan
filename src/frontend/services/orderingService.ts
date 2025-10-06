@@ -21,6 +21,10 @@ async function apiRequest<T = unknown>(
   const token = typeof window !== 'undefined' 
     ? localStorage.getItem('token') || sessionStorage.getItem('token') 
     : null;
+  
+  console.log('🔍 [API_REQUEST] Making request to:', url);
+  console.log('🔍 [API_REQUEST] Token available:', !!token);
+  
   if (token) {
     defaultHeaders['Authorization'] = `Bearer ${token}`;
   }
@@ -59,17 +63,22 @@ async function apiRequest<T = unknown>(
   };
 
   try {
+    console.log('🔍 [API_REQUEST] Request config:', { url, headers: defaultHeaders });
     const response = await fetch(url, config);
+    
+    console.log('🔍 [API_REQUEST] Response status:', response.status);
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error('❌ [API_REQUEST] Error response:', errorData);
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
     
     const data = await response.json();
+    console.log('✅ [API_REQUEST] Success response:', data);
     return data.data || data;
   } catch (error) {
-    console.error(`API request failed for ${endpoint}:`, error);
+    console.error(`❌ [API_REQUEST] API request failed for ${endpoint}:`, error);
     throw error;
   }
 }

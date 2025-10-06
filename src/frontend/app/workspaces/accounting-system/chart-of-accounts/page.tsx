@@ -160,7 +160,7 @@ export default function ChartOfAccountsPage() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fa-IR').format(amount) + ' ریال';
+    return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان';
   };
 
   const getAccountTypeLabel = (type: string) => {

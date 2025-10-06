@@ -406,13 +406,13 @@ export default function CreateJournalEntryPage() {
               <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                 <h4 className="font-medium text-gray-900 dark:text-white">مجموع بدهکار</h4>
                 <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                  {formatCurrency(totalDebit)} ریال
+                  {formatCurrency(totalDebit)} تومان
                 </p>
               </div>
               <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
                 <h4 className="font-medium text-gray-900 dark:text-white">مجموع بستانکار</h4>
                 <p className="text-xl font-bold text-red-600 dark:text-red-400">
-                  {formatCurrency(totalCredit)} ریال
+                  {formatCurrency(totalCredit)} تومان
                 </p>
               </div>
               <div className={`p-4 rounded-lg ${isBalanced ? 'bg-green-50 dark:bg-green-900/20' : 'bg-yellow-50 dark:bg-yellow-900/20'}`}>

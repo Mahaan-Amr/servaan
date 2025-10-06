@@ -16,6 +16,7 @@ import { AppError } from '../utils/AppError';
 import { OrderAccountingIntegrationService, RecipeRefundJournalEntry } from '../services/orderAccountingIntegrationService';
 import { prisma } from '../services/dbService';
 import { TablePerformanceController } from '../controllers/tablePerformanceController';
+import { OrderingAnalyticsService } from '../services/orderingAnalyticsService';
 
 const router = Router();
 
@@ -821,55 +822,15 @@ router.get('/analytics/sales-summary', async (req: Request, res: Response, next:
     const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
 
-    // Mock comprehensive sales analytics data
-    const mockData = {
-      totalRevenue: 12500000,
-      totalOrders: 450,
-      averageOrderValue: 27778,
-      revenueGrowth: 15.2,
-      orderGrowth: 8.7,
-      topSellingItems: [
-        { itemId: '1', itemName: 'برگر گوشت', quantity: 85, revenue: 2125000, percentage: 17 },
-        { itemId: '2', itemName: 'پیتزا مخصوص', quantity: 72, revenue: 1800000, percentage: 14.4 },
-        { itemId: '3', itemName: 'سالاد سزار', quantity: 45, revenue: 675000, percentage: 5.4 },
-        { itemId: '4', itemName: 'کباب ترکی', quantity: 38, revenue: 950000, percentage: 7.6 },
-        { itemId: '5', itemName: 'ساندویچ مرغ', quantity: 65, revenue: 975000, percentage: 7.8 }
-      ],
-      hourlyBreakdown: [
-        { hour: 10, orders: 15, revenue: 375000 },
-        { hour: 11, orders: 25, revenue: 625000 },
-        { hour: 12, orders: 45, revenue: 1125000 },
-        { hour: 13, orders: 52, revenue: 1300000 },
-        { hour: 14, orders: 38, revenue: 950000 },
-        { hour: 15, orders: 30, revenue: 750000 },
-        { hour: 16, orders: 25, revenue: 625000 },
-        { hour: 17, orders: 35, revenue: 875000 },
-        { hour: 18, orders: 42, revenue: 1050000 },
-        { hour: 19, orders: 65, revenue: 1625000 },
-        { hour: 20, orders: 58, revenue: 1450000 },
-        { hour: 21, orders: 45, revenue: 1125000 },
-        { hour: 22, orders: 35, revenue: 875000 }
-      ],
-      dailyRevenue: [
-        { date: '2024-01-01', revenue: 420000, orders: 15 },
-        { date: '2024-01-02', revenue: 380000, orders: 12 },
-        { date: '2024-01-03', revenue: 450000, orders: 18 },
-        { date: '2024-01-04', revenue: 520000, orders: 22 },
-        { date: '2024-01-05', revenue: 480000, orders: 20 },
-        { date: '2024-01-06', revenue: 550000, orders: 25 },
-        { date: '2024-01-07', revenue: 600000, orders: 28 }
-      ],
-      paymentMethods: [
-        { method: 'نقدی', count: 180, amount: 4500000, percentage: 36 },
-        { method: 'کارت بانکی', count: 200, amount: 5000000, percentage: 40 },
-        { method: 'کیف پول', count: 45, amount: 1125000, percentage: 9 },
-        { method: 'آنلاین', count: 25, amount: 1875000, percentage: 15 }
-      ]
-    };
+    console.log('📊 [ORDERING_ROUTES] Getting sales summary for tenant:', tenantId);
+    console.log('📊 [ORDERING_ROUTES] Date range:', { startDate, endDate });
+
+    // Get real sales analytics data
+    const salesData = await OrderingAnalyticsService.getSalesSummary(tenantId, startDate, endDate);
 
     res.json({
       success: true,
-      data: mockData,
+      data: salesData,
       message: 'Sales analytics retrieved successfully'
     });
   } catch (error) {
@@ -925,28 +886,15 @@ router.get('/analytics/customer-analytics', async (req: Request, res: Response, 
     const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
 
-    // Mock data for now - would be implemented with real customer analytics
-    const mockData = {
-      totalCustomers: 150,
-      newCustomers: 25,
-      repeatCustomers: 125,
-      averageOrderValue: 85000,
-      customerGrowth: 12.5,
-      topCustomers: [
-        { customerId: '1', customerName: 'احمد محمدی', totalSpent: 2500000, orderCount: 15, lastVisit: '2024-01-15' },
-        { customerId: '2', customerName: 'فاطمه احمدی', totalSpent: 1800000, orderCount: 12, lastVisit: '2024-01-14' },
-        { customerId: '3', customerName: 'علی رضایی', totalSpent: 1200000, orderCount: 8, lastVisit: '2024-01-13' }
-      ],
-      customerSegments: [
-        { segment: 'VIP', count: 20, percentage: 13.3, averageSpent: 150000 },
-        { segment: 'Regular', count: 80, percentage: 53.3, averageSpent: 85000 },
-        { segment: 'Occasional', count: 50, percentage: 33.4, averageSpent: 45000 }
-      ]
-    };
+    console.log('👥 [ORDERING_ROUTES] Getting customer analytics for tenant:', tenantId);
+    console.log('👥 [ORDERING_ROUTES] Date range:', { startDate, endDate });
+
+    // Get real customer analytics data
+    const customerData = await OrderingAnalyticsService.getCustomerAnalytics(tenantId, startDate, endDate);
 
     res.json({
       success: true,
-      data: mockData,
+      data: customerData,
       message: 'Customer analytics retrieved successfully'
     });
   } catch (error) {
@@ -967,30 +915,15 @@ router.get('/analytics/kitchen-performance', async (req: Request, res: Response,
     const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
 
-    // Mock data for now - would be implemented with real kitchen performance analytics
-    const mockData = {
-      totalOrders: 450,
-      averagePrepTime: 18,
-      onTimeDelivery: 92.5,
-      delayedOrders: 7.5,
-      efficiency: 88.3,
-      topItems: [
-        { itemName: 'برگر گوشت', orderCount: 85, averagePrepTime: 15 },
-        { itemName: 'پیتزا مخصوص', orderCount: 72, averagePrepTime: 20 },
-        { itemName: 'سالاد سزار', orderCount: 45, averagePrepTime: 8 }
-      ],
-      performanceByHour: [
-        { hour: 12, orders: 45, averagePrepTime: 16 },
-        { hour: 13, orders: 52, averagePrepTime: 18 },
-        { hour: 14, orders: 38, averagePrepTime: 15 },
-        { hour: 19, orders: 65, averagePrepTime: 20 },
-        { hour: 20, orders: 58, averagePrepTime: 19 }
-      ]
-    };
+    console.log('👨‍🍳 [ORDERING_ROUTES] Getting kitchen performance for tenant:', tenantId);
+    console.log('👨‍🍳 [ORDERING_ROUTES] Date range:', { startDate, endDate });
+
+    // Get real kitchen performance data
+    const kitchenData = await OrderingAnalyticsService.getKitchenPerformance(tenantId, startDate, endDate);
 
     res.json({
       success: true,
-      data: mockData,
+      data: kitchenData,
       message: 'Kitchen performance analytics retrieved successfully'
     });
   } catch (error) {
@@ -1011,36 +944,100 @@ router.get('/analytics/table-utilization', async (req: Request, res: Response, n
     const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
 
-    // Mock data for now - would be implemented with real table utilization analytics
-    const mockData = {
-      totalTables: 12,
-      averageUtilization: 78.5,
-      peakHours: [
-        { hour: 12, utilization: 85 },
-        { hour: 13, utilization: 92 },
-        { hour: 14, utilization: 75 },
-        { hour: 19, utilization: 88 },
-        { hour: 20, utilization: 95 },
-        { hour: 21, utilization: 82 }
-      ],
-      topPerformingTables: [
-        { tableNumber: 'A1', utilization: 92, revenue: 850000, orderCount: 45 },
-        { tableNumber: 'B2', utilization: 88, revenue: 720000, orderCount: 38 },
-        { tableNumber: 'C3', utilization: 85, revenue: 680000, orderCount: 35 }
-      ],
-      capacityOptimization: [
-        { tableNumber: 'A1', capacity: 4, utilization: 92, recommendation: 'بهینه' },
-        { tableNumber: 'B2', capacity: 6, utilization: 88, recommendation: 'بهینه' },
-        { tableNumber: 'C3', capacity: 2, utilization: 85, recommendation: 'بهینه' }
-      ]
-    };
+    console.log('🪑 [ORDERING_ROUTES] Getting table utilization for tenant:', tenantId);
+    console.log('🪑 [ORDERING_ROUTES] Date range:', { startDate, endDate });
+
+    // Get real table utilization data
+    const tableData = await OrderingAnalyticsService.getTableUtilization(tenantId, startDate, endDate);
 
     res.json({
       success: true,
-      data: mockData,
+      data: tableData,
       message: 'Table utilization analytics retrieved successfully'
     });
   } catch (error) {
+    next(error);
+  }
+});
+
+// ===================== ANALYTICS EXPORT ROUTES =====================
+
+/**
+ * Export analytics data to CSV
+ */
+router.get('/analytics/export/csv', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.user?.tenantId;
+
+    if (!tenantId) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    // Parse date range and data type
+    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
+    const dataType = (req.query.dataType as string) || 'all';
+
+    console.log('📄 [ORDERING_ROUTES] Exporting to CSV:', { tenantId, dataType, startDate, endDate });
+
+    // Get CSV data
+    const csvData = await OrderingAnalyticsService.exportToCSV(
+      tenantId, 
+      startDate, 
+      endDate, 
+      dataType as 'sales' | 'customers' | 'kitchen' | 'tables' | 'all'
+    );
+
+    // Set headers for CSV download
+    const filename = `analytics-${dataType}-${startDate.toISOString().split('T')[0]}-to-${endDate.toISOString().split('T')[0]}.csv`;
+    
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'no-cache');
+    
+    res.send('\ufeff' + csvData); // Add BOM for proper UTF-8 encoding
+  } catch (error) {
+    console.error('❌ [ORDERING_ROUTES] Error exporting to CSV:', error);
+    next(error);
+  }
+});
+
+/**
+ * Export analytics data to JSON (for Excel conversion)
+ */
+router.get('/analytics/export/json', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.user?.tenantId;
+
+    if (!tenantId) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    // Parse date range and data type
+    const startDate = req.query.startDate ? new Date(req.query.startDate as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const endDate = req.query.endDate ? new Date(req.query.endDate as string) : new Date();
+    const dataType = (req.query.dataType as string) || 'all';
+
+    console.log('📊 [ORDERING_ROUTES] Exporting to JSON:', { tenantId, dataType, startDate, endDate });
+
+    // Get JSON data
+    const jsonData = await OrderingAnalyticsService.exportToJSON(
+      tenantId, 
+      startDate, 
+      endDate, 
+      dataType as 'sales' | 'customers' | 'kitchen' | 'tables' | 'all'
+    );
+
+    // Set headers for JSON download
+    const filename = `analytics-${dataType}-${startDate.toISOString().split('T')[0]}-to-${endDate.toISOString().split('T')[0]}.json`;
+    
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'no-cache');
+    
+    res.json(jsonData);
+  } catch (error) {
+    console.error('❌ [ORDERING_ROUTES] Error exporting to JSON:', error);
     next(error);
   }
 });

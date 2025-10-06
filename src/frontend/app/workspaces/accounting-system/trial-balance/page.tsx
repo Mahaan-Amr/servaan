@@ -229,13 +229,13 @@ export default function TrialBalancePage() {
               <div>
                 <span className="text-gray-600 dark:text-gray-400">مجموع بدهکار: </span>
                 <span className="font-medium text-gray-900 dark:text-white">
-                  {formatCurrency(trialBalance.totalDebits)} ریال
+                  {formatCurrency(trialBalance.totalDebits)} تومان
                 </span>
               </div>
               <div>
                 <span className="text-gray-600 dark:text-gray-400">مجموع بستانکار: </span>
                 <span className="font-medium text-gray-900 dark:text-white">
-                  {formatCurrency(trialBalance.totalCredits)} ریال
+                  {formatCurrency(trialBalance.totalCredits)} تومان
                 </span>
               </div>
             </div>
@@ -368,7 +368,7 @@ export default function TrialBalancePage() {
             <div className="mr-3 sm:mr-4">
               <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">اختلاف</p>
               <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(Math.abs((trialBalance?.totalDebits || 0) - (trialBalance?.totalCredits || 0)))} ریال
+                {formatCurrency(Math.abs((trialBalance?.totalDebits || 0) - (trialBalance?.totalCredits || 0)))} تومان
               </p>
             </div>
           </div>

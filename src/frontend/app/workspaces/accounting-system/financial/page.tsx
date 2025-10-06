@@ -85,21 +85,21 @@ export default function FinancialPage() {
           <div className="bg-blue-50 dark:bg-blue-900/30 p-6 rounded-lg">
             <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">ارزش کل موجودی</h3>
             <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-              {summary.totalInventoryValue.toLocaleString('fa-IR')} ریال
+              {summary.totalInventoryValue.toLocaleString('fa-IR')} تومان
             </p>
           </div>
           
           <div className="bg-green-50 dark:bg-green-900/30 p-6 rounded-lg">
             <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">خرید ماه جاری</h3>
             <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-              {summary.thisMonthPurchases.toLocaleString('fa-IR')} ریال
+              {summary.thisMonthPurchases.toLocaleString('fa-IR')} تومان
             </p>
           </div>
           
           <div className="bg-orange-50 dark:bg-orange-900/30 p-6 rounded-lg">
             <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">خرید ماه قبل</h3>
             <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-              {summary.lastMonthPurchases.toLocaleString('fa-IR')} ریال
+              {summary.lastMonthPurchases.toLocaleString('fa-IR')} تومان
             </p>
           </div>
           

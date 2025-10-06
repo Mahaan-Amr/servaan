@@ -59,7 +59,7 @@ export default function FinancialStatementsPage() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fa-IR').format(amount) + ' ریال';
+    return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان';
   };
 
   if (loading) {

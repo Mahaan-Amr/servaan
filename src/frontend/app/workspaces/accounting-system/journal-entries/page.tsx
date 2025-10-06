@@ -286,7 +286,7 @@ export default function JournalEntriesPage() {
   }, [fetchJournalEntries]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fa-IR').format(amount) + ' ریال';
+    return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان';
   };
 
   const getStatusLabel = (status: string) => {
