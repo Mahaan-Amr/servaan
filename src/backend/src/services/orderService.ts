@@ -516,48 +516,57 @@ export class OrderService {
   private async generateOrderNumberInTransaction(tx: any, tenantId: string): Promise<string> {
     console.log('🔢 [ORDER_SERVICE] Generating globally unique order number for tenant:', tenantId);
 
-    // Find the highest order number for this tenant (globally, not just today)
-    const lastOrder = await tx.order.findFirst({
-      where: { 
-        tenantId
+    const today = new Date();
+    const datePrefix = today.toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
+    const orderNumberBasePrefix = `ORD-${datePrefix}-`; // e.g., ORD-20251005-
+
+    let currentSuffix = 1; // Start from 1 for today's orders
+
+    // First, find the highest existing suffix for today's date prefix
+    const lastTodayOrderWithPrefix = await tx.order.findFirst({
+      where: {
+        tenantId,
+        orderNumber: {
+          startsWith: orderNumberBasePrefix
+        }
       },
-      orderBy: { orderNumber: 'desc' }
-    });
-    console.log('🔢 [ORDER_SERVICE] Last order globally:', { 
-      found: !!lastOrder, 
-      orderNumber: lastOrder?.orderNumber 
+      orderBy: { orderNumber: 'desc' } // This will correctly sort 'ORD-YYYYMMDD-0001', 'ORD-YYYYMMDD-0002'
     });
 
-    // Start at 100 for the first order, then increment from the highest existing number
-    let next = 100;
-    if (lastOrder && lastOrder.orderNumber && lastOrder.orderNumber !== null) {
-      const parsed = parseInt(String(lastOrder.orderNumber).replace(/\D/g, ''), 10);
-      if (!isNaN(parsed)) next = parsed + 1;
+    if (lastTodayOrderWithPrefix && lastTodayOrderWithPrefix.orderNumber) {
+      const suffixPart = lastTodayOrderWithPrefix.orderNumber.split('-').pop();
+      const parsedSuffix = parseInt(suffixPart, 10);
+      if (!isNaN(parsedSuffix)) {
+        currentSuffix = parsedSuffix + 1; // Start from the next available suffix
+      }
     }
 
-    // Check if this order number already exists (race condition protection)
     let attempts = 0;
-    let finalOrderNumber = next;
-    
-    while (attempts < 10) { // Prevent infinite loop
+    const MAX_ATTEMPTS = 10;
+
+    while (attempts < MAX_ATTEMPTS) {
+      const formattedSuffix = String(currentSuffix).padStart(4, '0');
+      const candidateOrderNumber = `${orderNumberBasePrefix}${formattedSuffix}`; // e.g., ORD-20251005-0001
+
+      // Check if this candidate order number already exists
       const existingOrder = await tx.order.findFirst({
-        where: { 
+        where: {
           tenantId,
-          orderNumber: String(finalOrderNumber)
+          orderNumber: candidateOrderNumber
         }
       });
-      
+
       if (!existingOrder) {
-        break; // Order number is available
+        console.log('🔢 [ORDER_SERVICE] Final order number:', candidateOrderNumber);
+        return candidateOrderNumber;
       }
-      
-      console.log('🔢 [ORDER_SERVICE] Order number', finalOrderNumber, 'already exists, trying', finalOrderNumber + 1);
-      finalOrderNumber++;
+
+      console.log(`🔢 [ORDER_SERVICE] Order number ${candidateOrderNumber} already exists, trying ${orderNumberBasePrefix}${String(currentSuffix + 1).padStart(4, '0')}`);
+      currentSuffix++; // Increment suffix for the next attempt
       attempts++;
     }
 
-    console.log('🔢 [ORDER_SERVICE] Final order number:', finalOrderNumber);
-    return String(finalOrderNumber);
+    throw new AppError('Failed to generate a unique order number after multiple attempts.', 500);
   }
 
   // Generate numeric order number that resets daily per tenant and starts at 100 (OUTSIDE transaction - for backward compatibility)
