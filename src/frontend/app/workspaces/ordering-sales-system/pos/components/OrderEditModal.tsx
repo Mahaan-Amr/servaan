@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FaTimes, FaSearch, FaPlus, FaMinus, FaTrash, FaPrint } from 'react-icons/fa';
 import Image from 'next/image';
 import { OrderService, MenuService } from '../../../../../services/orderingService';
@@ -370,7 +370,7 @@ export default function OrderEditModal({
     }).format(amount);
   };
 
-  const calculateTotals = () => {
+  const calculateTotals = useCallback(() => {
     const subtotal = orderItems.reduce((sum, item) => sum + Number(item.totalPrice), 0);
     // Discount
     let discountAmount = 0;
@@ -400,7 +400,7 @@ export default function OrderEditModal({
       breakdown: { subtotal, discount: discountAmount, tax: taxAmount, service: serviceCharge, courier: courierAmount, total: totalAmount }
     };
     return calc;
-  };
+  }, [orderItems, orderOptions]);
 
   // Recalculate when items or options change
   useEffect(() => {

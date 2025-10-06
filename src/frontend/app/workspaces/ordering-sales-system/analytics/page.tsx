@@ -129,12 +129,12 @@ interface AnalyticsData {
   };
 }
 
-// API Response types for proper typing
-type ApiResponse<T> = {
-  success: boolean;
-  data: T;
-  message: string;
-}
+// API Response types for proper typing (used in type assertions)
+// type ApiResponse<T> = {
+//   success: boolean;
+//   data: T;
+//   message: string;
+// }
 
 export default function AnalyticsPage() {
   const { user } = useAuth();
