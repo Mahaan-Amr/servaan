@@ -161,6 +161,19 @@ export default function KitchenDisplayPage() {
   const handleFixExistingOrders = useCallback(async () => {
     try {
       console.log('🔧 [KITCHEN_DISPLAY] Fixing existing orders...');
+      
+      // Check authentication
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      console.log('🔧 [KITCHEN_DISPLAY] Authentication check:', {
+        hasToken: !!token,
+        tokenLength: token?.length || 0
+      });
+      
+      if (!token) {
+        toast.error('لطفاً ابتدا وارد سیستم شوید', { id: 'fix-orders' });
+        return;
+      }
+      
       toast.loading('در حال رفع مشکل سفارشات موجود...', { id: 'fix-orders' });
       
       const response = await KitchenService.fixExistingOrders() as ApiResponse<{ totalOrders: number; createdEntries: number }>;
@@ -178,7 +191,15 @@ export default function KitchenDisplayPage() {
       }
     } catch (error) {
       console.error('❌ [KITCHEN_DISPLAY] Error fixing existing orders:', error);
-      toast.error('خطا در رفع مشکل سفارشات موجود', { id: 'fix-orders' });
+      
+      // Show more detailed error information
+      const errorMessage = error instanceof Error ? error.message : 'خطای نامشخص';
+      console.error('❌ [KITCHEN_DISPLAY] Error details:', {
+        message: errorMessage,
+        error: error
+      });
+      
+      toast.error(`خطا در رفع مشکل سفارشات موجود: ${errorMessage}`, { id: 'fix-orders' });
     }
   }, [loadKitchenData]);
 
