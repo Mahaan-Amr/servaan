@@ -689,7 +689,19 @@ export class OrderService {
       if (updateData.notes !== undefined) orderUpdateData.notes = updateData.notes;
       if (updateData.kitchenNotes !== undefined) orderUpdateData.kitchenNotes = updateData.kitchenNotes;
       if (updateData.allergyInfo !== undefined) orderUpdateData.allergyInfo = updateData.allergyInfo;
-      if (updateData.status !== undefined) orderUpdateData.status = updateData.status;
+      if (updateData.status !== undefined) {
+        orderUpdateData.status = updateData.status;
+        
+        // Automatically sync kitchen display status when order status changes
+        try {
+          const { KitchenDisplayService } = await import('./kitchenDisplayService');
+          await KitchenDisplayService.syncKitchenDisplayWithOrderStatus(tenantId, orderId);
+          console.log(`🔄 [ORDER_SERVICE] Auto-synced kitchen display for order ${orderId} status change to ${updateData.status}`);
+        } catch (syncError) {
+          console.error(`❌ [ORDER_SERVICE] Failed to auto-sync kitchen display for order ${orderId}:`, syncError);
+          // Don't fail the entire operation if kitchen sync fails
+        }
+      }
 
       // Handle item updates
       if (updateData.items && updateData.items.length > 0) {
@@ -832,6 +844,16 @@ export class OrderService {
         });
       }
 
+      // Automatically sync kitchen display status when order is completed
+      try {
+        const { KitchenDisplayService } = await import('./kitchenDisplayService');
+        await KitchenDisplayService.syncKitchenDisplayWithOrderStatus(tenantId, orderId);
+        console.log(`🔄 [ORDER_SERVICE] Auto-synced kitchen display for completed order ${orderId}`);
+      } catch (syncError) {
+        console.error(`❌ [ORDER_SERVICE] Failed to auto-sync kitchen display for completed order ${orderId}:`, syncError);
+        // Don't fail the entire operation if kitchen sync fails
+      }
+
       return updatedOrder;
     });
   }
@@ -870,7 +892,17 @@ export class OrderService {
         });
       }
 
-        return updatedOrder;
+      // Automatically sync kitchen display status when order is cancelled
+      try {
+        const { KitchenDisplayService } = await import('./kitchenDisplayService');
+        await KitchenDisplayService.syncKitchenDisplayWithOrderStatus(tenantId, orderId);
+        console.log(`🔄 [ORDER_SERVICE] Auto-synced kitchen display for cancelled order ${orderId}`);
+      } catch (syncError) {
+        console.error(`❌ [ORDER_SERVICE] Failed to auto-sync kitchen display for cancelled order ${orderId}:`, syncError);
+        // Don't fail the entire operation if kitchen sync fails
+      }
+
+      return updatedOrder;
       });
   }
 

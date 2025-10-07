@@ -130,84 +130,6 @@ export default function KitchenDisplayPage() {
     }
   }, [selectedStation]);
 
-  // Fix existing orders by creating kitchen display entries
-  const handleFixExistingOrders = useCallback(async () => {
-    try {
-      console.log('🔧 [KITCHEN_DISPLAY] Fixing existing orders...');
-      
-      // Check authentication
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      console.log('🔧 [KITCHEN_DISPLAY] Authentication check:', {
-        hasToken: !!token,
-        tokenLength: token?.length || 0
-      });
-      
-      if (!token) {
-        toast.error('لطفاً ابتدا وارد سیستم شوید', { id: 'fix-orders' });
-        return;
-      }
-      
-      toast.loading('در حال رفع مشکل سفارشات موجود...', { id: 'fix-orders' });
-      
-      const response = await KitchenService.fixExistingOrders() as ApiResponse<{ totalOrders: number; createdEntries: number }>;
-      
-      if (response.success) {
-        const { totalOrders, createdEntries } = response.data;
-        console.log(`✅ [KITCHEN_DISPLAY] Fixed ${createdEntries} out of ${totalOrders} orders`);
-        
-        toast.success(`✅ ${toFarsiDigits(createdEntries)} ورودی نمایشگر آشپزخانه ایجاد شد`, { id: 'fix-orders' });
-        
-        // Reload kitchen data to show the fixed orders
-        await loadKitchenData();
-      } else {
-        throw new Error(response.message || 'خطا در رفع مشکل سفارشات');
-      }
-    } catch (error) {
-      console.error('❌ [KITCHEN_DISPLAY] Error fixing existing orders:', error);
-      
-      // Show more detailed error information
-      const errorMessage = error instanceof Error ? error.message : 'خطای نامشخص';
-      console.error('❌ [KITCHEN_DISPLAY] Error details:', {
-        message: errorMessage,
-        error: error
-      });
-      
-      toast.error(`خطا در رفع مشکل سفارشات موجود: ${errorMessage}`, { id: 'fix-orders' });
-    }
-  }, [loadKitchenData]);
-
-  const handleSyncCompletedOrders = useCallback(async () => {
-    try {
-      console.log('🔄 [KITCHEN_DISPLAY] Syncing completed orders...');
-      
-      toast.loading('در حال همگام‌سازی وضعیت سفارشات...', { id: 'sync-orders' });
-      
-      // Get all orders that are currently showing in kitchen display
-      const ordersToSync = orders.map(order => order.orderId);
-      
-      let syncedCount = 0;
-      for (const orderId of ordersToSync) {
-        try {
-          await KitchenService.syncKitchenDisplayWithOrderStatus(orderId);
-          syncedCount++;
-        } catch (error) {
-          console.error(`❌ [KITCHEN_DISPLAY] Failed to sync order ${orderId}:`, error);
-        }
-      }
-      
-      console.log(`✅ [KITCHEN_DISPLAY] Synced ${syncedCount} out of ${ordersToSync.length} orders`);
-      
-      toast.success(`✅ ${toFarsiDigits(syncedCount)} سفارش همگام‌سازی شد`, { id: 'sync-orders' });
-      
-      // Reload kitchen data to reflect changes
-      await loadKitchenData();
-    } catch (error) {
-      console.error('❌ [KITCHEN_DISPLAY] Error syncing completed orders:', error);
-      
-      const errorMessage = error instanceof Error ? error.message : 'خطای نامشخص';
-      toast.error(`خطا در همگام‌سازی وضعیت سفارشات: ${errorMessage}`, { id: 'sync-orders' });
-    }
-  }, [orders, loadKitchenData]);
 
   // Audio functions for notifications
   const playNotificationSound = useCallback(() => {
@@ -663,21 +585,6 @@ export default function KitchenDisplayPage() {
                 <span>در حال آماده‌سازی: {toFarsiDigits(orders.filter(o => o.status === OrderStatus.PREPARING).length)}</span>
               </div>
               
-        <button
-          onClick={handleFixExistingOrders}
-          className="px-3 py-1 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 transition-colors"
-          title="ایجاد ورودی‌های نمایشگر آشپزخانه برای سفارشات موجود"
-        >
-          رفع مشکل سفارشات موجود
-        </button>
-        
-        <button
-          onClick={handleSyncCompletedOrders}
-          className="px-3 py-1 bg-purple-500 text-white text-sm rounded-lg hover:bg-purple-600 transition-colors"
-          title="همگام‌سازی وضعیت سفارشات تکمیل شده"
-        >
-          همگام‌سازی وضعیت
-        </button>
             </div>
           </div>
         </div>

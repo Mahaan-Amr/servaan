@@ -107,6 +107,16 @@ export class OrderBulkOperationsService {
               orderId,
               updatedBy
             );
+
+            // Automatically sync kitchen display status with main order status
+            try {
+              const { KitchenDisplayService } = await import('./kitchenDisplayService');
+              await KitchenDisplayService.syncKitchenDisplayWithOrderStatus(tenantId, orderId);
+              console.log(`🔄 [BULK_OPERATIONS] Auto-synced kitchen display for completed order ${existingOrder.orderNumber}`);
+            } catch (syncError) {
+              console.error(`❌ [BULK_OPERATIONS] Failed to auto-sync kitchen display for completed order ${existingOrder.orderNumber}:`, syncError);
+              // Don't fail the entire operation if kitchen sync fails
+            }
             
             results.push({
               success: true,
@@ -138,6 +148,16 @@ export class OrderBulkOperationsService {
                    updatedAt: new Date()
                  }
                });
+
+          // Automatically sync kitchen display status with main order status
+          try {
+            const { KitchenDisplayService } = await import('./kitchenDisplayService');
+            await KitchenDisplayService.syncKitchenDisplayWithOrderStatus(tenantId, orderId);
+            console.log(`🔄 [BULK_OPERATIONS] Auto-synced kitchen display for order ${existingOrder.orderNumber}`);
+          } catch (syncError) {
+            console.error(`❌ [BULK_OPERATIONS] Failed to auto-sync kitchen display for order ${existingOrder.orderNumber}:`, syncError);
+            // Don't fail the entire operation if kitchen sync fails
+          }
 
           results.push({
             success: true,

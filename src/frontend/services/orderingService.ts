@@ -841,18 +841,6 @@ export class KitchenService {
     return apiRequest('/kitchen/dashboard');
   }
 
-  // Fix existing orders by creating kitchen display entries
-  static async fixExistingOrders() {
-    return apiRequest('/kitchen/fix-existing-orders', {
-      method: 'POST',
-    });
-  }
-
-  static async syncKitchenDisplayWithOrderStatus(orderId: string) {
-    return apiRequest(`/kitchen/sync-order-status/${orderId}`, {
-      method: 'POST',
-    });
-  }
 
   static async updateKitchenDisplayStatus(kitchenDisplayId: string, status: string) {
     return apiRequest(`/kitchen/displays/${kitchenDisplayId}/status`, {
