@@ -68,6 +68,12 @@ export class KitchenDisplayService {
     options: KitchenDisplayFilterOptions = {}
   ) {
     try {
+      console.log('🍳 [KITCHEN_DISPLAY_SERVICE] Getting kitchen display orders:', {
+        tenantId,
+        displayName,
+        options
+      });
+
       const where: any = {
         tenantId,
         displayName
@@ -103,6 +109,8 @@ export class KitchenDisplayService {
           }
         };
       }
+
+      console.log('🍳 [KITCHEN_DISPLAY_SERVICE] Query where clause:', where);
 
       const kitchenDisplays = await prisma.kitchenDisplay.findMany({
         where,
@@ -144,6 +152,8 @@ export class KitchenDisplayService {
         ]
       });
 
+      console.log('🍳 [KITCHEN_DISPLAY_SERVICE] Found kitchen displays:', kitchenDisplays.length);
+
       // Transform to kitchen display format
       const kitchenOrders: KitchenDisplayOrder[] = kitchenDisplays.map(display => {
         const order = display.order;
@@ -176,8 +186,10 @@ export class KitchenDisplayService {
         };
       });
 
+      console.log('🍳 [KITCHEN_DISPLAY_SERVICE] Returning kitchen orders:', kitchenOrders.length);
       return kitchenOrders;
     } catch (error) {
+      console.error('❌ [KITCHEN_DISPLAY_SERVICE] Error getting kitchen display orders:', error);
       throw new AppError('Failed to get kitchen display orders', 500, error);
     }
   }
