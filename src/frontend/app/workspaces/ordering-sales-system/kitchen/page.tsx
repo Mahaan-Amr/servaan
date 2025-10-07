@@ -513,22 +513,24 @@ export default function KitchenDisplayPage() {
     return `${toFarsiDigits(mins)}د`;
   };
 
-  // Enhanced priority color with more granular levels
+  // Priority color mapping (0-5 range to match backend)
   const getPriorityColor = (priority: number) => {
-    if (priority >= 9) return 'bg-red-600';
-    if (priority >= 7) return 'bg-red-500';
-    if (priority >= 5) return 'bg-orange-500';
-    if (priority >= 3) return 'bg-yellow-500';
-    return 'bg-green-500';
+    if (priority >= 5) return 'bg-red-500';      // Critical
+    if (priority >= 4) return 'bg-orange-500';   // High
+    if (priority >= 3) return 'bg-yellow-500';   // Medium
+    if (priority >= 2) return 'bg-blue-500';     // Low
+    if (priority >= 1) return 'bg-green-500';    // Normal
+    return 'bg-gray-500';                        // Default
   };
 
-  // Get priority text
+  // Priority text mapping (0-5 range to match backend)
   const getPriorityText = (priority: number) => {
-    if (priority >= 9) return 'بحرانی';
-    if (priority >= 7) return 'بالا';
-    if (priority >= 5) return 'متوسط';
-    if (priority >= 3) return 'پایین';
-    return 'عادی';
+    if (priority >= 5) return 'بحرانی';          // Critical
+    if (priority >= 4) return 'بالا';            // High
+    if (priority >= 3) return 'متوسط';           // Medium
+    if (priority >= 2) return 'پایین';           // Low
+    if (priority >= 1) return 'عادی';            // Normal
+    return 'پیش‌فرض';                            // Default
   };
 
   // Check if order is overdue
@@ -1034,13 +1036,42 @@ const OrderCard: React.FC<OrderCardProps> = ({
                     </button>
                   )}
                   
-                  <button
-            onClick={() => onUpdatePriority(order.kitchenDisplayId, order.priority + 1)}
-            className="px-2.5 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
-                    title="افزایش اولویت"
-                  >
-                    ⬆️
-                  </button>
+          <div className="flex flex-col space-y-1">
+            <button
+              onClick={() => {
+                const newPriority = Math.min(order.priority + 1, 5); // Cap at 5
+                if (newPriority !== order.priority) {
+                  onUpdatePriority(order.kitchenDisplayId, newPriority);
+                }
+              }}
+              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                order.priority >= 5 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
+              title={order.priority >= 5 ? 'حداکثر اولویت' : 'افزایش اولویت'}
+              disabled={order.priority >= 5}
+            >
+              ⬆️
+            </button>
+            <button
+              onClick={() => {
+                const newPriority = Math.max(order.priority - 1, 0); // Floor at 0
+                if (newPriority !== order.priority) {
+                  onUpdatePriority(order.kitchenDisplayId, newPriority);
+                }
+              }}
+              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                order.priority <= 0 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-gray-500 hover:bg-gray-600 text-white'
+              }`}
+              title={order.priority <= 0 ? 'حداقل اولویت' : 'کاهش اولویت'}
+              disabled={order.priority <= 0}
+            >
+              ⬇️
+            </button>
+          </div>
                 </div>
               </div>
     </div>
