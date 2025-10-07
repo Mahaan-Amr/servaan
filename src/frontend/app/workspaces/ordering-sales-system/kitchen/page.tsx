@@ -531,17 +531,9 @@ export default function KitchenDisplayPage() {
     return 'عادی';
   };
 
-  // Calculate elapsed time in minutes
-  const calculateElapsedTime = (orderDate: string, startedAt?: string) => {
-    const startTime = startedAt ? new Date(startedAt) : new Date(orderDate);
-    const now = new Date();
-    return Math.floor((now.getTime() - startTime.getTime()) / (1000 * 60));
-  };
-
   // Check if order is overdue
   const isOrderOverdue = (order: KitchenDisplayOrder) => {
-    const elapsed = calculateElapsedTime(order.orderDate, order.startedAt);
-    return elapsed > order.estimatedTime;
+    return order.elapsedTime > order.estimatedTime;
   };
 
   // Get order type text
@@ -826,7 +818,6 @@ export default function KitchenDisplayPage() {
                         getPriorityColor={getPriorityColor}
                         getPriorityText={getPriorityText}
                         formatTime={formatTime}
-                        calculateElapsedTime={calculateElapsedTime}
                         isOrderOverdue={isOrderOverdue}
                         getOrderTypeText={getOrderTypeText}
                         toFarsiDigits={toFarsiDigits}
@@ -875,7 +866,6 @@ interface OrderCardProps {
   getPriorityColor: (priority: number) => string;
   getPriorityText: (priority: number) => string;
   formatTime: (minutes: number) => string;
-  calculateElapsedTime: (orderDate: string, startedAt?: string) => number;
   isOrderOverdue: (order: KitchenDisplayOrder) => boolean;
   getOrderTypeText: (orderType: OrderType) => string;
   toFarsiDigits: (text: string | number) => string;
@@ -891,12 +881,11 @@ const OrderCard: React.FC<OrderCardProps> = ({
   getPriorityColor,
   getPriorityText,
   formatTime,
-  calculateElapsedTime,
   isOrderOverdue,
   getOrderTypeText,
   toFarsiDigits
 }) => {
-  const elapsed = calculateElapsedTime(order.orderDate, order.startedAt);
+  const elapsed = order.elapsedTime;
   const isOverdue = isOrderOverdue(order);
   
   return (

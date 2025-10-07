@@ -163,6 +163,7 @@ export class KitchenDisplayService {
         );
 
         return {
+          kitchenDisplayId: display.id,
           orderId: order.id,
           orderNumber: order.orderNumber,
           orderType: order.orderType,

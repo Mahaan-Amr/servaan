@@ -541,6 +541,7 @@ export type OrderSortOrder = 'asc' | 'desc';
  * Kitchen Display Order - سفارش نمایشگر آشپزخانه
  */
 export interface KitchenDisplayOrder {
+  kitchenDisplayId: string;
   orderId: string;
   orderNumber: string;
   orderType: OrderType;
