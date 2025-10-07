@@ -176,6 +176,39 @@ export default function KitchenDisplayPage() {
     }
   }, [loadKitchenData]);
 
+  const handleSyncCompletedOrders = useCallback(async () => {
+    try {
+      console.log('🔄 [KITCHEN_DISPLAY] Syncing completed orders...');
+      
+      toast.loading('در حال همگام‌سازی وضعیت سفارشات...', { id: 'sync-orders' });
+      
+      // Get all orders that are currently showing in kitchen display
+      const ordersToSync = orders.map(order => order.orderId);
+      
+      let syncedCount = 0;
+      for (const orderId of ordersToSync) {
+        try {
+          await KitchenService.syncKitchenDisplayWithOrderStatus(orderId);
+          syncedCount++;
+        } catch (error) {
+          console.error(`❌ [KITCHEN_DISPLAY] Failed to sync order ${orderId}:`, error);
+        }
+      }
+      
+      console.log(`✅ [KITCHEN_DISPLAY] Synced ${syncedCount} out of ${ordersToSync.length} orders`);
+      
+      toast.success(`✅ ${toFarsiDigits(syncedCount)} سفارش همگام‌سازی شد`, { id: 'sync-orders' });
+      
+      // Reload kitchen data to reflect changes
+      await loadKitchenData();
+    } catch (error) {
+      console.error('❌ [KITCHEN_DISPLAY] Error syncing completed orders:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'خطای نامشخص';
+      toast.error(`خطا در همگام‌سازی وضعیت سفارشات: ${errorMessage}`, { id: 'sync-orders' });
+    }
+  }, [orders, loadKitchenData]);
+
   // Audio functions for notifications
   const playNotificationSound = useCallback(() => {
     if (!soundEnabled) return;
@@ -354,18 +387,6 @@ export default function KitchenDisplayPage() {
     loadKitchenData();
   }, [loadKitchenData]);
 
-  // Enhanced order status update with better error handling
-  const updateOrderStatus = async (orderId: string, newStatus: OrderStatus) => {
-    try {
-      console.log(`🍳 [KITCHEN_DISPLAY] Updating order ${orderId} status to ${newStatus}`);
-      await KitchenService.updateKitchenDisplayStatus(orderId, newStatus);
-      toast.success(`وضعیت سفارش به ${ORDER_STATUS_LABELS[newStatus]} تغییر یافت`);
-      loadKitchenData(); // Refresh data
-    } catch (error) {
-      console.error('❌ [KITCHEN_DISPLAY] Error updating order status:', error);
-      toast.error('خطا در بروزرسانی وضعیت سفارش');
-    }
-  };
 
   // Enhanced order priority update
   const updateOrderPriority = async (kitchenDisplayId: string, newPriority: number) => {
@@ -377,6 +398,27 @@ export default function KitchenDisplayPage() {
     } catch (error) {
       console.error('❌ [KITCHEN_DISPLAY] Error updating order priority:', error);
       toast.error('خطا در بروزرسانی اولویت سفارش');
+    }
+  };
+
+  // Enhanced order status update
+  const updateOrderStatus = async (kitchenDisplayId: string, newStatus: string) => {
+    try {
+      console.log(`🔄 [KITCHEN_DISPLAY] Updating kitchen display ${kitchenDisplayId} status to ${newStatus}`);
+      await KitchenService.updateKitchenDisplayStatus(kitchenDisplayId, newStatus);
+      
+      const statusLabels: Record<string, string> = {
+        'CONFIRMED': 'تایید شده',
+        'PREPARING': 'در حال آماده سازی',
+        'READY': 'آماده',
+        'COMPLETED': 'تکمیل شده'
+      };
+      
+      toast.success(`وضعیت سفارش به "${statusLabels[newStatus] || newStatus}" تغییر یافت`);
+      loadKitchenData(); // Refresh data
+    } catch (error) {
+      console.error('❌ [KITCHEN_DISPLAY] Error updating order status:', error);
+      toast.error('خطا در بروزرسانی وضعیت سفارش');
     }
   };
 
@@ -621,13 +663,21 @@ export default function KitchenDisplayPage() {
                 <span>در حال آماده‌سازی: {toFarsiDigits(orders.filter(o => o.status === OrderStatus.PREPARING).length)}</span>
               </div>
               
-              <button
-                onClick={handleFixExistingOrders}
-                className="px-3 py-1 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 transition-colors"
-                title="ایجاد ورودی‌های نمایشگر آشپزخانه برای سفارشات موجود"
-              >
-                رفع مشکل سفارشات موجود
-              </button>
+        <button
+          onClick={handleFixExistingOrders}
+          className="px-3 py-1 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 transition-colors"
+          title="ایجاد ورودی‌های نمایشگر آشپزخانه برای سفارشات موجود"
+        >
+          رفع مشکل سفارشات موجود
+        </button>
+        
+        <button
+          onClick={handleSyncCompletedOrders}
+          className="px-3 py-1 bg-purple-500 text-white text-sm rounded-lg hover:bg-purple-600 transition-colors"
+          title="همگام‌سازی وضعیت سفارشات تکمیل شده"
+        >
+          همگام‌سازی وضعیت
+        </button>
             </div>
           </div>
         </div>
@@ -963,7 +1013,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 <div className="flex space-x-2 space-x-reverse">
           {order.status === OrderStatus.SUBMITTED && (
             <button
-              onClick={() => onUpdateStatus(order.orderId, OrderStatus.CONFIRMED)}
+              onClick={() => onUpdateStatus(order.kitchenDisplayId, OrderStatus.CONFIRMED)}
               className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-center space-x-1.5 space-x-reverse"
             >
               <FaCheckCircle className="w-3.5 h-3.5" />
@@ -973,7 +1023,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
           
                   {order.status === OrderStatus.CONFIRMED && (
                     <button
-              onClick={() => onUpdateStatus(order.orderId, OrderStatus.PREPARING)}
+              onClick={() => onUpdateStatus(order.kitchenDisplayId, OrderStatus.PREPARING)}
               className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-center space-x-1.5 space-x-reverse"
                     >
               <FaPlay className="w-3.5 h-3.5" />
@@ -983,11 +1033,21 @@ const OrderCard: React.FC<OrderCardProps> = ({
                   
                   {order.status === OrderStatus.PREPARING && (
                     <button
-              onClick={() => onUpdateStatus(order.orderId, OrderStatus.READY)}
+              onClick={() => onUpdateStatus(order.kitchenDisplayId, OrderStatus.READY)}
               className="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-center space-x-1.5 space-x-reverse"
                     >
               <FaCheckCircle className="w-3.5 h-3.5" />
               <span>آماده</span>
+                    </button>
+                  )}
+
+                  {order.status === OrderStatus.READY && (
+                    <button
+              onClick={() => onUpdateStatus(order.kitchenDisplayId, OrderStatus.COMPLETED)}
+              className="flex-1 bg-purple-500 hover:bg-purple-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-center space-x-1.5 space-x-reverse"
+                    >
+              <FaCheckCircle className="w-3.5 h-3.5" />
+              <span>تکمیل</span>
                     </button>
                   )}
                   

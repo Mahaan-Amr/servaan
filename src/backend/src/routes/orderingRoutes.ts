@@ -708,6 +708,42 @@ router.patch('/kitchen/displays/:id/priority', async (req: Request, res: Respons
   }
 });
 
+// Update kitchen display status
+router.patch('/kitchen/displays/:id/status', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.user?.tenantId;
+    const kitchenDisplayId = req.params.id;
+    const { status } = req.body;
+
+    if (!tenantId) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    if (!kitchenDisplayId) {
+      throw new AppError('Kitchen display ID is required', 400);
+    }
+
+    if (!status) {
+      throw new AppError('Status is required', 400);
+    }
+
+    const updatedDisplay = await KitchenDisplayService.updateKitchenDisplayStatus(
+      tenantId,
+      kitchenDisplayId,
+      status,
+      req.user?.id
+    );
+
+    res.json({
+      success: true,
+      data: updatedDisplay,
+      message: 'Kitchen display status updated successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/kitchen/performance', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.user?.tenantId;
@@ -844,6 +880,37 @@ router.post('/kitchen/fix-existing-orders', async (req: Request, res: Response, 
         createdEntries: createdCount
       },
       message: `Created ${createdCount} kitchen display entries for existing orders`
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Sync kitchen display status with main order status
+router.post('/kitchen/sync-order-status/:orderId', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.user?.tenantId;
+    const orderId = req.params.orderId;
+
+    if (!tenantId) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    if (!orderId) {
+      throw new AppError('Order ID is required', 400);
+    }
+
+    console.log('🔄 [KITCHEN_ROUTES] Syncing kitchen display status for order:', orderId);
+
+    const result = await KitchenDisplayService.syncKitchenDisplayWithOrderStatus(tenantId, orderId);
+
+    res.json({
+      success: true,
+      data: {
+        orderId,
+        syncedDisplays: result.count
+      },
+      message: `Synced ${result.count} kitchen displays with order status`
     });
   } catch (error) {
     next(error);

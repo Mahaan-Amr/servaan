@@ -813,13 +813,6 @@ export class KitchenService {
     return apiRequest('/kitchen/stations');
   }
 
-  // Update kitchen display status
-  static async updateKitchenDisplayStatus(kitchenDisplayId: string, status: OrderStatus) {
-    return apiRequest(`/kitchen/displays/${kitchenDisplayId}/status`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status }),
-    });
-  }
 
   // Update kitchen display priority
   static async updateKitchenDisplayPriority(kitchenDisplayId: string, priority: number, reason?: string) {
@@ -852,6 +845,19 @@ export class KitchenService {
   static async fixExistingOrders() {
     return apiRequest('/kitchen/fix-existing-orders', {
       method: 'POST',
+    });
+  }
+
+  static async syncKitchenDisplayWithOrderStatus(orderId: string) {
+    return apiRequest(`/kitchen/sync-order-status/${orderId}`, {
+      method: 'POST',
+    });
+  }
+
+  static async updateKitchenDisplayStatus(kitchenDisplayId: string, status: string) {
+    return apiRequest(`/kitchen/displays/${kitchenDisplayId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
     });
   }
 }

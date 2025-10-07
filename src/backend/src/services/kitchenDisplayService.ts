@@ -196,6 +196,45 @@ export class KitchenDisplayService {
   }
 
   /**
+   * Sync kitchen display status with main order status
+   * This ensures completed orders are properly filtered out
+   */
+  static async syncKitchenDisplayWithOrderStatus(tenantId: string, orderId: string) {
+    try {
+      return await prisma.$transaction(async (tx) => {
+        // Get the main order status
+        const order = await tx.order.findFirst({
+          where: { id: orderId, tenantId },
+          select: { status: true }
+        });
+
+        if (!order) {
+          throw new AppError('Order not found', 404);
+        }
+
+        // Update all kitchen displays for this order to match the main order status
+        const updatedDisplays = await tx.kitchenDisplay.updateMany({
+          where: {
+            orderId,
+            tenantId
+          },
+          data: {
+            status: order.status,
+            updatedAt: new Date(),
+            ...(order.status === OrderStatus.COMPLETED && { completedAt: new Date() })
+          }
+        });
+
+        console.log(`🔄 [KITCHEN_DISPLAY_SERVICE] Synced ${updatedDisplays.count} kitchen displays for order ${orderId} to status ${order.status}`);
+        return updatedDisplays;
+      });
+    } catch (error) {
+      console.error('❌ [KITCHEN_DISPLAY_SERVICE] Error syncing kitchen display with order status:', error);
+      throw new AppError('Failed to sync kitchen display with order status', 500, error);
+    }
+  }
+
+  /**
    * Get all kitchen stations with their current orders
    */
   static async getAllKitchenStations(tenantId: string) {
@@ -340,6 +379,32 @@ export class KitchenDisplayService {
               }
             });
           }
+        }
+
+        // Handle COMPLETED status - update main order and sync kitchen display
+        if (status === OrderStatus.COMPLETED) {
+          await tx.order.update({
+            where: { id: display.orderId },
+            data: {
+              status: OrderStatus.COMPLETED,
+              completedAt: new Date(),
+              servedAt: new Date(),
+              updatedAt: new Date()
+            }
+          });
+
+          // Update all kitchen displays for this order to COMPLETED
+          await tx.kitchenDisplay.updateMany({
+            where: {
+              orderId: display.orderId,
+              tenantId
+            },
+            data: {
+              status: OrderStatus.COMPLETED,
+              completedAt: new Date(),
+              updatedAt: new Date()
+            }
+          });
         }
 
         return updatedDisplay;
@@ -714,9 +779,9 @@ export class KitchenDisplayService {
       [OrderStatus.SUBMITTED]: [OrderStatus.CONFIRMED, OrderStatus.PREPARING],
       [OrderStatus.CONFIRMED]: [OrderStatus.PREPARING],
       [OrderStatus.PREPARING]: [OrderStatus.READY],
-      [OrderStatus.READY]: [], // Terminal state for kitchen
+      [OrderStatus.READY]: [OrderStatus.COMPLETED], // Allow completion from READY
       [OrderStatus.SERVED]: [],
-      [OrderStatus.COMPLETED]: [],
+      [OrderStatus.COMPLETED]: [], // Terminal state
       [OrderStatus.CANCELLED]: [],
       [OrderStatus.REFUNDED]: [],
       [OrderStatus.MODIFIED]: [OrderStatus.CONFIRMED, OrderStatus.PREPARING],
