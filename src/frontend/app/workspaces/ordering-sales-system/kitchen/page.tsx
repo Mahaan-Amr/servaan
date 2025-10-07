@@ -395,10 +395,10 @@ export default function KitchenDisplayPage() {
   };
 
   // Enhanced order priority update
-  const updateOrderPriority = async (orderId: string, newPriority: number) => {
+  const updateOrderPriority = async (kitchenDisplayId: string, newPriority: number) => {
     try {
-      console.log(`🍳 [KITCHEN_DISPLAY] Updating order ${orderId} priority to ${newPriority}`);
-      await KitchenService.updateKitchenDisplayPriority(orderId, newPriority);
+      console.log(`🍳 [KITCHEN_DISPLAY] Updating kitchen display ${kitchenDisplayId} priority to ${newPriority}`);
+      await KitchenService.updateKitchenDisplayPriority(kitchenDisplayId, newPriority);
       toast.success(`اولویت سفارش به ${newPriority} تغییر یافت`);
       loadKitchenData(); // Refresh data
     } catch (error) {
@@ -1033,7 +1033,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
           )}
           
           <button
-            onClick={() => onUpdatePriority(order.orderId, order.priority + 1)}
+            onClick={() => onUpdatePriority(order.kitchenDisplayId, order.priority + 1)}
             className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
             title="افزایش اولویت"
           >
