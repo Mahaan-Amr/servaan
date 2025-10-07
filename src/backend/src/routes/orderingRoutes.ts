@@ -775,6 +775,62 @@ router.get('/kitchen/dashboard', async (req: Request, res: Response, next: NextF
   }
 });
 
+// Fix existing orders by creating kitchen display entries
+router.post('/kitchen/fix-existing-orders', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.user?.tenantId;
+
+    if (!tenantId) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    console.log('🔧 [KITCHEN_ROUTES] Fixing existing orders for tenant:', tenantId);
+
+    // Get all orders that don't have kitchen display entries
+    const ordersWithoutKitchenDisplay = await prisma.order.findMany({
+      where: {
+        tenantId,
+        status: {
+          in: ['SUBMITTED', 'CONFIRMED', 'PREPARING', 'READY']
+        },
+        kitchenDisplays: {
+          none: {}
+        }
+      }
+    });
+
+    console.log(`🔧 [KITCHEN_ROUTES] Found ${ordersWithoutKitchenDisplay.length} orders without kitchen display entries`);
+
+    let createdCount = 0;
+    for (const order of ordersWithoutKitchenDisplay) {
+      try {
+        await KitchenDisplayService.createKitchenDisplayEntry(tenantId, {
+          orderId: order.id,
+          displayName: 'Main Kitchen',
+          station: 'Main Kitchen',
+          priority: 5,
+          estimatedTime: 30
+        });
+        createdCount++;
+        console.log(`✅ [KITCHEN_ROUTES] Created kitchen display entry for order ${order.orderNumber}`);
+      } catch (error) {
+        console.error(`❌ [KITCHEN_ROUTES] Failed to create kitchen display entry for order ${order.orderNumber}:`, error);
+      }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        totalOrders: ordersWithoutKitchenDisplay.length,
+        createdEntries: createdCount
+      },
+      message: `Created ${createdCount} kitchen display entries for existing orders`
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ===================== POS SPECIFIC ROUTES =====================
 
 /**

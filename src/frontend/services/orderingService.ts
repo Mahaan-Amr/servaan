@@ -195,7 +195,7 @@ export class OrderService {
   }
 
   // Get orders with filtering
-  static async getOrders(options: OrderFilterOptions = {}): Promise<any[]> {
+  static async getOrders(options: OrderFilterOptions = {}): Promise<unknown[]> {
     const queryParams = new URLSearchParams();
     
     Object.entries(options).forEach(([key, value]) => {
@@ -213,9 +213,9 @@ export class OrderService {
 
     const response = await apiRequest<unknown>(`/orders?${queryParams.toString()}`);
     if (response && typeof response === 'object' && (response as { data?: unknown }).data !== undefined) {
-      return (response as { data: any[] }).data;
+      return (response as { data: unknown[] }).data;
     }
-    return response as any[];
+    return response as unknown[];
   }
 
   // Get order by ID
@@ -840,6 +840,13 @@ export class KitchenService {
   // Get kitchen dashboard
   static async getKitchenDashboard() {
     return apiRequest('/kitchen/dashboard');
+  }
+
+  // Fix existing orders by creating kitchen display entries
+  static async fixExistingOrders() {
+    return apiRequest('/kitchen/fix-existing-orders', {
+      method: 'POST',
+    });
   }
 }
 

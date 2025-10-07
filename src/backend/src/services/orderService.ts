@@ -145,6 +145,23 @@ export class OrderService {
         status: order.status
       });
 
+      // Create kitchen display entry for the order
+      console.log('🍳 [ORDER_SERVICE] Creating kitchen display entry for order:', order.id);
+      try {
+        const { KitchenDisplayService } = await import('./kitchenDisplayService');
+        await KitchenDisplayService.createKitchenDisplayEntry(tenantId, {
+          orderId: order.id,
+          displayName: 'Main Kitchen', // Default kitchen display
+          station: 'Main Kitchen',
+          priority: 5, // Default priority
+          estimatedTime: 30 // Default 30 minutes
+        });
+        console.log('✅ [ORDER_SERVICE] Kitchen display entry created successfully');
+      } catch (kitchenError) {
+        console.error('❌ [ORDER_SERVICE] Failed to create kitchen display entry:', kitchenError);
+        // Don't fail the entire order creation if kitchen display fails
+      }
+
       // Fetch menu item details to get names and linked inventory items
       console.log('🍽️ [ORDER_SERVICE] Fetching menu item details');
       const itemIds = items.map((item: any) => item.itemId);

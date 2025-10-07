@@ -157,6 +157,31 @@ export default function KitchenDisplayPage() {
     }
   }, [selectedStation]);
 
+  // Fix existing orders by creating kitchen display entries
+  const handleFixExistingOrders = useCallback(async () => {
+    try {
+      console.log('🔧 [KITCHEN_DISPLAY] Fixing existing orders...');
+      toast.loading('در حال رفع مشکل سفارشات موجود...', { id: 'fix-orders' });
+      
+      const response = await KitchenService.fixExistingOrders() as ApiResponse<{ totalOrders: number; createdEntries: number }>;
+      
+      if (response.success) {
+        const { totalOrders, createdEntries } = response.data;
+        console.log(`✅ [KITCHEN_DISPLAY] Fixed ${createdEntries} out of ${totalOrders} orders`);
+        
+        toast.success(`✅ ${toFarsiDigits(createdEntries)} ورودی نمایشگر آشپزخانه ایجاد شد`, { id: 'fix-orders' });
+        
+        // Reload kitchen data to show the fixed orders
+        await loadKitchenData();
+      } else {
+        throw new Error(response.message || 'خطا در رفع مشکل سفارشات');
+      }
+    } catch (error) {
+      console.error('❌ [KITCHEN_DISPLAY] Error fixing existing orders:', error);
+      toast.error('خطا در رفع مشکل سفارشات موجود', { id: 'fix-orders' });
+    }
+  }, [loadKitchenData]);
+
   // Audio functions for notifications
   const playNotificationSound = useCallback(() => {
     if (!soundEnabled) return;
@@ -617,12 +642,22 @@ export default function KitchenDisplayPage() {
               </div>
             </div>
             
-            <div className="flex items-center space-x-2 space-x-reverse text-sm text-gray-600 dark:text-gray-400">
-              <span>کل سفارشات: {toFarsiDigits(orders.length)}</span>
-              <span>•</span>
-              <span>در انتظار: {toFarsiDigits(orders.filter(o => o.status === OrderStatus.PENDING).length)}</span>
-              <span>•</span>
-              <span>در حال آماده‌سازی: {toFarsiDigits(orders.filter(o => o.status === OrderStatus.PREPARING).length)}</span>
+            <div className="flex items-center space-x-4 space-x-reverse">
+              <div className="flex items-center space-x-2 space-x-reverse text-sm text-gray-600 dark:text-gray-400">
+                <span>کل سفارشات: {toFarsiDigits(orders.length)}</span>
+                <span>•</span>
+                <span>در انتظار: {toFarsiDigits(orders.filter(o => o.status === OrderStatus.PENDING).length)}</span>
+                <span>•</span>
+                <span>در حال آماده‌سازی: {toFarsiDigits(orders.filter(o => o.status === OrderStatus.PREPARING).length)}</span>
+              </div>
+              
+              <button
+                onClick={handleFixExistingOrders}
+                className="px-3 py-1 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 transition-colors"
+                title="ایجاد ورودی‌های نمایشگر آشپزخانه برای سفارشات موجود"
+              >
+                رفع مشکل سفارشات موجود
+              </button>
             </div>
           </div>
         </div>
