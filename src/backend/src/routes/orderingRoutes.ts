@@ -786,6 +786,25 @@ router.post('/kitchen/fix-existing-orders', async (req: Request, res: Response, 
 
     console.log('🔧 [KITCHEN_ROUTES] Fixing existing orders for tenant:', tenantId);
 
+    // First, let's see all orders for this tenant
+    const allOrders = await prisma.order.findMany({
+      where: { tenantId },
+      select: { id: true, orderNumber: true, status: true }
+    });
+    console.log(`🔧 [KITCHEN_ROUTES] Total orders for tenant: ${allOrders.length}`, allOrders);
+
+    // Check orders with kitchen display entries
+    const ordersWithKitchenDisplay = await prisma.order.findMany({
+      where: {
+        tenantId,
+        kitchenDisplays: {
+          some: {}
+        }
+      },
+      select: { id: true, orderNumber: true, status: true }
+    });
+    console.log(`🔧 [KITCHEN_ROUTES] Orders with kitchen display entries: ${ordersWithKitchenDisplay.length}`, ordersWithKitchenDisplay);
+
     // Get all orders that don't have kitchen display entries
     const ordersWithoutKitchenDisplay = await prisma.order.findMany({
       where: {
@@ -799,7 +818,7 @@ router.post('/kitchen/fix-existing-orders', async (req: Request, res: Response, 
       }
     });
 
-    console.log(`🔧 [KITCHEN_ROUTES] Found ${ordersWithoutKitchenDisplay.length} orders without kitchen display entries`);
+    console.log(`🔧 [KITCHEN_ROUTES] Found ${ordersWithoutKitchenDisplay.length} orders without kitchen display entries:`, ordersWithoutKitchenDisplay.map(o => ({ id: o.id, orderNumber: o.orderNumber, status: o.status })));
 
     let createdCount = 0;
     for (const order of ordersWithoutKitchenDisplay) {
