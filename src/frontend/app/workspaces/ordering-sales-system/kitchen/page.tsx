@@ -415,6 +415,7 @@ export default function KitchenDisplayPage() {
   const groupedOrders = useCallback(() => {
     const filtered = filteredAndSortedOrders();
     const groups: Record<string, KitchenDisplayOrder[]> = {
+      [OrderStatus.SUBMITTED]: [],
       [OrderStatus.PENDING]: [],
       [OrderStatus.CONFIRMED]: [],
       [OrderStatus.PREPARING]: [],
@@ -434,10 +435,12 @@ export default function KitchenDisplayPage() {
   // Enhanced status color with better visual hierarchy
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
+      case OrderStatus.SUBMITTED:
+        return 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-700';
       case OrderStatus.PENDING:
         return 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-700';
       case OrderStatus.CONFIRMED:
-        return 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-700';
+        return 'bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-900/20 dark:text-indigo-300 dark:border-indigo-700';
       case OrderStatus.PREPARING:
         return 'bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-700';
       case OrderStatus.READY:
@@ -954,6 +957,16 @@ const OrderCard: React.FC<OrderCardProps> = ({
       {/* Action Buttons */}
       <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex space-x-2 space-x-reverse">
+          {order.status === OrderStatus.SUBMITTED && (
+            <button
+              onClick={() => onUpdateStatus(order.orderId, OrderStatus.CONFIRMED)}
+              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 space-x-reverse"
+            >
+              <FaCheckCircle className="w-4 h-4" />
+              <span>تأیید سفارش</span>
+            </button>
+          )}
+          
           {order.status === OrderStatus.CONFIRMED && (
             <button
               onClick={() => onUpdateStatus(order.orderId, OrderStatus.PREPARING)}

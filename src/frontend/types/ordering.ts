@@ -12,6 +12,7 @@ import { Item } from './index';
 export enum OrderStatus {
   DRAFT = 'DRAFT',
   PENDING = 'PENDING',
+  SUBMITTED = 'SUBMITTED',
   CONFIRMED = 'CONFIRMED',
   PREPARING = 'PREPARING',
   READY = 'READY',
@@ -568,6 +569,7 @@ export interface KitchenDisplayOrder {
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   [OrderStatus.DRAFT]: 'پیش‌نویس',
   [OrderStatus.PENDING]: 'در انتظار',
+  [OrderStatus.SUBMITTED]: 'ثبت شده',
   [OrderStatus.CONFIRMED]: 'تأیید شده',
   [OrderStatus.PREPARING]: 'در حال آماده‌سازی',
   [OrderStatus.READY]: 'آماده',
