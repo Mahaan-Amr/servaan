@@ -77,8 +77,8 @@ async function apiRequest<T = unknown>(
     const data = await response.json();
     console.log('✅ [API_REQUEST] Success response:', data);
     
-    // For kitchen fix endpoint, return the full response to preserve success flag
-    if (endpoint.includes('/kitchen/fix-existing-orders')) {
+    // For kitchen endpoints, return the full response to preserve success flag and data structure
+    if (endpoint.includes('/kitchen/')) {
       return data;
     }
     
