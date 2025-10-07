@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import { KitchenService } from '../../../../services/orderingService';
-import { OrderStatus, OrderType, ORDER_STATUS_LABELS, ORDER_TYPE_LABELS } from '../../../../types/ordering';
+import { OrderStatus, OrderType, ORDER_STATUS_LABELS, ORDER_TYPE_LABELS, KitchenDisplayOrder } from '../../../../types/ordering';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { io } from 'socket.io-client';
 import { BASE_URL } from '../../../../lib/apiUtils';
@@ -26,33 +26,6 @@ import {
   FaList
 } from 'react-icons/fa';
 
-interface KitchenDisplayOrder {
-  orderId: string;
-  orderNumber: string;
-  orderType: OrderType;
-  tableNumber?: string;
-  customerName?: string;
-  items: {
-    itemName: string;
-    quantity: number;
-    modifiers: string[];
-    specialRequest?: string;
-    prepStatus: OrderStatus;
-    prepStartedAt?: string;
-    prepCompletedAt?: string;
-  }[];
-  priority: number;
-  estimatedTime: number;
-  elapsedTime: number;
-  status: OrderStatus;
-  notes?: string;
-  allergyInfo?: string;
-  guestCount?: number;
-  orderDate: string;
-  startedAt?: string;
-  readyAt?: string;
-  completedAt?: string;
-}
 
 interface KitchenStation {
   name: string;
@@ -427,31 +400,13 @@ export default function KitchenDisplayPage() {
       filtered = filtered.filter(order => filters.orderType.includes(order.orderType));
     }
 
-    // Apply time range filter
-    const now = new Date();
-    switch (filters.timeRange) {
-      case 'last_30min':
-        const thirtyMinAgo = new Date(now.getTime() - 30 * 60 * 1000);
-        filtered = filtered.filter(order => new Date(order.orderDate) >= thirtyMinAgo);
-        break;
-      case 'last_hour':
-        const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-        filtered = filtered.filter(order => new Date(order.orderDate) >= oneHourAgo);
-        break;
-      case 'today':
-        const startOfDay = new Date(now);
-        startOfDay.setHours(0, 0, 0, 0);
-        filtered = filtered.filter(order => new Date(order.orderDate) >= startOfDay);
-        break;
-    }
-
     // Apply sorting (default to priority desc for kitchen display)
     filtered.sort((a, b) => {
-      // Sort by priority (desc), then by order date (asc)
+      // Sort by priority (desc), then by elapsed time (asc)
       if (a.priority !== b.priority) {
         return b.priority - a.priority;
       }
-      return new Date(a.orderDate).getTime() - new Date(b.orderDate).getTime();
+      return a.elapsedTime - b.elapsedTime;
     });
 
     return filtered;
