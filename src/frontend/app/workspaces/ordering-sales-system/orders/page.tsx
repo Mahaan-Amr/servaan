@@ -139,10 +139,11 @@ export default function OrdersPage() {
       console.log('API response received:', Array.isArray(response) ? response.length : 'not an array', 'orders');
       
       if (response && Array.isArray(response)) {
-        console.log('Raw API order sample:', response.slice(0, 2).map(o => ({ id: o.id, status: o.status, orderNumber: o.orderNumber })));
-        console.log('Raw API order sample (expanded):', response.slice(0, 2));
-        console.log('Raw API order sample - STATUS CHECK:', response.slice(0, 2).map(o => ({ id: o.id, status: o.status, orderNumber: o.orderNumber })));
-        const transformedOrders: Order[] = response.map((order: ApiOrder) => {
+        const apiOrders = response as ApiOrder[];
+        console.log('Raw API order sample:', apiOrders.slice(0, 2).map((o: ApiOrder) => ({ id: o.id, status: o.status, orderNumber: o.orderNumber })));
+        console.log('Raw API order sample (expanded):', apiOrders.slice(0, 2));
+        console.log('Raw API order sample - STATUS CHECK:', apiOrders.slice(0, 2).map((o: ApiOrder) => ({ id: o.id, status: o.status, orderNumber: o.orderNumber })));
+        const transformedOrders: Order[] = apiOrders.map((order: ApiOrder) => {
           // Generate a more user-friendly order identifier
           // Keep for potential future use; ensures consistent Date object creation
           // const orderDate = new Date(order.orderDate || new Date());
