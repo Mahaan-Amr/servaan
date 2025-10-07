@@ -130,6 +130,32 @@ export default function KitchenDisplayPage() {
     }
   }, [selectedStation]);
 
+  const handleFixExistingEntries = useCallback(async () => {
+    try {
+      console.log('🔧 [KITCHEN_DISPLAY] Fixing existing kitchen display entries...');
+      
+      toast.loading('در حال رفع مشکل ورودی‌های نمایشگر آشپزخانه...', { id: 'fix-entries' });
+      
+      const response = await KitchenService.fixExistingKitchenDisplayEntries() as ApiResponse<{ created: number; fixed: number }>;
+      
+      if (response.success) {
+        const { created, fixed } = response.data;
+        console.log(`✅ [KITCHEN_DISPLAY] Fixed ${created} created, ${fixed} status corrected`);
+        
+        toast.success(`✅ ${toFarsiDigits(created)} ورودی ایجاد شد، ${toFarsiDigits(fixed)} وضعیت اصلاح شد`, { id: 'fix-entries' });
+        
+        // Reload kitchen data to show the fixed orders
+        await loadKitchenData();
+      } else {
+        throw new Error(response.message || 'خطا در رفع مشکل ورودی‌ها');
+      }
+    } catch (error) {
+      console.error('❌ [KITCHEN_DISPLAY] Error fixing existing entries:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'خطای نامشخص';
+      toast.error(`خطا در رفع مشکل ورودی‌های نمایشگر آشپزخانه: ${errorMessage}`, { id: 'fix-entries' });
+    }
+  }, [loadKitchenData]);
 
   // Audio functions for notifications
   const playNotificationSound = useCallback(() => {
@@ -584,6 +610,14 @@ export default function KitchenDisplayPage() {
                 <span>•</span>
                 <span>در حال آماده‌سازی: {toFarsiDigits(orders.filter(o => o.status === OrderStatus.PREPARING).length)}</span>
               </div>
+              
+              <button
+                onClick={handleFixExistingEntries}
+                className="px-3 py-1 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
+                title="رفع مشکل ورودی‌های نمایشگر آشپزخانه موجود"
+              >
+                رفع مشکل ورودی‌های موجود
+              </button>
               
             </div>
           </div>

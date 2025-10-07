@@ -812,6 +812,29 @@ router.get('/kitchen/dashboard', async (req: Request, res: Response, next: NextF
 });
 
 
+// Fix existing kitchen display entries
+router.post('/kitchen/fix-existing-entries', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.user?.tenantId;
+
+    if (!tenantId) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    console.log('🔧 [KITCHEN_ROUTES] Fixing existing kitchen display entries for tenant:', tenantId);
+
+    const result = await KitchenDisplayService.fixExistingKitchenDisplayEntries(tenantId);
+
+    res.json({
+      success: true,
+      data: result,
+      message: `Fixed kitchen display entries: ${result.created} created, ${result.fixed} status corrected`
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ===================== POS SPECIFIC ROUTES =====================
 
 /**

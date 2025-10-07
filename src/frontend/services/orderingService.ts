@@ -848,6 +848,12 @@ export class KitchenService {
       body: JSON.stringify({ status }),
     });
   }
+
+  static async fixExistingKitchenDisplayEntries() {
+    return apiRequest('/kitchen/fix-existing-entries', {
+      method: 'POST',
+    });
+  }
 }
 
 // ==================== ANALYTICS SERVICES ====================

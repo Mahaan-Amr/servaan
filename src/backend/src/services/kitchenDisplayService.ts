@@ -196,6 +196,84 @@ export class KitchenDisplayService {
   }
 
   /**
+   * Fix existing orders that have kitchen display entries with wrong status
+   * This ensures all orders have proper kitchen display entries
+   */
+  static async fixExistingKitchenDisplayEntries(tenantId: string) {
+    try {
+      console.log('🔧 [KITCHEN_DISPLAY_SERVICE] Fixing existing kitchen display entries for tenant:', tenantId);
+
+      // Get all orders that should have kitchen display entries but don't
+      const ordersWithoutKitchenDisplay = await prisma.order.findMany({
+        where: {
+          tenantId,
+          status: {
+            in: ['SUBMITTED', 'CONFIRMED', 'PREPARING', 'READY']
+          },
+          kitchenDisplays: {
+            none: {}
+          }
+        }
+      });
+
+      console.log(`🔧 [KITCHEN_DISPLAY_SERVICE] Found ${ordersWithoutKitchenDisplay.length} orders without kitchen display entries`);
+
+      let createdCount = 0;
+      for (const order of ordersWithoutKitchenDisplay) {
+        try {
+          await this.createKitchenDisplayEntry(tenantId, {
+            orderId: order.id,
+            displayName: 'Main Kitchen',
+            station: 'Main Kitchen',
+            priority: 5,
+            estimatedTime: 30
+          });
+          createdCount++;
+          console.log(`✅ [KITCHEN_DISPLAY_SERVICE] Created kitchen display entry for order ${order.orderNumber}`);
+        } catch (error) {
+          console.error(`❌ [KITCHEN_DISPLAY_SERVICE] Failed to create kitchen display entry for order ${order.orderNumber}:`, error);
+        }
+      }
+
+      // Also fix existing kitchen display entries with wrong status
+      const kitchenDisplaysWithWrongStatus = await prisma.kitchenDisplay.findMany({
+        where: {
+          tenantId,
+          status: 'PENDING', // These should be SUBMITTED
+          order: {
+            status: 'SUBMITTED'
+          }
+        },
+        include: {
+          order: true
+        }
+      });
+
+      console.log(`🔧 [KITCHEN_DISPLAY_SERVICE] Found ${kitchenDisplaysWithWrongStatus.length} kitchen display entries with wrong status`);
+
+      let fixedCount = 0;
+      for (const display of kitchenDisplaysWithWrongStatus) {
+        try {
+          await prisma.kitchenDisplay.update({
+            where: { id: display.id },
+            data: { status: OrderStatus.SUBMITTED }
+          });
+          fixedCount++;
+          console.log(`✅ [KITCHEN_DISPLAY_SERVICE] Fixed kitchen display status for order ${display.order.orderNumber}`);
+        } catch (error) {
+          console.error(`❌ [KITCHEN_DISPLAY_SERVICE] Failed to fix kitchen display status for order ${display.order.orderNumber}:`, error);
+        }
+      }
+
+      console.log(`🔧 [KITCHEN_DISPLAY_SERVICE] Fix completed: ${createdCount} created, ${fixedCount} fixed`);
+      return { created: createdCount, fixed: fixedCount };
+    } catch (error) {
+      console.error('❌ [KITCHEN_DISPLAY_SERVICE] Error fixing existing kitchen display entries:', error);
+      throw new AppError('Failed to fix existing kitchen display entries', 500, error);
+    }
+  }
+
+  /**
    * Sync kitchen display status with main order status
    * This ensures completed orders are properly filtered out
    */
@@ -663,7 +741,7 @@ export class KitchenDisplayService {
           orderId: displayData.orderId,
           displayName: displayData.displayName,
           station: displayData.station,
-          status: OrderStatus.PENDING,
+          status: OrderStatus.SUBMITTED, // Match the order's initial status
           priority: displayData.priority || 0,
           estimatedTime: displayData.estimatedTime
         }
