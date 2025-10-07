@@ -337,7 +337,7 @@ export default function KitchenDisplayPage() {
       if (unavailableItems.length > 0) {
         toast.error(`${unavailableItems.length} آیتم منو غیرفعال شد`);
       } else {
-        toast.success('بروزرسانی وضعیت منو');
+      toast.success('بروزرسانی وضعیت منو');
       }
     });
 
@@ -546,27 +546,27 @@ export default function KitchenDisplayPage() {
       {/* Enhanced Header with Controls */}
       <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4 space-x-reverse">
-              <div>
+        <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                   🍳 نمایشگر آشپزخانه
-                </h1>
+          </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  مدیریت سفارشات و نظارت بر آماده‌سازی
-                </p>
-              </div>
-              
-              {/* Connection Status */}
+            مدیریت سفارشات و نظارت بر آماده‌سازی
+          </p>
+        </div>
+        
+        {/* Connection Status */}
               <div className={`flex items-center space-x-2 space-x-reverse px-3 py-2 rounded-lg ${
-                isConnected 
+            isConnected 
                   ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300' 
                   : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300'
-              }`}>
-                <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                <span className="text-sm font-medium">
-                  {isConnected ? 'متصل' : 'قطع اتصال'}
-                </span>
+          }`}>
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <span className="text-sm font-medium">
+              {isConnected ? 'متصل' : 'قطع اتصال'}
+            </span>
               </div>
             </div>
             
@@ -638,17 +638,17 @@ export default function KitchenDisplayPage() {
           {/* Station Selector and Info */}
           <div className="flex items-center justify-between mt-4">
             <div className="flex items-center space-x-4 space-x-reverse">
-              <select
-                value={selectedStation}
-                onChange={(e) => setSelectedStation(e.target.value)}
+          <select
+            value={selectedStation}
+            onChange={(e) => setSelectedStation(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-600 text-sm font-medium"
-              >
-                {stations.map((station) => (
-                  <option key={station.name} value={station.displayName}>
+          >
+            {stations.map((station) => (
+              <option key={station.name} value={station.displayName}>
                     {station.name} ({toFarsiDigits(station.currentLoad)} سفارش)
-                  </option>
-                ))}
-              </select>
+              </option>
+            ))}
+          </select>
               
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 آخرین بروزرسانی: {formatFarsiDateTime(lastUpdate)}
@@ -776,16 +776,16 @@ export default function KitchenDisplayPage() {
 
       {/* Main Content */}
       <div className="p-6">
-        {/* Loading State */}
-        {loading && (
-          <div className="flex items-center justify-center py-12">
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             <span className="mr-3 text-lg text-gray-600 dark:text-gray-400">در حال بارگذاری...</span>
-          </div>
-        )}
+        </div>
+      )}
 
-        {/* Kitchen Display Board */}
-        {!loading && (
+      {/* Kitchen Display Board */}
+      {!loading && (
           <div className="space-y-6">
             {Object.entries(groupedOrders()).map(([status, statusOrders]) => {
               if (statusOrders.length === 0) return null;
@@ -808,7 +808,7 @@ export default function KitchenDisplayPage() {
                   }`}>
                     {statusOrders.map((order) => (
                       <OrderCard 
-                        key={order.orderId}
+              key={order.orderId}
                         order={order}
                         viewMode={viewMode}
                         onUpdateStatus={updateOrderStatus}
@@ -892,155 +892,157 @@ const OrderCard: React.FC<OrderCardProps> = ({
     <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200 ${
       isOverdue ? 'ring-2 ring-red-500 ring-opacity-50' : ''
     } ${viewMode === 'list' ? 'flex' : ''}`}>
-      {/* Order Header */}
-      <div className={`p-4 border-b border-gray-200 dark:border-gray-700 ${viewMode === 'list' ? 'flex-1' : ''}`}>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-3 space-x-reverse">
-            <span className="text-lg font-bold text-gray-900 dark:text-white">
-              #{order.orderNumber}
-            </span>
-            <div className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}>
-              {getStatusText(order.status)}
-            </div>
-          </div>
-          
-          {/* Priority Badge */}
+              {/* Order Header */}
+      <div className={`p-3 border-b border-gray-200 dark:border-gray-700 ${viewMode === 'list' ? 'flex-1' : ''}`}>
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center space-x-2 space-x-reverse">
-            <div className={`w-3 h-3 rounded-full ${getPriorityColor(order.priority)}`} 
+            <span className="text-base font-bold text-gray-900 dark:text-white">
+                      #{order.orderNumber}
+                    </span>
+            <div className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}>
+                      {getStatusText(order.status)}
+                    </div>
+                  </div>
+                  
+                  {/* Priority Badge */}
+          <div className="flex items-center space-x-1.5 space-x-reverse">
+            <div className={`w-2.5 h-2.5 rounded-full ${getPriorityColor(order.priority)}`} 
                  title={`اولویت: ${getPriorityText(order.priority)}`}></div>
             <span className="text-xs text-gray-500 dark:text-gray-400">
               {getPriorityText(order.priority)}
             </span>
           </div>
-        </div>
+                </div>
 
-        {/* Order Info */}
-        <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-          {order.tableNumber && (
-            <div className="flex items-center space-x-2 space-x-reverse">
-              <FaTable className="w-4 h-4" />
-              <span>میز {toFarsiDigits(order.tableNumber)}</span>
+                {/* Order Info */}
+        <div className="space-y-1.5 text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+                  {order.tableNumber && (
+              <div className="flex items-center space-x-1.5 space-x-reverse">
+                <FaTable className="w-3.5 h-3.5" />
+                <span className="text-xs">میز {toFarsiDigits(order.tableNumber)}</span>
+                    </div>
+                  )}
+                  
+                  {order.customerName && (
+              <div className="flex items-center space-x-1.5 space-x-reverse">
+                <FaUser className="w-3.5 h-3.5" />
+                <span className="text-xs">{order.customerName}</span>
+                    </div>
+                  )}
+
+            <div className="flex items-center space-x-1.5 space-x-reverse">
+              <FaUtensils className="w-3.5 h-3.5" />
+              <span className="text-xs">{getOrderTypeText(order.orderType)}</span>
             </div>
-          )}
-          
-          {order.customerName && (
-            <div className="flex items-center space-x-2 space-x-reverse">
-              <FaUser className="w-4 h-4" />
-              <span>{order.customerName}</span>
+
+                  {/* Timer */}
+            <div className="flex items-center space-x-1.5 space-x-reverse">
+              <FaClock className="w-3.5 h-3.5" />
+              <span className={`text-xs font-medium ${isOverdue ? 'text-red-600' : ''}`}>
+                {formatTime(elapsed)} / {formatTime(order.estimatedTime)}
+                    </span>
+              {isOverdue && <FaExclamationTriangle className="w-3.5 h-3.5 text-red-500" />}
             </div>
-          )}
+                  </div>
+                </div>
+              </div>
 
-          <div className="flex items-center space-x-2 space-x-reverse">
-            <FaUtensils className="w-4 h-4" />
-            <span>{getOrderTypeText(order.orderType)}</span>
-          </div>
-
-          {/* Timer */}
-          <div className="flex items-center space-x-2 space-x-reverse">
-            <FaClock className="w-4 h-4" />
-            <span className={isOverdue ? 'text-red-600 font-medium' : ''}>
-              {formatTime(elapsed)} / {formatTime(order.estimatedTime)}
-            </span>
-            {isOverdue && <FaExclamationTriangle className="w-4 h-4 text-red-500" />}
-          </div>
-        </div>
-      </div>
-
-      {/* Order Items */}
-      <div className={`p-4 ${viewMode === 'list' ? 'flex-1' : ''}`}>
-        <div className="space-y-3">
-          {order.items.map((item, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium text-gray-900 dark:text-white">
+              {/* Order Items */}
+      <div className={`p-3 ${viewMode === 'list' ? 'flex-1' : ''}`}>
+        <div className="space-y-2">
+                  {order.items.map((item, index) => (
+            <div key={index} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
                     {toFarsiDigits(item.quantity)}x {item.itemName}
-                  </span>
-                  <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.prepStatus)}`}>
-                    {getStatusText(item.prepStatus)}
-                  </div>
+                          </span>
+                  <div className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(item.prepStatus)}`}>
+                            {getStatusText(item.prepStatus)}
+                          </div>
+                        </div>
+                        
+                        {item.modifiers.length > 0 && (
+                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                            {item.modifiers.join('، ')}
+                          </div>
+                        )}
+                        
+                        {item.specialRequest && (
+                  <div className="text-xs text-orange-600 dark:text-orange-400 mt-0.5">
+                            💬 {item.specialRequest}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                
-                {item.modifiers.length > 0 && (
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    {item.modifiers.join('، ')}
+
+                {/* Notes and Allergy Info */}
+                {(order.notes || order.allergyInfo) && (
+          <div className="mt-2 space-y-1.5">
+                    {order.notes && (
+              <div className="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                <div className="text-xs text-yellow-800 dark:text-yellow-300">
+                  <strong>یادداشت:</strong> {order.notes}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {order.allergyInfo && (
+              <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                <div className="text-xs text-red-800 dark:text-red-300">
+                  <strong>⚠️ آلرژی:</strong> {order.allergyInfo}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
-                
-                {item.specialRequest && (
-                  <div className="text-sm text-orange-600 dark:text-orange-400 mt-1">
-                    💬 {item.specialRequest}
-                  </div>
-                )}
               </div>
-            </div>
-          ))}
-        </div>
 
-        {/* Notes and Allergy Info */}
-        {(order.notes || order.allergyInfo) && (
-          <div className="mt-4 space-y-2">
-            {order.notes && (
-              <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                <div className="text-sm text-yellow-800 dark:text-yellow-300">
-                  <strong>یادداشت آشپزخانه:</strong> {order.notes}
-                </div>
-              </div>
-            )}
-            
-            {order.allergyInfo && (
-              <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                <div className="text-sm text-red-800 dark:text-red-300">
-                  <strong>⚠️ اطلاعات آلرژی:</strong> {order.allergyInfo}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Action Buttons */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex space-x-2 space-x-reverse">
+              {/* Action Buttons */}
+      <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex space-x-2 space-x-reverse">
           {order.status === OrderStatus.SUBMITTED && (
             <button
               onClick={() => onUpdateStatus(order.orderId, OrderStatus.CONFIRMED)}
-              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 space-x-reverse"
+              className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-center space-x-1.5 space-x-reverse"
             >
-              <FaCheckCircle className="w-4 h-4" />
-              <span>تأیید سفارش</span>
+              <FaCheckCircle className="w-3.5 h-3.5" />
+              <span>تأیید</span>
             </button>
           )}
           
-          {order.status === OrderStatus.CONFIRMED && (
-            <button
+                  {order.status === OrderStatus.CONFIRMED && (
+                    <button
               onClick={() => onUpdateStatus(order.orderId, OrderStatus.PREPARING)}
-              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 space-x-reverse"
-            >
-              <FaPlay className="w-4 h-4" />
-              <span>شروع آماده‌سازی</span>
-            </button>
-          )}
-          
-          {order.status === OrderStatus.PREPARING && (
-            <button
+              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-center space-x-1.5 space-x-reverse"
+                    >
+              <FaPlay className="w-3.5 h-3.5" />
+              <span>شروع</span>
+                    </button>
+                  )}
+                  
+                  {order.status === OrderStatus.PREPARING && (
+                    <button
               onClick={() => onUpdateStatus(order.orderId, OrderStatus.READY)}
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 space-x-reverse"
-            >
-              <FaCheckCircle className="w-4 h-4" />
-              <span>آماده شد</span>
-            </button>
-          )}
-          
-          <button
+              className="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-center space-x-1.5 space-x-reverse"
+                    >
+              <FaCheckCircle className="w-3.5 h-3.5" />
+              <span>آماده</span>
+                    </button>
+                  )}
+                  
+                  <button
             onClick={() => onUpdatePriority(order.kitchenDisplayId, order.priority + 1)}
-            className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
-            title="افزایش اولویت"
-          >
-            ⬆️
-          </button>
-        </div>
-      </div>
+            className="px-2.5 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+                    title="افزایش اولویت"
+                  >
+                    ⬆️
+                  </button>
+                </div>
+              </div>
     </div>
   );
 }; 
