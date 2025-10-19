@@ -342,22 +342,50 @@ export default function OrderEditModal({
     try {
       setReceiptLoading(true);
       
-      // Fetch complete order data
+      // Fetch basic order info from database (orderNumber, orderDate, etc.)
       const orderDetails = await OrderService.getOrderById(orderId) as OrderData;
-      console.log('🔍 Order details for receipt:', orderDetails);
-      console.log('🔍 Order items structure:', orderDetails.items);
+      console.log('🔍 Basic order details:', { orderNumber: orderDetails.orderNumber, orderDate: orderDetails.orderDate });
       
-      // Debug: Check for null items
-      const nullItems = orderDetails.items.filter(item => !item || !item.item);
-      if (nullItems.length > 0) {
-        console.warn('⚠️ Found items with null item property:', nullItems);
-      }
+      // Use current orderItems state (edited data) instead of database items
+      console.log('🔍 Using current orderItems for receipt:', orderItems);
+      console.log('🔍 Current calculation:', calculation);
       
-      setOrderData(orderDetails);
+      // Create order data combining database info with current edited items
+      const currentOrderData: OrderData = {
+        id: orderId,
+        orderNumber: orderDetails.orderNumber, // Use actual order number from database
+        orderDate: orderDetails.orderDate, // Use actual order date from database
+        orderType: orderDetails.orderType, // Use actual order type from database
+        status: orderStatus || orderDetails.status,
+        totalAmount: calculation.totalAmount, // Use current calculated total
+        subtotal: calculation.subtotal, // Use current calculated subtotal
+        taxAmount: calculation.taxAmount, // Use current calculated tax
+        serviceCharge: calculation.serviceAmount, // Use current calculated service charge
+        discountAmount: calculation.discountAmount, // Use current calculated discount
+        items: orderItems.map(item => ({
+          id: item.id,
+          itemId: item.itemId,
+          menuItemId: item.itemId, // Use itemId as menuItemId for compatibility
+          itemName: item.itemName,
+          quantity: item.quantity, // Use current edited quantity
+          totalPrice: item.totalPrice, // Use current edited total price
+          unitPrice: item.unitPrice,
+          item: null, // Will be handled by the receipt template
+          menuItem: null // Will be handled by the receipt template
+        })),
+        tableInfo: orderDetails.tableInfo, // Use table info from database
+        paymentData: {
+          paymentMethod: 'CASH',
+          amountReceived: calculation.totalAmount,
+          notes: ''
+        }
+      };
+      
+      setOrderData(currentOrderData);
       setShowReceipt(true);
     } catch (error) {
-      console.error('Error fetching order details:', error);
-      toast.error('خطا در دریافت اطلاعات سفارش برای چاپ رسید');
+      console.error('Error preparing receipt data:', error);
+      toast.error('خطا در آماده‌سازی اطلاعات رسید');
     } finally {
       setReceiptLoading(false);
     }
