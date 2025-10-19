@@ -457,7 +457,10 @@ export class OrderService {
       where: { id: orderId },
       include: {
         items: {
-          include: { item: true }
+          include: { 
+            item: true,
+            menuItem: true  // Include menuItem relation for receipt data
+          }
         },
         payments: true,
         table: true,
@@ -519,7 +522,10 @@ export class OrderService {
           where,
           include: {
             items: {
-          include: { item: true }
+          include: { 
+            item: true,
+            menuItem: true  // Include menuItem relation for order listing
+          }
         },
         payments: true,
         table: true,
@@ -784,7 +790,10 @@ export class OrderService {
         data: orderUpdateData,
           include: {
             items: {
-            include: { item: true }
+            include: { 
+              item: true,
+              menuItem: true  // Include menuItem relation for updated order data
+            }
           },
           payments: true,
             table: true,
@@ -804,7 +813,10 @@ export class OrderService {
         include: {
           table: true,
           items: {
-            include: { item: true }
+            include: { 
+              item: true,
+              menuItem: true  // Include menuItem relation for completed order data
+            }
           }
         }
       });
@@ -829,7 +841,10 @@ export class OrderService {
         },
         include: {
           items: {
-            include: { item: true }
+            include: { 
+              item: true,
+              menuItem: true  // Include menuItem relation for completed order data
+            }
           },
           table: true,
           customer: true
