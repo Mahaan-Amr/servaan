@@ -19,20 +19,18 @@ export const getApiUrl = (): string => {
  */
 export const getBaseUrl = (): string => {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-  // Remove /api suffix if present
-  let cleanUrl = baseUrl.replace('/api', '');
   
-  // Ensure we have a proper protocol, preserving HTTPS if present
-  if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
-    // If the original URL was HTTPS, preserve it
-    if (baseUrl.startsWith('https://')) {
-      cleanUrl = 'https://' + cleanUrl;
-    } else {
-      cleanUrl = 'http://' + cleanUrl;
-    }
+  // Handle different URL formats properly
+  if (baseUrl.endsWith('/api')) {
+    // Remove /api suffix and return the base URL
+    return baseUrl.replace('/api', '');
+  } else if (baseUrl.includes('/api/')) {
+    // Handle cases like https://api.servaan.com/api -> https://api.servaan.com
+    return baseUrl.replace('/api', '');
+  } else {
+    // URL doesn't have /api, return as is
+    return baseUrl;
   }
-  
-  return cleanUrl;
 };
 
 // Export commonly used URLs
