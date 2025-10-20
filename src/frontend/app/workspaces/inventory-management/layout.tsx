@@ -252,8 +252,8 @@ export default function InventoryLayout({ children }: InventoryLayoutProps) {
           </div>
 
           {/* Main Content */}
-          <div className={`flex-1 transition-all duration-300 ${isSidebarExpanded ? 'mr-80' : 'mr-16'} overflow-y-auto`}>
-            <div className="h-full">
+          <div className={`flex-1 transition-all duration-300 ${isSidebarExpanded ? 'mr-80' : 'mr-16'}`}>
+            <div className="w-full">
               {children}
             </div>
           </div>

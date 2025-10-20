@@ -215,11 +215,11 @@ export default function SmsLayout({ children }: SmsLayoutProps) {
           </div>
 
           {/* Main Content */}
-          <div className={`flex-1 overflow-y-auto transition-all duration-300 ease-in-out ${
+          <div className={`flex-1 transition-all duration-300 ease-in-out ${
             isSidebarExpanded ? 'mr-80' : 'mr-16'
           }`}>
             <main className="min-h-full p-4 sm:p-6 max-w-7xl mx-auto">
-              <div className="h-full">
+              <div className="w-full">
                 {children}
               </div>
             </main>
