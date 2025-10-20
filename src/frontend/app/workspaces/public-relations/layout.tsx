@@ -40,7 +40,7 @@ export default function PublicRelationsLayout({ children }: PublicRelationsLayou
 
   return (
     <WorkspaceProtection workspaceId="public-relations">
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir="rtl">
+      <div className="w-full bg-gray-50 dark:bg-gray-900" dir="rtl">
         <div className="flex h-[calc(100vh-4rem)]">
           {/* Collapsible Hover Sidebar */}
           <div 

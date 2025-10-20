@@ -21,19 +21,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fa" dir="rtl">
-      <body>
+      <body className="flex flex-col min-h-screen">
         <TenantProvider>
         <AuthProvider>
           <WorkspaceProvider>
             <NotificationProvider>
               <ClientInitializer />
               <Navbar />
-              <main className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-12">
-                <div className="container mx-auto px-4 pt-6">
+              <main className="flex-1 bg-gray-50 dark:bg-gray-900">
+                <div className="container mx-auto px-4 pt-6 pb-6">
                   {children}
                 </div>
               </main>
-                <TenantAwareFooter />
+              <TenantAwareFooter />
               {/* Toast Notifications */}
               <Toaster
                 position="top-center"

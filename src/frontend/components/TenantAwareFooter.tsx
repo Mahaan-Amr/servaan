@@ -6,7 +6,7 @@ export function TenantAwareFooter() {
   const { tenant } = useTenant();
 
   return (
-    <footer className="bg-white dark:bg-gray-800 py-4 sm:py-6 border-t border-gray-200 dark:border-gray-700 relative z-60">
+    <footer className="bg-white dark:bg-gray-800 py-4 sm:py-6 border-t border-gray-200 dark:border-gray-700 mt-auto">
       <div className="container mx-auto px-3 sm:px-4">
         <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:justify-between lg:items-center">
           <div className="text-center lg:text-right">

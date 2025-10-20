@@ -75,8 +75,8 @@ export default function CrmLayout({ children }: CrmLayoutProps) {
 
   return (
     <WorkspaceProtection workspaceId="customer-relationship-management">
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900" dir="rtl">
-        <div className="flex h-[calc(100vh-4rem)]">
+      <div className="w-full bg-gray-50 dark:bg-gray-900" dir="rtl">
+        <div className="flex min-h-[calc(100vh-8rem)]">
           {/* Collapsible Hover Sidebar */}
           <div 
             className={`fixed right-0 top-16 h-[calc(100vh-4rem)] bg-white dark:bg-gray-800 shadow-lg border-l border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out z-50 ${
