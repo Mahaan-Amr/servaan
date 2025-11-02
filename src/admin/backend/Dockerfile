@@ -2,12 +2,47 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+# Configure npm for better network reliability
+RUN npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm config set fetch-timeout 300000 && \
+    npm config set registry https://registry.npmjs.org/
+
+# Optional: Configure proxy if provided via build args
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG http_proxy
+ARG https_proxy
+ENV HTTP_PROXY=${HTTP_PROXY}
+ENV HTTPS_PROXY=${HTTPS_PROXY}
+ENV http_proxy=${http_proxy}
+ENV https_proxy=${https_proxy}
+
 # Copy the entire project structure to maintain exact paths
 COPY . .
 
-# Install dependencies
+# Install dependencies with retry logic
 WORKDIR /app/src/admin/backend
-RUN npm ci
+RUN set -e; \
+    max_attempts=5; \
+    attempt=1; \
+    while [ $attempt -le $max_attempts ]; do \
+        echo "📦 Attempt $attempt/$max_attempts to install dependencies..." && \
+        if npm ci --no-audit --no-fund; then \
+            echo "✅ Dependencies installed successfully!" && \
+            break; \
+        else \
+            if [ $attempt -eq $max_attempts ]; then \
+                echo "❌ All attempts failed. Last attempt error:" && \
+                exit 1; \
+            else \
+                echo "⚠️ Attempt $attempt failed, waiting 15 seconds before retry..." && \
+                sleep 15; \
+            fi; \
+        fi; \
+        attempt=$((attempt + 1)); \
+    done
 
 # Generate Prisma client (this will create the shared/generated/client directory)
 WORKDIR /app/src/prisma
