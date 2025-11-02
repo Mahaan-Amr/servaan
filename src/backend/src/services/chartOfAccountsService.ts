@@ -49,7 +49,7 @@ export class ChartOfAccountsService {
     // Calculate level based on parent
     let level = 1;
     if (data.parentAccountId) {
-      const parent = await prisma.chartOfAccount.findUnique({
+      const parent = await prisma.chartOfAccount.findFirst({
         where: { 
           id: data.parentAccountId,
           tenantId: data.tenantId
@@ -264,6 +264,41 @@ export class ChartOfAccountsService {
       },
       orderBy: { accountCode: 'asc' }
     });
+  }
+
+  /**
+   * Validate presence of required baseline accounts for integrations
+   * گزارش حساب‌های ضروری که در هر مستاجر باید وجود داشته باشد
+   */
+  static async validateRequiredAccounts(tenantId: string): Promise<{
+    requiredCodes: string[];
+    missing: { code: string; description: string }[];
+    present: string[];
+  }> {
+    // Baseline accounts used by POS/Inventory/Tax flows (by accountCode)
+    const required: { code: string; description: string }[] = [
+      { code: '1101', description: 'Cash صندوق' },
+      { code: '1102', description: 'Bank بانک' },
+      { code: '1103', description: 'Accounts Receivable حساب‌های دریافتنی' },
+      { code: '1104', description: 'Inventory موجودی کالا' },
+      { code: '4101', description: 'Sales Revenue درآمد فروش' },
+      { code: '5100', description: 'COGS بهای تمام شده کالای فروخته شده' },
+      { code: '2102', description: 'VAT Payable مالیات پرداختنی' }
+    ];
+
+    const codes = required.map(r => r.code);
+    const existing = await prisma.chartOfAccount.findMany({
+      where: { tenantId, accountCode: { in: codes }, isActive: true },
+      select: { accountCode: true }
+    });
+    const present = new Set(existing.map(e => e.accountCode));
+    const missing = required.filter(r => !present.has(r.code));
+
+    return {
+      requiredCodes: codes,
+      missing,
+      present: Array.from(present)
+    };
   }
 
   /**

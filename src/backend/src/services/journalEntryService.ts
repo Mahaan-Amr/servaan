@@ -202,7 +202,7 @@ export class JournalEntryService {
     page: number = 1,
     limit: number = 50
   ) {
-    const whereClause: any = {};
+    const whereClause: any = { tenantId: filter.tenantId };
 
     if (filter.startDate || filter.endDate) {
       whereClause.entryDate = {};

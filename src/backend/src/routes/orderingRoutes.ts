@@ -191,167 +191,18 @@ router.get('/recipes/:id/price-analysis', RecipeController.getRecipePriceAnalysi
 router.put('/recipes/:recipeId/ingredients/:ingredientId/price', RecipeController.updateIngredientPrice);
 
 // ===================== INVENTORY INTEGRATION ROUTES =====================
-
-/**
- * Inventory integration endpoints for recipe-based stock management
- */
-router.get('/inventory/stock-validation/:menuItemId', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const tenantId = req.user?.tenantId;
-    const menuItemId = req.params.menuItemId;
-    const { quantity = 1 } = req.query;
-
-    if (!tenantId) {
-      throw new AppError('Authentication required', 401);
-    }
-
-    const { OrderInventoryIntegrationService } = await import('../services/orderInventoryIntegrationService');
-    const validation = await OrderInventoryIntegrationService.validateRecipeStockAvailability(
-      tenantId,
-      menuItemId,
-      Number(quantity)
-    );
-
-    res.json({
-      success: true,
-      data: validation,
-      message: 'Stock validation completed'
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.post('/inventory/validate-order-stock', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const tenantId = req.user?.tenantId;
-    const { orderItems } = req.body;
-
-    if (!tenantId) {
-      throw new AppError('Authentication required', 401);
-    }
-
-    if (!orderItems || !Array.isArray(orderItems)) {
-      throw new AppError('Order items array is required', 400);
-    }
-
-    const { OrderInventoryIntegrationService } = await import('../services/orderInventoryIntegrationService');
-    const validation = await OrderInventoryIntegrationService.validateOrderStockAvailability(
-      tenantId,
-      orderItems
-    );
-
-    res.json({
-      success: true,
-      data: validation,
-      message: 'Order stock validation completed'
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.post('/inventory/update-menu-availability', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const tenantId = req.user?.tenantId;
-
-    if (!tenantId) {
-      throw new AppError('Authentication required', 401);
-    }
-
-    const { OrderInventoryIntegrationService } = await import('../services/orderInventoryIntegrationService');
-    const result = await OrderInventoryIntegrationService.updateMenuItemAvailability(tenantId);
-
-    res.json({
-      success: true,
-      data: result,
-      message: `Menu availability updated: ${result.updated} items changed`
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.get('/inventory/low-stock-alerts', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const tenantId = req.user?.tenantId;
-
-    if (!tenantId) {
-      throw new AppError('Authentication required', 401);
-    }
-
-    console.log(`🔍 Getting low stock alerts for tenant: ${tenantId}`);
-
-    const { OrderInventoryIntegrationService } = await import('../services/orderInventoryIntegrationService');
-    const alerts = await OrderInventoryIntegrationService.getRecipeIngredientLowStockAlerts(tenantId);
-
-    console.log('⚠️ Low stock alerts:', JSON.stringify(alerts, null, 2));
-
-    const response = {
-      success: true,
-      data: alerts,
-      message: 'Low stock alerts retrieved'
-    };
-
-    console.log('📤 Sending alerts response:', JSON.stringify(response, null, 2));
-
-    res.json(response);
-  } catch (error) {
-    console.error('❌ Error in low stock alerts:', error);
-    next(error);
-  }
-});
-
-router.post('/inventory/update-recipe-costs', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const tenantId = req.user?.tenantId;
-
-    if (!tenantId) {
-      throw new AppError('Authentication required', 401);
-    }
-
-    const { OrderInventoryIntegrationService } = await import('../services/orderInventoryIntegrationService');
-    const result = await OrderInventoryIntegrationService.updateRecipeCosts(tenantId);
-
-    res.json({
-      success: true,
-      data: result,
-      message: `Recipe costs updated: ${result.updated} recipes changed`
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.get('/inventory/integration-status', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const tenantId = req.user?.tenantId;
-
-    if (!tenantId) {
-      throw new AppError('Authentication required', 401);
-    }
-
-    console.log(`🔍 Getting inventory integration status for tenant: ${tenantId}`);
-
-    const { OrderInventoryIntegrationService } = await import('../services/orderInventoryIntegrationService');
-    const status = await OrderInventoryIntegrationService.getInventoryIntegrationStatus(tenantId);
-
-    console.log('📦 Inventory integration status:', JSON.stringify(status, null, 2));
-
-    const response = {
-      success: true,
-      data: status,
-      message: 'Inventory integration status retrieved'
-    };
-
-    console.log('📤 Sending inventory response:', JSON.stringify(response, null, 2));
-
-    res.json(response);
-  } catch (error) {
-    console.error('❌ Error in inventory integration status:', error);
-    next(error);
-  }
-});
+// 
+// NOTE: Inventory integration endpoints have been moved to /api/inventory/*
+// See inventoryRoutes.ts for the following endpoints:
+// - GET  /api/inventory/stock-validation/:menuItemId (flexible validation)
+// - POST /api/inventory/validate-order-stock (flexible validation)
+// - POST /api/inventory/update-menu-availability
+// - GET  /api/inventory/low-stock-alerts
+// - POST /api/inventory/update-recipe-costs
+// - GET  /api/inventory/integration-status
+// - POST /api/inventory/stock-override
+// - GET  /api/inventory/stock-override-analytics
+// - GET  /api/inventory/stock-validation-config
 
 // ===================== ACCOUNTING INTEGRATION ROUTES =====================
 
@@ -708,42 +559,6 @@ router.patch('/kitchen/displays/:id/priority', async (req: Request, res: Respons
   }
 });
 
-// Update kitchen display status
-router.patch('/kitchen/displays/:id/status', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const tenantId = req.user?.tenantId;
-    const kitchenDisplayId = req.params.id;
-    const { status } = req.body;
-
-    if (!tenantId) {
-      throw new AppError('Authentication required', 401);
-    }
-
-    if (!kitchenDisplayId) {
-      throw new AppError('Kitchen display ID is required', 400);
-    }
-
-    if (!status) {
-      throw new AppError('Status is required', 400);
-    }
-
-    const updatedDisplay = await KitchenDisplayService.updateKitchenDisplayStatus(
-      tenantId,
-      kitchenDisplayId,
-      status,
-      req.user?.id
-    );
-
-    res.json({
-      success: true,
-      data: updatedDisplay,
-      message: 'Kitchen display status updated successfully'
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
 router.get('/kitchen/performance', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.user?.tenantId;
@@ -906,9 +721,31 @@ router.get('/analytics/top-items', async (req: Request, res: Response, next: Nex
       throw new AppError('Authentication required', 401);
     }
 
-    // This would require analysis of order items
-    // For now, return featured items as placeholder
-    const result = await MenuController.getFeaturedItems(req, res, next);
+    // Parse date range from query parameters (default: last 30 days)
+    const startDate = req.query.startDate 
+      ? new Date(req.query.startDate as string) 
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const endDate = req.query.endDate 
+      ? new Date(req.query.endDate as string) 
+      : new Date();
+
+    // Get limit from query (default: 10)
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+
+    console.log('📊 [ORDERING_ROUTES] Getting top selling items for tenant:', tenantId);
+    console.log('📊 [ORDERING_ROUTES] Date range:', { startDate, endDate, limit });
+
+    // Get top selling items from analytics service
+    const topItems = await OrderingAnalyticsService.getTopSellingItems(tenantId, startDate, endDate);
+
+    // Apply limit if specified
+    const limitedItems = topItems.slice(0, limit);
+
+    res.json({
+      success: true,
+      data: limitedItems,
+      message: 'Top selling items retrieved successfully'
+    });
   } catch (error) {
     next(error);
   }
@@ -922,11 +759,31 @@ router.get('/analytics/hourly-sales', async (req: Request, res: Response, next: 
       throw new AppError('Authentication required', 401);
     }
 
-    // This would be implemented with order data analysis
+    // Parse date range from query parameters (default: last 30 days)
+    const startDate = req.query.startDate 
+      ? new Date(req.query.startDate as string) 
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const endDate = req.query.endDate 
+      ? new Date(req.query.endDate as string) 
+      : new Date();
+
+    console.log('📊 [ORDERING_ROUTES] Getting hourly sales for tenant:', tenantId);
+    console.log('📊 [ORDERING_ROUTES] Date range:', { startDate, endDate });
+
+    // Get hourly breakdown from analytics service
+    const hourlySales = await OrderingAnalyticsService.getHourlyBreakdown(tenantId, startDate, endDate);
+
+    // Ensure all 24 hours are represented (fill missing hours with 0)
+    const hourlyMap = new Map(hourlySales.map(h => [h.hour, h]));
+    const completeHourlyData = Array.from({ length: 24 }, (_, hour) => {
+      const existing = hourlyMap.get(hour);
+      return existing || { hour, orders: 0, revenue: 0 };
+    });
+
     res.json({
       success: true,
-      data: [],
-      message: 'Hourly sales data not yet implemented'
+      data: completeHourlyData,
+      message: 'Hourly sales data retrieved successfully'
     });
   } catch (error) {
     next(error);

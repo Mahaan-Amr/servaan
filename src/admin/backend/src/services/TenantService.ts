@@ -143,6 +143,18 @@ export class TenantService {
       include: { features: true }
     });
 
+    // Idempotent COA seeding: only if no accounts exist
+    try {
+      const existingCoaCount = await prisma.chartOfAccount.count({ where: { tenantId: tenant.id } });
+      if (existingCoaCount === 0 && tenant.features?.hasAccountingSystem !== false) {
+        const { ChartOfAccountsService } = await import('../../../../backend/src/services/chartOfAccountsService');
+        await ChartOfAccountsService.initializeIranianChartOfAccounts(tenant.id);
+      }
+    } catch (seedError) {
+      console.error('Failed to seed Chart of Accounts for tenant', tenant.subdomain, seedError);
+      // Non-fatal: admin can initialize later via API
+    }
+
     return tenant;
   }
   /**

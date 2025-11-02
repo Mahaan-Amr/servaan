@@ -161,19 +161,22 @@ export class OrderAccountingIntegrationService {
       // 1. Debit: Cash/Bank/Accounts Receivable (based on payment method)
       const cashAccount = await prisma.chartOfAccount.findFirst({
         where: {
+          tenantId,
           accountCode: '1101' // صندوق
         }
       });
 
       const bankAccount = await prisma.chartOfAccount.findFirst({
         where: {
+          tenantId,
           accountCode: '1102' // بانک
         }
       });
 
       const accountsReceivableAccount = await prisma.chartOfAccount.findFirst({
         where: {
-          accountCode: '1201' // حساب‌های دریافتنی
+          tenantId,
+          accountCode: '1103' // حساب‌های دریافتنی
         }
       });
 
@@ -196,7 +199,8 @@ export class OrderAccountingIntegrationService {
       // 2. Debit: COGS (Cost of Goods Sold)
       const cogsAccount = await prisma.chartOfAccount.findFirst({
         where: {
-          accountCode: '5101' // بهای تمام شده کالای فروش رفته
+          tenantId,
+          accountCode: '5100' // بهای تمام شده کالای فروخته شده
         }
       });
 
@@ -214,6 +218,7 @@ export class OrderAccountingIntegrationService {
       // 3. Credit: Sales Revenue
       const salesAccount = await prisma.chartOfAccount.findFirst({
         where: {
+          tenantId,
           accountCode: '4101' // درآمد فروش
         }
       });
@@ -231,7 +236,8 @@ export class OrderAccountingIntegrationService {
       if (orderData.taxAmount > 0) {
         const vatAccount = await prisma.chartOfAccount.findFirst({
           where: {
-            accountCode: '2201' // مالیات بر ارزش افزوده
+            tenantId,
+            accountCode: '2102' // مالیات پرداختنی (VAT payable)
           }
         });
 
@@ -248,7 +254,8 @@ export class OrderAccountingIntegrationService {
       // 5. Credit: Inventory (for COGS)
       const inventoryAccount = await prisma.chartOfAccount.findFirst({
         where: {
-          accountCode: '1301' // موجودی کالا
+          tenantId,
+          accountCode: '1104' // موجودی کالا
         }
       });
 
@@ -309,6 +316,7 @@ export class OrderAccountingIntegrationService {
       // 1. Debit: Sales Revenue (reversal)
       const salesAccount = await prisma.chartOfAccount.findFirst({
         where: {
+          tenantId,
           accountCode: '4101' // درآمد فروش
         }
       });
@@ -326,7 +334,8 @@ export class OrderAccountingIntegrationService {
       if (refundData.refundTaxAmount > 0) {
         const vatAccount = await prisma.chartOfAccount.findFirst({
           where: {
-            accountCode: '2201' // مالیات بر ارزش افزوده
+            tenantId,
+            accountCode: '2102' // مالیات پرداختنی (VAT payable)
           }
         });
 
@@ -345,12 +354,14 @@ export class OrderAccountingIntegrationService {
       // 3. Credit: Cash/Bank/Accounts Receivable (refund payment)
       const cashAccount = await prisma.chartOfAccount.findFirst({
         where: {
+          tenantId,
           accountCode: '1101' // صندوق
         }
       });
 
       const bankAccount = await prisma.chartOfAccount.findFirst({
         where: {
+          tenantId,
           accountCode: '1102' // بانک
         }
       });
@@ -373,7 +384,8 @@ export class OrderAccountingIntegrationService {
       if (refundData.refundCOGS > 0) {
         const cogsAccount = await prisma.chartOfAccount.findFirst({
           where: {
-            accountCode: '5101' // بهای تمام شده کالای فروش رفته
+            tenantId,
+            accountCode: '5100' // بهای تمام شده کالای فروخته شده
           }
         });
 
@@ -391,7 +403,8 @@ export class OrderAccountingIntegrationService {
       if (refundData.refundCOGS > 0) {
         const inventoryAccount = await prisma.chartOfAccount.findFirst({
           where: {
-            accountCode: '1301' // موجودی کالا
+            tenantId,
+            accountCode: '1104' // موجودی کالا
           }
         });
 

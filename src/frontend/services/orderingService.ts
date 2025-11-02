@@ -77,8 +77,8 @@ async function apiRequest<T = unknown>(
     const data = await response.json();
     console.log('✅ [API_REQUEST] Success response:', data);
     
-    // For kitchen endpoints, return the full response to preserve success flag and data structure
-    if (endpoint.includes('/kitchen/')) {
+    // For kitchen and payments endpoints, return the full response to preserve success flag and data structure
+    if (endpoint.includes('/kitchen/') || endpoint.includes('/payments')) {
       return data;
     }
     
@@ -276,6 +276,13 @@ export class OrderService {
     return apiRequest(`/orders/${orderId}/cancel`, {
       method: 'POST',
       body: JSON.stringify({ reason, refundAmount }),
+    });
+  }
+
+  // Complete order
+  static async completeOrder(orderId: string) {
+    return apiRequest(`/orders/${orderId}/complete`, {
+      method: 'POST',
     });
   }
 
@@ -481,6 +488,36 @@ export class TableService {
     return apiRequest(`/tables/reservations?${queryParams.toString()}`);
   }
 
+  // Update reservation
+  static async updateReservation(
+    reservationId: string,
+    updateData: {
+      tableId?: string;
+      customerId?: string;
+      customerName?: string;
+      customerPhone?: string;
+      customerEmail?: string;
+      guestCount?: number;
+      reservationDate?: string;
+      duration?: number;
+      status?: string;
+      notes?: string;
+    }
+  ) {
+    return apiRequest(`/tables/reservations/${reservationId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updateData),
+    });
+  }
+
+  // Cancel reservation
+  static async cancelReservation(reservationId: string, reason?: string) {
+    return apiRequest(`/tables/reservations/${reservationId}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
   // Get upcoming reservations
   static async getUpcomingReservations() {
     return apiRequest(`/tables/reservations/upcoming`);
@@ -620,18 +657,74 @@ export class PaymentService {
     });
   }
 
-  // Get payments
-  static async getPayments(options: { status?: string; method?: string; dateFrom?: string; dateTo?: string; orderId?: string } = {}) {
+  // Get payments with comprehensive filtering
+  static async getPayments(options: {
+    status?: string | string[];
+    method?: string | string[];
+    dateFrom?: string;
+    dateTo?: string;
+    startDate?: string;
+    endDate?: string;
+    orderId?: string;
+    paymentStatus?: string | string[];
+    paymentMethod?: string | string[];
+    minAmount?: number;
+    maxAmount?: number;
+    search?: string;
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  } = {}) {
     const queryParams = new URLSearchParams();
-    Object.entries(options).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        if (Array.isArray(value)) {
-          value.forEach(item => queryParams.append(key, item.toString()));
-        } else {
-          queryParams.append(key, value.toString());
-        }
+    
+    // Handle backward compatibility and new fields
+    if (options.status) {
+      if (Array.isArray(options.status)) {
+        options.status.forEach(item => queryParams.append('paymentStatus', item.toString()));
+      } else {
+        queryParams.append('paymentStatus', options.status.toString());
       }
-    });
+    }
+    
+    if (options.paymentStatus) {
+      if (Array.isArray(options.paymentStatus)) {
+        options.paymentStatus.forEach(item => queryParams.append('paymentStatus', item.toString()));
+      } else {
+        queryParams.append('paymentStatus', options.paymentStatus.toString());
+      }
+    }
+    
+    if (options.method) {
+      if (Array.isArray(options.method)) {
+        options.method.forEach(item => queryParams.append('paymentMethod', item.toString()));
+      } else {
+        queryParams.append('paymentMethod', options.method.toString());
+      }
+    }
+    
+    if (options.paymentMethod) {
+      if (Array.isArray(options.paymentMethod)) {
+        options.paymentMethod.forEach(item => queryParams.append('paymentMethod', item.toString()));
+      } else {
+        queryParams.append('paymentMethod', options.paymentMethod.toString());
+      }
+    }
+    
+    // Handle date fields (backward compatibility)
+    const startDate = options.startDate || options.dateFrom;
+    const endDate = options.endDate || options.dateTo;
+    
+    if (startDate) queryParams.append('startDate', startDate);
+    if (endDate) queryParams.append('endDate', endDate);
+    if (options.orderId) queryParams.append('orderId', options.orderId);
+    if (options.minAmount !== undefined) queryParams.append('minAmount', options.minAmount.toString());
+    if (options.maxAmount !== undefined) queryParams.append('maxAmount', options.maxAmount.toString());
+    if (options.search) queryParams.append('search', options.search);
+    if (options.page) queryParams.append('page', options.page.toString());
+    if (options.limit) queryParams.append('limit', options.limit.toString());
+    if (options.sortBy) queryParams.append('sortBy', options.sortBy);
+    if (options.sortOrder) queryParams.append('sortOrder', options.sortOrder);
 
     return apiRequest(`/payments?${queryParams.toString()}`);
   }
@@ -656,6 +749,38 @@ export class PaymentService {
     return apiRequest('/payments/validate', {
       method: 'POST',
       body: JSON.stringify(paymentData),
+    });
+  }
+
+  // Get payment statistics
+  static async getPaymentStatistics(startDate?: string, endDate?: string) {
+    const queryParams = new URLSearchParams();
+    if (startDate) queryParams.append('startDate', startDate);
+    if (endDate) queryParams.append('endDate', endDate);
+
+    return apiRequest(`/payments/statistics?${queryParams.toString()}`);
+  }
+
+  // Get pending payments
+  static async getPendingPayments() {
+    return apiRequest('/payments/pending');
+  }
+
+  // Get failed payments
+  static async getFailedPayments() {
+    return apiRequest('/payments/failed');
+  }
+
+  // Get cash management report
+  static async getCashManagementReport(date?: string) {
+    const queryParams = date ? `?date=${date}` : '';
+    return apiRequest(`/payments/cash-management${queryParams}`);
+  }
+
+  // Retry failed payment
+  static async retryPayment(paymentId: string) {
+    return apiRequest(`/payments/${paymentId}/retry`, {
+      method: 'POST',
     });
   }
 }
@@ -896,13 +1021,192 @@ export class AnalyticsService {
   }
 
   // Get top items
-  static async getTopItems() {
-    return apiRequest('/analytics/top-items');
+  static async getTopItems(startDate?: string, endDate?: string, limit?: number) {
+    const queryParams = new URLSearchParams();
+    if (startDate) queryParams.append('startDate', startDate);
+    if (endDate) queryParams.append('endDate', endDate);
+    if (limit) queryParams.append('limit', limit.toString());
+
+    const queryString = queryParams.toString();
+    return apiRequest(`/analytics/top-items${queryString ? `?${queryString}` : ''}`);
   }
 
   // Get hourly sales
-  static async getHourlySales() {
-    return apiRequest('/analytics/hourly-sales');
+  static async getHourlySales(startDate?: string, endDate?: string) {
+    const queryParams = new URLSearchParams();
+    if (startDate) queryParams.append('startDate', startDate);
+    if (endDate) queryParams.append('endDate', endDate);
+
+    const queryString = queryParams.toString();
+    return apiRequest(`/analytics/hourly-sales${queryString ? `?${queryString}` : ''}`);
+  }
+
+  // Export analytics data to CSV
+  static async exportToCSV(
+    startDate?: string,
+    endDate?: string,
+    dataType: 'sales' | 'customers' | 'kitchen' | 'tables' | 'all' = 'all'
+  ): Promise<void> {
+    const queryParams = new URLSearchParams();
+    if (startDate) queryParams.append('startDate', startDate);
+    if (endDate) queryParams.append('endDate', endDate);
+    if (dataType) queryParams.append('dataType', dataType);
+
+    const url = `${ORDERING_API_BASE}/analytics/export/csv?${queryParams.toString()}`;
+    
+    // Get authentication token
+    const token = typeof window !== 'undefined' 
+      ? localStorage.getItem('token') || sessionStorage.getItem('token') 
+      : null;
+    
+    // Get tenant subdomain
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+    let subdomain = 'dima';
+    
+    if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
+      const parts = hostname.split('.');
+      if (parts.length >= 2 && parts[parts.length - 1] === 'localhost') {
+        subdomain = parts[0];
+      } else {
+        subdomain = 'dima';
+      }
+    } else {
+      const parts = hostname.split('.');
+      if (parts.length >= 3) {
+        subdomain = parts[0];
+      } else {
+        subdomain = 'dima';
+      }
+    }
+
+    const headers: Record<string, string> = {
+      'X-Tenant-Subdomain': subdomain,
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+        cache: 'no-store',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      
+      // Extract filename from Content-Disposition header or create default
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = `analytics-${dataType}-${startDate || 'start'}-to-${endDate || 'end'}.csv`;
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?(.+?)"?$/i);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(blobUrl);
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error exporting to CSV:', error);
+      throw error;
+    }
+  }
+
+  // Export analytics data to JSON
+  static async exportToJSON(
+    startDate?: string,
+    endDate?: string,
+    dataType: 'sales' | 'customers' | 'kitchen' | 'tables' | 'all' = 'all'
+  ): Promise<void> {
+    const queryParams = new URLSearchParams();
+    if (startDate) queryParams.append('startDate', startDate);
+    if (endDate) queryParams.append('endDate', endDate);
+    if (dataType) queryParams.append('dataType', dataType);
+
+    const url = `${ORDERING_API_BASE}/analytics/export/json?${queryParams.toString()}`;
+    
+    // Get authentication token
+    const token = typeof window !== 'undefined' 
+      ? localStorage.getItem('token') || sessionStorage.getItem('token') 
+      : null;
+    
+    // Get tenant subdomain
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+    let subdomain = 'dima';
+    
+    if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
+      const parts = hostname.split('.');
+      if (parts.length >= 2 && parts[parts.length - 1] === 'localhost') {
+        subdomain = parts[0];
+      } else {
+        subdomain = 'dima';
+      }
+    } else {
+      const parts = hostname.split('.');
+      if (parts.length >= 3) {
+        subdomain = parts[0];
+      } else {
+        subdomain = 'dima';
+      }
+    }
+
+    const headers: Record<string, string> = {
+      'X-Tenant-Subdomain': subdomain,
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+        cache: 'no-store',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      
+      // Extract filename from Content-Disposition header or create default
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = `analytics-${dataType}-${startDate || 'start'}-to-${endDate || 'end'}.json`;
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?(.+?)"?$/i);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(blobUrl);
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error exporting to JSON:', error);
+      throw error;
+    }
   }
 }
 
@@ -1091,20 +1395,20 @@ export interface InventoryIntegrationStatus {
 }
 
 export class InventoryIntegrationService {
-  // Validate stock availability for a single menu item
+  // Validate stock availability for a single menu item (legacy - use validateFlexibleStockAvailability)
   static async validateStockAvailability(menuItemId: string, quantity: number = 1): Promise<StockValidationResult> {
-    return apiRequest(`/inventory/stock-validation/${menuItemId}?quantity=${quantity}`);
+    return inventoryApiRequest(`/stock-validation/${menuItemId}?quantity=${quantity}`);
   }
 
-  // Validate stock availability for multiple order items
+  // Validate stock availability for multiple order items (legacy - use validateFlexibleOrderStock)
   static async validateOrderStock(orderItems: { menuItemId: string; quantity: number }[]): Promise<OrderStockValidationResult> {
-    return apiRequest('/inventory/validate-order-stock', {
+    return inventoryApiRequest('/validate-order-stock', {
       method: 'POST',
       body: JSON.stringify({ orderItems }),
     });
   }
 
-  // NEW: Flexible stock validation with warnings and override capabilities
+  // Flexible stock validation with warnings and override capabilities
   static async validateFlexibleStockAvailability(menuItemId: string, quantity: number = 1): Promise<{
     isAvailable: boolean;
     hasWarnings: boolean;
@@ -1131,10 +1435,10 @@ export class InventoryIntegrationService {
     canProceedWithOverride: boolean;
     overrideRequired: boolean;
   }> {
-    return apiRequest(`/inventory/stock-validation/${menuItemId}?quantity=${quantity}`);
+    return inventoryApiRequest(`/stock-validation/${menuItemId}?quantity=${quantity}`);
   }
 
-  // NEW: Validate flexible stock for multiple order items with warnings
+  // Validate flexible stock for multiple order items with warnings
   static async validateFlexibleOrderStock(orderItems: { menuItemId: string; quantity: number }[]): Promise<{
     isValid: boolean;
     hasWarnings: boolean;
@@ -1172,13 +1476,13 @@ export class InventoryIntegrationService {
     criticalWarnings: number;
     totalWarnings: number;
   }> {
-    return apiRequest('/inventory/validate-order-stock', {
+    return inventoryApiRequest('/validate-order-stock', {
       method: 'POST',
       body: JSON.stringify({ orderItems }),
     });
   }
 
-  // NEW: Record stock override when staff proceeds despite warnings
+  // Record stock override when staff proceeds despite warnings
   static async recordStockOverride(overrideData: {
     orderId: string;
     menuItemId: string;
@@ -1204,13 +1508,13 @@ export class InventoryIntegrationService {
     overriddenAt: string;
     notes?: string;
   }> {
-    return apiRequest('/inventory/stock-override', {
+    return inventoryApiRequest('/stock-override', {
       method: 'POST',
       body: JSON.stringify(overrideData),
     });
   }
 
-  // NEW: Get stock override analytics
+  // Get stock override analytics
   static async getStockOverrideAnalytics(startDate?: string, endDate?: string): Promise<{
     totalOverrides: number;
     overridesByType: Record<string, number>;
@@ -1237,10 +1541,10 @@ export class InventoryIntegrationService {
     if (startDate) queryParams.append('startDate', startDate);
     if (endDate) queryParams.append('endDate', endDate);
 
-    return apiRequest(`/inventory/stock-override-analytics?${queryParams.toString()}`);
+    return inventoryApiRequest(`/stock-override-analytics?${queryParams.toString()}`);
   }
 
-  // NEW: Get stock validation configuration
+  // Get stock validation configuration
   static async getStockValidationConfig(): Promise<{
     validationMode: 'STRICT' | 'FLEXIBLE' | 'DISABLED';
     allowStaffOverride: boolean;
@@ -1253,19 +1557,19 @@ export class InventoryIntegrationService {
     };
     overrideTypes: string[];
   }> {
-    return apiRequest('/inventory/stock-validation-config');
+    return inventoryApiRequest('/stock-validation-config');
   }
 
   // Update menu item availability based on ingredient stock
   static async updateMenuAvailability(): Promise<MenuAvailabilityUpdate> {
-    return apiRequest('/inventory/update-menu-availability', {
+    return inventoryApiRequest('/update-menu-availability', {
       method: 'POST',
     });
   }
 
   // Get low stock alerts for recipe ingredients
   static async getLowStockAlerts(): Promise<{ criticalIngredients: LowStockAlert[] }> {
-    return apiRequest('/inventory/low-stock-alerts');
+    return inventoryApiRequest('/low-stock-alerts');
   }
 
   // Update recipe costs when ingredient prices change
@@ -1280,14 +1584,14 @@ export class InventoryIntegrationService {
       newCostPerServing: number;
     }[];
   }> {
-    return apiRequest('/inventory/update-recipe-costs', {
+    return inventoryApiRequest('/update-recipe-costs', {
       method: 'POST',
     });
   }
 
   // Get comprehensive inventory integration status
   static async getIntegrationStatus(): Promise<InventoryIntegrationStatus> {
-    return apiRequest('/inventory/integration-status');
+    return inventoryApiRequest('/integration-status');
   }
 }
 

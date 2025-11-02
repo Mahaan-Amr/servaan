@@ -84,6 +84,31 @@ export class AccountingController {
   }
 
   /**
+   * Validate required accounts
+   * اعتبارسنجی حساب‌های ضروری برای هر مستاجر
+   * GET /api/accounting/chart-of-accounts/validate
+   */
+  static async validateChartOfAccounts(req: Request, res: Response) {
+    try {
+      const tenantId = req.tenant?.id;
+      if (!tenantId) {
+        return res.status(400).json({ success: false, message: 'Tenant context required' });
+      }
+
+      const result = await ChartOfAccountsService.validateRequiredAccounts(tenantId);
+      return res.status(200).json({ success: true, data: result });
+    } catch (error: any) {
+      console.error('Error validating chart of accounts:', error);
+      res.status(500).json({
+        success: false,
+        message: 'خطا در اعتبارسنجی دفتر حساب‌ها',
+        messageEn: 'Error validating chart of accounts',
+        error: error.message
+      });
+    }
+  }
+
+  /**
    * Create new account
    * ایجاد حساب جدید
    */
@@ -393,7 +418,7 @@ export class AccountingController {
       if (search) filter.search = search as string;
       
       const result = await JournalEntryService.getJournalEntries(
-        filter,
+        { ...filter, tenantId: req.tenant?.id as string },
         parseInt(page as string),
         parseInt(limit as string)
       );
@@ -996,9 +1021,9 @@ export class AccountingController {
           error: 'Tenant context required'
         });
       }
-      // Total accounts
+      // Total accounts (tenant-scoped)
       const totalAccounts = await prisma.chartOfAccount.count({
-        where: { isActive: true }
+        where: { isActive: true, tenantId }
       });
       // Monthly entries
       const now = new Date();

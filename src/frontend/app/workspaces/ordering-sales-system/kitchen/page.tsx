@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'react-hot-toast';
-import { KitchenService } from '../../../../services/orderingService';
+import { KitchenService, AnalyticsService } from '../../../../services/orderingService';
 import { OrderStatus, OrderType, ORDER_STATUS_LABELS, ORDER_TYPE_LABELS, KitchenDisplayOrder } from '../../../../types/ordering';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { io } from 'socket.io-client';
@@ -69,6 +69,57 @@ interface ApiResponse<T> {
   message: string;
 }
 
+interface KitchenDashboardData {
+  activeOrders: number;
+  completedToday: number;
+  averageWaitTime: number;
+  stationStatus: Array<{
+    station: string;
+    activeOrders: number;
+    status: 'busy' | 'moderate' | 'light';
+  }>;
+  lastUpdated?: Date;
+}
+
+interface KitchenPerformanceMetrics {
+  totalOrders: number;
+  averagePrepTime: number;
+  onTimeDelivery: number;
+  stationPerformance?: Array<{
+    station: string;
+    totalOrders: number;
+    averagePrepTime: number;
+    onTimeRate: number;
+    currentLoad?: number;
+  }>;
+}
+
+interface KitchenWorkloadData {
+  station: string;
+  pending: number;
+  preparing: number;
+  total: number;
+  averagePriority: number;
+}
+
+interface ComprehensiveKitchenPerformance {
+  totalOrders: number;
+  averagePrepTime: number;
+  onTimeDelivery: number;
+  delayedOrders?: number;
+  efficiency: number;
+  topItems?: Array<{
+    itemName: string;
+    orderCount: number;
+    averagePrepTime: number;
+  }>;
+  performanceByHour?: Array<{
+    hour: number;
+    orders: number;
+    averagePrepTime: number;
+  }>;
+}
+
 // Filter and sort options
 interface KitchenDisplayFilters {
   status: OrderStatus[];
@@ -99,6 +150,15 @@ export default function KitchenDisplayPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [activeTab, setActiveTab] = useState<'orders' | 'analytics'>('orders');
+  
+  // Analytics state
+  const [dashboardData, setDashboardData] = useState<KitchenDashboardData | null>(null);
+  const [performanceMetrics, setPerformanceMetrics] = useState<KitchenPerformanceMetrics | null>(null);
+  const [workloadData, setWorkloadData] = useState<KitchenWorkloadData[]>([]);
+  const [comprehensivePerformance, setComprehensivePerformance] = useState<ComprehensiveKitchenPerformance | null>(null);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+  const [analyticsDateRange, setAnalyticsDateRange] = useState<{ startDate?: Date; endDate?: Date }>({});
   
   // Refs for timers
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -334,6 +394,52 @@ export default function KitchenDisplayPage() {
   useEffect(() => {
     loadKitchenData();
   }, [loadKitchenData]);
+
+  // Load analytics data
+  const loadAnalyticsData = useCallback(async () => {
+    try {
+      setLoadingAnalytics(true);
+      
+      const startDate = analyticsDateRange.startDate?.toISOString().split('T')[0];
+      const endDate = analyticsDateRange.endDate?.toISOString().split('T')[0];
+      
+      // Load all analytics data in parallel
+      const [dashboard, performance, workload, comprehensive] = await Promise.all([
+        KitchenService.getKitchenDashboard(),
+        KitchenService.getKitchenPerformanceMetrics(startDate, endDate),
+        KitchenService.getKitchenWorkload(),
+        AnalyticsService.getKitchenPerformance(startDate, endDate)
+      ]);
+      
+      // Handle response structures
+      const dashboardResponse = dashboard as ApiResponse<KitchenDashboardData> | KitchenDashboardData;
+      const performanceResponse = performance as ApiResponse<KitchenPerformanceMetrics> | KitchenPerformanceMetrics;
+      const workloadResponse = workload as ApiResponse<KitchenWorkloadData[]> | KitchenWorkloadData[];
+      const comprehensiveResponse = comprehensive as ApiResponse<ComprehensiveKitchenPerformance> | ComprehensiveKitchenPerformance;
+      
+      const dashboardResult = 'data' in dashboardResponse ? dashboardResponse.data : dashboardResponse;
+      const performanceResult = 'data' in performanceResponse ? performanceResponse.data : performanceResponse;
+      const workloadResult = 'data' in workloadResponse ? workloadResponse.data : workloadResponse;
+      const comprehensiveResult = 'data' in comprehensiveResponse ? comprehensiveResponse.data : comprehensiveResponse;
+      
+      setDashboardData(dashboardResult);
+      setPerformanceMetrics(performanceResult);
+      setWorkloadData(Array.isArray(workloadResult) ? workloadResult : []);
+      setComprehensivePerformance(comprehensiveResult);
+    } catch (error) {
+      console.error('❌ [KITCHEN_DISPLAY] Error loading analytics:', error);
+      toast.error('خطا در بارگذاری آمار آشپزخانه');
+    } finally {
+      setLoadingAnalytics(false);
+    }
+  }, [analyticsDateRange]);
+
+  // Load analytics when tab switches to analytics
+  useEffect(() => {
+    if (activeTab === 'analytics' && !dashboardData) {
+      loadAnalyticsData();
+    }
+  }, [activeTab, dashboardData, loadAnalyticsData]);
 
 
   // Enhanced order priority update
@@ -582,6 +688,30 @@ export default function KitchenDisplayPage() {
             </div>
           </div>
           
+          {/* Tab Switcher */}
+          <div className="flex items-center space-x-2 space-x-reverse mt-4 border-b border-gray-200 dark:border-gray-700">
+            <button
+              onClick={() => setActiveTab('orders')}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'orders'
+                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+              }`}
+            >
+              سفارشات
+            </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'analytics'
+                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+              }`}
+            >
+              آمار و تحلیل
+            </button>
+          </div>
+
           {/* Station Selector and Info */}
           <div className="flex items-center justify-between mt-4">
             <div className="flex items-center space-x-4 space-x-reverse">
@@ -724,16 +854,19 @@ export default function KitchenDisplayPage() {
 
       {/* Main Content */}
       <div className="p-6">
-      {/* Loading State */}
-      {loading && (
-        <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <span className="mr-3 text-lg text-gray-600 dark:text-gray-400">در حال بارگذاری...</span>
-        </div>
-      )}
+      {/* Orders Tab */}
+      {activeTab === 'orders' && (
+        <>
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <span className="mr-3 text-lg text-gray-600 dark:text-gray-400">در حال بارگذاری...</span>
+            </div>
+          )}
 
-      {/* Kitchen Display Board */}
-      {!loading && (
+          {/* Kitchen Display Board */}
+          {!loading && (
           <div className="space-y-6">
             {Object.entries(groupedOrders()).map(([status, statusOrders]) => {
               if (statusOrders.length === 0) return null;
@@ -798,6 +931,279 @@ export default function KitchenDisplayPage() {
             </button>
           </div>
         )}
+        </>
+      )}
+
+      {/* Analytics Tab */}
+      {activeTab === 'analytics' && (
+        <div className="space-y-6">
+          {/* Date Range Selector */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center space-x-4 space-x-reverse">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                بازه زمانی:
+              </label>
+              <input
+                type="date"
+                value={analyticsDateRange.startDate?.toISOString().split('T')[0] || ''}
+                onChange={(e) => setAnalyticsDateRange(prev => ({ ...prev, startDate: e.target.value ? new Date(e.target.value) : undefined }))}
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
+              />
+              <span className="text-gray-500">تا</span>
+              <input
+                type="date"
+                value={analyticsDateRange.endDate?.toISOString().split('T')[0] || ''}
+                onChange={(e) => setAnalyticsDateRange(prev => ({ ...prev, endDate: e.target.value ? new Date(e.target.value) : undefined }))}
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
+              />
+              <button
+                onClick={loadAnalyticsData}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                بروزرسانی
+              </button>
+            </div>
+          </div>
+
+          {loadingAnalytics ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <span className="mr-3 text-lg text-gray-600 dark:text-gray-400">در حال بارگذاری آمار...</span>
+            </div>
+          ) : (
+            <>
+              {/* Real-time Dashboard */}
+              {dashboardData && (
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">داشبورد لحظه‌ای</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">سفارشات فعال</div>
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">
+                        {toFarsiDigits(dashboardData.activeOrders || 0)}
+                      </div>
+                    </div>
+                    <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">تکمیل شده امروز</div>
+                      <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
+                        {toFarsiDigits(dashboardData.completedToday || 0)}
+                      </div>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">میانگین زمان انتظار</div>
+                      <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">
+                        {toFarsiDigits(dashboardData.averageWaitTime || 0)} دقیقه
+                      </div>
+                    </div>
+                    <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">وضعیت ایستگاه‌ها</div>
+                      <div className="text-lg font-bold text-orange-600 dark:text-orange-400 mt-1">
+                        {Array.isArray(dashboardData.stationStatus) && dashboardData.stationStatus.length > 0
+                          ? `${toFarsiDigits(dashboardData.stationStatus.length)} ایستگاه`
+                          : 'نامشخص'}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Station Status Details */}
+                  {Array.isArray(dashboardData.stationStatus) && dashboardData.stationStatus.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">وضعیت ایستگاه‌ها</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {dashboardData.stationStatus.map((station) => (
+                          <div key={station.station} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium text-gray-900 dark:text-white">{station.station}</span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                station.status === 'busy' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
+                                station.status === 'moderate' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
+                                'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                              }`}>
+                                {station.status === 'busy' ? 'شلوغ' : station.status === 'moderate' ? 'متوسط' : 'سبک'}
+                              </span>
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              {toFarsiDigits(station.activeOrders || 0)} سفارش فعال
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Performance Metrics */}
+              {performanceMetrics && (
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">معیارهای عملکرد</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">کل سفارشات تکمیل شده</div>
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">
+                        {toFarsiDigits(performanceMetrics.totalOrders || 0)}
+                      </div>
+                    </div>
+                    <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">میانگین زمان آماده‌سازی</div>
+                      <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
+                        {toFarsiDigits(performanceMetrics.averagePrepTime || 0)} دقیقه
+                      </div>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">درصد تحویل به موقع</div>
+                      <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">
+                        {toFarsiDigits((performanceMetrics.onTimeDelivery || 0).toFixed(1))}%
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Station Performance */}
+                  {Array.isArray(performanceMetrics.stationPerformance) && performanceMetrics.stationPerformance.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">عملکرد ایستگاه‌ها</h3>
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-gray-50 dark:bg-gray-900">
+                            <tr>
+                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ایستگاه</th>
+                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">تعداد سفارشات</th>
+                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">میانگین زمان</th>
+                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">درصد به موقع</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            {performanceMetrics.stationPerformance.map((station) => (
+                              <tr key={station.station}>
+                                <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{station.station}</td>
+                                <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{toFarsiDigits(station.totalOrders || 0)}</td>
+                                <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{toFarsiDigits(station.averagePrepTime || 0)} دقیقه</td>
+                                <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{toFarsiDigits((station.onTimeRate || 0).toFixed(1))}%</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Workload Analysis */}
+              {workloadData.length > 0 && (
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">توزیع بار کاری</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {workloadData.map((station) => (
+                      <div key={station.station} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                        <h3 className="font-semibold text-gray-900 dark:text-white mb-3">{station.station}</h3>
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">در انتظار:</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{toFarsiDigits(station.pending || 0)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">در حال آماده‌سازی:</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{toFarsiDigits(station.preparing || 0)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">کل:</span>
+                            <span className="font-bold text-blue-600 dark:text-blue-400">{toFarsiDigits(station.total || 0)}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">میانگین اولویت:</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{toFarsiDigits((station.averagePriority || 0).toFixed(1))}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Comprehensive Performance */}
+              {comprehensivePerformance && (
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">تحلیل جامع عملکرد</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">کل سفارشات</div>
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">
+                        {toFarsiDigits(comprehensivePerformance.totalOrders || 0)}
+                      </div>
+                    </div>
+                    <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">میانگین زمان</div>
+                      <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
+                        {toFarsiDigits((comprehensivePerformance.averagePrepTime || 0).toFixed(1))} دقیقه
+                      </div>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">به موقع</div>
+                      <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">
+                        {toFarsiDigits((comprehensivePerformance.onTimeDelivery || 0).toFixed(1))}%
+                      </div>
+                    </div>
+                    <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">کارایی</div>
+                      <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
+                        {toFarsiDigits((comprehensivePerformance.efficiency || 0).toFixed(1))}%
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Top Items */}
+                  {Array.isArray(comprehensivePerformance.topItems) && comprehensivePerformance.topItems.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">پرفروش‌ترین آیتم‌ها</h3>
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-gray-50 dark:bg-gray-900">
+                            <tr>
+                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">آیتم</th>
+                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">تعداد سفارش</th>
+                              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">میانگین زمان</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            {comprehensivePerformance.topItems.map((item, index) => (
+                              <tr key={index}>
+                                <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{item.itemName}</td>
+                                <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{toFarsiDigits(item.orderCount || 0)}</td>
+                                <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{toFarsiDigits((item.averagePrepTime || 0).toFixed(1))} دقیقه</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Performance by Hour */}
+                  {Array.isArray(comprehensivePerformance.performanceByHour) && comprehensivePerformance.performanceByHour.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">عملکرد ساعتی</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                        {comprehensivePerformance.performanceByHour.map((hour) => (
+                          <div key={hour.hour} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg text-center">
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">{toFarsiDigits(hour.hour)}:00</div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                              {toFarsiDigits(hour.orders || 0)} سفارش
+                            </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">
+                              {toFarsiDigits((hour.averagePrepTime || 0).toFixed(0))} دقیقه
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
       </div>
     </div>
   );

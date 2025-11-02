@@ -499,12 +499,20 @@ export class OrderingAnalyticsService {
     };
   }
 
-  private static async getTopSellingItems(
+  /**
+   * Get top selling items (public method for standalone endpoint)
+   */
+  static async getTopSellingItems(
     tenantId: string,
     startDate: Date,
     endDate: Date,
-    totalRevenue: number
+    totalRevenue?: number
   ): Promise<Array<{ itemId: string; itemName: string; quantity: number; revenue: number; percentage: number }>> {
+    // Calculate total revenue if not provided
+    if (totalRevenue === undefined) {
+      const salesData = await this.getCurrentPeriodSalesData(tenantId, startDate, endDate);
+      totalRevenue = salesData.totalRevenue;
+    }
     const topItems = await prisma.orderItem.groupBy({
       by: ['itemName', 'menuItemId'],
       where: {
@@ -540,7 +548,10 @@ export class OrderingAnalyticsService {
     }));
   }
 
-  private static async getHourlyBreakdown(
+  /**
+   * Get hourly sales breakdown (public method for standalone endpoint)
+   */
+  static async getHourlyBreakdown(
     tenantId: string,
     startDate: Date,
     endDate: Date

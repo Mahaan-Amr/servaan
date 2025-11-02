@@ -43,11 +43,12 @@ interface RecipeIngredient {
 }
 
 // Sortable Menu Item Component
-function SortableMenuItem({ item, onEdit, onDelete, onToggleActive, categories }: {
+function SortableMenuItem({ item, onEdit, onDelete, onToggleActive, onViewCostAnalysis, categories }: {
   item: MenuItem;
   onEdit: (item: MenuItem) => void;
   onDelete: (id: string) => void;
   onToggleActive: (id: string) => void;
+  onViewCostAnalysis: (item: MenuItem) => void;
   categories: MenuCategory[];
 }) {
   const {
@@ -162,6 +163,19 @@ function SortableMenuItem({ item, onEdit, onDelete, onToggleActive, categories }
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+            
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewCostAnalysis(item);
+              }}
+              className="p-1 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-md transition-colors"
+              title="تحلیل هزینه"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
             </button>
             
@@ -445,6 +459,24 @@ export default function MenuManagementPage() {
   const [showIngredientsSection, setShowIngredientsSection] = useState(false);
   const [ingredients, setIngredients] = useState<RecipeIngredient[]>([]);
   const [editingIngredientIndex, setEditingIngredientIndex] = useState<number | null>(null);
+  
+  // Cost Analysis state
+  const [showCostAnalysisModal, setShowCostAnalysisModal] = useState(false);
+  const [costAnalysisItem, setCostAnalysisItem] = useState<MenuItem | null>(null);
+  const [costAnalysisData, setCostAnalysisData] = useState<{
+    totalCost: number;
+    costPerServing: number;
+    ingredients: Array<{
+      id: string;
+      itemName: string;
+      quantity: number;
+      unit: string;
+      unitCost: number;
+      totalCost: number;
+      percentage: number;
+    }>;
+  } | null>(null);
+  const [loadingCostAnalysis, setLoadingCostAnalysis] = useState(false);
   const [newIngredient, setNewIngredient] = useState({
     itemId: '',
     quantity: 1,
@@ -806,6 +838,72 @@ export default function MenuManagementPage() {
     } catch (error) {
       console.error('Error toggling menu item active status:', error);
       toast.error('خطا در تغییر وضعیت آیتم منو');
+    }
+  };
+
+  const handleViewCostAnalysis = async (item: MenuItem) => {
+    try {
+      setCostAnalysisItem(item);
+      setShowCostAnalysisModal(true);
+      setLoadingCostAnalysis(true);
+      setCostAnalysisData(null);
+
+      // Get recipe for this menu item
+      const recipe = await RecipeService.getRecipeByMenuItem(item.id) as { id: string } | null;
+      
+      if (!recipe || !recipe.id) {
+        toast.error('این آیتم منو دستور پخت (Recipe) ندارد');
+        setShowCostAnalysisModal(false);
+        setLoadingCostAnalysis(false);
+        return;
+      }
+
+      // Get cost analysis
+      const analysis = await RecipeService.getRecipeCostAnalysis(recipe.id);
+      
+      // Handle response structure (may be wrapped in data property)
+      const analysisResponse = analysis as {
+        data?: {
+          totalCost: number;
+          costPerServing: number;
+          ingredients: Array<{
+            id: string;
+            itemName: string;
+            quantity: number;
+            unit: string;
+            unitCost: number;
+            totalCost: number;
+            percentage: number;
+          }>;
+        };
+        totalCost?: number;
+        costPerServing?: number;
+        ingredients?: Array<{
+          id: string;
+          itemName: string;
+          quantity: number;
+          unit: string;
+          unitCost: number;
+          totalCost: number;
+          percentage: number;
+        }>;
+      };
+      
+      const finalData = analysisResponse.data || 
+        (analysisResponse.totalCost !== undefined ? analysisResponse as typeof costAnalysisData : null);
+      
+      if (finalData) {
+        setCostAnalysisData(finalData);
+      } else {
+        throw new Error('Invalid response format from cost analysis API');
+      }
+    } catch (error) {
+      console.error('Error loading cost analysis:', error);
+      const errorMessage = error instanceof Error ? error.message : 'خطا در بارگذاری تحلیل هزینه';
+      toast.error(errorMessage);
+      setShowCostAnalysisModal(false);
+    } finally {
+      setLoadingCostAnalysis(false);
     }
   };
 
@@ -1255,6 +1353,7 @@ export default function MenuManagementPage() {
                     onEdit={handleEditMenuItem}
                     onDelete={(id) => handleDeleteMenuItem(id, item.displayName)}
                     onToggleActive={handleToggleMenuItemActive}
+                    onViewCostAnalysis={handleViewCostAnalysis}
                   />
                 ))}
                         </div>
@@ -1776,6 +1875,183 @@ export default function MenuManagementPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Recipe Cost Analysis Modal */}
+      {showCostAnalysisModal && costAnalysisItem && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-4 mx-auto mb-8 p-6 border w-full max-w-3xl shadow-xl rounded-lg bg-white dark:bg-gray-800">
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white text-center">
+                تحلیل هزینه دستور پخت
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 text-center mt-2">
+                {costAnalysisItem.displayName}
+              </p>
+            </div>
+
+            {loadingCostAnalysis ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+              </div>
+            ) : costAnalysisData ? (
+              <div className="space-y-6">
+                {/* Summary Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">هزینه کل</div>
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">
+                      {new Intl.NumberFormat('fa-IR').format(costAnalysisData.totalCost)} تومان
+                    </div>
+                  </div>
+                  
+                  <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">هزینه هر سرو</div>
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
+                      {new Intl.NumberFormat('fa-IR').format(costAnalysisData.costPerServing)} تومان
+                    </div>
+                  </div>
+                  
+                  <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">قیمت فروش</div>
+                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">
+                      {new Intl.NumberFormat('fa-IR').format(costAnalysisItem.menuPrice || 0)} تومان
+                    </div>
+                  </div>
+                </div>
+
+                {/* Profitability */}
+                {(costAnalysisItem.menuPrice || 0) > 0 && (
+                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 p-4 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">سود خالص</div>
+                        <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
+                          {new Intl.NumberFormat('fa-IR').format(
+                            (costAnalysisItem.menuPrice || 0) - costAnalysisData.costPerServing
+                          )} تومان
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm text-gray-600 dark:text-gray-400">درصد سود</div>
+                        <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
+                          {costAnalysisItem.menuPrice > 0
+                            ? new Intl.NumberFormat('fa-IR', { 
+                                style: 'decimal',
+                                minimumFractionDigits: 1,
+                                maximumFractionDigits: 1
+                              }).format(
+                                ((costAnalysisItem.menuPrice - costAnalysisData.costPerServing) / costAnalysisItem.menuPrice) * 100
+                              )
+                            : '0'
+                          }%
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Ingredients Breakdown */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    جزئیات مواد اولیه
+                  </h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 dark:bg-gray-900">
+                        <tr>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                            ماده اولیه
+                          </th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                            مقدار
+                          </th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                            قیمت واحد
+                          </th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                            هزینه کل
+                          </th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                            درصد
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {costAnalysisData.ingredients.map((ingredient) => (
+                          <tr key={ingredient.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
+                              {ingredient.itemName}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                              {new Intl.NumberFormat('fa-IR', {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 2
+                              }).format(ingredient.quantity)} {ingredient.unit}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                              {new Intl.NumberFormat('fa-IR').format(ingredient.unitCost)} تومان
+                            </td>
+                            <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
+                              {new Intl.NumberFormat('fa-IR').format(ingredient.totalCost)} تومان
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center">
+                                <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-2">
+                                  <div
+                                    className="bg-purple-600 h-2 rounded-full"
+                                    style={{ width: `${Math.min(ingredient.percentage, 100)}%` }}
+                                  ></div>
+                                </div>
+                                <span className="text-sm text-gray-700 dark:text-gray-300 w-12 text-left">
+                                  {new Intl.NumberFormat('fa-IR', {
+                                    style: 'decimal',
+                                    minimumFractionDigits: 1,
+                                    maximumFractionDigits: 1
+                                  }).format(ingredient.percentage)}%
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot className="bg-gray-50 dark:bg-gray-900">
+                        <tr>
+                          <td colSpan={3} className="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white text-right">
+                            مجموع
+                          </td>
+                          <td className="px-4 py-3 text-sm font-bold text-blue-600 dark:text-blue-400">
+                            {new Intl.NumberFormat('fa-IR').format(costAnalysisData.totalCost)} تومان
+                          </td>
+                          <td className="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white">
+                            100%
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                <p>داده‌ای برای نمایش وجود ندارد</p>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end pt-6 border-t border-gray-200 dark:border-gray-600 mt-6">
+              <button
+                onClick={() => {
+                  setShowCostAnalysisModal(false);
+                  setCostAnalysisItem(null);
+                  setCostAnalysisData(null);
+                }}
+                className="px-6 py-2 bg-gray-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors"
+              >
+                بستن
+              </button>
+            </div>
           </div>
         </div>
       )}

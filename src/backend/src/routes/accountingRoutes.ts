@@ -47,6 +47,15 @@ router.get(
 );
 
 /**
+ * Validate required accounts for tenant
+ * GET /api/accounting/chart-of-accounts/validate
+ */
+router.get(
+  '/chart-of-accounts/validate',
+  AccountingController.validateChartOfAccounts
+);
+
+/**
  * Create new account
  * POST /api/accounting/chart-of-accounts
  */
@@ -587,10 +596,9 @@ router.get('/accounts/count', authenticate, async (req, res) => {
       });
     }
 
-    // Note: ChartOfAccount model doesn't have tenantId field yet
-    // For MVP, return count without tenant filtering but with auth requirement
     const count = await prisma.chartOfAccount.count({
       where: {
+        tenantId: req.tenant.id,
         isActive: true
       }
     });
