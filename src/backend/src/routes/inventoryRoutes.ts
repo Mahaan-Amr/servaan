@@ -543,7 +543,47 @@ router.get('/total-value', authenticate, requireTenant, async (req, res) => {
   }
 });
 
+// ===================== ORDER-INVENTORY INTEGRATION ROUTES =====================
+// 
+// NOTE: These routes must be defined BEFORE the /:id route to prevent route conflicts
+// Get low stock alerts for recipe ingredients
+router.get('/low-stock-alerts', authenticate, requireTenant, async (req, res, next) => {
+  try {
+    const tenantId = req.tenant!.id;
+    
+    const { OrderInventoryIntegrationService } = await import('../services/orderInventoryIntegrationService');
+    const alerts = await OrderInventoryIntegrationService.getRecipeIngredientLowStockAlerts(tenantId);
+    
+    res.json({
+      success: true,
+      data: alerts,
+      message: 'Low stock alerts retrieved'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get comprehensive inventory integration status
+router.get('/integration-status', authenticate, requireTenant, async (req, res, next) => {
+  try {
+    const tenantId = req.tenant!.id;
+    
+    const { OrderInventoryIntegrationService } = await import('../services/orderInventoryIntegrationService');
+    const status = await OrderInventoryIntegrationService.getInventoryIntegrationStatus(tenantId);
+    
+    res.json({
+      success: true,
+      data: status,
+      message: 'Inventory integration status retrieved'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/inventory/:id - Get an inventory entry by ID
+// NOTE: This parameterized route must be defined AFTER all specific routes
 router.get('/:id', authenticate, requireTenant, async (req, res) => {
   try {
     if (!req.tenant) {
@@ -971,5 +1011,48 @@ router.get('/deficits/summary', authenticate, requireTenant, async (req, res) =>
 
 // Mount stock validation routes
 router.use('/', stockValidationRoutes);
+
+// ===================== ORDER-INVENTORY INTEGRATION ROUTES =====================
+
+/**
+ * Inventory integration endpoints for recipe-based stock management
+ * These endpoints integrate ordering system with inventory management
+ */
+
+// Update menu item availability based on ingredient stock levels
+router.post('/update-menu-availability', authenticate, requireTenant, authorize(['MANAGER', 'ADMIN']), async (req, res, next) => {
+  try {
+    const tenantId = req.tenant!.id;
+    
+    const { OrderInventoryIntegrationService } = await import('../services/orderInventoryIntegrationService');
+    const result = await OrderInventoryIntegrationService.updateMenuItemAvailability(tenantId);
+    
+    res.json({
+      success: true,
+      data: result,
+      message: `Menu availability updated: ${result.updated} items changed`
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Update recipe costs when ingredient prices change
+router.post('/update-recipe-costs', authenticate, requireTenant, authorize(['MANAGER', 'ADMIN']), async (req, res, next) => {
+  try {
+    const tenantId = req.tenant!.id;
+    
+    const { OrderInventoryIntegrationService } = await import('../services/orderInventoryIntegrationService');
+    const result = await OrderInventoryIntegrationService.updateRecipeCosts(tenantId);
+    
+    res.json({
+      success: true,
+      data: result,
+      message: `Recipe costs updated: ${result.updated} recipes changed`
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 export { router as inventoryRoutes }; 
