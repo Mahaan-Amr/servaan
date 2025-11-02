@@ -1,8 +1,7 @@
 import express from 'express';
 import { authenticate } from '../middlewares/authMiddleware';
-import { PrismaClient } from '../../../shared/generated/client';
+import { prisma } from '../services/dbService';
 
-const prisma = new PrismaClient();
 const router = express.Router();
 
 // GET /api/workspace/user-access/:userId - Get user workspace access

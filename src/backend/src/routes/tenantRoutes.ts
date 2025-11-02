@@ -1,9 +1,9 @@
 import express from 'express';
-import { PrismaClient, Prisma } from '../../../shared/generated/client';
+import { Prisma } from '../../../shared/generated/client';
 import { validateSubdomain } from '../middlewares/tenantMiddleware';
+import { prisma } from '../services/dbService';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 /**
  * Create a new tenant (for admin/onboarding system)
@@ -140,8 +140,47 @@ router.post('/', async (req, res) => {
 });
 
 /**
+ * Check subdomain availability
+ * GET /api/tenants/check/:subdomain
+ * NOTE: Must be defined BEFORE /:subdomain route to prevent route conflicts
+ */
+router.get('/check/:subdomain', async (req, res) => {
+  try {
+    const { subdomain } = req.params;
+
+    // Validate subdomain format
+    if (!validateSubdomain(subdomain)) {
+      return res.json({
+        available: false,
+        reason: 'INVALID_FORMAT',
+        message: 'نام زیردامنه نامعتبر'
+      });
+    }
+
+    const existingTenant = await prisma.tenant.findUnique({
+      where: { subdomain }
+    });
+
+    res.json({
+      available: !existingTenant,
+      reason: existingTenant ? 'ALREADY_EXISTS' : null,
+      message: existingTenant ? 'این نام زیردامنه قبلاً استفاده شده' : 'نام زیردامنه در دسترس است'
+    });
+
+  } catch (error) {
+    console.error('Subdomain check error:', error);
+    res.status(500).json({
+      error: 'خطا در بررسی زیردامنه',
+      message: 'Internal server error',
+      code: 'INTERNAL_ERROR'
+    });
+  }
+});
+
+/**
  * Get tenant by subdomain
  * GET /api/tenants/:subdomain
+ * NOTE: This parameterized route must be defined AFTER all specific routes
  */
 router.get('/:subdomain', async (req, res) => {
   try {
@@ -162,6 +201,37 @@ router.get('/:subdomain', async (req, res) => {
       });
     }
 
+    // Format features object (handle null case)
+    const featuresObj = tenant.features ? {
+      hasInventoryManagement: tenant.features.hasInventoryManagement,
+      hasCustomerManagement: tenant.features.hasCustomerManagement,
+      hasAccountingSystem: tenant.features.hasAccountingSystem,
+      hasReporting: tenant.features.hasReporting,
+      hasNotifications: tenant.features.hasNotifications,
+      hasAdvancedReporting: tenant.features.hasAdvancedReporting,
+      hasApiAccess: tenant.features.hasApiAccess,
+      hasCustomBranding: tenant.features.hasCustomBranding,
+      hasMultiLocation: tenant.features.hasMultiLocation,
+      hasAdvancedCRM: tenant.features.hasAdvancedCRM,
+      hasWhatsappIntegration: tenant.features.hasWhatsappIntegration,
+      hasInstagramIntegration: tenant.features.hasInstagramIntegration,
+      hasAnalyticsBI: tenant.features.hasAnalyticsBI
+    } : {
+      hasInventoryManagement: true,
+      hasCustomerManagement: true,
+      hasAccountingSystem: true,
+      hasReporting: true,
+      hasNotifications: true,
+      hasAdvancedReporting: false,
+      hasApiAccess: false,
+      hasCustomBranding: false,
+      hasMultiLocation: false,
+      hasAdvancedCRM: false,
+      hasWhatsappIntegration: false,
+      hasInstagramIntegration: false,
+      hasAnalyticsBI: false
+    };
+
     res.json({
       tenant: {
         id: tenant.id,
@@ -174,7 +244,6 @@ router.get('/:subdomain', async (req, res) => {
         secondaryColor: tenant.secondaryColor,
         plan: tenant.plan,
         isActive: tenant.isActive,
-        features: tenant.features,
         ownerName: tenant.ownerName,
         ownerEmail: tenant.ownerEmail,
         ownerPhone: tenant.ownerPhone,
@@ -187,7 +256,8 @@ router.get('/:subdomain', async (req, res) => {
         timezone: tenant.timezone,
         locale: tenant.locale,
         currency: tenant.currency
-      }
+      },
+      features: featuresObj
     });
 
   } catch (error) {
@@ -278,43 +348,6 @@ router.put('/:subdomain/features', async (req, res) => {
     console.error('Tenant features update error:', error);
     res.status(500).json({
       error: 'خطا در بروزرسانی ویژگی‌ها',
-      message: 'Internal server error',
-      code: 'INTERNAL_ERROR'
-    });
-  }
-});
-
-/**
- * Check subdomain availability
- * GET /api/tenants/check/:subdomain
- */
-router.get('/check/:subdomain', async (req, res) => {
-  try {
-    const { subdomain } = req.params;
-
-    // Validate subdomain format
-    if (!validateSubdomain(subdomain)) {
-      return res.json({
-        available: false,
-        reason: 'INVALID_FORMAT',
-        message: 'نام زیردامنه نامعتبر'
-      });
-    }
-
-    const existingTenant = await prisma.tenant.findUnique({
-      where: { subdomain }
-    });
-
-    res.json({
-      available: !existingTenant,
-      reason: existingTenant ? 'ALREADY_EXISTS' : null,
-      message: existingTenant ? 'این نام زیردامنه قبلاً استفاده شده' : 'نام زیردامنه در دسترس است'
-    });
-
-  } catch (error) {
-    console.error('Subdomain check error:', error);
-    res.status(500).json({
-      error: 'خطا در بررسی زیردامنه',
       message: 'Internal server error',
       code: 'INTERNAL_ERROR'
     });
