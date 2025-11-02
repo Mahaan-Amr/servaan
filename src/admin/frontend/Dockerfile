@@ -2,11 +2,46 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+# Configure npm for better network reliability
+RUN npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm config set fetch-timeout 300000 && \
+    npm config set registry https://registry.npmjs.org/
+
+# Optional: Configure proxy if provided via build args
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG http_proxy
+ARG https_proxy
+ENV HTTP_PROXY=${HTTP_PROXY}
+ENV HTTPS_PROXY=${HTTPS_PROXY}
+ENV http_proxy=${http_proxy}
+ENV https_proxy=${https_proxy}
+
 # Copy package files
 COPY src/admin/frontend/package*.json ./
 
-# Install dependencies
-RUN npm ci
+# Install dependencies with retry logic
+RUN set -e; \
+    max_attempts=5; \
+    attempt=1; \
+    while [ $attempt -le $max_attempts ]; do \
+        echo "📦 Attempt $attempt/$max_attempts to install dependencies..." && \
+        if npm ci --no-audit --no-fund; then \
+            echo "✅ Dependencies installed successfully!" && \
+            break; \
+        else \
+            if [ $attempt -eq $max_attempts ]; then \
+                echo "❌ All attempts failed. Last attempt error:" && \
+                exit 1; \
+            else \
+                echo "⚠️ Attempt $attempt failed, waiting 15 seconds before retry..." && \
+                sleep 15; \
+            fi; \
+        fi; \
+        attempt=$((attempt + 1)); \
+    done
 
 # Copy the ENTIRE project structure to maintain consistency
 COPY . .
@@ -50,12 +85,37 @@ RUN adduser -S nodejs -u 1001
 # Copy package files first for dependency installation
 COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/package*.json ./
 
-# Install all dependencies (some dev deps are needed for production)
-RUN npm ci && \
-    echo "Installed packages:" && \
-    npm list --depth=0 && \
-    echo "Next.js version:" && \
-    npx next --version
+# Configure npm for better network reliability in production stage
+RUN npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm config set fetch-timeout 300000 && \
+    npm config set registry https://registry.npmjs.org/
+
+# Install all dependencies (some dev deps are needed for production) with retry logic
+RUN set -e; \
+    max_attempts=5; \
+    attempt=1; \
+    while [ $attempt -le $max_attempts ]; do \
+        echo "📦 Attempt $attempt/$max_attempts to install production dependencies..." && \
+        if npm ci --no-audit --no-fund; then \
+            echo "✅ Production dependencies installed successfully!" && \
+            echo "Installed packages:" && \
+            npm list --depth=0 && \
+            echo "Next.js version:" && \
+            npx next --version && \
+            break; \
+        else \
+            if [ $attempt -eq $max_attempts ]; then \
+                echo "❌ All attempts failed. Last attempt error:" && \
+                exit 1; \
+            else \
+                echo "⚠️ Attempt $attempt failed, waiting 15 seconds before retry..." && \
+                sleep 15; \
+            fi; \
+        fi; \
+        attempt=$((attempt + 1)); \
+    done
 
 # Copy built application (following main frontend pattern)
 COPY --from=builder --chown=nodejs:nodejs /app/src/admin/frontend/.next ./.next
