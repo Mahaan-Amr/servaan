@@ -22,23 +22,34 @@ ENV https_proxy=${https_proxy}
 # Copy the entire project structure to maintain exact paths
 COPY . .
 
-# Install dependencies with retry logic
+# Install dependencies with retry logic and timeout protection
 WORKDIR /app/src/admin/backend
-RUN set -e; \
+RUN apk add --no-cache coreutils && \
+    set -e; \
     max_attempts=5; \
     attempt=1; \
+    npm_ci_timeout=1200; \
     while [ $attempt -le $max_attempts ]; do \
-        echo "📦 Attempt $attempt/$max_attempts to install dependencies..." && \
-        if npm ci --no-audit --no-fund; then \
-            echo "✅ Dependencies installed successfully!" && \
+        echo "📦 Attempt $attempt/$max_attempts to install dependencies (timeout: ${npm_ci_timeout}s)..." && \
+        start_time=$(date +%s); \
+        if timeout $npm_ci_timeout npm ci --no-audit --no-fund --progress=true --loglevel=info; then \
+            elapsed=$(($(date +%s) - start_time)); \
+            echo "✅ Dependencies installed successfully in ${elapsed}s!" && \
             break; \
         else \
+            exit_code=$?; \
+            elapsed=$(($(date +%s) - start_time)); \
+            if [ $exit_code -eq 124 ]; then \
+                echo "⏱️ Attempt $attempt timed out after ${elapsed}s (exceeded ${npm_ci_timeout}s limit)"; \
+            else \
+                echo "❌ Attempt $attempt failed with exit code $exit_code after ${elapsed}s"; \
+            fi; \
             if [ $attempt -eq $max_attempts ]; then \
-                echo "❌ All attempts failed. Last attempt error:" && \
+                echo "❌ All $max_attempts attempts failed. Last attempt took ${elapsed}s." && \
                 exit 1; \
             else \
-                echo "⚠️ Attempt $attempt failed, waiting 15 seconds before retry..." && \
-                sleep 15; \
+                echo "⚠️ Waiting 30 seconds before retry..." && \
+                sleep 30; \
             fi; \
         fi; \
         attempt=$((attempt + 1)); \
