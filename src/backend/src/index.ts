@@ -137,10 +137,76 @@ app.use(errorHandler);
 // WebSocket setup
 socketService.initialize(server);
 
-// Start server
-server.listen(port, () => {
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason: Error | any, promise: Promise<any>) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  console.error('Stack:', reason?.stack || 'No stack trace');
+  // Don't exit the process in production, just log the error
+  if (process.env.NODE_ENV === 'development') {
+    // In development, we might want to see errors more clearly
+    process.exit(1);
+  }
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error: Error) => {
+  console.error('❌ Uncaught Exception:', error);
+  console.error('Stack:', error.stack);
+  // Exit the process as this is a critical error
+  process.exit(1);
+});
+
+// Graceful shutdown handlers
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully...');
+  server.close(() => {
+    console.log('Process terminated');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully...');
+  server.close(() => {
+    console.log('Process terminated');
+    process.exit(0);
+  });
+});
+
+// Start server with error handling
+server.listen(port, async () => {
   console.log(`🚀 Server running on port ${port}`);
   console.log('🔌 WebSocket server ready for real-time notifications');
   console.log('📊 Performance monitoring system initialized');
   console.log('🔥 Global caching system ready');
+  
+  // Test database connection
+  try {
+    const { prisma } = await import('./services/dbService');
+    await prisma.$connect();
+    console.log('✅ Database connection established');
+  } catch (error) {
+    console.error('❌ Failed to connect to database:', error);
+    console.error('⚠️ Server started but database connection failed. Some features may not work.');
+  }
+});
+
+// Handle server listen errors
+server.on('error', (error: NodeJS.ErrnoException) => {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  switch (error.code) {
+    case 'EACCES':
+      console.error(`❌ Port ${port} requires elevated privileges`);
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(`❌ Port ${port} is already in use`);
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
 }); 

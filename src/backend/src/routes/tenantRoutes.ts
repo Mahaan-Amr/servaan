@@ -186,6 +186,20 @@ router.get('/:subdomain', async (req, res) => {
   try {
     const { subdomain } = req.params;
 
+    console.log(`🔍 Fetching tenant with subdomain: ${subdomain}`);
+
+    // Test database connection before query
+    try {
+      await prisma.$connect();
+    } catch (dbError) {
+      console.error('❌ Database connection error:', dbError);
+      return res.status(503).json({
+        error: 'خطا در اتصال به پایگاه داده',
+        message: 'Database connection error',
+        code: 'DATABASE_CONNECTION_ERROR'
+      });
+    }
+
     const tenant = await prisma.tenant.findUnique({
       where: { subdomain },
       include: {
@@ -261,10 +275,31 @@ router.get('/:subdomain', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Tenant fetch error:', error);
+    console.error('❌ Tenant fetch error:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined
+    });
+
+    // Check if it's a database connection error
+    if (error instanceof Error && (
+      error.message.includes('connect') ||
+      error.message.includes('ECONNREFUSED') ||
+      error.message.includes('timeout') ||
+      error.message.includes('P1001') || // Prisma connection error code
+      error.name === 'PrismaClientInitializationError'
+    )) {
+      return res.status(503).json({
+        error: 'خطا در اتصال به پایگاه داده',
+        message: 'Database connection error',
+        code: 'DATABASE_CONNECTION_ERROR'
+      });
+    }
+
     res.status(500).json({
       error: 'خطا در دریافت اطلاعات مجموعه',
-      message: 'Internal server error',
+      message: error instanceof Error ? error.message : 'Internal server error',
       code: 'INTERNAL_ERROR'
     });
   }

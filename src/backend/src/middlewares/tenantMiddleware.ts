@@ -22,10 +22,13 @@ declare global {
  * Resolves tenant from subdomain and adds tenant context to request
  */
 export const resolveTenant = async (req: Request, res: Response, next: NextFunction) => {
+  // Declare subdomain outside try block for error handling
+  let subdomain: string | null = null;
+  
   try {
     // Extract subdomain from request - try multiple sources
     const host = req.get('host') || '';
-    let subdomain = extractSubdomain(host);
+    subdomain = extractSubdomain(host);
     
     console.log(`🔍 DEBUG - Host header: "${host}", extracted subdomain: "${subdomain}"`);
     
@@ -51,6 +54,24 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
     if (!customSubdomain && (subdomain === 'www' || subdomain === 'admin' || subdomain === 'api')) {
       console.log(`🔍 DEBUG - Skipping tenant resolution for subdomain: ${subdomain}`);
       return next();
+    }
+
+    // Test database connection before query
+    try {
+      await prisma.$connect();
+    } catch (dbError) {
+      console.error('❌ Database connection error in resolveTenant:', dbError);
+      // If database is unavailable and we're trying to resolve a tenant, fail
+      // But if this is for a route that doesn't need tenant (like /api/tenants), allow it
+      if (req.path && req.path.startsWith('/api/tenants')) {
+        console.log('⚠️ Database error but route is /api/tenants - allowing request to continue');
+        return next();
+      }
+      return res.status(503).json({
+        error: 'خطا در اتصال به پایگاه داده',
+        message: 'Database connection error',
+        code: 'DATABASE_CONNECTION_ERROR'
+      });
     }
 
     // Find tenant by subdomain
@@ -98,10 +119,43 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
     console.log(`✅ Tenant context set: ${tenant.subdomain} (${tenant.name})`);
     next();
   } catch (error) {
-    console.error('Tenant resolution error:', error);
+    console.error('❌ Tenant resolution error:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined
+    });
+
+    // Check if it's a database connection error
+    if (error instanceof Error && (
+      error.message.includes('connect') ||
+      error.message.includes('ECONNREFUSED') ||
+      error.message.includes('timeout') ||
+      error.message.includes('P1001') || // Prisma connection error code
+      error.name === 'PrismaClientInitializationError'
+    )) {
+      // For database errors, only fail if we actually tried to resolve a tenant
+      // If we're just skipping (no subdomain or reserved subdomain), allow the request to continue
+      if (!subdomain || subdomain === 'www' || subdomain === 'admin' || subdomain === 'api') {
+        console.log('⚠️ Database connection error during tenant resolution, but subdomain is skipped - allowing request to continue');
+        return next();
+      }
+      // Also allow if route is /api/tenants
+      if (req.path && req.path.startsWith('/api/tenants')) {
+        console.log('⚠️ Database error but route is /api/tenants - allowing request to continue');
+        return next();
+      }
+      return res.status(503).json({
+        error: 'خطا در اتصال به پایگاه داده',
+        message: 'Database connection error',
+        code: 'DATABASE_CONNECTION_ERROR'
+      });
+    }
+
+    // For other errors, return 500
     res.status(500).json({
       error: 'خطا در شناسایی مجموعه',
-      message: 'Error resolving tenant',
+      message: error instanceof Error ? error.message : 'Error resolving tenant',
       code: 'TENANT_RESOLUTION_ERROR'
     });
   }
