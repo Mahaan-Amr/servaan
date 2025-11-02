@@ -24,7 +24,7 @@ COPY . .
 
 # Install dependencies with retry logic and timeout protection
 WORKDIR /app/src/admin/backend
-RUN apk add --no-cache coreutils && \
+RUN apk add --no-cache coreutils procps && \
     set -e; \
     max_attempts=5; \
     attempt=1; \
@@ -32,14 +32,26 @@ RUN apk add --no-cache coreutils && \
     while [ $attempt -le $max_attempts ]; do \
         echo "📦 Attempt $attempt/$max_attempts to install dependencies (timeout: ${npm_ci_timeout}s)..." && \
         start_time=$(date +%s); \
-        if timeout $npm_ci_timeout npm ci --no-audit --no-fund --progress=true --loglevel=info; then \
+        npm ci --no-audit --no-fund --progress=true --loglevel=info --maxsockets=1 & \
+        npm_pid=$!; \
+        ( \
+            sleep $npm_ci_timeout && \
+            echo "⏱️ Timeout reached (${npm_ci_timeout}s), killing npm process group..." && \
+            kill -TERM -$npm_pid 2>/dev/null || true && \
+            sleep 5 && \
+            kill -KILL -$npm_pid 2>/dev/null || true \
+        ) & \
+        timeout_monitor=$!; \
+        if wait $npm_pid; then \
+            kill $timeout_monitor 2>/dev/null || true; \
             elapsed=$(($(date +%s) - start_time)); \
             echo "✅ Dependencies installed successfully in ${elapsed}s!" && \
             break; \
         else \
+            kill $timeout_monitor 2>/dev/null || true; \
             exit_code=$?; \
             elapsed=$(($(date +%s) - start_time)); \
-            if [ $exit_code -eq 124 ]; then \
+            if [ $elapsed -ge $npm_ci_timeout ]; then \
                 echo "⏱️ Attempt $attempt timed out after ${elapsed}s (exceeded ${npm_ci_timeout}s limit)"; \
             else \
                 echo "❌ Attempt $attempt failed with exit code $exit_code after ${elapsed}s"; \
