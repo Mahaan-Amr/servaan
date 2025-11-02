@@ -1,3 +1,13 @@
+# ✅ Synced Deployment Notes (2025-10-20)
+
+- Backend base: `/api/admin` (auth, dashboard, backups, tenants, users)
+- Ensure CORS allowlist matches admin origins; helmet enabled; JSON limits in place
+- Enable rate limiting in production for `/auth/*` and export routes
+- Health: `/api/admin/health`; Version: `/api/admin/version`
+- See also: `CURRENT_IMPLEMENTATION_STATUS.md`, `SECURITY_POLICY.md`
+
+---
+
 # 🚀 Admin Panel Deployment Guide
 
 ## 📋 Overview

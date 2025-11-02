@@ -1,3 +1,30 @@
+# ✅ Admin API — Authoritative Snapshot (2025-10-20)
+
+Base: `/api/admin`
+Auth: Separate admin JWT; use `authenticateAdmin`; role checks via `requireRole`
+
+Implemented routes (non-exhaustive; reflects current code)
+- Auth: `/auth/login`, `/auth/logout`, `/auth/profile`, `/auth/change-password`, `/auth/verify`, `/auth/health`
+- Dashboard: `/dashboard/*` (see backend routes)
+- Backups: `/backups/*`
+- Tenants: `/tenants` (GET with rich filters, POST create), `/tenants/export`, `/tenants/overview`, `/tenants/:id`, `/tenants/:id/metrics`, `/tenants/:id/activate`, `/tenants/bulk-status`, `/tenants/:id/activity`,
+  - Users under tenant: GET `/tenants/:id/users`, POST `/tenants/:id/users`, PUT `/tenants/:id/users/:userId`, POST `/tenants/:id/users/reset-password`
+- Users: `/users/*` (see adminUserRoutes)
+
+Conventions
+- Pagination and filtering are supported where indicated (e.g., TenantService.listTenants)
+- Audit logging recorded for sensitive actions (`auditLog`)
+- Error responses include `success: false` with code/message
+
+Links
+- `../common_invariants.md` for shared UI conventions
+- `./SECURITY_POLICY.md` for admin security practices
+
+Planned
+- Any routes referenced in docs not listed above are planned or legacy; prefer the above route set.
+
+---
+
 # 🔌 Admin Panel API Specification
 
 ## 📋 Overview

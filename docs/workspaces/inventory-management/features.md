@@ -478,4 +478,7 @@ const checkPermissions = (user: User, action: string) => {
 
 ---
 
-> **نکته:** تمامی ویژگی‌های ذکر شده کاملاً پیاده‌سازی شده و آماده استفاده در محیط production هستند. 
+## 🔄 Alignment with Current Implementation (2025-10-20)
+- Implemented: low-stock alerts, WAC, menu availability sync, order stock validation, recipe cost sync
+- Planned: `/api/inventory/current`, `/api/inventory/report`, `/api/inventory/valuation`, scanner REST endpoints; use `/api/analytics/summary` for valuation meanwhile
+- See `../../common_invariants.md` for currency/date/stock rules 

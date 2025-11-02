@@ -1,3 +1,13 @@
+# ✅ CRM — Synced Status (2025-10-20)
+
+Reference
+- Platform status: `capabilities_matrix.md`
+- Shared rules: `common_invariants.md`
+
+Note: Unless CRM endpoints are explicitly present in backend routes, treat sections below as planned specifications. Current customer analytics are provided via ordering analytics endpoints.
+
+---
+
 # CRM API Specification
 ## مشخصات API مدیریت ارتباط با مشتری
 

@@ -1,3 +1,15 @@
+# ✅ Current Implementation Snapshot (2025-10-20)
+
+This workspace doc reflects the current codebase. For authoritative APIs see `api-documentation.md`. For shared rules see `../../common_invariants.md`. For overall scope see `../../capabilities_matrix.md`.
+
+Key corrections vs historical content
+- Inventory endpoints in use: `/api/inventory/low-stock-alerts`, `/api/inventory/validate-order-stock`, `/api/inventory/update-menu-availability`, `/api/inventory/update-recipe-costs`, `/api/inventory/integration-status`.
+- Valuation data is provided via `/api/analytics/summary` (`totalInventoryValue`).
+- Costing: Weighted Average Cost (WAC). OUT operations must not drive stock negative (except ADJUSTMENT with reason).
+- Currency on UI: Toman (no decimals). Dates: Farsi calendar and digits.
+
+---
+
 # مدیریت موجودی (Inventory Management Workspace)
 
 ## نمای کلی (Overview)

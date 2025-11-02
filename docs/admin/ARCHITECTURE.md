@@ -1,3 +1,15 @@
+# ✅ Synced with Admin Backend (2025-10-20)
+
+- Separation: Admin backend is a separate Express app (`src/admin/backend`) with its own JWT auth and roles
+- Routing: Mounted under `/api/admin` — auth, dashboard, backups, tenants, users
+- Security: `helmet`, CORS restricted to allowed origins, JSON size limits, global error handler
+- Observability: `morgan` logging; audit logs via `utils/auditLogger`
+- Health: `/api/admin/health`, version `/api/admin/version`
+
+See also: `API_SPECIFICATION.md`
+
+---
+
 # 🏗️ Admin Panel Technical Architecture
 
 ## 🎯 System Overview

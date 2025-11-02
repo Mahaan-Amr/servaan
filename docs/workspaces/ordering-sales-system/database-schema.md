@@ -582,3 +582,12 @@ GROUP BY oi.tenant_id, oi.item_id, i.name;
 
 *Last Updated: [Current Date]*
 *Version: 1.0* 
+
+# ✅ Current Implementation Notes (2025-10-20)
+
+- `OrderStatus` includes `SUBMITTED` as initial status for new orders
+- `Order.orderNumber` is unique per tenant (format `ORD-YYYYMMDD-NNNN`), generated inside a transaction with retry
+- `Order` has relation `kitchenDisplays KitchenDisplay[]`; KDS entries mirror order status and priority (0..5)
+- Completed/Cancelled/SERVED orders are excluded from active KDS queries
+
+--- 

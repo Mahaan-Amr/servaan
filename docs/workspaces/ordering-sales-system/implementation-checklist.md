@@ -296,3 +296,11 @@ This checklist provides a comprehensive breakdown of all tasks required to imple
 - **Status**: Phase 3.3 - Real-time Features
 - **Last Updated**: January 2025
 - **Next Milestone**: Complete real-time features and move to Phase 4 
+
+> Update (2025-10-20):
+> - KDS integration and syncing: COMPLETE (status transitions + priority 0..5)
+> - Ordering analytics endpoints: COMPLETE (`/analytics/*` + exports)
+> - SUBMITTED initial status flow: ACTIVE
+> - TODO: Server-side pagination/filters for Orders list (reduce client-side filtering)
+> - TODO: Centralize `unwrapApi<T>` in frontend services
+> - TODO: Structured JSON logging with `tenantId`, `userId`, `requestId`, and domain IDs 

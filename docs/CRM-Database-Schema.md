@@ -1,3 +1,10 @@
+# ✅ CRM — Current Scope (2025-10-20)
+
+- Customer analytics available via ordering analytics; dedicated CRM models/APIs in this doc are planned unless present in code.
+- See `capabilities_matrix.md` for current status.
+
+---
+
 # CRM Database Schema
 ## طراحی پایگاه داده مدیریت ارتباط با مشتری
 

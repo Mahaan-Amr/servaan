@@ -451,3 +451,5 @@ The Custom Reports system now provides a **solid foundation** for advanced analy
 
 **📞 Contact**: Available for questions about the implementation  
 **🔄 Updates**: This document reflects the current state as of 2025/01/27 
+
+> Synced (2025-10-20): For exports use `/api/analytics/export/{csv|json}`. Ensure Toman (no decimals) and Farsi dates in generated outputs. See `common_invariants.md` for shared rules. 

@@ -1,3 +1,13 @@
+# ✅ Security Policy — Admin (2025-10-20)
+
+- Separate admin JWT auth; do not reuse tenant tokens
+- Enforce RBAC via `authenticateAdmin` + `requireRole` on sensitive routes
+- CORS: allow only admin origins configured in adminConfig
+- Headers: `helmet` enabled; keep JSON limits on requests
+- Audit: all sensitive mutations must write audit logs (already applied in tenant routes)
+- Rate limiting: disabled in dev; enable in production with per-IP caps for `/auth/*` and export routes
+- Logging: prefer structured JSON in production; include adminUserId, action, ipAddress, requestId
+
 # 🔒 Admin Panel Security Policy
 
 ## 🚨 **CRITICAL SECURITY REQUIREMENTS**

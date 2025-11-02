@@ -1,3 +1,23 @@
+# ✅ Business Intelligence — Current Implementation Snapshot (2025-10-20)
+
+Authoritative endpoints
+- Ordering analytics: GET `/api/analytics/sales-summary`, `/top-items`, `/hourly-sales`, `/customer-analytics`, `/kitchen-performance`, `/table-utilization`
+- Table analytics: GET `/api/tables/analytics/*`, `/api/tables/advanced-analytics/*`
+- Inventory insights: GET `/api/inventory/stock-override-analytics`; summary: GET `/api/analytics/summary`
+- Exports: GET `/api/analytics/export/{csv|json}`
+
+Invariants
+- Currency on UI: Toman (no decimals). Dates: Farsi calendar and digits. See `common_invariants.md`.
+
+Planned
+- Dedicated endpoints for ABC analysis and Profit Analysis; current pages may derive from sales-summary + cost data.
+
+Links
+- Capabilities: `capabilities_matrix.md`
+- Shared rules: `common_invariants.md`
+
+---
+
 # 📊 Business Intelligence System Status Report
 
 ## 🎯 **System Overview**

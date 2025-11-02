@@ -1,3 +1,11 @@
+# ✅ Workspace Spec — Synced (2025-10-20)
+
+- Current CRM functionality is partial; consult `capabilities_matrix.md`
+- Shared rules: `common_invariants.md`
+- Any endpoint listings below not found in code are planned specifications
+
+---
+
 # CRM Workspace Specification
 ## مشخصات فضای کاری مدیریت ارتباط با مشتری
 

@@ -1,3 +1,11 @@
+# ✅ Synced Snapshot (2025-10-20)
+
+- Treat API sections as planned unless routes exist in backend; current analytics sourced from ordering endpoints
+- Use Toman (no decimals) and Farsi dates on UI
+- See `capabilities_matrix.md` for scope
+
+---
+
 # Architecture
 
 ## System Components

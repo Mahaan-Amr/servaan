@@ -1,3 +1,14 @@
+# ✅ Inventory Management Docs Index (Synced 2025-10-20)
+
+Authoritative sources
+- APIs: `./api-documentation.md` (refactored to match current routes)
+- Shared invariants: `../../common_invariants.md`
+- Capabilities and status: `../../capabilities_matrix.md`
+
+Note: Historical claims like “40+ endpoints complete” referred to planned scope. Current implemented inventory-related endpoints are those listed in `api-documentation.md`; valuation and scanner REST endpoints are planned.
+
+---
+
 # مستندات جامع مدیریت موجودی
 # Comprehensive Inventory Management Documentation
 

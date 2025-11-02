@@ -1,3 +1,22 @@
+# ✅ Accounting — Current Scope Snapshot (2025-10-20)
+
+Implemented now
+- Profitability/COGS analytics via Ordering services and analytics routes
+- Refund processing endpoints; tax helpers
+
+Planned (spec retained in this document)
+- Full COA, Journal Entries, Financial Statements APIs and UI
+- Budget and Cost Centers modules
+
+Guidance
+- Use Toman (no decimals) and Farsi dates on UI (see `common_invariants.md`)
+- Enforce RBAC (ADMIN/MANAGER for mutations)
+- When adding accounting APIs, provide server-side pagination and indexes as listed in `capabilities_matrix.md`
+
+Link: Ordering analytics endpoints `/api/analytics/*` provide the sales basis for profitability.
+
+---
+
 # سیستم حسابداری ایرانی سِروان - پیاده‌سازی کامل
 
 **نسخه**: 3.0  

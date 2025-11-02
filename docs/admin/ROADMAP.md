@@ -1,3 +1,11 @@
+# ✅ Admin Roadmap — Pointer (2025-10-20)
+
+- Current status: see `CURRENT_IMPLEMENTATION_STATUS.md`
+- Platform-wide status: `../capabilities_matrix.md`
+- Near-term priority: wire admin frontend to existing backend routes (tenants/users/exports/analytics), enforce role-based UI guards, and consolidate audit views.
+
+---
+
 # 🗺️ Admin Panel Development Roadmap
 
 ## 📋 Project Overview

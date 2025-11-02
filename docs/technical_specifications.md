@@ -1,3 +1,13 @@
+# ✅ Reality Check (2025-10-20)
+
+Use these as sources of truth:
+- `capabilities_matrix.md` — exact Implemented/Partial/Planned
+- `common_invariants.md` — system-wide conventions
+
+Note: Sections asserting “100% complete” describe planned scope or prior milestones. Where APIs are not present in code (e.g., POS session, accounting COA/Journals), treat them as Planned unless listed in the workspace API specs.
+
+---
+
 # مشخصات فنی فاز ۲ - سِروان پیشرفته
 
 **نسخه**: 3.1  

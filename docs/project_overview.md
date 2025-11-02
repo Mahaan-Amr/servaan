@@ -1,3 +1,14 @@
+# ✅ Synced Status (2025-10-20)
+
+This document contains historical context. For the authoritative current scope and status, see:
+- `capabilities_matrix.md` (Implemented/Partial/Planned per workspace)
+- `common_invariants.md` (currency, dates, order numbers, KDS rules, WAC)
+
+Notes
+- Statements claiming “100% complete” refer to earlier milestones. Accounting COA/Journals/Statements, POS session flows, scanner REST endpoints, and dedicated BI ABC/profit APIs are Planned. Implemented analytics and KDS endpoints are reflected in workspace API docs.
+
+---
+
 # پروژه سِروان - سیستم جامع مدیریت کسب‌وکار
 
 ## 📋 **خلاصه پروژه**

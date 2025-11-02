@@ -1,3 +1,9 @@
+# ✅ Roadmap — Status Pointer (2025-10-20)
+
+For current implementation status and what’s planned next, see `capabilities_matrix.md`. This roadmap reflects goals; some items are now implemented under different endpoint names (see workspace API docs), while others remain planned.
+
+---
+
 # نقشه راه توسعه سِروان
 
 ## فاز ۱: MVP (محصول حداقلی قابل استفاده)

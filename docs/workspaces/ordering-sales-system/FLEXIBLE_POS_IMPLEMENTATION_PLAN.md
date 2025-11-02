@@ -1,3 +1,7 @@
+> Status Banner (2025-10-20): PLANNED / PARTIAL ONLY
+> This document is a design plan. The POS session/quick-sale endpoints referenced here are NOT implemented yet. Refer to `./api-specification.md` for current, implemented routes.
+
+
 # 🚀 Flexible POS System Implementation Plan
 
 ## 📋 **Overview**

@@ -1,3 +1,5 @@
+> Synced (2025-10-20): Charts should source data exclusively from `/api/analytics/*` and `/api/tables/analytics/*`, with Toman formatting (no decimals) and Farsi dates. For exports use `/api/analytics/export/{csv|json}`. See `common_invariants.md`.
+
 # Business Intelligence Interactive Charts & Specialized Pages Implementation
 
 **تاریخ**: 2025/01/10  

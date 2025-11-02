@@ -1,850 +1,115 @@
-# API Specification - Ordering & Sales System
-## مشخصات API - سیستم سفارش‌گیری و فروش
+# Ordering & Sales System – API Specification (Refactored)
 
-### 📋 Overview | نمای کلی
+Last updated: 2025-10-20
+Status: Current and authoritative for the deployed codebase
 
-This document defines the RESTful API endpoints for the Ordering & Sales System workspace. All endpoints follow the existing Servaan API patterns with proper authentication, authorization, and multi-tenant data isolation.
+## 1) Authentication, Tenanting, RBAC
+- Auth: JWT in `Authorization: Bearer <token>`
+- Tenant: resolved by middleware (header optional in some deployments)
+- Roles: ADMIN, MANAGER, STAFF
+  - Mutations on orders (complete/cancel), KDS priority/status: ADMIN/MANAGER
 
----
+## 2) Global Invariants
+- Currency: Displayed as Toman (no decimals) on UI
+- Dates: Farsi calendar and Farsi digits on UI
+- Order numbers: `ORD-YYYYMMDD-NNNN`, unique per-tenant, generated in-transaction with retry
+- Initial order status: `SUBMITTED` → then `CONFIRMED → PREPARING → READY → SERVED/COMPLETED`
+- KDS priority: integer 0..5 (validated backend)
 
-## 🔐 Authentication & Authorization | احراز هویت و مجوز
+## 3) Orders API
 
-### Headers Required
-```http
-Authorization: Bearer <jwt_token>
-Content-Type: application/json
-X-Tenant-ID: <tenant_id>
-```
+### GET /api/orders
+Query params: `page, limit, status[], orderType[], tableId, customerId, startDate, endDate, search, sortBy, sortOrder`
+Response: `{ success, data: { orders, pagination, summary } }`
 
-### Role-Based Access
-- **ADMIN**: Full access to all endpoints
-- **MANAGER**: Access to all except system configuration
-- **STAFF**: Limited to order creation and status updates
+### GET /api/orders/:id
+Response: `{ success, data: { order, items, payments, table?, customer? } }`
 
----
+### GET /api/orders/today/summary
+Response: stats for dashboard (revenue, counts, averages)
 
-## 📋 Order Management API | API مدیریت سفارشات
+### POST /api/orders
+Creates order with status SUBMITTED and creates matching KDS entry.
+Body: orderType, customer info (optional), tableId (optional), items[], notes, kitchenNotes, allergyInfo
+Response: `{ success, data: { order, orderNumber, estimatedTime } }`
 
-### 1. Get Orders | دریافت سفارشات
+### PUT /api/orders/:id
+Updates order (items, notes, options). KDS sync applied when relevant.
 
-```http
-GET /api/orders
-```
+### PATCH /api/orders/:id/status
+Controlled status transitions; validation enforced.
 
-**Query Parameters:**
-```typescript
-interface GetOrdersQuery {
-  page?: number;           // Default: 1
-  limit?: number;          // Default: 20, Max: 100
-  status?: OrderStatus[];  // Filter by status
-  orderType?: OrderType[]; // Filter by type
-  tableId?: string;        // Filter by table
-  customerId?: string;     // Filter by customer
-  startDate?: string;      // ISO date
-  endDate?: string;        // ISO date
-  search?: string;         // Search in order number, customer name
-  sortBy?: 'orderDate' | 'orderNumber' | 'totalAmount' | 'status';
-  sortOrder?: 'asc' | 'desc';
-}
-```
+### POST /api/orders/:id/complete
+Sets order to COMPLETED, triggers accounting integration and KDS sync.
 
-**Response:**
-```typescript
-interface GetOrdersResponse {
-  success: boolean;
-  data: {
-    orders: Order[];
-    pagination: {
-      total: number;
-      totalPages: number;
-      currentPage: number;
-      limit: number;
-    };
-    summary: {
-      totalRevenue: number;
-      completedOrders: number;
-      pendingOrders: number;
-      averageOrderValue: number;
-    };
-  };
-}
-```
+### POST /api/orders/:id/cancel
+Cancels order, updates KDS entry accordingly.
 
-### 2. Get Order by ID | دریافت سفارش با شناسه
+### Ancillary
+- POST `/api/orders/:id/add-items`
+- DELETE `/api/orders/:id/remove-items`
+- PUT `/api/orders/:id/update-quantities`
+- GET `/api/orders/:id/payment-history`
 
-```http
-GET /api/orders/:orderId
-```
+## 4) Kitchen Display (KDS)
 
-**Response:**
-```typescript
-interface GetOrderResponse {
-  success: boolean;
-  data: {
-    order: Order;
-    items: OrderItem[];
-    payments: Payment[];
-    customer?: Customer;
-    table?: Table;
-    timeline: OrderTimeline[];
-  };
-}
+### GET /api/kitchen/displays/:displayName
+Returns KDS orders for a given display (excludes COMPLETED/CANCELLED/SERVED).
 
-interface OrderTimeline {
-  timestamp: string;
-  status: OrderStatus;
-  note?: string;
-  userId: string;
-  userName: string;
-}
-```
+### GET /api/kitchen/stations
+Lists available stations.
 
-### 3. Create Order | ایجاد سفارش
+### PATCH /api/kitchen/displays/:id/status
+Valid transitions include SUBMITTED→CONFIRMED/PREPARING; READY→SERVED, etc.
 
-```http
-POST /api/orders
-```
+### PATCH /api/kitchen/displays/:id/priority
+Priority must be between 0 and 5.
 
-**Request Body:**
-```typescript
-interface CreateOrderRequest {
-  orderType: OrderType;
-  customerId?: string;
-  customerName?: string;
-  customerPhone?: string;
-  tableId?: string;
-  guestCount?: number;
-  items: {
-    itemId: string;
-    quantity: number;
-    modifiers?: OrderItemModifier[];
-    specialRequest?: string;
-  }[];
-  notes?: string;
-  kitchenNotes?: string;
-  allergyInfo?: string;
-}
+## 5) Payments
+- POST `/api/payments/process`
+- POST `/api/payments/refund`
+- POST `/api/payments/validate`
+- GET `/api/payments`, `/daily-summary`, `/methods-breakdown`, `/statistics`, `/pending`, `/failed`, `/cash-management`
+- POST `/api/payments/:id/retry`
 
-interface OrderItemModifier {
-  modifierId: string;
-  quantity: number;
-}
-```
+## 6) Tables
+- GET `/api/tables`, `/tables/layout`, `/tables/available`, `/tables/:id`
+- PATCH `/api/tables/:id/status`
+- POST `/api/tables/:tableId/transfer`
+- POST `/api/tables/:id/occupy`, POST `/api/tables/:id/clear`
 
-**Response:**
-```typescript
-interface CreateOrderResponse {
-  success: boolean;
-  data: {
-    order: Order;
-    orderNumber: string;
-    estimatedTime: number;
-  };
-}
-```
+## 7) Analytics (Ordering)
+- GET `/api/analytics/sales-summary`
+- GET `/api/analytics/top-items`
+- GET `/api/analytics/hourly-sales`
+- GET `/api/analytics/customer-analytics`
+- GET `/api/analytics/kitchen-performance`
+- GET `/api/analytics/table-utilization`
+- Exports: GET `/api/analytics/export/csv`, GET `/api/analytics/export/json`
 
-### 4. Update Order | به‌روزرسانی سفارش
+## 8) Integrations leveraged by Ordering
+- Inventory stock check: POST `/api/inventory/validate-order-stock`
+- Menu availability sync: POST `/api/inventory/update-menu-availability`
 
-```http
-PUT /api/orders/:orderId
-```
-
-**Request Body:**
-```typescript
-interface UpdateOrderRequest {
-  status?: OrderStatus;
-  priority?: number;
-  estimatedTime?: number;
-  notes?: string;
-  kitchenNotes?: string;
-  items?: {
-    action: 'ADD' | 'UPDATE' | 'REMOVE';
-    orderItemId?: string; // For UPDATE/REMOVE
-    itemId?: string;      // For ADD
-    quantity?: number;
-    modifiers?: OrderItemModifier[];
-    specialRequest?: string;
-  }[];
-}
-```
-
-### 5. Cancel Order | لغو سفارش
-
-```http
-DELETE /api/orders/:orderId
-```
-
-**Request Body:**
-```typescript
-interface CancelOrderRequest {
-  reason: string;
-  refundAmount?: number;
-}
-```
+## 9) WebSocket Events (tenant-scoped)
+- `kitchen:order:update`
+- `kitchen:stock:alert`
+- `kitchen:menu:availability`
+- `kitchen:profitability:update`
 
 ---
 
-## 🍽️ Point of Sale (POS) API | API سیستم فروش
+## Appendix A — Deprecated/Legacy/Planned
 
-### 1. Get POS Session | دریافت جلسه فروش
+- Legacy kitchen endpoints
+  - GET `/api/kitchen/orders`, PUT `/api/kitchen/orders/:orderId/status`, PUT item-ready
+  - Status: replaced by `/kitchen/displays/*`
 
-```http
-GET /api/pos/session
-```
+- POS session and quick-sale endpoints
+  - `/api/pos/session*`, `/api/pos/quick-sale`
+  - Status: Planned (not implemented)
 
-**Response:**
-```typescript
-interface POSSessionResponse {
-  success: boolean;
-  data: {
-    sessionId: string;
-    cashierId: string;
-    openedAt: string;
-    initialCash: number;
-    currentCash: number;
-    totalSales: number;
-    orderCount: number;
-    lastActivity: string;
-  };
-}
-```
+- Legacy “table-performance” endpoint name
+  - Use `/analytics/table-utilization` and `/tables/analytics/*` instead
 
-### 2. Open POS Session | باز کردن جلسه فروش
-
-```http
-POST /api/pos/session/open
-```
-
-**Request Body:**
-```typescript
-interface OpenSessionRequest {
-  initialCash: number;
-  notes?: string;
-}
-```
-
-### 3. Close POS Session | بستن جلسه فروش
-
-```http
-POST /api/pos/session/close
-```
-
-**Request Body:**
-```typescript
-interface CloseSessionRequest {
-  finalCash: number;
-  notes?: string;
-}
-```
-
-### 4. Quick Sale | فروش سریع
-
-```http
-POST /api/pos/quick-sale
-```
-
-**Request Body:**
-```typescript
-interface QuickSaleRequest {
-  items: {
-    itemId: string;
-    quantity: number;
-    unitPrice: number;
-  }[];
-  paymentMethod: PaymentMethod;
-  customerPhone?: string;
-  discountAmount?: number;
-  notes?: string;
-}
-```
-
----
-
-## 🪑 Table Management API | API مدیریت میزها
-
-### 1. Get Tables | دریافت میزها
-
-```http
-GET /api/tables
-```
-
-**Query Parameters:**
-```typescript
-interface GetTablesQuery {
-  section?: string;
-  floor?: number;
-  status?: TableStatus[];
-  includeOrders?: boolean;
-}
-```
-
-**Response:**
-```typescript
-interface GetTablesResponse {
-  success: boolean;
-  data: {
-    tables: Table[];
-    layout?: {
-      sections: string[];
-      floors: number[];
-    };
-  };
-}
-```
-
-### 2. Update Table Status | به‌روزرسانی وضعیت میز
-
-```http
-PUT /api/tables/:tableId/status
-```
-
-**Request Body:**
-```typescript
-interface UpdateTableStatusRequest {
-  status: TableStatus;
-  notes?: string;
-}
-```
-
-### 3. Transfer Order | انتقال سفارش
-
-```http
-POST /api/tables/:tableId/transfer
-```
-
-**Request Body:**
-```typescript
-interface TransferOrderRequest {
-  fromTableId: string;
-  orderId: string;
-  reason?: string;
-}
-```
-
-### 4. Merge Tables | ادغام میزها
-
-```http
-POST /api/tables/merge
-```
-
-**Request Body:**
-```typescript
-interface MergeTablesRequest {
-  tableIds: string[];
-  primaryTableId: string;
-  reason?: string;
-}
-```
-
----
-
-## 💳 Payment Processing API | API پردازش پرداخت
-
-### 1. Process Payment | پردازش پرداخت
-
-```http
-POST /api/payments/process
-```
-
-**Request Body:**
-```typescript
-interface ProcessPaymentRequest {
-  orderId: string;
-  amount: number;
-  paymentMethod: PaymentMethod;
-  
-  // For card payments
-  cardInfo?: {
-    terminalId: string;
-    transactionRef: string;
-  };
-  
-  // For cash payments
-  cashReceived?: number;
-  
-  // For loyalty points
-  pointsUsed?: number;
-  
-  // For mixed payments
-  splitPayments?: {
-    method: PaymentMethod;
-    amount: number;
-  }[];
-}
-```
-
-**Response:**
-```typescript
-interface ProcessPaymentResponse {
-  success: boolean;
-  data: {
-    payment: Payment;
-    changeAmount?: number;
-    pointsEarned?: number;
-    receiptData: {
-      paymentNumber: string;
-      timestamp: string;
-      items: OrderItem[];
-      totals: {
-        subtotal: number;
-        discount: number;
-        tax: number;
-        total: number;
-        paid: number;
-        change: number;
-      };
-    };
-  };
-}
-```
-
-### 2. Refund Payment | برگشت پرداخت
-
-```http
-POST /api/payments/:paymentId/refund
-```
-
-**Request Body:**
-```typescript
-interface RefundPaymentRequest {
-  amount: number;
-  reason: string;
-  refundMethod?: PaymentMethod;
-}
-```
-
-### 3. Split Payment | تقسیم پرداخت
-
-```http
-POST /api/payments/split
-```
-
-**Request Body:**
-```typescript
-interface SplitPaymentRequest {
-  orderId: string;
-  splits: {
-    amount: number;
-    paymentMethod: PaymentMethod;
-    customerName?: string;
-  }[];
-}
-```
-
----
-
-## 🏷️ Menu Management API | API مدیریت منو
-
-### 1. Get Menu | دریافت منو
-
-```http
-GET /api/menu
-```
-
-**Query Parameters:**
-```typescript
-interface GetMenuQuery {
-  categoryId?: string;
-  isActive?: boolean;
-  isAvailable?: boolean;
-  includeModifiers?: boolean;
-  language?: 'fa' | 'en';
-}
-```
-
-**Response:**
-```typescript
-interface GetMenuResponse {
-  success: boolean;
-  data: {
-    categories: MenuCategory[];
-    items: MenuItem[];
-    modifiers: MenuItemModifier[];
-  };
-}
-```
-
-### 2. Update Item Availability | به‌روزرسانی موجودی آیتم
-
-```http
-PUT /api/menu/items/:itemId/availability
-```
-
-**Request Body:**
-```typescript
-interface UpdateAvailabilityRequest {
-  isAvailable: boolean;
-  reason?: string;
-  estimatedRestockTime?: string;
-}
-```
-
-### 3. Bulk Update Prices | به‌روزرسانی گروهی قیمت‌ها
-
-```http
-PUT /api/menu/bulk-update-prices
-```
-
-**Request Body:**
-```typescript
-interface BulkUpdatePricesRequest {
-  updates: {
-    itemId: string;
-    newPrice: number;
-  }[];
-  effectiveDate?: string;
-  reason?: string;
-}
-```
-
----
-
-## 👨‍🍳 Kitchen Display API | API نمایشگر آشپزخانه
-
-### 1. Get Kitchen Orders | دریافت سفارشات آشپزخانه
-
-```http
-GET /api/kitchen/orders
-```
-
-**Query Parameters:**
-```typescript
-interface GetKitchenOrdersQuery {
-  station?: string;
-  status?: OrderStatus[];
-  priority?: number;
-  limit?: number;
-}
-```
-
-**Response:**
-```typescript
-interface GetKitchenOrdersResponse {
-  success: boolean;
-  data: {
-    orders: KitchenDisplayOrder[];
-    stations: string[];
-    statistics: {
-      pending: number;
-      preparing: number;
-      ready: number;
-      averagePrepTime: number;
-    };
-  };
-}
-
-interface KitchenDisplayOrder {
-  orderId: string;
-  orderNumber: string;
-  orderType: OrderType;
-  tableNumber?: string;
-  customerName?: string;
-  items: {
-    itemName: string;
-    quantity: number;
-    modifiers: string[];
-    specialRequest?: string;
-    prepStatus: OrderStatus;
-  }[];
-  priority: number;
-  estimatedTime: number;
-  elapsedTime: number;
-  status: OrderStatus;
-  notes?: string;
-  allergyInfo?: string;
-}
-```
-
-### 2. Update Kitchen Order Status | به‌روزرسانی وضعیت سفارش آشپزخانه
-
-```http
-PUT /api/kitchen/orders/:orderId/status
-```
-
-**Request Body:**
-```typescript
-interface UpdateKitchenStatusRequest {
-  status: OrderStatus;
-  itemId?: string; // For individual item status
-  estimatedTime?: number;
-  notes?: string;
-}
-```
-
-### 3. Mark Item Ready | علامت‌گذاری آیتم آماده
-
-```http
-PUT /api/kitchen/orders/:orderId/items/:itemId/ready
-```
-
-**Request Body:**
-```typescript
-interface MarkItemReadyRequest {
-  actualPrepTime?: number;
-  qualityNotes?: string;
-}
-```
-
----
-
-## 📊 Analytics & Reports API | API تحلیل‌ها و گزارشات
-
-### 1. Sales Summary | خلاصه فروش
-
-```http
-GET /api/analytics/sales-summary
-```
-
-**Query Parameters:**
-```typescript
-interface SalesSummaryQuery {
-  startDate: string;
-  endDate: string;
-  groupBy?: 'hour' | 'day' | 'week' | 'month';
-  compareWith?: 'previous-period' | 'last-year';
-}
-```
-
-**Response:**
-```typescript
-interface SalesSummaryResponse {
-  success: boolean;
-  data: {
-    totalRevenue: number;
-    totalOrders: number;
-    averageOrderValue: number;
-    topSellingItems: {
-      itemId: string;
-      itemName: string;
-      quantity: number;
-      revenue: number;
-    }[];
-    hourlyBreakdown: {
-      hour: number;
-      orders: number;
-      revenue: number;
-    }[];
-    comparison?: {
-      revenueGrowth: number;
-      orderGrowth: number;
-      averageOrderValueGrowth: number;
-    };
-  };
-}
-```
-
-### 2. Table Performance | عملکرد میزها
-
-```http
-GET /api/analytics/table-performance
-```
-
-**Response:**
-```typescript
-interface TablePerformanceResponse {
-  success: boolean;
-  data: {
-    tables: {
-      tableId: string;
-      tableNumber: string;
-      totalOrders: number;
-      totalRevenue: number;
-      averageOrderValue: number;
-      occupancyRate: number;
-      turnoverRate: number;
-    }[];
-    overallMetrics: {
-      averageOccupancyRate: number;
-      averageTurnoverRate: number;
-      peakHours: number[];
-    };
-  };
-}
-```
-
-### 3. Staff Performance | عملکرد کارکنان
-
-```http
-GET /api/analytics/staff-performance
-```
-
-**Response:**
-```typescript
-interface StaffPerformanceResponse {
-  success: boolean;
-  data: {
-    staff: {
-      userId: string;
-      userName: string;
-      ordersProcessed: number;
-      totalRevenue: number;
-      averageOrderValue: number;
-      averageServiceTime: number;
-      customerRating?: number;
-    }[];
-  };
-}
-```
-
----
-
-## 🔄 Integration Endpoints | نقاط پایانی ادغام
-
-### 1. Sync with Inventory | همگام‌سازی با انبار
-
-```http
-POST /api/integration/inventory/sync
-```
-
-**Request Body:**
-```typescript
-interface InventorySyncRequest {
-  orderId: string;
-  items: {
-    itemId: string;
-    quantityUsed: number;
-  }[];
-}
-```
-
-### 2. Generate Accounting Entry | تولید سند حسابداری
-
-```http
-POST /api/integration/accounting/generate-entry
-```
-
-**Request Body:**
-```typescript
-interface GenerateAccountingEntryRequest {
-  orderId: string;
-  paymentId: string;
-  entryType: 'SALE' | 'REFUND' | 'DISCOUNT';
-}
-```
-
-### 3. Update Customer Visit | به‌روزرسانی بازدید مشتری
-
-```http
-POST /api/integration/crm/update-visit
-```
-
-**Request Body:**
-```typescript
-interface UpdateCustomerVisitRequest {
-  orderId: string;
-  customerId?: string;
-  visitData: {
-    totalAmount: number;
-    itemsOrdered: string[];
-    serviceRating?: number;
-    feedbackComment?: string;
-  };
-}
-```
-
----
-
-## 🚨 Real-time Events | رویدادهای بلادرنگ
-
-### WebSocket Connection
-```
-ws://api.servaan.com/ws/ordering
-```
-
-### Event Types
-```typescript
-interface OrderStatusUpdate {
-  type: 'ORDER_STATUS_UPDATE';
-  orderId: string;
-  status: OrderStatus;
-  timestamp: string;
-}
-
-interface NewOrderAlert {
-  type: 'NEW_ORDER';
-  order: Order;
-  station: string;
-}
-
-interface PaymentCompleted {
-  type: 'PAYMENT_COMPLETED';
-  orderId: string;
-  paymentId: string;
-  amount: number;
-}
-
-interface TableStatusUpdate {
-  type: 'TABLE_STATUS_UPDATE';
-  tableId: string;
-  status: TableStatus;
-}
-```
-
----
-
-## 📝 Error Handling | مدیریت خطا
-
-### Standard Error Response
-```typescript
-interface ErrorResponse {
-  success: false;
-  error: {
-    code: string;
-    message: string;
-    details?: any;
-    field?: string; // For validation errors
-  };
-  timestamp: string;
-  requestId: string;
-}
-```
-
-### Common Error Codes
-```typescript
-const ErrorCodes = {
-  // Order Errors
-  'ORDER_NOT_FOUND': 'سفارش یافت نشد',
-  'ORDER_ALREADY_COMPLETED': 'سفارش قبلاً تکمیل شده است',
-  'ORDER_CANNOT_BE_MODIFIED': 'سفارش قابل تغییر نیست',
-  'INSUFFICIENT_STOCK': 'موجودی کافی نیست',
-  
-  // Payment Errors
-  'PAYMENT_FAILED': 'پرداخت ناموفق بود',
-  'INSUFFICIENT_AMOUNT': 'مبلغ کافی نیست',
-  'PAYMENT_ALREADY_PROCESSED': 'پرداخت قبلاً انجام شده است',
-  
-  // Table Errors
-  'TABLE_NOT_AVAILABLE': 'میز در دسترس نیست',
-  'TABLE_ALREADY_OCCUPIED': 'میز قبلاً اشغال شده است',
-  
-  // Authorization Errors
-  'INSUFFICIENT_PERMISSIONS': 'دسترسی کافی ندارید',
-  'TENANT_MISMATCH': 'عدم تطابق مستأجر',
-  
-  // Validation Errors
-  'INVALID_INPUT': 'ورودی نامعتبر',
-  'REQUIRED_FIELD_MISSING': 'فیلد اجباری وارد نشده است'
-};
-```
-
----
-
-## 🔐 Rate Limiting | محدودیت نرخ
-
-```typescript
-const RateLimits = {
-  // Per user per minute
-  'GET /api/orders': 100,
-  'POST /api/orders': 30,
-  'POST /api/payments/process': 20,
-  
-  // Per tenant per minute
-  'GET /api/analytics/*': 50,
-  'POST /api/integration/*': 100
-};
-```
-
----
-
-*Last Updated: [Current Date]*
-*Version: 1.0* 
+--- 

@@ -1,3 +1,15 @@
+# ✅ BI Implementation — Authoritative Snapshot (2025-10-20)
+
+- Implemented data sources: `/api/analytics/sales-summary`, `/top-items`, `/hourly-sales`, `/customer-analytics`, `/kitchen-performance`, `/table-utilization`, `/api/tables/analytics/*`
+- Exports: `/api/analytics/export/{csv|json}`
+- Inventory insights: `/api/inventory/stock-override-analytics`, `/api/analytics/summary`
+- UI invariants: Toman no-decimals, Farsi dates/digits (`common_invariants.md`)
+- Planned: dedicated ABC and profit analysis endpoints
+
+See also: `capabilities_matrix.md`.
+
+---
+
 # Business Intelligence Implementation Summary
 
 **تاریخ**: 2025/01/10  

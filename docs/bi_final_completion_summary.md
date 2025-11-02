@@ -265,3 +265,5 @@ src/frontend/components/charts/
 ✅ **آماده برای استقرار** در محیط تولید  
 
 **🎉 فاز 2 از پروژه سِروان با موفقیت 85% تکمیل شد!**
+
+> Correction (2025-10-20): BI completion refers to the implemented analytics routes listed in `/api/analytics/*` and `/api/tables/analytics/*`, plus exports. Dedicated ABC/profit endpoints are planned; current pages may compute from sales-summary and cost data. See `common_invariants.md`.

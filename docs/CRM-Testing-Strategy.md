@@ -1,3 +1,10 @@
+# ✅ Testing Scope (2025-10-20)
+
+- Tests should target implemented analytics endpoints and any CRM routes present in code; other sections here are planned
+- Follow invariants in `common_invariants.md` for data formatting assertions
+
+---
+
 # CRM Testing Strategy
 ## استراتژی تست مدیریت ارتباط با مشتری
 
