@@ -22,6 +22,7 @@ export interface JournalEntryLineData {
 }
 
 export interface JournalEntryFilter {
+  tenantId?: string;
   startDate?: Date;
   endDate?: Date;
   accountId?: string;
@@ -202,6 +203,11 @@ export class JournalEntryService {
     page: number = 1,
     limit: number = 50
   ) {
+    // Validate tenantId is provided for security (tenant isolation)
+    if (!filter.tenantId) {
+      throw new Error('Tenant ID is required for querying journal entries');
+    }
+
     const whereClause: any = { tenantId: filter.tenantId };
 
     if (filter.startDate || filter.endDate) {
