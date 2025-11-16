@@ -59,40 +59,43 @@ model Tenant {
   tables             Table[]
   features           TenantFeatures?
   stockOverrides     StockOverride[]
-  
+
   // CRM System relations
-  customers         Customer[]
-  customerLoyalty   CustomerLoyalty[]
-  customerVisits    CustomerVisit[]
+  customers           Customer[]
+  customerLoyalty     CustomerLoyalty[]
+  customerVisits      CustomerVisit[]
   loyaltyTransactions LoyaltyTransaction[]
-  campaigns         Campaign[]
-  campaignDeliveries CampaignDelivery[]
-  customerFeedback  CustomerFeedback[]
+  campaigns           Campaign[]
+  campaignDeliveries  CampaignDelivery[]
+  customerFeedback    CustomerFeedback[]
   crmCustomerSegments CrmCustomerSegment[]
-  campaignTemplates CampaignTemplate[]
-  smsProviders     SmsProvider[]
-  suppliers        Supplier[]
-  itemSuppliers    ItemSupplier[]
-  notifications    Notification[]
-  scanHistory      ScanHistory[]
+  campaignTemplates   CampaignTemplate[]
+  smsProviders        SmsProvider[]
+  suppliers           Supplier[]
+  itemSuppliers       ItemSupplier[]
+  notifications       Notification[]
+  scanHistory         ScanHistory[]
   externalBarcodeData ExternalBarcodeData[]
-  customReports    CustomReport[]
-  reportExecutions ReportExecution[]
-  
+  customReports       CustomReport[]
+  reportExecutions    ReportExecution[]
+
   // Accounting System relations
-  chartOfAccounts ChartOfAccount[]
-  journalEntries JournalEntry[]
-  journalEntryLines JournalEntryLine[]
-  costCenters CostCenter[]
-  budgets Budget[]
-  budgetLines BudgetLine[]
+  chartOfAccounts     ChartOfAccount[]
+  journalEntries      JournalEntry[]
+  journalEntryLines   JournalEntryLine[]
+  costCenters         CostCenter[]
+  budgets             Budget[]
+  budgetLines         BudgetLine[]
   financialStatements FinancialStatement[]
-  taxConfigurations TaxConfiguration[]
-  accountingPeriods AccountingPeriod[]
-  
+  taxConfigurations   TaxConfiguration[]
+  accountingPeriods   AccountingPeriod[]
+
   // Inventory System relations
-  inventoryEntries InventoryEntry[]
-  
+  inventoryEntries  InventoryEntry[]
+  inventorySettings InventorySettings?
+  inventoryAuditCycles InventoryAuditCycle[]
+  inventoryAuditEntries InventoryAuditEntry[]
+
   @@map("tenants")
 }
 
@@ -115,14 +118,25 @@ model TenantFeatures {
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
   tenant                  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
+
   @@map("tenant_features")
+}
+
+model InventorySettings {
+  id                 String   @id @default(cuid())
+  tenantId           String   @unique
+  allowNegativeStock Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  tenant             Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("inventory_settings")
 }
 
 model ChartOfAccount {
   id                String             @id @default(cuid())
   tenantId          String
-  tenant            Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   accountCode       String             @db.VarChar(20)
   accountName       String             @db.VarChar(255)
   accountNameEn     String?            @db.VarChar(255)
@@ -139,16 +153,16 @@ model ChartOfAccount {
   parentAccount     ChartOfAccount?    @relation("AccountHierarchy", fields: [parentAccountId], references: [id])
   childAccounts     ChartOfAccount[]   @relation("AccountHierarchy")
   journalEntryLines JournalEntryLine[]
-  
-    @@index([tenantId])
+
   @@unique([tenantId, accountCode])
+  @@index([tenantId])
   @@map("chart_of_accounts")
 }
 
 model JournalEntry {
   id             String             @id @default(cuid())
-  tenantId          String
-  tenant            Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId       String
+  tenant         Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   entryNumber    String             @unique @db.VarChar(50)
   entryDate      DateTime           @db.Date
   description    String
@@ -171,14 +185,14 @@ model JournalEntry {
   reversedByUser User?              @relation("JournalReversedBy", fields: [reversedBy], references: [id])
   lines          JournalEntryLine[]
 
-    @@index([tenantId])
+  @@index([tenantId])
   @@map("journal_entries")
 }
 
 model JournalEntryLine {
   id             String         @id @default(cuid())
-  tenantId          String
-  tenant            Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId       String
+  tenant         Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   journalEntryId String
   accountId      String
   description    String?
@@ -191,15 +205,15 @@ model JournalEntryLine {
   account        ChartOfAccount @relation(fields: [accountId], references: [id])
   costCenter     CostCenter?    @relation(fields: [costCenterId], references: [id])
   journalEntry   JournalEntry   @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
-  
-    @@index([tenantId])
+
+  @@index([tenantId])
   @@map("journal_entry_lines")
 }
 
 model CostCenter {
   id                 String             @id @default(cuid())
-  tenantId          String
-  tenant            Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId           String
+  tenant             Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   code               String             @unique @db.VarChar(20)
   name               String             @db.VarChar(255)
   nameEn             String?            @db.VarChar(255)
@@ -217,14 +231,14 @@ model CostCenter {
   childCostCenters   CostCenter[]       @relation("CostCenterHierarchy")
   journalEntryLines  JournalEntryLine[]
 
-    @@index([tenantId])
+  @@index([tenantId])
   @@map("cost_centers")
 }
 
 model Budget {
   id             String       @id @default(cuid())
-  tenantId          String
-  tenant            Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId       String
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   name           String       @db.VarChar(255)
   nameEn         String?      @db.VarChar(255)
   fiscalYear     Int
@@ -242,14 +256,14 @@ model Budget {
   approvedByUser User?        @relation("BudgetApprovedBy", fields: [approvedBy], references: [id])
   createdByUser  User         @relation("BudgetCreatedBy", fields: [createdBy], references: [id])
 
-    @@index([tenantId])
+  @@index([tenantId])
   @@map("budgets")
 }
 
 model BudgetLine {
   id              String         @id @default(cuid())
-  tenantId          String
-  tenant            Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId        String
+  tenant          Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   budgetId        String
   accountId       String
   costCenterId    String?
@@ -265,14 +279,14 @@ model BudgetLine {
   budget          Budget         @relation(fields: [budgetId], references: [id], onDelete: Cascade)
   costCenter      CostCenter?    @relation(fields: [costCenterId], references: [id])
 
-    @@index([tenantId])
+  @@index([tenantId])
   @@map("budget_lines")
 }
 
 model FinancialStatement {
   id              String        @id @default(cuid())
-  tenantId          String
-  tenant            Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId        String
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   statementType   StatementType
   fiscalYear      Int
   period          String        @db.VarChar(50)
@@ -282,16 +296,16 @@ model FinancialStatement {
   generatedBy     String
   generatedAt     DateTime      @default(now())
   generatedByUser User          @relation(fields: [generatedBy], references: [id])
-  
+
   @@unique([statementType, fiscalYear, period])
-    @@index([tenantId])
+  @@index([tenantId])
   @@map("financial_statements")
 }
 
 model TaxConfiguration {
   id            String    @id @default(cuid())
-  tenantId          String
-  tenant            Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId      String
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   taxType       TaxType
   taxName       String    @db.VarChar(255)
   taxRate       Decimal   @db.Decimal(5, 4)
@@ -301,15 +315,15 @@ model TaxConfiguration {
   description   String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
-    @@index([tenantId])
+
+  @@index([tenantId])
   @@map("tax_configurations")
 }
 
 model AccountingPeriod {
   id           String       @id @default(cuid())
-  tenantId          String
-  tenant            Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId     String
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   name         String       @db.VarChar(255)
   fiscalYear   Int
   periodNumber Int
@@ -322,9 +336,9 @@ model AccountingPeriod {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   closedByUser User?        @relation(fields: [closedBy], references: [id])
-  
+
   @@unique([fiscalYear, periodNumber, periodType])
-    @@index([tenantId])
+  @@index([tenantId])
   @@map("accounting_periods")
 }
 
@@ -433,7 +447,7 @@ model CustomerVisit {
   createdByUser       User                 @relation("VisitCreatedBy", fields: [createdBy], references: [id])
   customer            Customer             @relation(fields: [customerId], references: [id], onDelete: Cascade)
   loyaltyTransactions LoyaltyTransaction[]
-  
+
   @@index([tenantId])
   @@index([customerId])
   @@index([visitDate])
@@ -500,7 +514,7 @@ model Campaign {
   approvedByUser      User?                @relation("CampaignApprovedBy", fields: [approvedBy], references: [id])
   createdByUser       User                 @relation("CampaignCreatedBy", fields: [createdBy], references: [id])
   loyaltyTransactions LoyaltyTransaction[]
-  
+
   @@index([tenantId])
   @@index([campaignType])
   @@index([status])
@@ -658,7 +672,7 @@ model SmsHistory {
   customer     Customer? @relation(fields: [customerId], references: [id])
   sentByUser   User?     @relation("SmsHistorySentBy", fields: [sentBy], references: [id])
   tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  
+
   @@index([tenantId, createdAt])
   @@index([phoneNumber])
   @@index([messageType, status])
@@ -670,7 +684,7 @@ model SmsHistory {
 model CampaignTemplate {
   id               String       @id @default(uuid())
   tenantId         String
-  tenant           Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant           Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   name             String       @db.VarChar(200)
   templateType     CampaignType
   content          String
@@ -702,7 +716,8 @@ model User {
   phoneNumber                String?
   tenantId                   String
   customReports              CustomReport[]
-  inventoryEntries           InventoryEntry[]
+  inventoryEntries           InventoryEntry[]     @relation("InventoryEntryCreatedBy")
+  inventoryEntriesDeleted    InventoryEntry[]     @relation("InventoryEntryDeletedBy")
   notifications              Notification[]
   reportExecutions           ReportExecution[]
   scanHistory                ScanHistory[]
@@ -732,6 +747,11 @@ model User {
   reservationsCreated        TableReservation[]   @relation("ReservationCreatedBy")
   tableStatusChanges         TableStatusLog[]     @relation("TableStatusChangedBy")
   stockOverrides             StockOverride[]
+  auditCyclesCreated         InventoryAuditCycle[] @relation("AuditCycleCreatedBy")
+  auditCyclesCompleted       InventoryAuditCycle[] @relation("AuditCycleCompletedBy")
+  auditCyclesCancelled        InventoryAuditCycle[] @relation("AuditCycleCancelledBy")
+  auditEntriesCounted         InventoryAuditEntry[] @relation("AuditEntryCountedBy")
+  auditEntriesCreated         InventoryAuditEntry[] @relation("AuditEntryCreatedBy")
 
   @@index([email])
 }
@@ -748,6 +768,8 @@ model Item {
   image             String?
   isActive          Boolean            @default(true)
   minStock          Float?
+  deletedAt         DateTime?
+  deletedBy         String?
   tenantId          String
   inventoryEntries  InventoryEntry[]
   tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -756,16 +778,19 @@ model Item {
   menuItems         MenuItem[]
   orderItems        OrderItem[]
   recipeIngredients RecipeIngredient[]
+  auditEntries      InventoryAuditEntry[]
 
   @@index([category])
   @@index([name])
   @@index([barcode])
+  @@index([deletedAt])
+  @@index([tenantId, deletedAt])
 }
 
 model InventoryEntry {
   id          String             @id @default(uuid())
-  tenantId          String
-  tenant            Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId    String
+  tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   itemId      String
   quantity    Float
   type        InventoryEntryType
@@ -776,13 +801,18 @@ model InventoryEntry {
   batchNumber String?
   expiryDate  DateTime?
   unitPrice   Float?
+  deletedAt   DateTime?
+  deletedBy   String?
   item        Item               @relation(fields: [itemId], references: [id])
-  user        User               @relation(fields: [userId], references: [id])
+  user        User               @relation("InventoryEntryCreatedBy", fields: [userId], references: [id])
+  deletedByUser User?            @relation("InventoryEntryDeletedBy", fields: [deletedBy], references: [id])
+  auditCorrections InventoryAuditEntry[] @relation("AuditCorrectionEntry")
 
   @@index([itemId, type])
   @@index([createdAt])
   @@index([tenantId])
-
+  @@index([deletedAt])
+  @@index([tenantId, deletedAt])
 }
 
 model ItemSupplier {
@@ -827,8 +857,8 @@ model Notification {
 
 model ScanHistory {
   id        String        @id @default(uuid())
-  tenantId          String
-  tenant            Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId  String
+  tenant    Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   userId    String
   code      String
   format    BarcodeFormat
@@ -844,13 +874,12 @@ model ScanHistory {
   @@index([code])
   @@index([itemId])
   @@index([tenantId])
-
 }
 
 model ExternalBarcodeData {
   id          String   @id @default(uuid())
-  tenantId          String
-  tenant            Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   barcode     String   @unique
   productName String?
   brand       String?
@@ -864,13 +893,12 @@ model ExternalBarcodeData {
   @@index([barcode])
   @@index([lastUpdated])
   @@index([tenantId])
-
 }
 
 model CustomReport {
   id               String            @id @default(uuid())
-  tenantId          String
-  tenant            Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId         String
+  tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   name             String
   description      String?
   reportType       ReportType        @default(TABULAR)
@@ -899,13 +927,12 @@ model CustomReport {
   @@index([createdAt])
   @@index([lastRunAt])
   @@index([tenantId])
-
 }
 
 model ReportExecution {
   id            String       @id @default(uuid())
-  tenantId          String
-  tenant            Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId      String
+  tenant        Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   reportId      String
   executedBy    String
   executionTime Int
@@ -923,7 +950,6 @@ model ReportExecution {
   @@index([status])
   @@index([executedAt])
   @@index([tenantId])
-
 }
 
 model Order {
@@ -989,8 +1015,8 @@ model Order {
 model OrderItem {
   id              String      @id @default(uuid())
   orderId         String
-  itemId          String?     // Make optional since not all menu items have inventory
-  menuItemId      String?     // Add direct reference to menu item
+  itemId          String? // Make optional since not all menu items have inventory
+  menuItemId      String? // Add direct reference to menu item
   itemName        String      @db.VarChar(200)
   itemCode        String?     @db.VarChar(50)
   quantity        Int         @default(1)
@@ -1221,7 +1247,7 @@ model MenuItem {
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
   modifiers     MenuItemModifier[]
-  orderItems    OrderItem[]        // Add reverse relation
+  orderItems    OrderItem[] // Add reverse relation
   category      MenuCategory       @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   item          Item?              @relation(fields: [itemId], references: [id], onDelete: Cascade)
   tenant        Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -1358,11 +1384,15 @@ model Supplier {
   address     String?
   notes       String?
   isActive    Boolean        @default(true)
+  deletedAt   DateTime?
+  deletedBy   String?
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @default(now()) @updatedAt
   items       ItemSupplier[]
 
   @@index([tenantId])
+  @@index([deletedAt])
+  @@index([tenantId, deletedAt])
   @@map("suppliers")
 }
 
@@ -1650,67 +1680,67 @@ enum ExportFormat {
 
 // Admin System Models
 model AdminUser {
-  id                String      @id @default(cuid())
-  email             String      @unique
-  passwordHash      String      @map("password_hash")
-  role              AdminRole
-  isActive          Boolean     @default(true) @map("is_active")
-  twoFactorSecret   String?     @map("two_factor_secret")
-  lastLogin         DateTime?   @map("last_login")
-  createdAt         DateTime    @default(now()) @map("created_at")
-  updatedAt         DateTime    @updatedAt @map("updated_at")
-  auditLogs         AdminAuditLog[]
+  id              String          @id @default(cuid())
+  email           String          @unique
+  passwordHash    String          @map("password_hash")
+  role            AdminRole
+  isActive        Boolean         @default(true) @map("is_active")
+  twoFactorSecret String?         @map("two_factor_secret")
+  lastLogin       DateTime?       @map("last_login")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  auditLogs       AdminAuditLog[]
 
   @@map("admin_users")
 }
 
 model AdminAuditLog {
-  id            String      @id @default(cuid())
-  adminUserId   String      @map("admin_user_id")
-  action        String
-  resourceType  String?     @map("resource_type")
-  resourceId    String?     @map("resource_id")
-  details       Json?
-  ipAddress     String?     @map("ip_address") @db.Inet
-  userAgent     String?     @map("user_agent")
-  createdAt     DateTime    @default(now()) @map("created_at")
-  adminUser     AdminUser   @relation(fields: [adminUserId], references: [id], onDelete: Restrict)
+  id           String    @id @default(cuid())
+  adminUserId  String    @map("admin_user_id")
+  action       String
+  resourceType String?   @map("resource_type")
+  resourceId   String?   @map("resource_id")
+  details      Json?
+  ipAddress    String?   @map("ip_address") @db.Inet
+  userAgent    String?   @map("user_agent")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  adminUser    AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Restrict)
 
   @@map("admin_audit_logs")
 }
 
 model SystemHealthMetric {
-  id           String      @id @default(cuid())
-  metricName   String      @map("metric_name")
-  metricValue  Json        @map("metric_value")
-  status       HealthStatus
-  collectedAt  DateTime    @default(now()) @map("collected_at")
+  id          String       @id @default(cuid())
+  metricName  String       @map("metric_name")
+  metricValue Json         @map("metric_value")
+  status      HealthStatus
+  collectedAt DateTime     @default(now()) @map("collected_at")
 
   @@map("system_health_metrics")
 }
 
 model FeatureFlag {
-  id                 String    @id @default(cuid())
-  featureName        String    @unique @map("feature_name")
-  isEnabled          Boolean   @default(false) @map("is_enabled")
-  rolloutPercentage  Int       @default(0) @map("rollout_percentage")
-  targetTenants      Json?     @map("target_tenants")
-  createdAt          DateTime  @default(now()) @map("created_at")
-  updatedAt          DateTime  @updatedAt @map("updated_at")
+  id                String   @id @default(cuid())
+  featureName       String   @unique @map("feature_name")
+  isEnabled         Boolean  @default(false) @map("is_enabled")
+  rolloutPercentage Int      @default(0) @map("rollout_percentage")
+  targetTenants     Json?    @map("target_tenants")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
 
   @@map("feature_flags")
 }
 
 model ApiUsageLog {
-  id           String    @id @default(cuid())
-  tenantId     String?   @map("tenant_id")
+  id           String   @id @default(cuid())
+  tenantId     String?  @map("tenant_id")
   endpoint     String
   method       String
-  responseTime Int?      @map("response_time")
-  statusCode   Int?      @map("status_code")
-  userAgent    String?   @map("user_agent")
-  ipAddress    String?   @map("ip_address") @db.Inet
-  createdAt    DateTime  @default(now()) @map("created_at")
+  responseTime Int?     @map("response_time")
+  statusCode   Int?     @map("status_code")
+  userAgent    String?  @map("user_agent")
+  ipAddress    String?  @map("ip_address") @db.Inet
+  createdAt    DateTime @default(now()) @map("created_at")
 
   @@map("api_usage_logs")
 }
@@ -1732,25 +1762,25 @@ enum HealthStatus {
 
 // Stock Override Model for Flexible Stock Validation
 model StockOverride {
-  id               String    @id @default(cuid())
-  tenantId         String    @map("tenant_id")
-  orderId          String    @map("order_id")
-  menuItemId       String    @map("menu_item_id")
-  itemId           String    @map("item_id")
-  itemName         String    @map("item_name")
-  requiredQuantity Float     @map("required_quantity")
-  availableQuantity Float    @map("available_quantity")
-  overrideReason   String    @map("override_reason")
-  overrideType     OverrideType @map("override_type")
-  overriddenBy     String    @map("overridden_by")
-  overriddenAt     DateTime  @default(now()) @map("overridden_at")
-  notes            String?
-  
+  id                String       @id @default(cuid())
+  tenantId          String       @map("tenant_id")
+  orderId           String       @map("order_id")
+  menuItemId        String       @map("menu_item_id")
+  itemId            String       @map("item_id")
+  itemName          String       @map("item_name")
+  requiredQuantity  Float        @map("required_quantity")
+  availableQuantity Float        @map("available_quantity")
+  overrideReason    String       @map("override_reason")
+  overrideType      OverrideType @map("override_type")
+  overriddenBy      String       @map("overridden_by")
+  overriddenAt      DateTime     @default(now()) @map("overridden_at")
+  notes             String?
+
   // Relations
-  tenant           Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  order            Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  overriddenByUser User      @relation(fields: [overriddenBy], references: [id], onDelete: Cascade)
-  
+  tenant           Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  order            Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  overriddenByUser User   @relation(fields: [overriddenBy], references: [id], onDelete: Cascade)
+
   @@map("stock_overrides")
 }
 
@@ -1759,4 +1789,71 @@ enum OverrideType {
   EMERGENCY_PURCHASE
   SUBSTITUTE_INGREDIENT
   VIP_CUSTOMER
+}
+
+enum AuditCycleStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model InventoryAuditCycle {
+  id              String              @id @default(cuid())
+  tenantId        String
+  tenant          Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name            String               @db.VarChar(255)
+  description     String?
+  startDate       DateTime             @db.Date
+  endDate         DateTime             @db.Date
+  status          AuditCycleStatus     @default(DRAFT)
+  completedAt     DateTime?
+  completedBy     String?
+  cancelledAt     DateTime?
+  cancelledBy     String?
+  cancelledReason String?
+  createdBy       String
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  entries         InventoryAuditEntry[]
+  createdByUser   User                 @relation("AuditCycleCreatedBy", fields: [createdBy], references: [id])
+  completedByUser User?                @relation("AuditCycleCompletedBy", fields: [completedBy], references: [id])
+  cancelledByUser User?                 @relation("AuditCycleCancelledBy", fields: [cancelledBy], references: [id])
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([startDate, endDate])
+  @@index([createdAt])
+  @@map("inventory_audit_cycles")
+}
+
+model InventoryAuditEntry {
+  id                String              @id @default(cuid())
+  auditCycleId      String
+  auditCycle        InventoryAuditCycle @relation(fields: [auditCycleId], references: [id], onDelete: Cascade)
+  tenantId          String
+  tenant            Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  itemId            String
+  item              Item                @relation(fields: [itemId], references: [id])
+  countedQuantity   Float               // Actual counted quantity
+  systemQuantity    Float               // System stock at audit time
+  discrepancy       Float               // countedQuantity - systemQuantity
+  reason            String?             // Reason for discrepancy (if any)
+  correctionApplied Boolean             @default(false) // Whether correction transaction was created
+  correctionEntryId String?             // Reference to the correction InventoryEntry
+  correctionEntry   InventoryEntry?     @relation("AuditCorrectionEntry", fields: [correctionEntryId], references: [id])
+  countedBy         String
+  countedAt         DateTime            @default(now())
+  createdBy         String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  countedByUser     User                @relation("AuditEntryCountedBy", fields: [countedBy], references: [id])
+  createdByUser     User                @relation("AuditEntryCreatedBy", fields: [createdBy], references: [id])
+
+  @@index([auditCycleId])
+  @@index([tenantId])
+  @@index([itemId])
+  @@index([discrepancy])
+  @@index([correctionApplied])
+  @@map("inventory_audit_entries")
 }

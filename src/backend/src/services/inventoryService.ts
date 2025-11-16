@@ -42,7 +42,8 @@ export async function calculateCurrentStock(
 ): Promise<number> {
   const whereClause: any = { 
     itemId,
-    tenantId // Added tenantId filter
+    tenantId, // Added tenantId filter
+    deletedAt: null // Exclude soft-deleted entries
   };
   
   if (startDate || endDate) {
@@ -163,6 +164,9 @@ export async function getStockMovements(itemId: string, filter: StockMovementFil
     whereClause.type = type;
   }
 
+  // Always exclude soft-deleted entries
+  whereClause.deletedAt = null;
+  
   const [entries, total] = await Promise.all([
     prisma.inventoryEntry.findMany({
       where: whereClause,
@@ -267,6 +271,7 @@ export async function calculateWeightedAverageCost(itemId: string, tenantId: str
       itemId,
       tenantId, // Added tenantId filter
       type: 'IN',
+      deletedAt: null, // Exclude soft-deleted entries
       unitPrice: {
         not: null
       }
@@ -340,8 +345,11 @@ export async function canDeleteInventoryEntry(
   userId: string, 
   userRole: string
 ): Promise<DeletionPermission> {
-  const entry = await prisma.inventoryEntry.findUnique({
-    where: { id: entryId },
+  const entry = await prisma.inventoryEntry.findFirst({
+    where: { 
+      id: entryId,
+      deletedAt: null // Only check non-deleted entries
+    },
     select: {
       userId: true,
       createdAt: true

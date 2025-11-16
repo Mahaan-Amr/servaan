@@ -7,6 +7,7 @@ import * as itemService from '../../../../services/itemService';
 import * as inventoryService from '../../../../services/inventoryService';
 import UniversalScanner from '../../../../components/scanner/UniversalScanner';
 import toast from 'react-hot-toast';
+import { FormattedNumberInput } from '../../../../components/ui/FormattedNumberInput';
 
 interface UniversalScanResult {
   code: string;
@@ -689,17 +690,16 @@ export default function ScannerPage() {
                       مقدار * ({foundItem.unit})
                     </label>
                     <div className="flex space-x-2 space-x-reverse">
-                      <input
-                        type="number"
-                        id="quantity"
+                      <FormattedNumberInput
                         value={quantity}
-                        onChange={(e) => setQuantity(e.target.value)}
-                        min="0.01"
+                        onChange={(value: string) => setQuantity(value)}
+                        placeholder={`مقدار ${quickAction === 'in' ? 'ورودی' : 'خروجی'}`}
+                        min={0.01}
                         max={quickAction === 'out' ? currentStock : undefined}
                         step="0.01"
                         disabled={loading}
-                        className="flex-1 px-2 sm:px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white text-sm sm:text-base"
-                        placeholder={`مقدار ${quickAction === 'in' ? 'ورودی' : 'خروجی'}`}
+                        allowDecimals={true}
+                        className="flex-1 text-sm sm:text-base"
                       />
                       {/* Quick +/- buttons */}
                       <div className="flex flex-col">

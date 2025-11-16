@@ -543,6 +543,7 @@ class ScannerService {
     const result = await prisma.inventoryEntry.aggregate({
       where: { 
         itemId,
+        deletedAt: null, // Exclude soft-deleted entries
         ...(tenantId && { tenantId }), // Filter by tenant if provided
       },
       _sum: {

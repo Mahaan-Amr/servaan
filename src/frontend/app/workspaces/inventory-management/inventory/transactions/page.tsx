@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { InventoryEntry, InventoryEntryType } from '../../../../../../shared/types';
 import * as inventoryService from '../../../../../services/inventoryService';
 import toast from 'react-hot-toast';
+import { FarsiDatePicker } from '../../../../../components/ui/FarsiDatePicker';
 
 export default function InventoryTransactionsPage() {
   const [loading, setLoading] = useState(true);
@@ -240,25 +241,21 @@ export default function InventoryTransactionsPage() {
           <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <div className="flex items-center space-x-4 space-x-reverse">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  از تاریخ
-                </label>
-                <input
-                  type="date"
+                <FarsiDatePicker
+                  label="از تاریخ"
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                  onChange={(value) => setStartDate(value)}
+                  placeholder="از تاریخ را انتخاب کنید"
+                  maxDate={endDate || undefined}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  تا تاریخ
-                </label>
-                <input
-                  type="date"
+                <FarsiDatePicker
+                  label="تا تاریخ"
                   value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                  onChange={(value) => setEndDate(value)}
+                  placeholder="تا تاریخ را انتخاب کنید"
+                  minDate={startDate || undefined}
                 />
               </div>
               <div className="flex items-end">

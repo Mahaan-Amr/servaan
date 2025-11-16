@@ -92,6 +92,7 @@ router.get('/monthly-financial', authenticate, authorize(['ADMIN', 'MANAGER']), 
       const purchases = await prisma.inventoryEntry.findMany({
         where: {
           type: 'IN',
+          deletedAt: null, // Exclude soft-deleted entries
           unitPrice: { not: null },
           createdAt: {
             gte: startOfMonth,
@@ -112,6 +113,7 @@ router.get('/monthly-financial', authenticate, authorize(['ADMIN', 'MANAGER']), 
       const outTransactions = await prisma.inventoryEntry.findMany({
         where: {
           type: 'OUT',
+          deletedAt: null, // Exclude soft-deleted entries
           createdAt: {
             gte: startOfMonth,
             lte: endOfMonth
@@ -201,6 +203,7 @@ router.get('/financial-trends', authenticate, authorize(['ADMIN', 'MANAGER']), a
       const purchaseEntries = await prisma.inventoryEntry.findMany({
         where: {
           type: 'IN',
+          deletedAt: null, // Exclude soft-deleted entries
           unitPrice: { not: null },
           createdAt: {
             gte: periodStart,
@@ -221,6 +224,7 @@ router.get('/financial-trends', authenticate, authorize(['ADMIN', 'MANAGER']), a
       const allPurchasesUpToDate = await prisma.inventoryEntry.findMany({
         where: {
           type: 'IN',
+          deletedAt: null, // Exclude soft-deleted entries
           unitPrice: { not: null },
           createdAt: { lte: periodEnd }
         },
@@ -235,6 +239,7 @@ router.get('/financial-trends', authenticate, authorize(['ADMIN', 'MANAGER']), a
       const itemStocks: Record<string, number> = {};
       const allTransactionsUpToDate = await prisma.inventoryEntry.findMany({
         where: {
+          deletedAt: null, // Exclude soft-deleted entries
           createdAt: { lte: periodEnd }
         },
         select: {
@@ -303,6 +308,7 @@ router.get('/summary', authenticate, authorize(['ADMIN', 'MANAGER']), async (req
     const thisMonthPurchases = await prisma.inventoryEntry.findMany({
       where: {
         type: 'IN',
+        deletedAt: null, // Exclude soft-deleted entries
         unitPrice: { not: null },
         createdAt: { gte: thisMonthStart }
       },
@@ -317,6 +323,7 @@ router.get('/summary', authenticate, authorize(['ADMIN', 'MANAGER']), async (req
     const lastMonthPurchases = await prisma.inventoryEntry.findMany({
       where: {
         type: 'IN',
+        deletedAt: null, // Exclude soft-deleted entries
         unitPrice: { not: null },
         createdAt: {
           gte: lastMonthStart,

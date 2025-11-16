@@ -1,5 +1,7 @@
 import React from 'react';
 import { FormFieldProps } from '../../types/forms';
+import { FarsiDatePicker } from '../ui/FarsiDatePicker';
+import { FormattedNumberInput } from '../ui/FormattedNumberInput';
 
 /**
  * Reusable form field component
@@ -145,11 +147,17 @@ export const FormField: React.FC<FormFieldProps> = ({
 
       case 'date':
         return (
-          <input
-            {...commonProps}
-            type="date"
-            placeholder={placeholder}
+          <FarsiDatePicker
             value={String(value || '')}
+            onChange={(dateValue: string) => {
+              if (onChange) {
+                onChange(dateValue);
+              }
+            }}
+            placeholder={placeholder || 'تاریخ را انتخاب کنید'}
+            disabled={disabled}
+            error={error && touched ? error : undefined}
+            className={className}
           />
         );
 
@@ -187,12 +195,18 @@ export const FormField: React.FC<FormFieldProps> = ({
 
       case 'number':
         return (
-          <input
-            {...commonProps}
-            type="number"
-            placeholder={placeholder}
-            dir="ltr"
+          <FormattedNumberInput
             value={String(value || '')}
+            onChange={(numValue: string) => {
+              if (onChange) {
+                onChange(numValue);
+              }
+            }}
+            placeholder={placeholder || ''}
+            disabled={disabled}
+            error={error && touched ? error : undefined}
+            className={className}
+            dir="ltr"
           />
         );
 

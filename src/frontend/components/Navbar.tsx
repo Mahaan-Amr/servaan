@@ -83,11 +83,6 @@ export function Navbar() {
                     سیستم حسابداری
                   </Link>
                 )}
-                {hasFeature('hasCustomerManagement') && (
-                  <Link href="/crm" className={`nav-link ${pathname.startsWith('/crm') ? 'nav-link-active' : ''}`}>
-                    مدیریت ارتباط مشتری
-                  </Link>
-                )}
                 {isManager() && (
                   <>
                     <Link href="/users/management" className={`nav-link ${pathname === '/users/management' ? 'nav-link-active' : ''}`}>

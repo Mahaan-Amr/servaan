@@ -33,6 +33,11 @@ export const WorkspaceGrid: React.FC<WorkspaceGridProps> = ({
   // Filter workspaces based on user role and access
   const getFilteredWorkspaces = () => {
     const filteredWorkspaces = workspaces.filter(workspace => {
+      // Exclude maintenance workspaces (deactivated)
+      if (workspace.status === 'maintenance') {
+        return false;
+      }
+      
       // Check if user has required role
       if (!workspace.requiredRoles.includes(user.role)) {
         return false;

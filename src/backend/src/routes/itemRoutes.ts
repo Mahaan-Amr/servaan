@@ -37,6 +37,7 @@ router.get('/', async (req, res) => {
       where: {
         // Filter by tenant to ensure data isolation
         tenantId: req.tenant.id,
+        deletedAt: null, // Exclude soft-deleted items
         // By default, only show active items unless explicitly requested
         isActive: req.query.includeInactive === 'true' ? undefined : true,
         // If category param is provided, filter by it
@@ -219,62 +220,38 @@ router.put('/:id', authenticate, async (req, res) => {
   }
 });
 
-// DELETE /api/items/:id - Delete an item (restricted to ADMIN)
+// DELETE /api/items/:id - Delete an item (soft delete, restricted to ADMIN)
 router.delete('/:id', authenticate, authorize(['ADMIN']), async (req, res) => {
   try {
-    // Check if item exists and belongs to tenant
+    const userId = (req as any).user.id;
+    
+    // Check if item exists, belongs to tenant, and is not already deleted
     const item = await prisma.item.findFirst({
       where: { 
         id: req.params.id,
-        tenantId: (req as any).user.tenantId  // Filter by tenant
-      },
-      include: {
-        inventoryEntries: {
-          select: { id: true },
-          take: 1
-        }
+        tenantId: (req as any).user.tenantId,
+        deletedAt: null // Only find non-deleted items
       }
     });
     
     if (!item) {
-      return res.status(404).json({ message: 'کالا یافت نشد' });
+      return res.status(404).json({ message: 'کالا یافت نشد یا قبلاً حذف شده است' });
     }
     
-    // If the item has inventory entries, use soft delete
-    if (item.inventoryEntries.length > 0) {
-      await prisma.item.update({
-        where: { id: req.params.id },
-        data: { isActive: false }
-      });
-      
-      // Send deletion notification
-      try {
-        await notificationService.sendUserActivityNotification({
-          userId: (req as any).user.id,
-          userName: (req as any).user.name,
-          action: 'غیرفعال کرد',
-          entityType: 'کالا',
-          entityId: item.id,
-          entityName: item.name,
-          tenantId: req.tenant!.id
-        });
-      } catch (notificationError) {
-        console.error('Error sending item deactivation notification:', notificationError);
-        // Don't fail the request if notification fails
+    // Always use soft delete
+    await prisma.item.update({
+      where: { id: req.params.id },
+      data: {
+        isActive: false,
+        deletedAt: new Date(),
+        deletedBy: userId
       }
-      
-      return res.json({ message: 'کالا غیرفعال شد (حذف نرم)' });
-    }
-    
-    // If no inventory entries, we can hard delete
-    await prisma.item.delete({
-      where: { id: req.params.id }
     });
     
     // Send deletion notification
     try {
       await notificationService.sendUserActivityNotification({
-        userId: (req as any).user.id,
+        userId: userId,
         userName: (req as any).user.name,
         action: 'حذف کرد',
         entityType: 'کالا',
@@ -287,7 +264,7 @@ router.delete('/:id', authenticate, authorize(['ADMIN']), async (req, res) => {
       // Don't fail the request if notification fails
     }
     
-    res.json({ message: 'کالا با موفقیت حذف شد' });
+    res.json({ message: 'کالا با موفقیت حذف شد (حذف نرم)' });
   } catch (error) {
     console.error('Error deleting item:', error);
     res.status(500).json({ message: 'خطا در حذف کالا' });

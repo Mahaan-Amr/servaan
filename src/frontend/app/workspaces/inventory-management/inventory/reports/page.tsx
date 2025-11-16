@@ -7,6 +7,7 @@ import * as inventoryService from '../../../../../services/inventoryService';
 import * as itemService from '../../../../../services/itemService';
 import toast from 'react-hot-toast';
 import type { WorkBook, WorkSheet } from 'xlsx';
+import { FarsiDatePicker } from '../../../../../components/ui/FarsiDatePicker';
 
 interface InventoryReportSummary {
   totalItems: number;
@@ -828,26 +829,22 @@ export default function InventoryReportsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    از تاریخ
-                  </label>
-                  <input
-                    type="date"
+                  <FarsiDatePicker
+                    label="از تاریخ"
                     value={transactionFilter.startDate}
-                    onChange={(e) => setTransactionFilter(prev => ({ ...prev, startDate: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white text-sm"
+                    onChange={(value: string) => setTransactionFilter(prev => ({ ...prev, startDate: value }))}
+                    placeholder="از تاریخ را انتخاب کنید"
+                    maxDate={transactionFilter.endDate || undefined}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    تا تاریخ
-                  </label>
-                  <input
-                    type="date"
+                  <FarsiDatePicker
+                    label="تا تاریخ"
                     value={transactionFilter.endDate}
-                    onChange={(e) => setTransactionFilter(prev => ({ ...prev, endDate: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white text-sm"
+                    onChange={(value: string) => setTransactionFilter(prev => ({ ...prev, endDate: value }))}
+                    placeholder="تا تاریخ را انتخاب کنید"
+                    minDate={transactionFilter.startDate || undefined}
                   />
                 </div>
 

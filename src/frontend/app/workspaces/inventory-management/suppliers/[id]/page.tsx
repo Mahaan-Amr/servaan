@@ -8,6 +8,8 @@ import * as supplierService from '../../../../../services/supplierService';
 import * as itemService from '../../../../../services/itemService';
 import { useAuth } from '../../../../../contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { FarsiDatePicker } from '../../../../../components/ui/FarsiDatePicker';
+import { FormattedNumberInput } from '../../../../../components/ui/FormattedNumberInput';
 
 interface SupplierItemModalProps {
   supplier: Supplier;
@@ -145,25 +147,21 @@ const SupplierTransactionHistory: React.FC<SupplierTransactionHistoryProps> = ({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              از تاریخ
-            </label>
-            <input
-              type="date"
+            <FarsiDatePicker
+              label="از تاریخ"
               value={filters.startDate}
-              onChange={(e) => handleFilterChange('startDate', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white text-sm"
+              onChange={(value) => handleFilterChange('startDate', value)}
+              placeholder="از تاریخ را انتخاب کنید"
+              maxDate={filters.endDate || undefined}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              تا تاریخ
-            </label>
-            <input
-              type="date"
+            <FarsiDatePicker
+              label="تا تاریخ"
               value={filters.endDate}
-              onChange={(e) => handleFilterChange('endDate', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white text-sm"
+              onChange={(value) => handleFilterChange('endDate', value)}
+              placeholder="تا تاریخ را انتخاب کنید"
+              minDate={filters.startDate || undefined}
             />
           </div>
           <div className="flex items-end">
@@ -434,18 +432,14 @@ const SupplierItemModal: React.FC<SupplierItemModalProps> = ({ supplier, onClose
 
             {/* Unit Price */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                قیمت واحد (ریال)
-              </label>
-              <input
-                type="number"
-                name="unitPrice"
+              <FormattedNumberInput
+                label="قیمت واحد (ریال)"
                 value={formData.unitPrice}
-                onChange={handleChange}
+                onChange={(value: string) => handleChange({ target: { name: 'unitPrice', value } } as React.ChangeEvent<HTMLInputElement>)}
                 placeholder="قیمت واحد از این تأمین‌کننده"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                min="0"
+                min={0}
                 step="0.01"
+                allowDecimals={true}
               />
             </div>
 

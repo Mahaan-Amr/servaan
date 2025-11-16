@@ -8,6 +8,8 @@ import * as inventoryService from '../../../../../services/inventoryService';
 import * as itemService from '../../../../../services/itemService';
 import toast from 'react-hot-toast';
 import { useSearchParams } from 'next/navigation';
+import { FarsiDatePicker } from '../../../../../components/ui/FarsiDatePicker';
+import { FormattedNumberInput } from '../../../../../components/ui/FormattedNumberInput';
 
 export default function AddInventoryPage() {
   const [items, setItems] = useState<Item[]>([]);
@@ -168,21 +170,16 @@ export default function AddInventoryPage() {
             </div>
 
             <div>
-              <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                مقدار *
-              </label>
-              <input
-                type="number"
-                id="quantity"
-                name="quantity"
+              <FormattedNumberInput
+                label="مقدار *"
                 value={formData.quantity}
-                onChange={handleChange}
-                required
-                min="0.01"
+                onChange={(value: string) => handleChange({ target: { name: 'quantity', value } } as React.ChangeEvent<HTMLInputElement>)}
+                placeholder="مقدار ورودی"
+                min={0.01}
                 step="0.01"
                 disabled={loading}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
-                placeholder="مقدار ورودی"
+                allowDecimals={true}
+                required
               />
               {selectedItem && (
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -192,20 +189,15 @@ export default function AddInventoryPage() {
             </div>
 
             <div>
-              <label htmlFor="unitPrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                قیمت واحد (ریال)
-              </label>
-              <input
-                type="number"
-                id="unitPrice"
-                name="unitPrice"
+              <FormattedNumberInput
+                label="قیمت واحد (ریال)"
                 value={formData.unitPrice}
-                onChange={handleChange}
-                min="0"
+                onChange={(value: string) => handleChange({ target: { name: 'unitPrice', value } } as React.ChangeEvent<HTMLInputElement>)}
+                placeholder="قیمت خرید"
+                min={0}
                 step="1"
                 disabled={loading}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
-                placeholder="قیمت خرید"
+                allowDecimals={false}
               />
             </div>
 
@@ -226,17 +218,12 @@ export default function AddInventoryPage() {
             </div>
 
             <div>
-              <label htmlFor="expiryDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                تاریخ انقضا
-              </label>
-              <input
-                type="date"
-                id="expiryDate"
-                name="expiryDate"
+              <FarsiDatePicker
+                label="تاریخ انقضا"
                 value={formData.expiryDate}
-                onChange={handleChange}
+                onChange={(value) => handleChange({ target: { name: 'expiryDate', value } } as React.ChangeEvent<HTMLInputElement>)}
                 disabled={loading}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
+                placeholder="تاریخ انقضا را انتخاب کنید"
               />
             </div>
           </div>

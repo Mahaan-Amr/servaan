@@ -38,6 +38,30 @@ export const createInventoryEntry = async (data: CreateInventoryEntryData): Prom
   }
 };
 
+// Bulk create inventory entries
+export interface BulkCreateInventoryEntryData {
+  entries: CreateInventoryEntryData[];
+}
+
+export interface BulkCreateInventoryEntryResponse {
+  success: boolean;
+  message: string;
+  created: InventoryEntry[];
+  errors?: Array<{
+    index: number;
+    itemId: string;
+    error: string;
+  }>;
+}
+
+export const bulkCreateInventoryEntries = async (data: BulkCreateInventoryEntryData): Promise<BulkCreateInventoryEntryResponse> => {
+  try {
+    return await apiClient.post<BulkCreateInventoryEntryResponse>('/inventory/bulk', data);
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Update inventory entry
 export const updateInventoryEntry = async (id: string, data: CreateInventoryEntryData): Promise<InventoryEntry> => {
   try {
@@ -114,6 +138,46 @@ export const getInventoryStats = async (): Promise<{
 export const getRecentActivities = async (): Promise<InventoryEntry[]> => {
   try {
     return await apiClient.get<InventoryEntry[]>('/inventory', { limit: 5, sortBy: 'createdAt', sortOrder: 'desc' });
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Reset item stock to zero
+export interface ResetStockResponse {
+  success: boolean;
+  message: string;
+  adjustment: InventoryEntry;
+}
+
+export const resetItemStock = async (itemId: string): Promise<ResetStockResponse> => {
+  try {
+    return await apiClient.post<ResetStockResponse>(`/inventory/reset/${itemId}`);
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Inventory Settings
+export interface InventorySettings {
+  id: string;
+  tenantId: string;
+  allowNegativeStock: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const getInventorySettings = async (): Promise<InventorySettings> => {
+  try {
+    return await apiClient.get<InventorySettings>('/inventory/settings');
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const updateInventorySettings = async (settings: { allowNegativeStock: boolean }): Promise<{ message: string; settings: InventorySettings }> => {
+  try {
+    return await apiClient.put<{ message: string; settings: InventorySettings }>('/inventory/settings', settings);
   } catch (error) {
     throw error;
   }

@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import * as itemService from '../../../../../services/itemService';
 import toast from 'react-hot-toast';
+import { FormattedNumberInput } from '../../../../../components/ui/FormattedNumberInput';
 
 export default function AddItemPage() {
   const [loading, setLoading] = useState(false);
@@ -289,18 +290,15 @@ export default function AddItemPage() {
             </div>
 
             <div>
-              <label htmlFor="minStock" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                حداقل موجودی
-              </label>
-              <input
-                type="number"
-                id="minStock"
-                name="minStock"
-                className="w-full px-2 sm:px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 dark:text-white text-sm sm:text-base"
+              <FormattedNumberInput
+                label="حداقل موجودی"
                 value={formData.minStock}
-                onChange={handleChange}
-                min="0"
+                onChange={(value: string) => handleChange({ target: { name: 'minStock', value } } as React.ChangeEvent<HTMLInputElement>)}
+                placeholder="حداقل موجودی"
+                min={0}
                 disabled={loading}
+                allowDecimals={false}
+                className="text-sm sm:text-base"
               />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 اگر موجودی کمتر از این مقدار باشد، هشدار داده می‌شود

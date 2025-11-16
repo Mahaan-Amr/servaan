@@ -117,6 +117,12 @@ export default function InventoryPage() {
               ورود کالا
             </Link>
             <Link
+              href="/workspaces/inventory-management/inventory/bulk-add"
+              className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base text-center"
+            >
+              ورود گروهی
+            </Link>
+            <Link
               href="/workspaces/inventory-management/inventory/remove"
               className="px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm sm:text-base text-center"
             >
@@ -302,6 +308,21 @@ export default function InventoryPage() {
               <div className="mr-2 sm:mr-3">
                 <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">ورود کالا</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">ثبت ورود کالای جدید</p>
+              </div>
+            </Link>
+
+            <Link
+              href="/workspaces/inventory-management/inventory/bulk-add"
+              className="flex items-center p-2 sm:p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              <div className="flex-shrink-0">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+              </div>
+              <div className="mr-2 sm:mr-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">ورود گروهی کالاها</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">ثبت ورود چندین کالا همزمان</p>
               </div>
             </Link>
 

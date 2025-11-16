@@ -25,6 +25,7 @@ router.get('/', requireTenant, async (req, res) => {
   try {
     const suppliers = await prisma.supplier.findMany({
       where: {
+        deletedAt: null, // Exclude soft-deleted suppliers
         isActive: req.query.active === 'true' ? true : undefined,
         tenantId: req.tenant!.id
       },
@@ -142,53 +143,38 @@ router.put('/:id', requireTenant, authorize(['ADMIN', 'MANAGER']), async (req, r
   }
 });
 
-// DELETE /api/suppliers/:id - Delete a supplier (restricted to ADMIN)
+// DELETE /api/suppliers/:id - Delete a supplier (soft delete, restricted to ADMIN)
 router.delete('/:id', requireTenant, authorize(['ADMIN']), async (req, res) => {
   try {
-    // Check if supplier exists
-    const supplier = await prisma.supplier.findUnique({
+    const userId = (req as any).user.id;
+    
+    // Check if supplier exists and is not already deleted
+    const supplier = await prisma.supplier.findFirst({
       where: { 
         id: req.params.id,
-        tenantId: req.tenant!.id
+        tenantId: req.tenant!.id,
+        deletedAt: null // Only find non-deleted suppliers
       }
     });
     
     if (!supplier) {
-      return res.status(404).json({ message: 'تأمین‌کننده یافت نشد' });
+      return res.status(404).json({ message: 'تأمین‌کننده یافت نشد یا قبلاً حذف شده است' });
     }
     
-    // Check if supplier has related items
-    const relatedItems = await prisma.itemSupplier.count({
-      where: { 
-        supplierId: req.params.id,
-        tenantId: req.tenant!.id
-      }
-    });
-    
-    if (relatedItems > 0) {
-      // Soft delete by marking as inactive
-      await prisma.supplier.update({
-        where: { 
-          id: req.params.id,
-          tenantId: req.tenant!.id
-        },
-        data: { isActive: false }
-      });
-      
-      return res.json({ 
-        message: 'تأمین‌کننده به دلیل وجود کالا‌های مرتبط به حالت غیرفعال تغییر داده شد' 
-      });
-    }
-    
-    // Hard delete if no related items
-    await prisma.supplier.delete({
+    // Always use soft delete
+    await prisma.supplier.update({
       where: { 
         id: req.params.id,
         tenantId: req.tenant!.id
+      },
+      data: {
+        isActive: false,
+        deletedAt: new Date(),
+        deletedBy: userId
       }
     });
     
-    res.json({ message: 'تأمین‌کننده با موفقیت حذف شد' });
+    res.json({ message: 'تأمین‌کننده با موفقیت حذف شد (حذف نرم)' });
   } catch (error) {
     console.error('Error deleting supplier:', error);
     res.status(500).json({ message: 'خطا در حذف تأمین‌کننده' });
@@ -364,6 +350,9 @@ router.get('/:id/transactions', requireTenant, async (req, res) => {
       }
     }
     
+    // Always exclude soft-deleted entries
+    whereClause.deletedAt = null;
+    
     // Get transactions with pagination
     const [transactions, totalCount] = await Promise.all([
       prisma.inventoryEntry.findMany({
@@ -400,7 +389,9 @@ router.get('/:id/transactions', requireTenant, async (req, res) => {
       by: ['type'],
       where: {
         tenantId: req.tenant!.id,
+        deletedAt: null, // Exclude soft-deleted entries
         item: {
+          deletedAt: null, // Exclude soft-deleted items
           suppliers: {
             some: {
               supplierId: supplierId,

@@ -5,7 +5,7 @@ import { InventoryEntryType } from '../../../shared/types';
 import { authenticate, authorize } from '../middlewares/authMiddleware';
 import { requireTenant } from '../middlewares/tenantMiddleware';
 import { notificationService } from '../services/notificationService';
-import { getStockDeficits, getDeficitSummary } from '../services/inventoryService';
+import { getStockDeficits, getDeficitSummary, adjustStock } from '../services/inventoryService';
 import { InventoryController } from '../controllers/inventoryController';
 import stockValidationRoutes from './stockValidationRoutes';
 
@@ -20,6 +20,11 @@ const inventoryEntrySchema = z.object({
   unitPrice: z.number().positive().optional(),
   batchNumber: z.string().optional(),
   expiryDate: z.string().optional(),
+});
+
+// Validation schema for bulk inventory entries
+const bulkInventoryEntrySchema = z.object({
+  entries: z.array(inventoryEntrySchema).min(1, 'حداقل یک ورودی الزامی است')
 });
 
 // GET /api/inventory - Get all inventory entries
@@ -41,6 +46,7 @@ router.get('/', authenticate, requireTenant, async (req, res) => {
     
     const entries = await prisma.inventoryEntry.findMany({
       where: {
+        deletedAt: null, // Exclude soft-deleted entries
         item: {
           tenantId: req.tenant!.id
         }
@@ -78,8 +84,10 @@ router.get('/current', authenticate, requireTenant, async (req, res) => {
     const inventorySummary = await prisma.inventoryEntry.groupBy({
       by: ['itemId', 'type'],
       where: {
+        deletedAt: null, // Exclude soft-deleted entries
         item: {
-          tenantId: req.tenant!.id
+          tenantId: req.tenant!.id,
+          deletedAt: null // Exclude soft-deleted items
         }
       },
       _sum: {
@@ -87,10 +95,12 @@ router.get('/current', authenticate, requireTenant, async (req, res) => {
       }
     });
 
-    // Get all items info for this tenant
+    // Get all items info for this tenant (excluding deleted)
     const items = await prisma.item.findMany({
       where: {
-        tenantId: req.tenant!.id
+        tenantId: req.tenant!.id,
+        deletedAt: null, // Exclude soft-deleted items
+        isActive: true
       },
       select: {
         id: true,
@@ -322,7 +332,8 @@ router.get('/report', authenticate, requireTenant, async (req, res) => {
       filter.type = type;
     }
     
-    // Get entries based on filter
+    // Get entries based on filter (exclude soft-deleted)
+    filter.deletedAt = null;
     const entries = await prisma.inventoryEntry.findMany({
       where: filter,
       include: {
@@ -582,6 +593,252 @@ router.get('/integration-status', authenticate, requireTenant, async (req, res, 
   }
 });
 
+// Validation schema for stock adjustment
+const stockAdjustmentSchema = z.object({
+  itemId: z.string().uuid('شناسه کالا نامعتبر است'),
+  newQuantity: z.number().min(0, 'مقدار موجودی نمی‌تواند منفی باشد'),
+  reason: z.string().min(1, 'دلیل تعدیل موجودی الزامی است')
+});
+
+// POST /api/inventory/adjust - Adjust stock to a specific quantity
+router.post('/adjust', authenticate, requireTenant, authorize(['ADMIN', 'MANAGER']), async (req, res) => {
+  try {
+    // Validate request body
+    const validatedData = stockAdjustmentSchema.parse(req.body);
+    
+    // Get the user ID from the authenticated user
+    if (!req.user) {
+      return res.status(401).json({ message: 'کاربر احراز هویت نشده است' });
+    }
+    const userId = req.user.id;
+    const tenantId = req.tenant!.id;
+
+    // Verify item exists and belongs to tenant
+    const item = await prisma.item.findFirst({
+      where: {
+        id: validatedData.itemId,
+        tenantId: tenantId,
+        isActive: true
+      },
+      select: { id: true, name: true, unit: true }
+    });
+
+    if (!item) {
+      return res.status(404).json({ message: 'کالا یافت نشد یا غیرفعال است' });
+    }
+
+    // Adjust stock using the service function
+    const adjustment = await adjustStock(
+      validatedData.itemId,
+      validatedData.newQuantity,
+      validatedData.reason,
+      userId,
+      tenantId
+    );
+
+    // Send inventory update notification (non-blocking)
+    setImmediate(async () => {
+      try {
+        const stockAgg = await prisma.inventoryEntry.aggregate({
+          where: {
+            itemId: validatedData.itemId
+          },
+          _sum: {
+            quantity: true
+          }
+        });
+        const newCurrentStock = stockAgg._sum.quantity || 0;
+        const previousStock = newCurrentStock - adjustment.quantity;
+
+        // Get user info for notification
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { name: true }
+        });
+
+        await notificationService.sendInventoryUpdateNotification({
+          itemId: validatedData.itemId,
+          itemName: item.name,
+          previousStock,
+          newStock: newCurrentStock,
+          changeAmount: adjustment.quantity,
+          type: adjustment.type,
+          unit: item.unit,
+          userId,
+          userName: user?.name || 'کاربر',
+          tenantId
+        });
+      } catch (notifError) {
+        console.error('Error sending inventory update notification:', notifError);
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'تعدیل موجودی با موفقیت انجام شد',
+      adjustment: adjustment
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        message: 'داده‌های ورودی نامعتبر است',
+        errors: error.errors
+      });
+    }
+    
+    if (error instanceof Error && error.message.includes('موجودی فعلی برابر')) {
+      return res.status(400).json({ message: error.message });
+    }
+
+    console.error('Error adjusting stock:', error);
+    res.status(500).json({ message: 'خطا در تعدیل موجودی' });
+  }
+});
+
+// POST /api/inventory/reset/:itemId - Reset stock to zero
+router.post('/reset/:itemId', authenticate, requireTenant, authorize(['ADMIN', 'MANAGER']), async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    
+    // Get the user ID from the authenticated user
+    if (!req.user) {
+      return res.status(401).json({ message: 'کاربر احراز هویت نشده است' });
+    }
+    const userId = req.user.id;
+    const tenantId = req.tenant!.id;
+
+    // Verify item exists and belongs to tenant
+    const item = await prisma.item.findFirst({
+      where: {
+        id: itemId,
+        tenantId: tenantId,
+        isActive: true
+      },
+      select: { id: true, name: true, unit: true }
+    });
+
+    if (!item) {
+      return res.status(404).json({ message: 'کالا یافت نشد یا غیرفعال است' });
+    }
+
+    // Reset stock to zero using the service function
+    const adjustment = await adjustStock(
+      itemId,
+      0,
+      'بازنشانی موجودی به صفر',
+      userId,
+      tenantId
+    );
+
+    // Send inventory update notification (non-blocking)
+    setImmediate(async () => {
+      try {
+        const stockAgg = await prisma.inventoryEntry.aggregate({
+          where: {
+            itemId: itemId
+          },
+          _sum: {
+            quantity: true
+          }
+        });
+        const newCurrentStock = stockAgg._sum.quantity || 0;
+        const previousStock = newCurrentStock - adjustment.quantity;
+
+        // Get user info for notification
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { name: true }
+        });
+
+        await notificationService.sendInventoryUpdateNotification({
+          itemId: itemId,
+          itemName: item.name,
+          previousStock,
+          newStock: newCurrentStock,
+          changeAmount: adjustment.quantity,
+          type: adjustment.type,
+          unit: item.unit,
+          userId,
+          userName: user?.name || 'کاربر',
+          tenantId
+        });
+      } catch (notifError) {
+        console.error('Error sending inventory update notification:', notifError);
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'موجودی کالا با موفقیت به صفر بازنشانی شد',
+      adjustment: adjustment
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('موجودی فعلی برابر')) {
+      return res.status(400).json({ message: 'موجودی این کالا در حال حاضر صفر است' });
+    }
+
+    console.error('Error resetting stock:', error);
+    res.status(500).json({ message: 'خطا در بازنشانی موجودی' });
+  }
+});
+
+// GET /api/inventory/settings - Get inventory settings
+// IMPORTANT: This route must come BEFORE /:id to avoid route conflicts
+router.get('/settings', authenticate, requireTenant, async (req, res) => {
+  try {
+    const tenantId = req.tenant!.id;
+    
+    // Get or create default settings
+    const settings = await prisma.inventorySettings.upsert({
+      where: { tenantId },
+      update: {},
+      create: {
+        tenantId,
+        allowNegativeStock: true // Default: allow negative stock
+      }
+    });
+    
+    res.json(settings);
+  } catch (error) {
+    console.error('Error fetching inventory settings:', error);
+    res.status(500).json({ message: 'خطا در دریافت تنظیمات موجودی' });
+  }
+});
+
+// PUT /api/inventory/settings - Update inventory settings
+// IMPORTANT: This route must come BEFORE /:id to avoid route conflicts
+router.put('/settings', authenticate, requireTenant, authorize(['ADMIN', 'MANAGER']), async (req, res) => {
+  try {
+    const tenantId = req.tenant!.id;
+    const { allowNegativeStock } = req.body;
+    
+    // Validate input
+    if (typeof allowNegativeStock !== 'boolean') {
+      return res.status(400).json({ message: 'مقدار allowNegativeStock باید boolean باشد' });
+    }
+    
+    // Update or create settings
+    const settings = await prisma.inventorySettings.upsert({
+      where: { tenantId },
+      update: {
+        allowNegativeStock
+      },
+      create: {
+        tenantId,
+        allowNegativeStock
+      }
+    });
+    
+    res.json({
+      message: 'تنظیمات موجودی با موفقیت بروزرسانی شد',
+      settings
+    });
+  } catch (error) {
+    console.error('Error updating inventory settings:', error);
+    res.status(500).json({ message: 'خطا در بروزرسانی تنظیمات موجودی' });
+  }
+});
+
 // GET /api/inventory/:id - Get an inventory entry by ID
 // NOTE: This parameterized route must be defined AFTER all specific routes
 router.get('/:id', authenticate, requireTenant, async (req, res) => {
@@ -599,8 +856,10 @@ router.get('/:id', authenticate, requireTenant, async (req, res) => {
     const entry = await prisma.inventoryEntry.findFirst({
       where: { 
         id,
+        deletedAt: null, // Exclude soft-deleted entries
         item: {
-          tenantId: req.tenant!.id
+          tenantId: req.tenant!.id,
+          deletedAt: null // Exclude soft-deleted items
         }
       },
       include: {
@@ -639,9 +898,20 @@ router.post('/', authenticate, requireTenant, async (req, res) => {
     }
     const userId = req.user.id;
 
+    // Get inventory settings
+    const inventorySettings = await prisma.inventorySettings.findUnique({
+      where: { tenantId: req.tenant!.id }
+    });
+    const allowNegativeStock = inventorySettings?.allowNegativeStock ?? true; // Default: allow
+
+    // IMPORTANT: For OUT entries, store quantity as NEGATIVE so calculateCurrentStock works correctly
+    const entryQuantity = validatedData.type === 'OUT' 
+      ? -validatedData.quantity 
+      : validatedData.quantity;
+
     // Use database transaction to ensure data consistency
     const result = await prisma.$transaction(async (tx) => {
-      // For inventory out, track deficit but allow negative stock
+      // For inventory out, check stock availability based on settings
       if (validatedData.type === 'OUT') {
         // Lock the item row to prevent race conditions
         const item = await tx.item.findUniqueOrThrow({
@@ -672,11 +942,25 @@ router.post('/', authenticate, requireTenant, async (req, res) => {
         });
         const current = totalIn - totalOut;
         
-        // Track deficit but allow negative stock
+        // Check if transaction would result in negative stock
         const willBeNegative = current < validatedData.quantity;
+        
         if (willBeNegative) {
-          console.log(`⚠️ Stock deficit detected: ${item.name} will go from ${current} to ${current - validatedData.quantity}`);
-          // Note: We don't throw an error anymore, just log the deficit
+          if (!allowNegativeStock) {
+            // Block transaction if negative stock is not allowed
+            throw new Error(JSON.stringify({
+              type: 'INSUFFICIENT_STOCK',
+              message: `موجودی کافی نیست. موجودی فعلی: ${current} ${item.unit}`,
+              itemId: item.id,
+              itemName: item.name,
+              currentStock: current,
+              requestedQuantity: validatedData.quantity,
+              unit: item.unit
+            }));
+          } else {
+            // Log the deficit but allow the transaction
+            console.log(`⚠️ Stock deficit detected: ${item.name} will go from ${current} to ${current - validatedData.quantity}`);
+          }
         }
       }
 
@@ -684,6 +968,7 @@ router.post('/', authenticate, requireTenant, async (req, res) => {
       const newEntry = await tx.inventoryEntry.create({
         data: {
           ...validatedData,
+          quantity: entryQuantity, // Use negated quantity for OUT entries
           expiryDate: validatedData.expiryDate ? new Date(validatedData.expiryDate) : undefined,
           userId,
           tenantId: req.tenant!.id
@@ -713,18 +998,21 @@ router.post('/', authenticate, requireTenant, async (req, res) => {
     }
 
     // Calculate final stock using single-source-of-truth rule:
-    // OUT entries are already negative → current stock = SUM(quantity)
+    // OUT entries are stored as negative → current stock = SUM(quantity)
     const stockAgg = await prisma.inventoryEntry.aggregate({
       where: {
-        itemId: validatedData.itemId
+        itemId: validatedData.itemId,
+        deletedAt: null // Exclude soft-deleted entries
       },
       _sum: {
         quantity: true
       }
     });
     const newCurrentStock = stockAgg._sum.quantity || 0;
-    // Previous stock is simply current minus this change (works for both IN and OUT)
-    const previousStock = newCurrentStock - validatedData.quantity;
+    // Previous stock: subtract the change we just made
+    // For IN: we added positive, so subtract positive
+    // For OUT: we added negative, so subtract negative (which is adding)
+    const previousStock = newCurrentStock - entryQuantity;
 
     // Send inventory update notification (non-blocking)
     setImmediate(async () => {
@@ -734,7 +1022,7 @@ router.post('/', authenticate, requireTenant, async (req, res) => {
           itemName: result.item.name,
           previousStock,
           newStock: newCurrentStock,
-          changeAmount: validatedData.quantity,
+          changeAmount: Math.abs(entryQuantity), // Use absolute value for display
           type: validatedData.type,
           unit: result.item.unit,
           userId,
@@ -764,22 +1052,198 @@ router.post('/', authenticate, requireTenant, async (req, res) => {
   }
 });
 
+// POST /api/inventory/bulk - Create multiple inventory entries in a single transaction
+router.post('/bulk', authenticate, requireTenant, async (req, res) => {
+  try {
+    // Validate request body
+    const validatedData = bulkInventoryEntrySchema.parse(req.body);
+    
+    // Get the user ID from the authenticated user
+    if (!req.user) {
+      return res.status(401).json({ message: 'کاربر احراز هویت نشده است' });
+    }
+    const userId = req.user.id;
+    const tenantId = req.tenant!.id;
+
+    // Ensure all entries are IN type for bulk entry
+    const invalidEntries = validatedData.entries.filter(entry => entry.type !== 'IN');
+    if (invalidEntries.length > 0) {
+      return res.status(400).json({ 
+        message: 'ورود گروهی فقط برای تراکنش‌های ورودی (IN) مجاز است',
+        error: 'Bulk entry only allowed for IN transactions'
+      });
+    }
+
+    // Process all entries in a single transaction
+    const results = await prisma.$transaction(async (tx) => {
+      const createdEntries = [];
+      const errors = [];
+
+      for (let i = 0; i < validatedData.entries.length; i++) {
+        const entryData = validatedData.entries[i];
+        
+        try {
+          // Verify item exists and belongs to tenant
+          const item = await tx.item.findFirst({
+            where: {
+              id: entryData.itemId,
+              tenantId: tenantId,
+              isActive: true
+            },
+            select: { id: true, name: true, unit: true }
+          });
+
+          if (!item) {
+            errors.push({
+              index: i,
+              itemId: entryData.itemId,
+              error: 'کالا یافت نشد یا غیرفعال است'
+            });
+            continue;
+          }
+
+          // Create inventory entry
+          const newEntry = await tx.inventoryEntry.create({
+            data: {
+              ...entryData,
+              expiryDate: entryData.expiryDate ? new Date(entryData.expiryDate) : undefined,
+              userId,
+              tenantId
+            },
+            include: {
+              item: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  role: true
+                }
+              }
+            }
+          });
+
+          createdEntries.push(newEntry);
+        } catch (error) {
+          errors.push({
+            index: i,
+            itemId: entryData.itemId,
+            error: error instanceof Error ? error.message : 'خطای نامشخص'
+          });
+        }
+      }
+
+      return { createdEntries, errors };
+    }, {
+      isolationLevel: 'Serializable',
+      timeout: 30000 // 30 seconds timeout for bulk operations
+    });
+
+    // Send notifications for successfully created entries (non-blocking)
+    if (results.createdEntries.length > 0) {
+      setImmediate(async () => {
+        for (const entry of results.createdEntries) {
+          try {
+            // Calculate stock for notification
+            const stockAgg = await prisma.inventoryEntry.aggregate({
+              where: {
+                itemId: entry.itemId
+              },
+              _sum: {
+                quantity: true
+              }
+            });
+            const newCurrentStock = stockAgg._sum.quantity || 0;
+            const previousStock = newCurrentStock - entry.quantity;
+
+            await notificationService.sendInventoryUpdateNotification({
+              itemId: entry.itemId,
+              itemName: entry.item.name,
+              previousStock,
+              newStock: newCurrentStock,
+              changeAmount: entry.quantity,
+              type: entry.type,
+              unit: entry.item.unit,
+              userId,
+              userName: entry.user.name,
+              tenantId
+            });
+          } catch (notificationError) {
+            console.error('Error sending inventory notification for bulk entry:', notificationError);
+            // Log but don't affect main transaction
+          }
+        }
+      });
+    }
+
+    // Return results
+    if (results.errors.length > 0 && results.createdEntries.length === 0) {
+      // All failed
+      return res.status(400).json({
+        success: false,
+        message: 'هیچ تراکنشی ثبت نشد',
+        errors: results.errors,
+        created: []
+      });
+    } else if (results.errors.length > 0) {
+      // Partial success
+      return res.status(207).json({
+        success: true,
+        message: `${results.createdEntries.length} تراکنش با موفقیت ثبت شد، ${results.errors.length} تراکنش ناموفق بود`,
+        created: results.createdEntries,
+        errors: results.errors
+      });
+    } else {
+      // All successful
+      return res.status(201).json({
+        success: true,
+        message: `${results.createdEntries.length} تراکنش با موفقیت ثبت شد`,
+        created: results.createdEntries,
+        errors: []
+      });
+    }
+
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        message: 'اطلاعات نامعتبر', 
+        errors: error.errors 
+      });
+    }
+    
+    console.error('Error creating bulk inventory entries:', error);
+    res.status(500).json({ 
+      message: 'خطا در ثبت تراکنش‌های انبار',
+      error: error instanceof Error ? error.message : 'خطای نامشخص'
+    });
+  }
+});
+
 // PUT /api/inventory/:id - Update an inventory entry
 router.put('/:id', authenticate, requireTenant, authorize(['ADMIN', 'MANAGER']), async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Check if entry exists
-    const existingEntry = await prisma.inventoryEntry.findUnique({
-      where: { id }
+    // Check if entry exists and is not deleted
+    const existingEntry = await prisma.inventoryEntry.findFirst({
+      where: { 
+        id,
+        deletedAt: null // Only find non-deleted entries
+      }
     });
     
     if (!existingEntry) {
-      return res.status(404).json({ message: 'تراکنش انبار یافت نشد' });
+      return res.status(404).json({ message: 'تراکنش انبار یافت نشد یا قبلاً حذف شده است' });
     }
     
     // Validate request body
     const validatedData = inventoryEntrySchema.parse(req.body);
+    
+    // Get inventory settings
+    const inventorySettings = await prisma.inventorySettings.findUnique({
+      where: { tenantId: req.tenant!.id }
+    });
+    const allowNegativeStock = inventorySettings?.allowNegativeStock ?? true; // Default: allow
     
     // If changing type or quantity, need to check inventory constraints
     if (existingEntry.type !== validatedData.type || existingEntry.quantity !== validatedData.quantity) {
@@ -808,29 +1272,48 @@ router.put('/:id', authenticate, requireTenant, authorize(['ADMIN', 'MANAGER']),
         });
         
         // Calculate current stock without the entry being updated
+        // Note: OUT entries are stored as negative, so totalOut is already negative
+        // So current = totalIn + totalOut (where totalOut is negative)
         let adjustedTotalIn = totalIn;
         let adjustedTotalOut = totalOut;
         
+        // Remove the old entry's effect
+        // existingEntry.quantity is already negative for OUT, positive for IN
         if (existingEntry.type === 'IN') {
-          adjustedTotalIn -= existingEntry.quantity;
+          adjustedTotalIn -= existingEntry.quantity; // existingEntry.quantity is positive
         } else {
-          adjustedTotalOut -= existingEntry.quantity;
+          // For OUT, existingEntry.quantity is negative, so subtracting it adds to totalOut
+          adjustedTotalOut -= existingEntry.quantity; // This effectively adds (since quantity is negative)
         }
         
         // Calculate what stock would be after applying the new values
+        // For OUT entries, we'll store negative, so we need to account for that
+        const newEntryQuantity = validatedData.type === 'OUT' 
+          ? -validatedData.quantity 
+          : validatedData.quantity;
+        
         if (validatedData.type === 'IN') {
-          adjustedTotalIn += validatedData.quantity;
+          adjustedTotalIn += newEntryQuantity; // newEntryQuantity is positive
         } else {
-          adjustedTotalOut += validatedData.quantity;
+          // For OUT, newEntryQuantity is negative, so adding it subtracts from totalOut
+          adjustedTotalOut += newEntryQuantity; // This effectively subtracts (since quantity is negative)
         }
         
-        const finalStock = adjustedTotalIn - adjustedTotalOut;
+        // Since OUT entries are stored as negative, current = totalIn + totalOut
+        const finalStock = adjustedTotalIn + adjustedTotalOut;
         
-        // Track deficit but allow negative stock
+        // Check if update would result in negative stock
         const willBeNegative = finalStock < 0;
-        if (willBeNegative) {
+        if (willBeNegative && !allowNegativeStock) {
+          // Block update if negative stock is not allowed
+          throw new Error(JSON.stringify({
+            type: 'INSUFFICIENT_STOCK',
+            message: `به‌روزرسانی باعث موجودی منفی می‌شود. موجودی نهایی: ${finalStock}`,
+            finalStock
+          }));
+        } else if (willBeNegative) {
+          // Log the deficit but allow the update
           console.log(`⚠️ Stock deficit detected in update: Item will go to ${finalStock}`);
-          // Note: We don't throw an error anymore, just log the deficit
         }
         
         return { success: true };
@@ -838,10 +1321,16 @@ router.put('/:id', authenticate, requireTenant, authorize(['ADMIN', 'MANAGER']),
     }
     
     // Update inventory entry
+    // IMPORTANT: For OUT entries, store quantity as NEGATIVE so calculateCurrentStock works correctly
+    const entryQuantity = validatedData.type === 'OUT' 
+      ? -validatedData.quantity 
+      : validatedData.quantity;
+    
     const updatedEntry = await prisma.inventoryEntry.update({
       where: { id },
       data: {
         ...validatedData,
+        quantity: entryQuantity, // Use negated quantity for OUT entries
         expiryDate: validatedData.expiryDate ? new Date(validatedData.expiryDate) : undefined,
       },
       include: {
@@ -874,26 +1363,34 @@ router.put('/:id', authenticate, requireTenant, authorize(['ADMIN', 'MANAGER']),
   }
 });
 
-// DELETE /api/inventory/:id - Delete an inventory entry
+// DELETE /api/inventory/:id - Delete an inventory entry (soft delete)
 router.delete('/:id', authenticate, requireTenant, authorize(['ADMIN', 'MANAGER']), async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = (req as any).user.id;
     
-    // Check if entry exists
-    const existingEntry = await prisma.inventoryEntry.findUnique({
-      where: { id }
+    // Check if entry exists and is not already deleted
+    const existingEntry = await prisma.inventoryEntry.findFirst({
+      where: { 
+        id,
+        deletedAt: null // Only find non-deleted entries
+      }
     });
     
     if (!existingEntry) {
-      return res.status(404).json({ message: 'تراکنش انبار یافت نشد' });
+      return res.status(404).json({ message: 'تراکنش انبار یافت نشد یا قبلاً حذف شده است' });
     }
     
-    // Delete inventory entry
-    await prisma.inventoryEntry.delete({
-      where: { id }
+    // Soft delete inventory entry
+    await prisma.inventoryEntry.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        deletedBy: userId
+      }
     });
     
-    res.json({ message: 'تراکنش انبار با موفقیت حذف شد' });
+    res.json({ message: 'تراکنش انبار با موفقیت حذف شد (حذف نرم)' });
   } catch (error) {
     console.error('Error deleting inventory entry:', error);
     res.status(500).json({ message: 'خطا در حذف تراکنش انبار' });

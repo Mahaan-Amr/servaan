@@ -10,6 +10,7 @@ import * as inventoryService from '../../../../../services/inventoryService';
 import * as supplierService from '../../../../../services/supplierService';
 import { useAuth } from '../../../../../contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { FormattedNumberInput } from '../../../../../components/ui/FormattedNumberInput';
 
 interface InventoryEntry {
   id: string;
@@ -176,18 +177,14 @@ const ItemSupplierModal: React.FC<ItemSupplierModalProps> = ({ item, onClose, on
 
             {/* Unit Price */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                قیمت واحد (ریال)
-              </label>
-              <input
-                type="number"
-                name="unitPrice"
+              <FormattedNumberInput
+                label="قیمت واحد (ریال)"
                 value={formData.unitPrice}
-                onChange={handleChange}
+                onChange={(value: string) => handleChange({ target: { name: 'unitPrice', value } } as React.ChangeEvent<HTMLInputElement>)}
                 placeholder="قیمت واحد از این تأمین‌کننده"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                min="0"
+                min={0}
                 step="0.01"
+                allowDecimals={true}
               />
             </div>
 

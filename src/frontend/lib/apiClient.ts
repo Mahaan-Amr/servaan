@@ -43,18 +43,23 @@ export class ApiClient {
   private async handleResponse<T>(response: Response, defaultErrorMessage: string): Promise<T> {
     if (!response.ok) {
       let errorMessage = defaultErrorMessage;
+      let errorDetails: any = null;
       
       try {
         const errorData = await response.json();
         errorMessage = errorData.message || errorData.error || defaultErrorMessage;
+        errorDetails = errorData.errors || errorData;
       } catch {
         // If error response is not JSON, use status text
         errorMessage = response.statusText || defaultErrorMessage;
       }
       
-      // Create custom error with status code for better error handling
-      const error = new Error(errorMessage) as Error & { statusCode?: number };
+      // Create custom error with status code and details for better error handling
+      const error = new Error(errorMessage) as Error & { statusCode?: number; details?: any };
       error.statusCode = response.status;
+      if (errorDetails) {
+        error.details = errorDetails;
+      }
       throw error;
     }
     

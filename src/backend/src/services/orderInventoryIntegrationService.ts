@@ -167,6 +167,12 @@ export class OrderInventoryIntegrationService {
         };
       }
 
+      // Get inventory settings to check if negative stock is allowed
+      const inventorySettings = await prisma.inventorySettings.findUnique({
+        where: { tenantId }
+      });
+      const allowNegativeStock = inventorySettings?.allowNegativeStock ?? true; // Default: allow
+
       const unavailableIngredients = [];
       let totalCost = 0;
 
@@ -182,20 +188,30 @@ export class OrderInventoryIntegrationService {
         const ingredientTotalCost = requiredQuantity * currentCost;
         totalCost += ingredientTotalCost;
 
-        // Check if ingredient is available (allow negative stock for non-optional ingredients)
-        // Note: We now allow negative stock instead of blocking orders
+        // Check if ingredient is available
         if (availableStock < requiredQuantity && !ingredient.isOptional) {
-          // Log the deficit but don't block the order
-          console.log(`⚠️ Stock deficit for ${ingredient.item?.name}: Required ${requiredQuantity}, Available ${availableStock}`);
-          
-          // Add to unavailable ingredients list for reporting purposes
-          unavailableIngredients.push({
-            itemId: ingredient.itemId,
-            itemName: ingredient.item?.name || 'Unknown Item',
-            requiredQuantity,
-            availableQuantity: availableStock,
-            unit: ingredient.unit
-          });
+          // If negative stock is not allowed, block the order
+          if (!allowNegativeStock) {
+            unavailableIngredients.push({
+              itemId: ingredient.itemId,
+              itemName: ingredient.item?.name || 'Unknown Item',
+              requiredQuantity,
+              availableQuantity: availableStock,
+              unit: ingredient.unit
+            });
+          } else {
+            // Log the deficit but allow the order
+            console.log(`⚠️ Stock deficit for ${ingredient.item?.name}: Required ${requiredQuantity}, Available ${availableStock}`);
+            
+            // Add to unavailable ingredients list for reporting purposes
+            unavailableIngredients.push({
+              itemId: ingredient.itemId,
+              itemName: ingredient.item?.name || 'Unknown Item',
+              requiredQuantity,
+              availableQuantity: availableStock,
+              unit: ingredient.unit
+            });
+          }
         }
       }
 
@@ -203,9 +219,9 @@ export class OrderInventoryIntegrationService {
       const menuPrice = Number(recipe.menuItem?.menuPrice || 0);
       const profitMargin = menuPrice - (totalCost / orderQuantity);
 
-      // Always return available = true to allow orders with negative stock
+      // Return availability based on settings
       return {
-        isAvailable: true, // Changed from unavailableIngredients.length === 0
+        isAvailable: allowNegativeStock || unavailableIngredients.length === 0,
         unavailableIngredients,
         totalCost,
         profitMargin: profitMargin * orderQuantity
@@ -324,6 +340,12 @@ export class OrderInventoryIntegrationService {
         };
       }
 
+      // Get inventory settings to check if negative stock is allowed
+      const inventorySettings = await prisma.inventorySettings.findUnique({
+        where: { tenantId }
+      });
+      const allowNegativeStock = inventorySettings?.allowNegativeStock ?? true; // Default: allow
+
       const warnings = [];
       const unavailableIngredients = [];
       let totalCost = 0;
@@ -416,15 +438,19 @@ export class OrderInventoryIntegrationService {
       const menuPrice = Number(recipe.menuItem?.menuPrice || 0);
       const profitMargin = menuPrice - (totalCost / orderQuantity);
 
+      // Determine availability based on settings
+      // If negative stock is not allowed and there are unavailable ingredients, block the order
+      const isAvailable = allowNegativeStock || unavailableIngredients.length === 0;
+
       return {
-        isAvailable: true, // Always allow orders to proceed
+        isAvailable,
         hasWarnings: warnings.length > 0,
         warnings,
         unavailableIngredients,
         totalCost,
         profitMargin: profitMargin * orderQuantity,
-        canProceedWithOverride: true, // Staff can always override
-        overrideRequired: hasCriticalIssues // Override required for critical issues
+        canProceedWithOverride: allowNegativeStock, // Can override only if negative stock is allowed
+        overrideRequired: !allowNegativeStock && hasCriticalIssues // Override required if negative stock not allowed and critical issues exist
       };
 
     } catch (error) {

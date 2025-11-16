@@ -6,12 +6,14 @@ import { Item, InventoryEntryType, InventoryStatus } from '../../../../../../sha
 import * as inventoryService from '../../../../../services/inventoryService';
 import * as itemService from '../../../../../services/itemService';
 import toast from 'react-hot-toast';
+import { FormattedNumberInput } from '../../../../../components/ui/FormattedNumberInput';
 
 export default function RemoveInventoryPage() {
   const [loading, setLoading] = useState(false);
   const [itemsLoading, setItemsLoading] = useState(true);
   const [items, setItems] = useState<Item[]>([]);
   const [inventory, setInventory] = useState<InventoryStatus[]>([]);
+  const [allowNegativeStock, setAllowNegativeStock] = useState(true);
   const [formData, setFormData] = useState({
     itemId: '',
     quantity: '',
@@ -24,13 +26,17 @@ export default function RemoveInventoryPage() {
     const loadData = async () => {
       try {
         setItemsLoading(true);
-        const [itemsData, inventoryData] = await Promise.all([
+        const [itemsData, inventoryData, settingsData] = await Promise.all([
           itemService.getItems(),
-          inventoryService.getCurrentInventory()
+          inventoryService.getCurrentInventory(),
+          inventoryService.getInventorySettings().catch(() => null) // Load settings, default to null if fails
         ]);
         
         setItems(itemsData.filter(item => item.isActive));
         setInventory(inventoryData);
+        if (settingsData) {
+          setAllowNegativeStock(settingsData.allowNegativeStock);
+        }
       } catch (error) {
         console.error('Error loading data:', error);
         toast.error('خطا در دریافت اطلاعات');
@@ -66,10 +72,16 @@ export default function RemoveInventoryPage() {
         return;
       }
 
-      // Check current stock
+      // Check current stock based on settings
       const currentStock = inventory.find(inv => inv.itemId === formData.itemId);
-      if (!currentStock || currentStock.current < parseFloat(formData.quantity)) {
-        toast.error(`موجودی کافی نیست. موجودی فعلی: ${currentStock?.current || 0}`);
+      if (!currentStock) {
+        toast.error('کالای انتخاب شده یافت نشد');
+        return;
+      }
+
+      // If negative stock is not allowed, validate availability
+      if (!allowNegativeStock && currentStock.current < parseFloat(formData.quantity)) {
+        toast.error(`موجودی کافی نیست. موجودی فعلی: ${currentStock.current} ${selectedItem?.unit || ''}`);
         return;
       }
 
@@ -177,37 +189,45 @@ export default function RemoveInventoryPage() {
                   </div>
                 </div>
               )}
-              {selectedItem && maxQuantity === 0 && (
+              {selectedItem && maxQuantity === 0 && !allowNegativeStock && (
                 <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                   <p className="text-sm text-red-700 dark:text-red-300">
                     این کالا موجودی ندارد و امکان خروج آن وجود ندارد.
                   </p>
                 </div>
               )}
+              {selectedItem && maxQuantity === 0 && allowNegativeStock && (
+                <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    ⚠️ این کالا موجودی ندارد. با توجه به تنظیمات، امکان خروج با موجودی منفی وجود دارد.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div>
-              <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                مقدار *
-              </label>
-              <input
-                type="number"
-                id="quantity"
-                name="quantity"
+              <FormattedNumberInput
+                label="مقدار *"
                 value={formData.quantity}
-                onChange={handleChange}
-                required
-                min="0.01"
-                max={maxQuantity}
-                step="0.01"
-                disabled={loading || maxQuantity === 0}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 dark:bg-gray-700 dark:text-white"
+                onChange={(value: string) => handleChange({ target: { name: 'quantity', value } } as React.ChangeEvent<HTMLInputElement>)}
                 placeholder="مقدار خروجی"
+                min={0.01}
+                max={allowNegativeStock ? undefined : maxQuantity}
+                step="0.01"
+                disabled={loading || (!allowNegativeStock && maxQuantity === 0)}
+                allowDecimals={true}
+                required
               />
               {selectedItem && (
                 <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   <p>واحد: {selectedItem.unit}</p>
-                  <p>حداکثر قابل خروج: {maxQuantity.toLocaleString('fa-IR')} {selectedItem.unit}</p>
+                  {allowNegativeStock ? (
+                    <p className="text-yellow-600 dark:text-yellow-400">
+                      موجودی فعلی: {maxQuantity.toLocaleString('fa-IR')} {selectedItem.unit} (موجودی منفی مجاز است)
+                    </p>
+                  ) : (
+                    <p>حداکثر قابل خروج: {maxQuantity.toLocaleString('fa-IR')} {selectedItem.unit}</p>
+                  )}
                 </div>
               )}
             </div>
@@ -230,7 +250,7 @@ export default function RemoveInventoryPage() {
             </div>
           </div>
 
-          {formData.quantity && parseFloat(formData.quantity) > maxQuantity && (
+          {formData.quantity && !allowNegativeStock && parseFloat(formData.quantity) > maxQuantity && (
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
@@ -244,6 +264,26 @@ export default function RemoveInventoryPage() {
                   </h3>
                   <div className="mt-2 text-sm text-red-700 dark:text-red-300">
                     <p>مقدار وارد شده ({parseFloat(formData.quantity).toLocaleString('fa-IR')}) بیشتر از موجودی فعلی ({maxQuantity.toLocaleString('fa-IR')}) است.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {formData.quantity && allowNegativeStock && parseFloat(formData.quantity) > maxQuantity && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="mr-3">
+                  <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-400">
+                    هشدار: موجودی منفی
+                  </h3>
+                  <div className="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+                    <p>مقدار وارد شده ({parseFloat(formData.quantity).toLocaleString('fa-IR')}) بیشتر از موجودی فعلی ({maxQuantity.toLocaleString('fa-IR')}) است.</p>
+                    <p className="mt-1">با توجه به تنظیمات، این تراکنش ثبت خواهد شد و موجودی منفی خواهد شد.</p>
                   </div>
                 </div>
               </div>
@@ -277,7 +317,7 @@ export default function RemoveInventoryPage() {
             </button>
             <button
               type="submit"
-              disabled={loading || !formData.itemId || !formData.quantity || !formData.note || parseFloat(formData.quantity || '0') > maxQuantity || maxQuantity === 0}
+              disabled={loading || !formData.itemId || !formData.quantity || !formData.note || (!allowNegativeStock && (parseFloat(formData.quantity || '0') > maxQuantity || maxQuantity === 0))}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
             >
               {loading ? (
