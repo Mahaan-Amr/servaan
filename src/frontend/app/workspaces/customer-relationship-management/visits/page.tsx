@@ -7,6 +7,7 @@ import { useAuth } from '../../../../contexts/AuthContext';
 import { getVisits } from '../../../../services/visitService';
 import { getCustomers } from '../../../../services/customerService';
 import { CustomerVisit, VisitFilter, Customer } from '../../../../types/crm';
+import { FarsiDatePicker } from '../../../../components/ui/FarsiDatePicker';
 
 function VisitsPageContent() {
   const { user } = useAuth();
@@ -184,26 +185,22 @@ function VisitsPageContent() {
 
           {/* Date Range */}
           <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              از تاریخ
-            </label>
-            <input
-              type="date"
+            <FarsiDatePicker
+              label="از تاریخ"
               value={filters.startDate || ''}
-              onChange={(e) => handleFilterChange('startDate', e.target.value)}
-              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              onChange={(value) => handleFilterChange('startDate', value)}
+              placeholder="از تاریخ را انتخاب کنید"
+              maxDate={filters.endDate || undefined}
             />
           </div>
 
           <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              تا تاریخ
-            </label>
-            <input
-              type="date"
+            <FarsiDatePicker
+              label="تا تاریخ"
               value={filters.endDate || ''}
-              onChange={(e) => handleFilterChange('endDate', e.target.value)}
-              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              onChange={(value) => handleFilterChange('endDate', value)}
+              placeholder="تا تاریخ را انتخاب کنید"
+              minDate={filters.startDate || undefined}
             />
           </div>
 

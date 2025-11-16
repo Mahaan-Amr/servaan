@@ -62,20 +62,20 @@ router.get('/user-access/:userId', authenticate, async (req, res) => {
           hasAccess: req.tenant.features?.hasAccountingSystem || false,
           level: user.role === 'ADMIN' ? 'full' : (user.role === 'MANAGER' ? 'full' : 'none')
         },
-        // Customer Relationship Management
+        // Customer Relationship Management - DEACTIVATED (Maintenance)
         'customer-relationship-management': {
-          hasAccess: req.tenant.features?.hasCustomerManagement || false,
-          level: user.role === 'ADMIN' ? 'full' : (user.role === 'MANAGER' ? 'full' : 'read-only')
+          hasAccess: false, // Deactivated - will be re-enabled in future
+          level: 'none'
         },
         // SMS Management
         'sms-management': {
           hasAccess: req.tenant.features?.hasNotifications || false,
           level: user.role === 'ADMIN' ? 'full' : (user.role === 'MANAGER' ? 'full' : 'read-only')
         },
-        // Public Relations
+        // Public Relations - DEACTIVATED (Maintenance)
         'public-relations': {
-          hasAccess: req.tenant.features?.hasAdvancedCRM || false,
-          level: user.role === 'ADMIN' ? 'full' : (user.role === 'MANAGER' ? 'full' : 'none')
+          hasAccess: false, // Deactivated - will be re-enabled in future
+          level: 'none'
         },
         // Ordering and Sales System
         'ordering-sales-system': {

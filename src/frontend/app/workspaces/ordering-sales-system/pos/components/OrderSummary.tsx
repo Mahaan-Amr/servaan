@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import type { OrderOptions, OrderCalculation, BusinessPreset } from '../../../../../services/orderingService';
+import { FormattedNumberInput } from '../../../../../components/ui/FormattedNumberInput';
 
 interface OrderSummaryProps {
   orderItems: Array<{
@@ -171,13 +172,14 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
                     <option value="PERCENTAGE">%</option>
                     <option value="AMOUNT">تومان</option>
                   </select>
-                  <input
-                    type="number"
+                  <FormattedNumberInput
                     value={options.discountValue}
-                    onChange={(e) => onOptionsChange({ ...options, discountValue: parseFloat(e.target.value) || 0 })}
+                    onChange={(value: string) => onOptionsChange({ ...options, discountValue: parseFloat(value) || 0 })}
                     disabled={!options.discountEnabled}
-                    className={`w-20 px-2 py-1 rounded text-xs border ${options.discountEnabled ? 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800' : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/40'} text-gray-900 dark:text-white`}
                     placeholder="0"
+                    min={0}
+                    allowDecimals={true}
+                    className={`w-20 text-xs ${options.discountEnabled ? '' : 'opacity-50'}`}
                   />
                 </div>
               </div>
@@ -195,13 +197,15 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
                 </div>
                 <div className="mt-3 flex items-center space-x-2 space-x-reverse">
                   <span className="text-xs text-gray-500">%</span>
-                  <input
-                    type="number"
+                  <FormattedNumberInput
                     value={options.taxPercentage}
-                    onChange={(e) => onOptionsChange({ ...options, taxPercentage: parseFloat(e.target.value) || 0 })}
+                    onChange={(value: string) => onOptionsChange({ ...options, taxPercentage: parseFloat(value) || 0 })}
                     disabled={!options.taxEnabled}
-                    className={`w-20 px-2 py-1 rounded text-xs border ${options.taxEnabled ? 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800' : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/40'} text-gray-900 dark:text-white`}
                     placeholder="9"
+                    min={0}
+                    max={100}
+                    allowDecimals={true}
+                    className={`w-20 text-xs ${options.taxEnabled ? '' : 'opacity-50'}`}
                   />
                 </div>
               </div>
@@ -219,13 +223,15 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
                 </div>
                 <div className="mt-3 flex items-center space-x-2 space-x-reverse">
                   <span className="text-xs text-gray-500">%</span>
-                  <input
-                    type="number"
+                  <FormattedNumberInput
                     value={options.servicePercentage}
-                    onChange={(e) => onOptionsChange({ ...options, servicePercentage: parseFloat(e.target.value) || 0 })}
+                    onChange={(value: string) => onOptionsChange({ ...options, servicePercentage: parseFloat(value) || 0 })}
                     disabled={!options.serviceEnabled}
-                    className={`w-20 px-2 py-1 rounded text-xs border ${options.serviceEnabled ? 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800' : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/40'} text-gray-900 dark:text-white`}
                     placeholder="10"
+                    min={0}
+                    max={100}
+                    allowDecimals={true}
+                    className={`w-20 text-xs ${options.serviceEnabled ? '' : 'opacity-50'}`}
                   />
                 </div>
               </div>
@@ -243,13 +249,14 @@ export default function OrderSummary({ orderItems, options, calculation, onOptio
                 </div>
                 <div className="mt-3 flex items-center space-x-2 space-x-reverse">
                   <span className="text-xs text-gray-500">تومان</span>
-                  <input
-                    type="number"
+                  <FormattedNumberInput
                     value={options.courierAmount}
-                    onChange={(e) => onOptionsChange({ ...options, courierAmount: parseFloat(e.target.value) || 0 })}
+                    onChange={(value: string) => onOptionsChange({ ...options, courierAmount: parseFloat(value) || 0 })}
                     disabled={!options.courierEnabled}
-                    className={`w-24 px-2 py-1 rounded text-xs border ${options.courierEnabled ? 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800' : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900/40'} text-gray-900 dark:text-white`}
                     placeholder="0"
+                    min={0}
+                    allowDecimals={false}
+                    className={`w-24 text-xs ${options.courierEnabled ? '' : 'opacity-50'}`}
                   />
                 </div>
               </div>

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 // import { useAuth } from '../../../../../contexts/AuthContext';
 import { AccountingService } from '../../../../../services/accountingService';
+import { FarsiDatePicker } from '../../../../../components/ui/FarsiDatePicker';
+import { FormattedNumberInput } from '../../../../../components/ui/FormattedNumberInput';
 
 interface ChartOfAccount {
   id: string;
@@ -269,17 +271,13 @@ export default function CreateJournalEntryPage() {
             </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    تاریخ سند *
-                  </label>
-                    <input
-                      type="date"
-                      value={entryDate}
-                      onChange={(e) => setEntryDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 dark:text-white"
-                      required
-                    />
-                  </div>
+                  <FarsiDatePicker
+                    label="تاریخ سند *"
+                    value={entryDate}
+                    onChange={(value: string) => setEntryDate(value)}
+                    placeholder="تاریخ سند را انتخاب کنید"
+                  />
+                </div>
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -370,29 +368,25 @@ export default function CreateJournalEntryPage() {
 
                   {/* Debit Amount */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      بدهکار
-                    </label>
-                    <input
-                      type="number"
+                    <FormattedNumberInput
+                      label="بدهکار"
                       value={line.debitAmount}
-                      onChange={(e) => updateLine(index, 'debitAmount', parseFloat(e.target.value) || 0)}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 dark:text-white"
+                      onChange={(value: string) => updateLine(index, 'debitAmount', parseFloat(value) || 0)}
                       placeholder="0"
+                      min={0}
+                      allowDecimals={true}
                     />
                   </div>
 
                   {/* Credit Amount */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      بستانکار
-                    </label>
-                    <input
-                      type="number"
+                    <FormattedNumberInput
+                      label="بستانکار"
                       value={line.creditAmount}
-                      onChange={(e) => updateLine(index, 'creditAmount', parseFloat(e.target.value) || 0)}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 dark:text-white"
+                      onChange={(value: string) => updateLine(index, 'creditAmount', parseFloat(value) || 0)}
                       placeholder="0"
+                      min={0}
+                      allowDecimals={true}
                     />
                   </div>
                 </div>

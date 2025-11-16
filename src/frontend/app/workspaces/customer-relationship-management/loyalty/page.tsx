@@ -13,6 +13,7 @@ import {
   LoyaltyTransactionFilter
 } from '../../../../services/loyaltyService';
 import { getCustomers } from '../../../../services/customerService';
+import { FarsiDatePicker } from '../../../../components/ui/FarsiDatePicker';
 import { 
   LoyaltyStatistics, 
   LoyaltyTransaction, 
@@ -388,17 +389,19 @@ export default function LoyaltyPage() {
                   تاریخ
                 </label>
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <input
-                    type="date"
+                  <FarsiDatePicker
                     value={filters.startDate || ''}
-                    onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
-                    className="flex-1 px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    onChange={(value) => setFilters(prev => ({ ...prev, startDate: value }))}
+                    placeholder="از تاریخ"
+                    maxDate={filters.endDate || undefined}
+                    className="flex-1"
                   />
-                  <input
-                    type="date"
+                  <FarsiDatePicker
                     value={filters.endDate || ''}
-                    onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
-                    className="flex-1 px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                    onChange={(value) => setFilters(prev => ({ ...prev, endDate: value }))}
+                    placeholder="تا تاریخ"
+                    minDate={filters.startDate || undefined}
+                    className="flex-1"
                   />
                 </div>
               </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { AccountingService } from '../../../../services/accountingService';
+import { FarsiDatePicker } from '../../../../components/ui/FarsiDatePicker';
 
 interface TrialBalanceAccount {
   id: string;
@@ -140,14 +141,11 @@ export default function TrialBalancePage() {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
           <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              تا تاریخ
-            </label>
-            <input
-              type="date"
+            <FarsiDatePicker
+              label="تا تاریخ"
               value={asOfDate}
-              onChange={(e) => setAsOfDate(e.target.value)}
-              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 dark:text-white"
+              onChange={(value) => setAsOfDate(value)}
+              placeholder="تا تاریخ را انتخاب کنید"
             />
           </div>
 

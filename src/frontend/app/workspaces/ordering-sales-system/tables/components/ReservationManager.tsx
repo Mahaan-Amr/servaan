@@ -6,6 +6,8 @@ import { Modal } from '@/components/ui/Modal';
 import { TableService, CreateReservationRequest } from '@/services/orderingService';
 import { TableReservation, Table } from '@/types/ordering';
 import { formatDate, toInputDateFormat } from '@/utils/dateUtils';
+import { FarsiDatePicker } from '@/components/ui/FarsiDatePicker';
+import { FormattedNumberInput } from '@/components/ui/FormattedNumberInput';
 import toast from 'react-hot-toast';
 import { ReservationCalendar } from './ReservationCalendar';
 
@@ -328,16 +330,14 @@ export const ReservationManager: React.FC<ReservationManagerProps> = ({
 
               {/* Guest Count */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  تعداد مهمان *
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="20"
+                <FormattedNumberInput
+                  label="تعداد مهمان *"
                   value={formData.guestCount}
-                  onChange={(e) => handleFormChange('guestCount', parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  onChange={(value: string) => handleFormChange('guestCount', parseInt(value) || 1)}
+                  placeholder="تعداد مهمان"
+                  min={1}
+                  max={20}
+                  allowDecimals={false}
                   required
                 />
               </div>
@@ -372,15 +372,11 @@ export const ReservationManager: React.FC<ReservationManagerProps> = ({
 
               {/* Reservation Date */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  تاریخ رزرو *
-                </label>
-                <input
-                  type="date"
+                <FarsiDatePicker
+                  label="تاریخ رزرو *"
                   value={formData.reservationDate}
-                  onChange={(e) => handleFormChange('reservationDate', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  required
+                  onChange={(value: string) => handleFormChange('reservationDate', value)}
+                  placeholder="تاریخ رزرو را انتخاب کنید"
                 />
               </div>
 

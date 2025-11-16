@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
+import { FarsiDatePicker } from '@/components/ui/FarsiDatePicker';
 import { 
   FaChartLine, 
   FaUsers, 
@@ -83,18 +84,20 @@ export default function AdvancedAnalyticsDashboard({ isOpen, onClose }: Advanced
           <div className="flex items-center space-x-4 rtl:space-x-reverse">
             {/* Date Range Selector */}
             <div className="flex items-center space-x-2 rtl:space-x-reverse">
-              <input
-                type="date"
+              <FarsiDatePicker
                 value={dateRange.startDate}
-                onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:text-white"
+                onChange={(value) => setDateRange(prev => ({ ...prev, startDate: value }))}
+                placeholder="از تاریخ"
+                maxDate={dateRange.endDate || undefined}
+                className="w-auto text-sm"
               />
               <span className="text-gray-500">تا</span>
-              <input
-                type="date"
+              <FarsiDatePicker
                 value={dateRange.endDate}
-                onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm dark:bg-gray-700 dark:text-white"
+                onChange={(value) => setDateRange(prev => ({ ...prev, endDate: value }))}
+                placeholder="تا تاریخ"
+                minDate={dateRange.startDate || undefined}
+                className="w-auto text-sm"
               />
             </div>
             

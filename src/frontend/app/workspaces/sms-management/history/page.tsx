@@ -17,6 +17,7 @@ import {
 import { AlertBox } from '../../../../components/ui/AlertBox';
 import { Spinner } from '../../../../components/ui/Spinner';
 import { Modal } from '../../../../components/ui/Modal';
+import { FarsiDatePicker } from '../../../../components/ui/FarsiDatePicker';
 
 interface SMSMessage {
   id: string;
@@ -305,21 +306,21 @@ const SMSHistoryPage = () => {
           </select>
 
           {/* Date From */}
-          <input
-            type="date"
-            placeholder="از تاریخ"
+          <FarsiDatePicker
             value={filters.dateFrom}
-            onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-            className="form-input"
+            onChange={(value) => handleFilterChange('dateFrom', value)}
+            placeholder="از تاریخ"
+            maxDate={filters.dateTo || undefined}
+            className="w-auto"
           />
 
           {/* Date To */}
-          <input
-            type="date"
-            placeholder="تا تاریخ"
+          <FarsiDatePicker
             value={filters.dateTo}
-            onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-            className="form-input"
+            onChange={(value) => handleFilterChange('dateTo', value)}
+            placeholder="تا تاریخ"
+            minDate={filters.dateFrom || undefined}
+            className="w-auto"
           />
         </div>
 

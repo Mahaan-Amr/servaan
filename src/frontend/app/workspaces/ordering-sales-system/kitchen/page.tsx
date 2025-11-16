@@ -8,6 +8,7 @@ import { useAuth } from '../../../../contexts/AuthContext';
 import { io } from 'socket.io-client';
 import { BASE_URL } from '../../../../lib/apiUtils';
 import { formatFarsiDateTime, toFarsiDigits } from '../../../../utils/dateUtils';
+import { FarsiDatePicker } from '../../../../components/ui/FarsiDatePicker';
 import { 
   FaClock, 
   FaUtensils, 
@@ -621,8 +622,8 @@ export default function KitchenDisplayPage() {
               {isConnected ? 'متصل' : 'قطع اتصال'}
             </span>
               </div>
-            </div>
-            
+          </div>
+          
             {/* Control Panel */}
             <div className="flex items-center space-x-3 space-x-reverse">
               {/* Sound Toggle */}
@@ -729,9 +730,9 @@ export default function KitchenDisplayPage() {
               
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 آخرین بروزرسانی: {formatFarsiDateTime(lastUpdate)}
-              </div>
-            </div>
-            
+        </div>
+      </div>
+
             <div className="flex items-center space-x-4 space-x-reverse">
               <div className="flex items-center space-x-2 space-x-reverse text-sm text-gray-600 dark:text-gray-400">
                 <span>کل سفارشات: {toFarsiDigits(orders.length)}</span>
@@ -857,16 +858,16 @@ export default function KitchenDisplayPage() {
       {/* Orders Tab */}
       {activeTab === 'orders' && (
         <>
-          {/* Loading State */}
-          {loading && (
-            <div className="flex items-center justify-center py-12">
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                 <span className="mr-3 text-lg text-gray-600 dark:text-gray-400">در حال بارگذاری...</span>
-            </div>
-          )}
+        </div>
+      )}
 
-          {/* Kitchen Display Board */}
-          {!loading && (
+      {/* Kitchen Display Board */}
+      {!loading && (
           <div className="space-y-6">
             {Object.entries(groupedOrders()).map(([status, statusOrders]) => {
               if (statusOrders.length === 0) return null;
@@ -943,18 +944,20 @@ export default function KitchenDisplayPage() {
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 بازه زمانی:
               </label>
-              <input
-                type="date"
+              <FarsiDatePicker
                 value={analyticsDateRange.startDate?.toISOString().split('T')[0] || ''}
-                onChange={(e) => setAnalyticsDateRange(prev => ({ ...prev, startDate: e.target.value ? new Date(e.target.value) : undefined }))}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
+                onChange={(value) => setAnalyticsDateRange(prev => ({ ...prev, startDate: value ? new Date(value + 'T00:00:00') : undefined }))}
+                placeholder="از تاریخ"
+                maxDate={analyticsDateRange.endDate?.toISOString().split('T')[0] || undefined}
+                className="w-auto"
               />
               <span className="text-gray-500">تا</span>
-              <input
-                type="date"
+              <FarsiDatePicker
                 value={analyticsDateRange.endDate?.toISOString().split('T')[0] || ''}
-                onChange={(e) => setAnalyticsDateRange(prev => ({ ...prev, endDate: e.target.value ? new Date(e.target.value) : undefined }))}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700"
+                onChange={(value) => setAnalyticsDateRange(prev => ({ ...prev, endDate: value ? new Date(value + 'T23:59:59') : undefined }))}
+                placeholder="تا تاریخ"
+                minDate={analyticsDateRange.startDate?.toISOString().split('T')[0] || undefined}
+                className="w-auto"
               />
               <button
                 onClick={loadAnalyticsData}
@@ -1387,15 +1390,15 @@ const OrderCard: React.FC<OrderCardProps> = ({
               <span>آماده</span>
                     </button>
                   )}
-
+                  
                   {order.status === OrderStatus.READY && (
-                    <button
+                  <button
               onClick={() => onUpdateStatus(order.kitchenDisplayId, OrderStatus.COMPLETED)}
               className="flex-1 bg-purple-500 hover:bg-purple-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-center space-x-1.5 space-x-reverse"
-                    >
+                  >
               <FaCheckCircle className="w-3.5 h-3.5" />
               <span>تکمیل</span>
-                    </button>
+                  </button>
                   )}
                   
           <div className="flex flex-col space-y-1">
@@ -1434,7 +1437,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
               ⬇️
             </button>
           </div>
-                </div>
+        </div>
               </div>
     </div>
   );

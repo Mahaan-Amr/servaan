@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { FormattedNumberInput } from '../../../../../components/ui/FormattedNumberInput';
 import { toast } from 'react-hot-toast';
 import { TableService } from '../../../../../services/orderingService';
 import { FaTimes, FaSave, FaPlus } from 'react-icons/fa';
@@ -185,22 +186,16 @@ export default function TableForm({ isOpen, onClose, editingTable, onTableSaved 
 
           {/* Capacity */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              ظرفیت *
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="20"
-              value={formData.capacity}
-              onChange={(e) => handleInputChange('capacity', parseInt(e.target.value))}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
-                errors.capacity ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              }`}
+            <FormattedNumberInput
+              label="ظرفیت *"
+              value={String(formData.capacity)}
+              onChange={(value: string) => handleInputChange('capacity', parseInt(value) || 1)}
+              placeholder="ظرفیت"
+              min={1}
+              max={20}
+              allowDecimals={false}
+              error={errors.capacity as string | undefined}
             />
-            {errors.capacity && (
-              <p className="text-red-500 text-sm mt-1">{errors.capacity}</p>
-            )}
           </div>
 
           {/* Section */}
@@ -219,21 +214,15 @@ export default function TableForm({ isOpen, onClose, editingTable, onTableSaved 
 
           {/* Floor */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              طبقه *
-            </label>
-            <input
-              type="number"
-              min="1"
-              value={formData.floor}
-              onChange={(e) => handleInputChange('floor', parseInt(e.target.value))}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
-                errors.floor ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              }`}
+            <FormattedNumberInput
+              label="طبقه *"
+              value={String(formData.floor)}
+              onChange={(value: string) => handleInputChange('floor', parseInt(value) || 1)}
+              placeholder="طبقه"
+              min={1}
+              allowDecimals={false}
+              error={errors.floor as string | undefined}
             />
-            {errors.floor && (
-              <p className="text-red-500 text-sm mt-1">{errors.floor}</p>
-            )}
           </div>
 
           {/* Action Buttons */}

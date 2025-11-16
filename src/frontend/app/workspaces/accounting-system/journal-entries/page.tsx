@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { AccountingService } from '../../../../services/accountingService';
+import { FarsiDatePicker } from '../../../../components/ui/FarsiDatePicker';
+import { FormattedNumberInput } from '../../../../components/ui/FormattedNumberInput';
 
 interface JournalEntry {
   id: string;
@@ -786,13 +788,11 @@ export default function JournalEntriesPage() {
             <form onSubmit={handleEditSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">تاریخ سند *</label>
-                  <input
-                    type="date"
+                  <FarsiDatePicker
+                    label="تاریخ سند *"
                     value={editEntryState.entryDate}
-                    onChange={e => setEditEntryState((prev) => prev ? { ...prev, entryDate: e.target.value } : prev)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 dark:text-white"
-                    required
+                    onChange={(value: string) => setEditEntryState((prev) => prev ? { ...prev, entryDate: value } : prev)}
+                    placeholder="تاریخ سند را انتخاب کنید"
                   />
                 </div>
                 <div>
@@ -865,23 +865,23 @@ export default function JournalEntriesPage() {
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">بدهکار</label>
-                          <input
-                            type="number"
+                          <FormattedNumberInput
+                            label="بدهکار"
                             value={line.debitAmount}
-                            onChange={e => updateEditLine(index, 'debitAmount', parseFloat(e.target.value) || 0)}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 dark:text-white"
+                            onChange={(value: string) => updateEditLine(index, 'debitAmount', parseFloat(value) || 0)}
                             placeholder="0"
+                            min={0}
+                            allowDecimals={true}
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">بستانکار</label>
-                          <input
-                            type="number"
+                          <FormattedNumberInput
+                            label="بستانکار"
                             value={line.creditAmount}
-                            onChange={e => updateEditLine(index, 'creditAmount', parseFloat(e.target.value) || 0)}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 dark:text-white"
+                            onChange={(value: string) => updateEditLine(index, 'creditAmount', parseFloat(value) || 0)}
                             placeholder="0"
+                            min={0}
+                            allowDecimals={true}
                           />
                         </div>
                       </div>

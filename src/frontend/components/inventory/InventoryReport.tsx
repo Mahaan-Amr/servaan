@@ -5,6 +5,7 @@ import { InventoryEntry, InventoryEntryType, Item } from '../../../shared/types'
 import { formatDate } from '../../utils/dateUtils';
 import axios from 'axios';
 import { getToken } from '../../services/authService';
+import { FarsiDatePicker } from '../ui/FarsiDatePicker';
 
 interface InventoryReportProps {
   items: Item[];
@@ -98,28 +99,22 @@ export const InventoryReport: React.FC<InventoryReportProps> = ({ items }) => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div>
-          <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            از تاریخ
-          </label>
-          <input
-            type="date"
-            id="startDate"
+          <FarsiDatePicker
+            label="از تاریخ"
             value={filters.startDate}
-            onChange={(e) => handleFilterChange('startDate', e.target.value)}
-            className="w-full rounded-md border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-primary-500 focus:border-primary-500"
+            onChange={(value) => handleFilterChange('startDate', value)}
+            placeholder="از تاریخ را انتخاب کنید"
+            maxDate={filters.endDate || undefined}
           />
         </div>
         
         <div>
-          <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            تا تاریخ
-          </label>
-          <input
-            type="date"
-            id="endDate"
+          <FarsiDatePicker
+            label="تا تاریخ"
             value={filters.endDate}
-            onChange={(e) => handleFilterChange('endDate', e.target.value)}
-            className="w-full rounded-md border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-primary-500 focus:border-primary-500"
+            onChange={(value) => handleFilterChange('endDate', value)}
+            placeholder="تا تاریخ را انتخاب کنید"
+            minDate={filters.startDate || undefined}
           />
         </div>
         

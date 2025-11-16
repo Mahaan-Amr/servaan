@@ -27,6 +27,7 @@ import {
 
 // Import the existing CustomerCard component
 import CustomerCard from './components/CustomerCard';
+import { FarsiDatePicker } from '../../../../components/ui/FarsiDatePicker';
 
 // Temporary placeholder components (to be implemented)
 const BulkOperationsPanel = ({ selectedCustomers, onBulkUpdate, onBulkSms, onBulkDelete, onClose, processing }: {
@@ -171,21 +172,21 @@ const AdvancedFilters = ({ filters, onFilterChange, onClose }: {
         <h5 className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">محدوده تاریخ</h5>
         <div className="space-y-3">
           <div>
-            <label className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">عضویت از</label>
-            <input
-              type="date"
+            <FarsiDatePicker
+              label="عضویت از"
               value={filters.createdFrom || ''}
-              onChange={(e) => onFilterChange('createdFrom', e.target.value || undefined)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
+              onChange={(value) => onFilterChange('createdFrom', value || undefined)}
+              placeholder="عضویت از"
+              maxDate={filters.createdTo || undefined}
             />
           </div>
           <div>
-            <label className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">عضویت تا</label>
-            <input
-              type="date"
+            <FarsiDatePicker
+              label="عضویت تا"
               value={filters.createdTo || ''}
-              onChange={(e) => onFilterChange('createdTo', e.target.value || undefined)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
+              onChange={(value) => onFilterChange('createdTo', value || undefined)}
+              placeholder="عضویت تا"
+              minDate={filters.createdFrom || undefined}
             />
           </div>
         </div>
@@ -196,21 +197,21 @@ const AdvancedFilters = ({ filters, onFilterChange, onClose }: {
         <h5 className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-300">آخرین بازدید</h5>
         <div className="space-y-3">
           <div>
-            <label className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">از تاریخ</label>
-            <input
-              type="date"
+            <FarsiDatePicker
+              label="از تاریخ"
               value={filters.lastVisitFrom || ''}
-              onChange={(e) => onFilterChange('lastVisitFrom', e.target.value || undefined)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
+              onChange={(value) => onFilterChange('lastVisitFrom', value || undefined)}
+              placeholder="از تاریخ"
+              maxDate={filters.lastVisitTo || undefined}
             />
           </div>
           <div>
-            <label className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">تا تاریخ</label>
-            <input
-              type="date"
+            <FarsiDatePicker
+              label="تا تاریخ"
               value={filters.lastVisitTo || ''}
-              onChange={(e) => onFilterChange('lastVisitTo', e.target.value || undefined)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm"
+              onChange={(value) => onFilterChange('lastVisitTo', value || undefined)}
+              placeholder="تا تاریخ"
+              minDate={filters.lastVisitFrom || undefined}
             />
           </div>
         </div>

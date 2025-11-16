@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { FaTimes, FaUser, FaPhone, FaStickyNote } from 'react-icons/fa';
+import { FormattedNumberInput } from '../../../../../components/ui/FormattedNumberInput';
 
 interface FlexiblePaymentModalProps {
   isOpen: boolean;
@@ -289,15 +290,13 @@ export default function FlexiblePaymentModal({ isOpen, onClose, onSubmit, totalA
             </div>
 
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                مبلغ دریافتی
-              </label>
-              <input
-                type="number"
+              <FormattedNumberInput
+                label="مبلغ دریافتی"
                 value={amountReceived}
-                onChange={(e) => setAmountReceived(parseFloat(e.target.value) || 0)}
-                className="w-full py-2 px-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
+                onChange={(value: string) => setAmountReceived(parseFloat(value) || 0)}
+                placeholder="مبلغ دریافتی"
                 min={totalAmount}
+                allowDecimals={false}
               />
             </div>
           </div>

@@ -5,6 +5,8 @@ import { toast } from 'react-hot-toast';
 import { PaymentService } from '../../../../services/orderingService';
 import { PaymentMethod, PaymentStatus } from '../../../../types/ordering';
 import { formatFarsiDate, formatFarsiDateTime, toFarsiDigits } from '../../../../utils/dateUtils';
+import { FarsiDatePicker } from '../../../../components/ui/FarsiDatePicker';
+import { FormattedNumberInput } from '../../../../components/ui/FormattedNumberInput';
 import { 
   FaDollarSign, 
   FaSearch, 
@@ -533,39 +535,41 @@ export default function PaymentsPage() {
             </select>
             
             {/* Date From */}
-            <input
-              type="date"
+            <FarsiDatePicker
               value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
+              onChange={(value) => setDateFrom(value)}
               placeholder="از تاریخ"
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              maxDate={dateTo || undefined}
+              className="w-auto"
             />
             
             {/* Date To */}
-            <input
-              type="date"
+            <FarsiDatePicker
               value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
+              onChange={(value) => setDateTo(value)}
               placeholder="تا تاریخ"
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              minDate={dateFrom || undefined}
+              className="w-auto"
             />
             
             {/* Min Amount */}
-            <input
-              type="number"
+            <FormattedNumberInput
               value={minAmount}
-              onChange={(e) => setMinAmount(e.target.value)}
+              onChange={(value: string) => setMinAmount(value)}
               placeholder="حداقل مبلغ (تومان)"
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              min={0}
+              allowDecimals={false}
+              className="w-auto"
             />
             
             {/* Max Amount */}
-            <input
-              type="number"
+            <FormattedNumberInput
               value={maxAmount}
-              onChange={(e) => setMaxAmount(e.target.value)}
+              onChange={(value: string) => setMaxAmount(value)}
               placeholder="حداکثر مبلغ (تومان)"
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              min={0}
+              allowDecimals={false}
+              className="w-auto"
             />
           </div>
           
@@ -1291,15 +1295,13 @@ function RefundForm({
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           مبلغ بازگشت (تومان)
         </label>
-        <input
-          type="number"
+        <FormattedNumberInput
           value={refundAmount}
-          onChange={(e) => setRefundAmount(e.target.value)}
-          min="0"
+          onChange={(value: string) => setRefundAmount(value)}
+          placeholder="مبلغ بازگشت (تومان)"
+          min={0}
           max={Math.abs(payment.amount)}
-          step="1000"
-          required
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          allowDecimals={false}
         />
         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
           حداکثر مبلغ قابل بازگشت: {new Intl.NumberFormat('fa-IR').format(Math.abs(payment.amount))} تومان

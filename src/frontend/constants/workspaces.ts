@@ -220,7 +220,7 @@ export const PREDEFINED_WORKSPACES: Workspace[] = [
     title: 'روابط عمومی',
     titleEn: 'Public Relations',
     description: 'مدیریت روابط عمومی، کمپین‌های تبلیغاتی و ارتباط با مشتریان',
-    status: 'coming-soon',
+    status: 'maintenance',
     icon: WORKSPACE_ICONS['public-relations'],
     color: WORKSPACE_COLORS['public-relations'],
     gradient: 'bg-gradient-to-br from-orange-500 to-orange-600',
@@ -267,8 +267,8 @@ export const PREDEFINED_WORKSPACES: Workspace[] = [
       lastUpdated: new Date().toISOString()
     },
     requiredRoles: ['ADMIN', 'MANAGER'],
-    isComingSoon: true,
-    estimatedLaunch: 'فاز 4 - تابستان 1403',
+    isComingSoon: false,
+    estimatedLaunch: undefined,
     priority: 4,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
@@ -278,7 +278,7 @@ export const PREDEFINED_WORKSPACES: Workspace[] = [
     title: 'مدیریت ارتباط با مشتری',
     titleEn: 'Customer Relationship Management',
     description: 'سیستم جامع CRM برای مدیریت مشتریان، فروش و خدمات پس از فروش',
-    status: 'active',
+    status: 'maintenance',
     icon: WORKSPACE_ICONS['customer-relationship-management'],
     color: WORKSPACE_COLORS['customer-relationship-management'],
     gradient: 'bg-gradient-to-br from-pink-500 to-pink-600',

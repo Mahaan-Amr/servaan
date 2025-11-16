@@ -252,12 +252,12 @@ export default function Home() {
                   glowColor: 'shadow-emerald-400/10'
                 },
                 {
-                  icon: '👥',
-                  title: 'مدیریت ارتباط با مشتری',
-                  description: 'پایگاه مشتریان، تحلیل رفتار، کمپین‌های بازاریابی، و وفاداری مشتری',
-                  color: 'from-pink-400 to-rose-500',
-                  neonColor: 'border-pink-400/30',
-                  glowColor: 'shadow-pink-400/10'
+                  icon: '🛒',
+                  title: 'سیستم سفارش‌گیری و فروش',
+                  description: 'سیستم جامع POS، مدیریت سفارشات، پردازش پرداخت و ادغام با انبار',
+                  color: 'from-amber-400 to-orange-500',
+                  neonColor: 'border-amber-400/30',
+                  glowColor: 'shadow-amber-400/10'
                 },
                 {
                   icon: '📱',
@@ -266,14 +266,6 @@ export default function Home() {
                   color: 'from-amber-400 to-yellow-500',
                   neonColor: 'border-amber-400/30',
                   glowColor: 'shadow-amber-400/10'
-                },
-                {
-                  icon: '🔗',
-                  title: 'روابط عمومی',
-                  description: 'مدیریت شبکه‌های اجتماعی، کمپین‌های تبلیغاتی، و برندسازی آنلاین',
-                  color: 'from-indigo-400 to-blue-500',
-                  neonColor: 'border-indigo-400/30',
-                  glowColor: 'shadow-indigo-400/10'
                 }
               ].map((workspace, index) => (
                 <div key={index} className="group relative">

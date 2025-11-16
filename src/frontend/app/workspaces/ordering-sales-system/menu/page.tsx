@@ -26,6 +26,7 @@ import { MenuService, RecipeService, InventoryPriceService } from '../../../../s
 import { getItems } from '../../../../services/itemService';
 import { MenuCategory, MenuItem } from '../../../../types/ordering';
 import { Item } from '../../../../types';
+import { FormattedNumberInput } from '../../../../components/ui/FormattedNumberInput';
 
 interface MenuStats {
   totalCategories: number;
@@ -1529,31 +1530,26 @@ export default function MenuManagementPage() {
                 {/* Right Column */}
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      قیمت منو (تومان) *
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      min="0"
-                      step="1000"
+                    <FormattedNumberInput
+                      label="قیمت منو (تومان) *"
                       value={itemForm.menuPrice}
-                      onChange={(e) => setItemForm({...itemForm, menuPrice: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      onChange={(value: string) => setItemForm({...itemForm, menuPrice: value})}
+                      placeholder="قیمت منو"
+                      min={0}
+                      allowDecimals={false}
+                      required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      زمان آماده‌سازی (دقیقه)
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="120"
+                    <FormattedNumberInput
+                      label="زمان آماده‌سازی (دقیقه)"
                       value={itemForm.prepTime}
-                      onChange={(e) => setItemForm({...itemForm, prepTime: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                      onChange={(value: string) => setItemForm({...itemForm, prepTime: value})}
+                      placeholder="زمان آماده‌سازی"
+                      min={1}
+                      max={120}
+                      allowDecimals={false}
                     />
                   </div>
 
@@ -1750,16 +1746,14 @@ export default function MenuManagementPage() {
                         </div>
                         
                         <div>
-                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            مقدار
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.1"
+                          <FormattedNumberInput
+                            label="مقدار"
                             value={newIngredient.quantity}
-                            onChange={(e) => setNewIngredient(prev => ({...prev, quantity: Number(e.target.value) || 0}))}
-                            className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                            onChange={(value: string) => setNewIngredient(prev => ({...prev, quantity: Number(value) || 0}))}
+                            placeholder="مقدار"
+                            min={0}
+                            allowDecimals={true}
+                            className="text-xs"
                           />
                         </div>
                         

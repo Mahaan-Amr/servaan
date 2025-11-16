@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { FaChartLine, FaClock, FaDollarSign, FaUsers, FaLightbulb } from 'react-icons/fa';
+import { FarsiDatePicker } from '@/components/ui/FarsiDatePicker';
 
 interface TableUtilizationMetric {
   tableId: string;
@@ -206,18 +207,20 @@ export default function TableAnalyticsDashboard({ isOpen, onClose }: TableAnalyt
           <div className="flex items-center gap-4">
             {/* Date Range Filter */}
             <div className="flex items-center gap-2">
-              <input
-                type="date"
+              <FarsiDatePicker
                 value={dateRange.startDate}
-                onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                onChange={(value) => setDateRange(prev => ({ ...prev, startDate: value }))}
+                placeholder="از تاریخ"
+                maxDate={dateRange.endDate || undefined}
+                className="w-auto text-sm"
               />
               <span className="text-gray-500">تا</span>
-              <input
-                type="date"
+              <FarsiDatePicker
                 value={dateRange.endDate}
-                onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                onChange={(value) => setDateRange(prev => ({ ...prev, endDate: value }))}
+                placeholder="تا تاریخ"
+                minDate={dateRange.startDate || undefined}
+                className="w-auto text-sm"
               />
             </div>
             <button

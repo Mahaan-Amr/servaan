@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createCustomer } from '../../../../../services/customerService';
 import { CustomerCreateData } from '../../../../../types/crm';
+import { FarsiDatePicker } from '../../../../../components/ui/FarsiDatePicker';
 
 export default function NewCustomerPage() {
   const router = useRouter();
@@ -266,36 +267,23 @@ export default function NewCustomerPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               {/* Birthday */}
               <div>
-                <label htmlFor="birthday" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  تاریخ تولد (اختیاری)
-                </label>
-                <input
-                  type="date"
-                  id="birthday"
+                <FarsiDatePicker
+                  label="تاریخ تولد (اختیاری)"
                   value={formData.birthday || ''}
-                  onChange={(e) => handleInputChange('birthday', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm ${
-                    errors.birthday ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
-                  }`}
+                  onChange={(value) => handleInputChange('birthday', value)}
+                  placeholder="تاریخ تولد را انتخاب کنید"
+                  error={errors.birthday}
                 />
-                {errors.birthday && (
-                  <p className="mt-1 text-xs sm:text-sm text-red-600 dark:text-red-400">{errors.birthday}</p>
-                )}
               </div>
 
               {/* Anniversary */}
               <div>
-                <label htmlFor="anniversary" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  سالگرد (اختیاری)
-                </label>
-                <input
-                  type="date"
-                  id="anniversary"
+                <FarsiDatePicker
+                  label="سالگرد (اختیاری)"
                   value={formData.anniversary || ''}
-                  onChange={(e) => handleInputChange('anniversary', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm ${
-                    errors.anniversary ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
-                  }`}
+                  onChange={(value) => handleInputChange('anniversary', value)}
+                  placeholder="سالگرد را انتخاب کنید"
+                  error={errors.anniversary}
                 />
                 {errors.anniversary && (
                   <p className="mt-1 text-xs sm:text-sm text-red-600 dark:text-red-400">{errors.anniversary}</p>
