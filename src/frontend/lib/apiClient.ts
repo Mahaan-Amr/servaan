@@ -43,10 +43,10 @@ export class ApiClient {
   private async handleResponse<T>(response: Response, defaultErrorMessage: string): Promise<T> {
     if (!response.ok) {
       let errorMessage = defaultErrorMessage;
-      let errorDetails: any = null;
+      let errorDetails: unknown = null;
       
       try {
-        const errorData = await response.json();
+        const errorData = await response.json() as { message?: string; error?: string; errors?: unknown };
         errorMessage = errorData.message || errorData.error || defaultErrorMessage;
         errorDetails = errorData.errors || errorData;
       } catch {
@@ -55,7 +55,7 @@ export class ApiClient {
       }
       
       // Create custom error with status code and details for better error handling
-      const error = new Error(errorMessage) as Error & { statusCode?: number; details?: any };
+      const error = new Error(errorMessage) as Error & { statusCode?: number; details?: unknown };
       error.statusCode = response.status;
       if (errorDetails) {
         error.details = errorDetails;
