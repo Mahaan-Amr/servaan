@@ -587,12 +587,12 @@ export class FinancialStatementsService {
     try {
       await prisma.financialStatement.upsert({
         where: {
-          statementType_fiscalYear_period: {
+          tenantId_statementType_fiscalYear_period: {
+            tenantId,
             statementType,
             fiscalYear,
             period
-          },
-          tenantId
+          }
         },
         update: {
           data,
