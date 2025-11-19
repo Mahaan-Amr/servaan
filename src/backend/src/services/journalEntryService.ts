@@ -1,4 +1,5 @@
 import { PrismaClient, JournalStatus, SourceType } from '../../../shared/generated/client';
+import { getTenantPrefix } from '../utils/orderUtils';
 
 const prisma = new PrismaClient();
 
@@ -47,7 +48,7 @@ export class JournalEntryService {
     this.validateDoubleEntry(data.lines);
 
     // Generate entry number
-    const entryNumber = await this.generateEntryNumber();
+    const entryNumber = await this.generateEntryNumber(tenantId);
 
     // Calculate totals
     const totalDebit = data.lines.reduce((sum, line) => sum + line.debitAmount, 0);
@@ -173,7 +174,7 @@ export class JournalEntryService {
       });
 
       // Create reversal entry
-      const reversalEntryNumber = await this.generateEntryNumber();
+      const reversalEntryNumber = await this.generateEntryNumber(tenantId);
       const reversalLines = originalEntry.lines.map(line => ({
         accountId: line.accountId,
         description: `ابطال: ${line.description || ''}`,
@@ -643,14 +644,17 @@ export class JournalEntryService {
    * Generate unique entry number
    * تولید شماره یکتای سند
    */
-  private static async generateEntryNumber(): Promise<string> {
+  private static async generateEntryNumber(tenantId: string): Promise<string> {
     const currentYear = new Date().getFullYear();
     const yearShamsi = currentYear - 621; // Convert to Shamsi year
+    const tenantPrefix = getTenantPrefix(tenantId);
+    const basePrefix = `JRN-${tenantPrefix}-${yearShamsi}-`;
 
     const lastEntry = await prisma.journalEntry.findFirst({
       where: {
+        tenantId,
         entryNumber: {
-          startsWith: `${yearShamsi}-`
+          startsWith: basePrefix
         }
       },
       orderBy: {
@@ -659,12 +663,14 @@ export class JournalEntryService {
     });
 
     let nextNumber = 1;
-    if (lastEntry) {
-      const lastNumber = parseInt(lastEntry.entryNumber.split('-')[1]);
-      nextNumber = lastNumber + 1;
+    if (lastEntry?.entryNumber) {
+      const lastNumber = parseInt(lastEntry.entryNumber.split('-').pop() || '', 10);
+      if (!isNaN(lastNumber)) {
+        nextNumber = lastNumber + 1;
+      }
     }
 
-    return `${yearShamsi}-${nextNumber.toString().padStart(6, '0')}`;
+    return `${basePrefix}${nextNumber.toString().padStart(6, '0')}`;
   }
 
   /**

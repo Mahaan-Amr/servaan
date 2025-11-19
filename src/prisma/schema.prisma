@@ -230,7 +230,7 @@ model CostCenter {
   id                 String             @id @default(cuid())
   tenantId           String
   tenant             Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  code               String             @unique @db.VarChar(20)
+  code               String             @db.VarChar(20)
   name               String             @db.VarChar(255)
   nameEn             String?            @db.VarChar(255)
   description        String?
@@ -247,6 +247,7 @@ model CostCenter {
   childCostCenters   CostCenter[]       @relation("CostCenterHierarchy")
   journalEntryLines  JournalEntryLine[]
 
+  @@unique([tenantId, code])
   @@index([tenantId])
   @@map("cost_centers")
 }
@@ -313,7 +314,7 @@ model FinancialStatement {
   generatedAt     DateTime      @default(now())
   generatedByUser User          @relation(fields: [generatedBy], references: [id])
 
-  @@unique([statementType, fiscalYear, period])
+  @@unique([tenantId, statementType, fiscalYear, period])
   @@index([tenantId])
   @@map("financial_statements")
 }
@@ -353,7 +354,7 @@ model AccountingPeriod {
   updatedAt    DateTime     @updatedAt
   closedByUser User?        @relation(fields: [closedBy], references: [id])
 
-  @@unique([fiscalYear, periodNumber, periodType])
+  @@unique([tenantId, fiscalYear, periodNumber, periodType])
   @@index([tenantId])
   @@map("accounting_periods")
 }
@@ -623,7 +624,7 @@ model CrmCustomerSegment {
   tenant           Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   name             String    @db.VarChar(100)
   description      String?
-  segmentKey       String    @unique @db.VarChar(50)
+  segmentKey       String    @db.VarChar(50)
   criteria         Json
   customerCount    Int       @default(0)
   lastCalculatedAt DateTime?
@@ -637,6 +638,7 @@ model CrmCustomerSegment {
   createdBy        String?
   createdByUser    User?     @relation("SegmentCreatedBy", fields: [createdBy], references: [id])
 
+  @@unique([tenantId, segmentKey])
   @@index([tenantId])
   @@index([segmentKey])
   @@index([isSystemSegment])

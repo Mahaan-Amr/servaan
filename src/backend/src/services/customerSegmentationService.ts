@@ -1,5 +1,6 @@
 import { PrismaClient } from '../../../shared/generated/client';
 import { AppError } from '../middlewares/errorHandler';
+import { getTenantPrefix } from '../utils/orderUtils';
 
 const prisma = new PrismaClient();
 
@@ -344,8 +345,13 @@ export async function createCustomSegment(
   tenantId: string
 ): Promise<any> {
   try {
-    // Validate segment key
-    const segmentKey = segmentData.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    // Generate tenant-scoped segment key
+    const normalizedName = segmentData.name
+      .toLowerCase()
+      .replace(/\s+/g, '_')
+      .replace(/[^a-z0-9_]/g, '');
+    const tenantPrefix = getTenantPrefix(tenantId, 4).toLowerCase();
+    const segmentKey = `${tenantPrefix}_${normalizedName}`.slice(0, 50);
     
     // Check if segment key already exists
     const existingSegment = await prisma.crmCustomerSegment.findFirst({

@@ -1,5 +1,18 @@
-import { PrismaClient } from '../../../shared/generated/client';
 import { calculateOrderTotals as calculateOrderTotalsUtil } from '../../../shared/utils/currencyUtils';
+
+/**
+ * Derive a short alphanumeric prefix that uniquely represents a tenant.
+ * We use the last characters of the tenantId to minimize collisions while keeping IDs short.
+ */
+export function getTenantPrefix(tenantId: string, length: number = 5): string {
+  const sanitized = tenantId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  if (!sanitized) {
+    return 'TENANT'.slice(0, length);
+  }
+  return sanitized.length >= length
+    ? sanitized.slice(-length)
+    : sanitized.padStart(length, '0');
+}
 
 /**
  * Generate unique order number for the tenant
@@ -10,8 +23,9 @@ export async function generateOrderNumber(tenantId: string, prisma: any): Promis
   const dateStr = today.getFullYear().toString() + 
                   (today.getMonth() + 1).toString().padStart(2, '0') + 
                   today.getDate().toString().padStart(2, '0');
-  
-  const prefix = `ORD-${dateStr}-`;
+
+  const tenantPrefix = getTenantPrefix(tenantId);
+  const prefix = `ORD-${tenantPrefix}-${dateStr}-`;
   
   // Find the last order number for today
   const lastOrder = await prisma.order.findFirst({
@@ -48,8 +62,9 @@ export async function generatePaymentNumber(tenantId: string, prisma: any): Prom
   const dateStr = today.getFullYear().toString() + 
                   (today.getMonth() + 1).toString().padStart(2, '0') + 
                   today.getDate().toString().padStart(2, '0');
-  
-  const prefix = `PAY-${dateStr}-`;
+
+  const tenantPrefix = getTenantPrefix(tenantId);
+  const prefix = `PAY-${tenantPrefix}-${dateStr}-`;
   
   // Find the last payment number for today
   const lastPayment = await prisma.orderPayment.findFirst({

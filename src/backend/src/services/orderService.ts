@@ -1,6 +1,7 @@
 import { PrismaClient } from '../../../shared/generated/client';
 import { AppError } from '../utils/AppError';
 import { TableService } from './tableService';
+import { getTenantPrefix } from '../utils/orderUtils';
 
 const prisma = new PrismaClient();
 
@@ -541,7 +542,8 @@ export class OrderService {
 
     const today = new Date();
     const datePrefix = today.toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
-    const orderNumberBasePrefix = `ORD-${datePrefix}-`; // e.g., ORD-20251005-
+    const tenantPrefix = getTenantPrefix(tenantId);
+    const orderNumberBasePrefix = `ORD-${tenantPrefix}-${datePrefix}-`; // e.g., ORD-ABCDE-20251005-
 
     let currentSuffix = 1; // Start from 1 for today's orders
 
@@ -569,7 +571,7 @@ export class OrderService {
 
     while (attempts < MAX_ATTEMPTS) {
       const formattedSuffix = String(currentSuffix).padStart(4, '0');
-      const candidateOrderNumber = `${orderNumberBasePrefix}${formattedSuffix}`; // e.g., ORD-20251005-0001
+      const candidateOrderNumber = `${orderNumberBasePrefix}${formattedSuffix}`; // e.g., ORD-ABCDE-20251005-0001
 
       // Check if this candidate order number already exists
       const existingOrder = await tx.order.findFirst({
@@ -596,76 +598,76 @@ export class OrderService {
   private async generateOrderNumber(tenantId: string): Promise<string> {
     console.log('🔢 [ORDER_SERVICE] Generating order number for tenant:', tenantId);
     const today = new Date();
-    const dateStr = today.toISOString().slice(0, 10); // YYYY-MM-DD
-    const startOfDay = new Date(dateStr + 'T00:00:00.000Z');
-    const endOfDay = new Date(dateStr + 'T23:59:59.999Z');
-    console.log('🔢 [ORDER_SERVICE] Date range:', { startOfDay, endOfDay });
+    const datePrefix = today.toISOString().slice(0, 10).replace(/-/g, '');
+    const tenantPrefix = getTenantPrefix(tenantId);
+    const orderNumberBasePrefix = `ORD-${tenantPrefix}-${datePrefix}-`;
 
-    // Find the highest order number for today
     const lastTodayOrder = await prisma.order.findFirst({
-      where: { 
-        tenantId, 
-        orderDate: { gte: startOfDay, lte: endOfDay }
+      where: {
+        tenantId,
+        orderNumber: {
+          startsWith: orderNumberBasePrefix
+        }
       },
       orderBy: { orderNumber: 'desc' }
     });
-    console.log('🔢 [ORDER_SERVICE] Last order today:', { 
-      found: !!lastTodayOrder, 
-      orderNumber: lastTodayOrder?.orderNumber 
-    });
 
-    // Start at 100 each day
-    let next = 100;
-    if (lastTodayOrder && lastTodayOrder.orderNumber && lastTodayOrder.orderNumber !== null) {
-      const parsed = parseInt(String(lastTodayOrder.orderNumber).replace(/\D/g, ''), 10);
-      if (!isNaN(parsed)) next = parsed + 1;
+    let currentSuffix = 1;
+    if (lastTodayOrder?.orderNumber) {
+      const suffixPart = lastTodayOrder.orderNumber.split('-').pop();
+      const parsedSuffix = parseInt(suffixPart || '', 10);
+      if (!isNaN(parsedSuffix)) {
+        currentSuffix = parsedSuffix + 1;
+      }
     }
 
-    // Check if this order number already exists (race condition protection)
     let attempts = 0;
-    let finalOrderNumber = next;
-    
-    while (attempts < 10) { // Prevent infinite loop
+    while (attempts < 10) {
+      const formattedSuffix = String(currentSuffix).padStart(4, '0');
+      const candidate = `${orderNumberBasePrefix}${formattedSuffix}`;
+
       const existingOrder = await prisma.order.findFirst({
-        where: { 
-          tenantId,
-          orderNumber: String(finalOrderNumber)
-        }
+        where: { orderNumber: candidate }
       });
-      
+
       if (!existingOrder) {
-        break; // Order number is available
+        console.log('🔢 [ORDER_SERVICE] Final order number:', candidate);
+        return candidate;
       }
-      
-      console.log('🔢 [ORDER_SERVICE] Order number', finalOrderNumber, 'already exists, trying', finalOrderNumber + 1);
-      finalOrderNumber++;
+
+      console.log('🔢 [ORDER_SERVICE] Order number', candidate, 'already exists, trying next suffix');
+      currentSuffix++;
       attempts++;
     }
 
-    console.log('🔢 [ORDER_SERVICE] Final order number:', finalOrderNumber);
-    return String(finalOrderNumber);
+    throw new AppError('Failed to generate a unique order number after multiple attempts (legacy path).', 500);
   }
 
   // Generate unique payment number
   private async generatePaymentNumber(tenantId: string): Promise<string> {
     const today = new Date();
     const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+    const tenantPrefix = getTenantPrefix(tenantId);
+    const basePrefix = `PAY-${tenantPrefix}-${dateStr}-`;
     
     const lastPayment = await prisma.orderPayment.findFirst({
-        where: {
+      where: {
         tenantId,
-        paymentNumber: { startsWith: `PAY-${dateStr}` }
+        paymentNumber: { startsWith: basePrefix }
       },
       orderBy: { paymentNumber: 'desc' }
     });
 
     let sequence = 1;
-    if (lastPayment) {
-      const lastSequence = parseInt(lastPayment.paymentNumber.slice(-4));
-      sequence = lastSequence + 1;
+    if (lastPayment?.paymentNumber) {
+      const suffix = lastPayment.paymentNumber.split('-').pop();
+      const parsed = parseInt(suffix || '', 10);
+      if (!isNaN(parsed)) {
+        sequence = parsed + 1;
+      }
     }
 
-    return `PAY-${dateStr}-${sequence.toString().padStart(4, '0')}`;
+    return `${basePrefix}${sequence.toString().padStart(4, '0')}`;
   }
 
   // Update order with enhanced functionality
