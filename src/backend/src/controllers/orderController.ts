@@ -6,6 +6,9 @@ import { OrderCalculationService, OrderOptions } from '../services/orderCalculat
 // import { OrderInventoryIntegrationService } from '../services/orderInventoryIntegrationService';
 import { AppError } from '../utils/AppError';
 import { OrderStatus, OrderType } from '../../../shared/generated/client';
+import { PrismaClient } from '../../../shared/generated/client';
+
+const prisma = new PrismaClient();
 
 // Create OrderService instance
 const orderService = new OrderService();
@@ -103,6 +106,19 @@ export class OrderController {
         }
       }
       console.log('✅ [ORDER_CREATION] Items validation passed');
+
+      // Check if order creation is enabled
+      console.log('⚙️ [ORDER_CREATION] Checking ordering settings...');
+      const orderingSettings = await prisma.orderingSettings.findUnique({
+        where: { tenantId }
+      });
+      const orderCreationEnabled = orderingSettings?.orderCreationEnabled ?? true;
+      
+      if (!orderCreationEnabled) {
+        console.error('❌ [ORDER_CREATION] Order creation is disabled');
+        throw new AppError('Order creation is currently disabled. Please contact the manager.', 403);
+      }
+      console.log('✅ [ORDER_CREATION] Order creation is enabled');
 
       // Perform flexible stock validation
       console.log('📦 [ORDER_CREATION] Starting stock validation');

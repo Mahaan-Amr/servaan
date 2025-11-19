@@ -434,6 +434,12 @@ export class OrderInventoryIntegrationService {
         }
       }
 
+      // Get ordering settings to check if manager confirmation is required
+      const orderingSettings = await prisma.orderingSettings.findUnique({
+        where: { tenantId }
+      });
+      const requireManagerConfirmation = orderingSettings?.requireManagerConfirmationForNoStock ?? false;
+
       // Calculate profit margin
       const menuPrice = Number(recipe.menuItem?.menuPrice || 0);
       const profitMargin = menuPrice - (totalCost / orderQuantity);
@@ -441,6 +447,12 @@ export class OrderInventoryIntegrationService {
       // Determine availability based on settings
       // If negative stock is not allowed and there are unavailable ingredients, block the order
       const isAvailable = allowNegativeStock || unavailableIngredients.length === 0;
+
+      // Override required if:
+      // 1. Negative stock not allowed AND critical issues exist, OR
+      // 2. Manager confirmation is required AND there are any unavailable ingredients
+      const overrideRequired = (!allowNegativeStock && hasCriticalIssues) || 
+                               (requireManagerConfirmation && unavailableIngredients.length > 0);
 
       return {
         isAvailable,
@@ -450,7 +462,7 @@ export class OrderInventoryIntegrationService {
         totalCost,
         profitMargin: profitMargin * orderQuantity,
         canProceedWithOverride: allowNegativeStock, // Can override only if negative stock is allowed
-        overrideRequired: !allowNegativeStock && hasCriticalIssues // Override required if negative stock not allowed and critical issues exist
+        overrideRequired // Override required based on settings
       };
 
     } catch (error) {

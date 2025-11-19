@@ -96,6 +96,9 @@ model Tenant {
   inventoryAuditCycles InventoryAuditCycle[]
   inventoryAuditEntries InventoryAuditEntry[]
 
+  // Ordering System relations
+  orderingSettings OrderingSettings?
+
   @@map("tenants")
 }
 
@@ -131,6 +134,19 @@ model InventorySettings {
   tenant             Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@map("inventory_settings")
+}
+
+model OrderingSettings {
+  id                                 String   @id @default(cuid())
+  tenantId                           String   @unique
+  orderCreationEnabled               Boolean  @default(true)
+  lockItemsWithoutStock              Boolean  @default(false)
+  requireManagerConfirmationForNoStock Boolean @default(false)
+  createdAt                          DateTime @default(now())
+  updatedAt                          DateTime @updatedAt
+  tenant                             Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("ordering_settings")
 }
 
 model ChartOfAccount {

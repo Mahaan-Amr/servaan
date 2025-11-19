@@ -1,16 +1,37 @@
 import { OrderStatus, OrderType, PaymentMethod, TableStatus } from '../types/ordering';
 import { API_URL } from '../lib/apiUtils';
 import { formatCurrency } from '../../shared/utils/currencyUtils';
+import { offlineApiService } from './offlineApiService';
 
 // API Configuration
 const ORDERING_API_BASE = `${API_URL}/ordering`;
 const INVENTORY_API_BASE = `${API_URL}/inventory`;
 
-// Utility function for API requests
+// Utility function for API requests with offline support
 async function apiRequest<T = unknown>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  useOfflineSupport: boolean = true
 ): Promise<T> {
+  // Use offline-aware API service if enabled
+  if (useOfflineSupport && typeof window !== 'undefined') {
+    try {
+      const shouldCache = options.method === 'GET' || !options.method;
+      const shouldQueue = options.method !== 'GET' && options.method !== undefined;
+      
+      return await offlineApiService.request<T>(
+        endpoint,
+        options,
+        shouldQueue,
+        shouldCache
+      );
+    } catch (error) {
+      // If offline service fails, fall back to regular fetch
+      console.warn('⚠️ [API_REQUEST] Offline service failed, falling back to regular fetch:', error);
+    }
+  }
+
+  // Fallback to regular API request
   const url = `${ORDERING_API_BASE}${endpoint}`;
   
   const defaultHeaders: Record<string, string> = {
@@ -2222,6 +2243,43 @@ export class TableAdvancedAnalyticsService {
   static async getAdvancedAnalyticsSummary(startDate: string, endDate: string) {
     const params = new URLSearchParams({ startDate, endDate });
     return apiRequest(`/tables/advanced-analytics/summary?${params}`);
+  }
+}
+
+// ==================== ORDERING SETTINGS SERVICE ====================
+
+export interface OrderingSettings {
+  id: string;
+  tenantId: string;
+  orderCreationEnabled: boolean;
+  lockItemsWithoutStock: boolean;
+  requireManagerConfirmationForNoStock: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateOrderingSettingsData {
+  orderCreationEnabled?: boolean;
+  lockItemsWithoutStock?: boolean;
+  requireManagerConfirmationForNoStock?: boolean;
+}
+
+export class OrderingSettingsService {
+  /**
+   * Get ordering settings
+   */
+  static async getOrderingSettings(): Promise<OrderingSettings> {
+    return apiRequest<OrderingSettings>('/settings');
+  }
+
+  /**
+   * Update ordering settings
+   */
+  static async updateOrderingSettings(settings: UpdateOrderingSettingsData): Promise<OrderingSettings> {
+    return apiRequest<OrderingSettings>('/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings)
+    });
   }
 }
 

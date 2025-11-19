@@ -17,6 +17,7 @@ import { OrderAccountingIntegrationService, RecipeRefundJournalEntry } from '../
 import { prisma } from '../services/dbService';
 import { TablePerformanceController } from '../controllers/tablePerformanceController';
 import { OrderingAnalyticsService } from '../services/orderingAnalyticsService';
+import { OrderingSettingsController } from '../controllers/orderingSettingsController';
 
 const router = Router();
 
@@ -996,6 +997,14 @@ router.get('/tables/performance/connection-status', TablePerformanceController.g
 router.post('/tables/performance/optimize-queries', TablePerformanceController.optimizeQueries);
 router.get('/tables/performance/recommendations', TablePerformanceController.getPerformanceRecommendations);
 router.get('/tables/performance/health', TablePerformanceController.healthCheck);
+
+// ===================== ORDERING SETTINGS ROUTES =====================
+
+/**
+ * Ordering system settings endpoints
+ */
+router.get('/settings', OrderingSettingsController.getOrderingSettings);
+router.put('/settings', OrderingSettingsController.updateOrderingSettings);
 
 // ===================== HEALTH CHECK ROUTES =====================
 

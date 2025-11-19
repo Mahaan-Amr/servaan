@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { io } from 'socket.io-client';
 import { useRouter } from 'next/navigation';
 import type { OrderOptions, OrderCalculation, BusinessPreset } from '../../../../services/orderingService';
-import { OrderService, PaymentService, MenuService, TableService, InventoryIntegrationService } from '../../../../services/orderingService';
+import { OrderService, PaymentService, MenuService, TableService, InventoryIntegrationService, OrderingSettingsService } from '../../../../services/orderingService';
 import { OrderType, PaymentMethod } from '../../../../types/ordering';
 import type { MenuCategory as ApiMenuCategory, MenuItem as ApiMenuItem } from '../../../../types/ordering';
 import OrderSummary from './components/OrderSummary';
@@ -20,6 +20,8 @@ import { FaList, FaCog } from 'react-icons/fa';
 import { useTenant } from '../../../../contexts/TenantContext';
 import { BASE_URL } from '../../../../lib/apiUtils';
 import PrinterSettingsModal from './components/PrinterSettingsModal';
+import OfflineStatusBar from '../../../../components/ordering/OfflineStatusBar';
+import { offlineStorage } from '../../../../services/offlineStorageService';
 
 // Simple toast function for now - we'll replace with proper toast library later
 const toast = {
@@ -169,6 +171,9 @@ export default function POSInterface() {
   const [showStockWarning, setShowStockWarning] = useState(false);
   const [stockWarnings, setStockWarnings] = useState<StockWarning[]>([]);
   const [stockValidationData, setStockValidationData] = useState<StockValidationData | null>(null);
+  
+  // Ordering settings state
+  const [orderCreationEnabled, setOrderCreationEnabled] = useState(true);
   // Mobile cart drawer state
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [dragStartY, setDragStartY] = useState<number | null>(null);
@@ -352,6 +357,43 @@ export default function POSInterface() {
     }
   }, [isSidebarOpen]);
 
+  // Initialize offline services
+  useEffect(() => {
+    const initOfflineServices = async () => {
+      try {
+        await offlineStorage.init();
+        console.log('✅ [POS] Offline services initialized');
+      } catch (error) {
+        console.error('❌ [POS] Failed to initialize offline services:', error);
+      }
+    };
+    initOfflineServices();
+  }, []);
+
+  // Load ordering settings
+  useEffect(() => {
+    const loadOrderingSettings = async () => {
+      try {
+        const settings = await OrderingSettingsService.getOrderingSettings();
+        setOrderCreationEnabled(settings.orderCreationEnabled);
+      } catch (error) {
+        console.error('Error loading ordering settings:', error);
+        // Try to get from cache if offline
+        try {
+          const cached = await offlineStorage.getCachedSettings();
+          if (cached?.orderingSettings) {
+            setOrderCreationEnabled(cached.orderingSettings.orderCreationEnabled);
+          } else {
+            setOrderCreationEnabled(true);
+          }
+        } catch {
+          setOrderCreationEnabled(true);
+        }
+      }
+    };
+    loadOrderingSettings();
+  }, []);
+
   // Load menu data and tables
   useEffect(() => {
     loadMenuData();
@@ -374,8 +416,29 @@ export default function POSInterface() {
       setLoading(true);
       setError(null);
       
-      // Fetch full menu with categories and items
-      const menuData = await MenuService.getFullMenu(true) as ApiMenuCategory[]; // onlyAvailable = true
+      let menuData: ApiMenuCategory[];
+      
+      try {
+        // Try to fetch from server
+        menuData = await MenuService.getFullMenu(true) as ApiMenuCategory[];
+        
+        // Cache menu data for offline use
+        await offlineStorage.cacheMenu({
+          categories: menuData as unknown[],
+          items: menuData.flatMap(cat => cat.items || []) as unknown[],
+          lastUpdated: Date.now()
+        });
+      } catch (err) {
+        // If offline, try to load from cache
+        console.log('📴 [POS] Offline, loading menu from cache...');
+        const cached = await offlineStorage.getCachedMenu();
+        if (cached && cached.categories) {
+          menuData = cached.categories as ApiMenuCategory[];
+          console.log('✅ [POS] Loaded menu from cache');
+        } else {
+          throw err;
+        }
+      }
       
       // Transform the data to match our POS interface
       const transformedCategories: MenuCategory[] = menuData.map((category: ApiMenuCategory) => ({
@@ -410,13 +473,32 @@ export default function POSInterface() {
   const loadTables = async () => {
     try {
       setLoading(true);
-      const response = await TableService.getTables();
-      if (Array.isArray(response)) {
-        setTables(response);
-      } else {
-        console.error('Invalid response format for tables:', response);
-        setTables([]);
+      
+      let tablesData: Table[];
+      
+      try {
+        // Try to fetch from server
+        const response = await TableService.getTables();
+        tablesData = Array.isArray(response) ? (response as Table[]) : [];
+        
+        // Cache tables for offline use
+        await offlineStorage.cacheTables({
+          tables: tablesData as unknown[],
+          lastUpdated: Date.now()
+        });
+      } catch {
+        // If offline, try to load from cache
+        console.log('📴 [POS] Offline, loading tables from cache...');
+        const cached = await offlineStorage.getCachedTables();
+        if (cached && cached.tables) {
+          tablesData = (cached.tables as unknown[]) as Table[];
+          console.log('✅ [POS] Loaded tables from cache');
+        } else {
+          tablesData = [];
+        }
       }
+      
+      setTables(tablesData);
     } catch (error) {
       console.error('Error loading tables:', error);
       setTables([]);
@@ -643,8 +725,35 @@ export default function POSInterface() {
         notes: `${orderNotes}\n${data.orderNotes}`.trim()
       };
 
-      // Create order in backend
-      const createdOrder = await OrderService.createOrder(orderData) as OrderCreationResponse;
+      // Check if order creation is enabled
+      if (!orderCreationEnabled) {
+        toast.error('ثبت سفارش در حال حاضر غیرفعال است. لطفاً با مدیر تماس بگیرید.');
+        setIsProcessing(false);
+        return;
+      }
+
+      // Create order in backend (with offline support)
+      let createdOrder: OrderCreationResponse;
+      try {
+        createdOrder = await OrderService.createOrder(orderData) as OrderCreationResponse;
+      } catch (error: unknown) {
+        // If offline, the order was queued and we got a local response
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (errorMessage.includes('queued') || errorMessage.includes('offline')) {
+          // Order was created offline, show success message
+          toast.success('سفارش در حالت آفلاین ثبت شد و پس از اتصال به اینترنت همگام‌سازی می‌شود');
+          
+          // Reset form
+          setOrderItems([]);
+          setCustomer({});
+          setSelectedTable(null);
+          setOrderNotes('');
+          setIsProcessing(false);
+          setShowFlexiblePayment(false);
+          return;
+        }
+        throw error;
+      }
 
       // Normalize response shape from API wrapper
       const normalized = ((): UnwrappedOrderCreation | null => {
@@ -1149,6 +1258,9 @@ export default function POSInterface() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
+        {/* Offline Status Bar */}
+        <OfflineStatusBar />
+        
         {/* Header */}
         <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1205,6 +1317,25 @@ export default function POSInterface() {
             </div>
           </div>
         </div>
+
+        {/* Order Creation Disabled Banner */}
+        {!orderCreationEnabled && (
+          <div className="mx-3 sm:mx-4 mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <div className="flex items-center space-x-3 space-x-reverse">
+              <svg className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-red-800 dark:text-red-200">
+                  ثبت سفارش غیرفعال است
+                </h3>
+                <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                  ثبت سفارشات جدید در حال حاضر غیرفعال است. لطفاً با مدیر تماس بگیرید.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Menu Items Grid */}
         <div className="flex-1 p-3 sm:p-4 overflow-y-auto pb-24 sm:pb-4">

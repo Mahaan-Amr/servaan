@@ -498,9 +498,16 @@ export class MenuService {
 
   /**
    * Get full menu (categories with items)
+   * Respects ordering settings for locking items without stock
    */
   static async getFullMenu(tenantId: string, onlyAvailable: boolean = true) {
     try {
+      // Get ordering settings to check if items without stock should be locked
+      const orderingSettings = await prisma.orderingSettings.findUnique({
+        where: { tenantId }
+      });
+      const lockItemsWithoutStock = orderingSettings?.lockItemsWithoutStock ?? false;
+
       const categoryWhere: any = { tenantId, isActive: true };
       const itemWhere: any = { isActive: true };
 
@@ -522,6 +529,22 @@ export class MenuService {
                   unit: true
                 }
               },
+              recipe: {
+                where: { isActive: true },
+                include: {
+                  ingredients: {
+                    where: { isOptional: false },
+                    include: {
+                      item: {
+                        select: {
+                          id: true,
+                          name: true
+                        }
+                      }
+                    }
+                  }
+                }
+              },
               modifiers: {
                 where: { isActive: true },
                 orderBy: { displayOrder: 'asc' }
@@ -533,18 +556,61 @@ export class MenuService {
         orderBy: { displayOrder: 'asc' }
       });
 
-      // TODO: Re-enable availability checking once proper availability logic is implemented
-      // For now, return all categories and items without availability filtering
-      // to get the POS system working
-      
-      const menuWithAvailability = categories.map(category => ({
-        ...category,
-        items: category.items.map(item => ({
-          ...item,
-          stockStatus: item.isAvailable ? 'available' : 'unavailable',
-          isCurrentlyAvailable: true
-        }))
-      }));
+      // If lockItemsWithoutStock is enabled, check stock for items with recipes
+      const menuWithAvailability = await Promise.all(
+        categories.map(async (category) => {
+          const itemsWithStockCheck = await Promise.all(
+            category.items.map(async (item) => {
+              let isAvailableForOrder = item.isAvailable;
+              let stockStatus = item.isAvailable ? 'available' : 'unavailable';
+
+              // If lockItemsWithoutStock is enabled and item has a recipe, check stock
+              if (lockItemsWithoutStock && item.recipe && item.recipe.ingredients.length > 0) {
+                const { OrderInventoryIntegrationService } = await import('./orderInventoryIntegrationService');
+                const { calculateCurrentStock } = await import('./inventoryService');
+
+                // Check if all required ingredients have stock
+                let hasAllStock = true;
+                for (const ingredient of item.recipe.ingredients) {
+                  if (!ingredient.isOptional) {
+                    const currentStock = await calculateCurrentStock(ingredient.itemId, tenantId);
+                    const requiredQuantity = Number(ingredient.quantity);
+                    
+                    if (currentStock < requiredQuantity) {
+                      hasAllStock = false;
+                      break;
+                    }
+                  }
+                }
+
+                // If any ingredient is out of stock, lock the item
+                if (!hasAllStock) {
+                  isAvailableForOrder = false;
+                  stockStatus = 'out_of_stock';
+                  
+                  // Update menu item availability in database
+                  await prisma.menuItem.update({
+                    where: { id: item.id },
+                    data: { isAvailable: false }
+                  });
+                }
+              }
+
+              return {
+                ...item,
+                stockStatus,
+                isCurrentlyAvailable: isAvailableForOrder,
+                isAvailable: isAvailableForOrder
+              };
+            })
+          );
+
+          return {
+            ...category,
+            items: itemsWithStockCheck
+          };
+        })
+      );
 
       return menuWithAvailability;
     } catch (error) {
