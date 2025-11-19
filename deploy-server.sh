@@ -142,6 +142,11 @@ zero_downtime_deployment() {
         rollback_deployment "$backup_dir"
         exit 1
     fi
+
+    # Run Prisma migrations for main backend immediately after it's healthy
+    print_status "Running Prisma migrations (backend)..."
+    docker-compose $ENV_FILE -f docker-compose.prod.yml exec backend sh -lc "npx prisma migrate deploy --schema src/prisma/schema.prisma" || {
+        rollback_deployment "$backup_dir"; exit 1; }
     
     # Update admin backend
     print_status "Updating admin backend service..."
