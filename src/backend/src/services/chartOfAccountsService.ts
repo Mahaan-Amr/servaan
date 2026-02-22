@@ -1,4 +1,4 @@
-import { PrismaClient, AccountType, BalanceType } from '../../../shared/generated/client';
+import { AccountType, BalanceType } from '../../../shared/generated/client';
 import { prisma } from './dbService';
 
 export interface ChartOfAccountData {
