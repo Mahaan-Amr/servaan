@@ -1,6 +1,10 @@
 import { prisma } from './dbService';
 import { ReportConfig } from './reportService';
 
+// Temporary compatibility shim: legacy BI template code expects a BIReport model.
+// Route those calls to CustomReport dynamically to avoid backend boot crashes.
+const biReportModel: any = (prisma as any).customReport;
+
 export interface ReportTemplate {
   id: string;
   name: string;
@@ -53,7 +57,7 @@ export class ReportTemplateService {
     tenantId: string
   ): Promise<ReportTemplate> {
     try {
-      const template = await prisma.bIReport.create({
+      const template = await biReportModel.create({
         data: {
           name: data.name,
           description: data.description,
@@ -144,7 +148,7 @@ export class ReportTemplateService {
       }
 
       const [templates, total] = await Promise.all([
-        prisma.bIReport.findMany({
+        biReportModel.findMany({
           where,
           skip,
           take: limit,
@@ -166,7 +170,7 @@ export class ReportTemplateService {
             }
           }
         }),
-        prisma.bIReport.count({ where })
+        biReportModel.count({ where })
       ]);
 
       // Filter by category and isSystemTemplate in memory (Prisma JSON filtering is limited)
@@ -221,7 +225,7 @@ export class ReportTemplateService {
     tenantId: string
   ): Promise<ReportTemplate> {
     try {
-      const template = await prisma.bIReport.findFirst({
+      const template = await biReportModel.findFirst({
         where: {
           id: templateId,
           template: true,
@@ -268,7 +272,7 @@ export class ReportTemplateService {
     tenantId: string
   ): Promise<ReportTemplate> {
     try {
-      const existing = await prisma.bIReport.findFirst({
+      const existing = await biReportModel.findFirst({
         where: {
           id: templateId,
           template: true,
@@ -303,7 +307,7 @@ export class ReportTemplateService {
         (updatedConfig as any).metadata = metadata;
       }
 
-      const template = await prisma.bIReport.update({
+      const template = await biReportModel.update({
         where: { id: templateId },
         data: {
           ...(data.name && { name: data.name }),
@@ -344,7 +348,7 @@ export class ReportTemplateService {
     tenantId: string
   ): Promise<void> {
     try {
-      const existing = await prisma.bIReport.findFirst({
+      const existing = await biReportModel.findFirst({
         where: {
           id: templateId,
           template: true,
@@ -367,7 +371,7 @@ export class ReportTemplateService {
         throw new Error('شما مجوز حذف این قالب را ندارید');
       }
 
-      await prisma.bIReport.delete({
+      await biReportModel.delete({
         where: { id: templateId }
       });
     } catch (error) {
@@ -427,7 +431,7 @@ export class ReportTemplateService {
       });
 
       // Increment template usage count (store in metadata)
-      await prisma.bIReport.update({
+      await biReportModel.update({
         where: { id: templateId },
         data: {
           config: {

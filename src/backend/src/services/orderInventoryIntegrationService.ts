@@ -816,7 +816,7 @@ export class OrderInventoryIntegrationService {
         where: {
           tenantId,
           type: 'OUT',
-          orderId: orderId
+          note: { contains: `[orderId:${orderId}]` }
         }
       });
       if (existing) {
@@ -923,11 +923,9 @@ export class OrderInventoryIntegrationService {
               itemId: ingredient.itemId,
               quantity: -quantityToDeduct, // Negative for OUT transaction
               type: 'OUT',
-              note: `Order ${order.orderNumber} (${order.id}) - Recipe ingredient: ${ingredient.item?.name}`,
+              note: `Order ${order.orderNumber} (${order.id}) [orderId:${order.id}] [orderItemId:${orderItem.id}] - Recipe ingredient: ${ingredient.item?.name}`,
               userId,
               tenantId,
-              orderId: orderId,           // Direct reference to order
-              orderItemId: orderItem.id,  // Direct reference to order item
             }
           });
 
@@ -1040,7 +1038,7 @@ export class OrderInventoryIntegrationService {
       const existing = await prisma.inventoryEntry.findFirst({
         where: {
           tenantId,
-          orderItemId: orderItemId,
+          note: { contains: `[orderItemId:${orderItemId}]` },
           type: 'OUT',
           deletedAt: null
         }
@@ -1133,11 +1131,9 @@ export class OrderInventoryIntegrationService {
             itemId: ingredient.itemId,
             quantity: -quantityToDeduct, // Negative for OUT transaction
             type: 'OUT',
-            note: `Order ${orderItem.order.orderNumber} - Item prepared: ${orderItem.itemName} (${orderItem.quantity}x) - Recipe ingredient: ${ingredient.item?.name}`,
+            note: `Order ${orderItem.order.orderNumber} (${orderItem.orderId}) [orderId:${orderItem.orderId}] [orderItemId:${orderItemId}] - Item prepared: ${orderItem.itemName} (${orderItem.quantity}x) - Recipe ingredient: ${ingredient.item?.name}`,
             userId,
             tenantId,
-            orderId: orderItem.orderId,
-            orderItemId: orderItemId // Direct reference to this specific order item
           }
         });
 
@@ -1245,8 +1241,10 @@ export class OrderInventoryIntegrationService {
         where: {
           tenantId,
           type: 'IN',
-          orderId: orderId,
-          note: { contains: 'Restored from cancelled order' }
+          AND: [
+            { note: { contains: `[orderId:${orderId}]` } },
+            { note: { contains: 'Restored from cancelled order' } }
+          ]
         }
       });
       if (existing) {
@@ -1274,7 +1272,7 @@ export class OrderInventoryIntegrationService {
       const outEntries = await prisma.inventoryEntry.findMany({
         where: {
           tenantId,
-          orderId: orderId,
+          note: { contains: `[orderId:${orderId}]` },
           type: 'OUT',
           deletedAt: null
         },
@@ -1332,11 +1330,9 @@ export class OrderInventoryIntegrationService {
             itemId: outEntry.itemId,
             quantity: quantityToRestore, // Positive for IN transaction
             type: 'IN',
-            note: `Restored from cancelled order ${order.orderNumber} (${order.id})${cancellationReason ? ` - Reason: ${cancellationReason}` : ''} - Original deduction: ${outEntry.note || 'N/A'}`,
+            note: `Restored from cancelled order ${order.orderNumber} (${order.id}) [orderId:${order.id}]${cancellationReason ? ` - Reason: ${cancellationReason}` : ''} - Original deduction: ${outEntry.note || 'N/A'}`,
             userId,
             tenantId,
-            orderId: orderId,           // Keep reference to original order
-            orderItemId: outEntry.orderItemId, // Keep reference to original order item if available
             unitPrice: currentCost      // Store current cost for audit trail
           }
         });
