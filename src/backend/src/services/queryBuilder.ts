@@ -1,7 +1,6 @@
-import { PrismaClient } from '../../../shared/generated/client';
+import { Prisma } from '../../../shared/generated/client';
 import { performanceMonitoringService } from './performanceMonitoringService';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 export interface QueryConfig {
   dataSources: any[];
@@ -9,7 +8,7 @@ export interface QueryConfig {
   filters?: any[];
   sorting?: any[];
   parameters?: any;
-  tenantId?: string; // Add tenantId to prevent data leakage
+  tenantId?: string;
 }
 
 export interface FieldMapping {
@@ -21,482 +20,377 @@ export interface FieldMapping {
   };
 }
 
-// نقشه‌برداری فیلدهای موجود در سیستم
+export class QueryBuilderValidationError extends Error {
+  public readonly code = 'VALIDATION_ERROR';
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'QueryBuilderValidationError';
+  }
+}
+
 const FIELD_MAPPINGS: FieldMapping = {
-  // Frontend field IDs that match the AVAILABLE_FIELDS in the report builder
-  'item_name': { table: 'items', column: 'name', type: 'text' },
-  'item_category': { table: 'items', column: 'category', type: 'text' },
-  'quantity': { table: 'inventory_entries', column: 'quantity', type: 'number' },
-  'unit_price': { table: 'inventory_entries', column: 'unitPrice', type: 'currency' },
-  'total_value': { table: 'calculated', column: 'quantity * unitPrice', type: 'currency' },
-  'entry_date': { table: 'inventory_entries', column: 'createdAt', type: 'date' },
-  'entry_type': { table: 'inventory_entries', column: 'type', type: 'text' },
-  'user_name': { table: 'users', column: 'name', type: 'text' },
-  'supplier_name': { table: 'suppliers', column: 'name', type: 'text' },
-  'current_stock': { table: 'calculated', column: 'current_stock', type: 'number' },
-  
-  // Additional legacy mappings for backward compatibility
-  'item_unit': { table: 'items', column: 'unit', type: 'text' },
-  'item_description': { table: 'items', column: 'description', type: 'text' },
-  'item_barcode': { table: 'items', column: 'barcode', type: 'text' },
-  'item_min_stock': { table: 'items', column: 'minStock', type: 'number' },
-  'item_is_active': { table: 'items', column: 'isActive', type: 'boolean' },
-  'item_created_at': { table: 'items', column: 'createdAt', type: 'date' },
-  
-  'inventory_quantity': { table: 'inventory_entries', column: 'quantity', type: 'number' },
-  'inventory_type': { table: 'inventory_entries', column: 'type', type: 'text' },
-  'inventory_unit_price': { table: 'inventory_entries', column: 'unitPrice', type: 'currency' },
-  'inventory_note': { table: 'inventory_entries', column: 'note', type: 'text' },
-  'inventory_batch_number': { table: 'inventory_entries', column: 'batchNumber', type: 'text' },
-  'inventory_expiry_date': { table: 'inventory_entries', column: 'expiryDate', type: 'date' },
-  'inventory_created_at': { table: 'inventory_entries', column: 'createdAt', type: 'date' },
-  
-  'user_email': { table: 'users', column: 'email', type: 'text' },
-  'user_role': { table: 'users', column: 'role', type: 'text' },
-  'user_active': { table: 'users', column: 'active', type: 'boolean' },
-  'user_created_at': { table: 'users', column: 'createdAt', type: 'date' },
-  
-  'supplier_contact_name': { table: 'suppliers', column: 'contactName', type: 'text' },
-  'supplier_email': { table: 'suppliers', column: 'email', type: 'text' },
-  'supplier_phone': { table: 'suppliers', column: 'phoneNumber', type: 'text' },
-  'supplier_address': { table: 'suppliers', column: 'address', type: 'text' },
-  'supplier_is_active': { table: 'suppliers', column: 'isActive', type: 'boolean' },
-  
-  'item_supplier_unit_price': { table: 'item_suppliers', column: 'unitPrice', type: 'currency' },
-  'item_supplier_preferred': { table: 'item_suppliers', column: 'preferredSupplier', type: 'boolean' }
+  item_name: { table: 'items', column: 'name', type: 'text' },
+  item_category: { table: 'items', column: 'category', type: 'text' },
+  quantity: { table: 'inventory_entries', column: 'quantity', type: 'number' },
+  unit_price: { table: 'inventory_entries', column: 'unitPrice', type: 'currency' },
+  total_value: { table: 'calculated', column: 'quantity * unitPrice', type: 'currency' },
+  entry_date: { table: 'inventory_entries', column: 'createdAt', type: 'date' },
+  entry_type: { table: 'inventory_entries', column: 'type', type: 'text' },
+  user_name: { table: 'users', column: 'name', type: 'text' },
+  supplier_name: { table: 'suppliers', column: 'name', type: 'text' },
+  current_stock: { table: 'calculated', column: 'current_stock', type: 'number' },
+  item_unit: { table: 'items', column: 'unit', type: 'text' },
+  item_description: { table: 'items', column: 'description', type: 'text' },
+  item_barcode: { table: 'items', column: 'barcode', type: 'text' },
+  item_min_stock: { table: 'items', column: 'minStock', type: 'number' },
+  item_is_active: { table: 'items', column: 'isActive', type: 'boolean' },
+  item_created_at: { table: 'items', column: 'createdAt', type: 'date' },
+  inventory_quantity: { table: 'inventory_entries', column: 'quantity', type: 'number' },
+  inventory_type: { table: 'inventory_entries', column: 'type', type: 'text' },
+  inventory_unit_price: { table: 'inventory_entries', column: 'unitPrice', type: 'currency' },
+  inventory_note: { table: 'inventory_entries', column: 'note', type: 'text' },
+  inventory_batch_number: { table: 'inventory_entries', column: 'batchNumber', type: 'text' },
+  inventory_expiry_date: { table: 'inventory_entries', column: 'expiryDate', type: 'date' },
+  inventory_created_at: { table: 'inventory_entries', column: 'createdAt', type: 'date' },
+  user_email: { table: 'users', column: 'email', type: 'text' },
+  user_role: { table: 'users', column: 'role', type: 'text' },
+  user_active: { table: 'users', column: 'active', type: 'boolean' },
+  user_created_at: { table: 'users', column: 'createdAt', type: 'date' },
+  supplier_contact_name: { table: 'suppliers', column: 'contactName', type: 'text' },
+  supplier_email: { table: 'suppliers', column: 'email', type: 'text' },
+  supplier_phone: { table: 'suppliers', column: 'phoneNumber', type: 'text' },
+  supplier_address: { table: 'suppliers', column: 'address', type: 'text' },
+  supplier_is_active: { table: 'suppliers', column: 'isActive', type: 'boolean' },
+  item_supplier_unit_price: { table: 'item_suppliers', column: 'unitPrice', type: 'currency' },
+  item_supplier_preferred: { table: 'item_suppliers', column: 'preferredSupplier', type: 'boolean' }
 };
 
+const ALLOWED_OPERATORS = new Set(['equals', 'contains', 'greater', 'less', 'between', 'in']);
+const ALLOWED_AGGREGATIONS = new Set(['sum', 'avg', 'count', 'min', 'max', 'none']);
+
 export class QueryBuilder {
-  /**
-   * ساخت کوئری SQL از تنظیمات گزارش
-   */
-  static async buildQuery(config: QueryConfig): Promise<string> {
-    try {
-      const { columns, filters = [], sorting = [], tenantId } = config;
-      
-      // تشخیص جداول مورد نیاز
-      const requiredTables = this.getRequiredTables(columns, filters);
-      console.log('DEBUG: Required tables:', Array.from(requiredTables));
-      
-      // ساخت بخش SELECT
-      const selectClause = this.buildSelectClause(columns);
-      console.log('DEBUG: Select clause:', selectClause);
-      
-      // ساخت بخش FROM و JOIN
-      const fromClause = this.buildFromClause(requiredTables);
-      console.log('DEBUG: From clause:', fromClause);
-      
-      // ساخت بخش WHERE - CRITICAL: Always include tenant filtering
-      const whereClause = this.buildWhereClause(filters, config.parameters, tenantId);
-      
-      // ساخت بخش GROUP BY
-      const groupByClause = this.buildGroupByClause(columns);
-      
-      // ساخت بخش ORDER BY
-      const orderByClause = this.buildOrderByClause(
-        sorting, 
-        groupByClause.length > 0, 
-        groupByClause.length > 0 ? groupByClause.split(', ') : []
-      );
-      
-      // ساخت کوئری نهایی
-      const query = `
-        SELECT ${selectClause}
-        FROM ${fromClause}
-        WHERE ${whereClause}
-        ${groupByClause ? `GROUP BY ${groupByClause}` : ''}
-        ${orderByClause ? `ORDER BY ${orderByClause}` : ''}
-      `.trim().replace(/\s+/g, ' ');
-      
-      console.log('Executing query:', query);
-      
-      return query;
-    } catch (error) {
-      console.error('Error building query:', error);
-      throw error;
+  static async buildQuery(config: QueryConfig): Promise<Prisma.Sql> {
+    const { columns, filters = [], sorting = [], tenantId } = config;
+
+    if (!tenantId) {
+      throw new QueryBuilderValidationError('TenantId is required for report execution');
     }
+
+    if (!Array.isArray(columns) || columns.length === 0) {
+      throw new QueryBuilderValidationError('At least one report column is required');
+    }
+
+    const requiredTables = this.getRequiredTables(columns, filters);
+    const selectSql = this.buildSelectClause(columns);
+    const fromSql = this.buildFromClause(requiredTables);
+    const whereSql = this.buildWhereClause(filters, config.parameters, tenantId);
+    const groupByFields = this.buildGroupByFields(columns);
+    const orderBySql = this.buildOrderByClause(sorting, groupByFields);
+
+    return Prisma.sql`
+      SELECT ${selectSql}
+      FROM ${fromSql}
+      WHERE ${whereSql}
+      ${groupByFields.length > 0 ? Prisma.sql`GROUP BY ${Prisma.join(groupByFields.map((f) => Prisma.raw(f)), ', ')}` : Prisma.empty}
+      ${orderBySql ? Prisma.sql`ORDER BY ${orderBySql}` : Prisma.empty}
+    `;
   }
 
-  /**
-   * اجرای کوئری و بازگرداندن نتایج
-   */
-  static async executeQuery(query: string): Promise<any[]> {
+  static async executeQuery(query: Prisma.Sql): Promise<any[]> {
     const startTime = Date.now();
-    
     try {
-      const result = await prisma.$queryRawUnsafe(query);
+      const result = await prisma.$queryRaw(query);
       const executionTime = Date.now() - startTime;
-      
-      // Record query performance for monitoring
-      performanceMonitoringService.recordDatabaseQuery(query, executionTime);
-      
+      performanceMonitoringService.recordDatabaseQuery(this.queryToLogString(query), executionTime);
       return result as any[];
     } catch (error) {
       const executionTime = Date.now() - startTime;
-      
-      // Record failed query performance
-      performanceMonitoringService.recordDatabaseQuery(query, executionTime);
-      
-      console.error('Error executing query:', error);
+      performanceMonitoringService.recordDatabaseQuery(this.queryToLogString(query), executionTime);
       throw error;
     }
   }
 
-  /**
-   * تشخیص جداول مورد نیاز بر اساس ستون‌ها و فیلترها
-   */
+  private static queryToLogString(query: Prisma.Sql): string {
+    const rawSql = (query as any)?.sql || '';
+    return typeof rawSql === 'string' ? rawSql : 'parameterized_query';
+  }
+
   private static getRequiredTables(columns: any[], filters: any[]): Set<string> {
     const tables = new Set<string>();
-    
-    // بررسی ستون‌ها
-    columns.forEach(column => {
-      const fieldMapping = FIELD_MAPPINGS[column.id];
-      if (fieldMapping) {
-        if (fieldMapping.table === 'calculated') {
-          // فیلدهای محاسبه شده که به جداول خاصی نیاز دارند
-          if (column.id === 'total_value') {
-            tables.add('inventory_entries');
-          } else if (column.id === 'current_stock') {
-            // current_stock uses a subquery, doesn't need JOIN
-          }
-        } else {
-          tables.add(fieldMapping.table);
+
+    for (const column of columns) {
+      const mapping = this.getFieldMapping(column.id, 'column');
+      if (mapping.table === 'calculated') {
+        if (column.id === 'total_value') {
+          tables.add('inventory_entries');
         }
+      } else {
+        tables.add(mapping.table);
       }
-    });
-    
-    // بررسی فیلترها
-    filters.forEach(filter => {
-      const fieldMapping = FIELD_MAPPINGS[filter.field];
-      if (fieldMapping) {
-        if (fieldMapping.table === 'calculated') {
-          // فیلدهای محاسبه شده که به جداول خاصی نیاز دارند
-          if (filter.field === 'total_value') {
-            tables.add('inventory_entries');
-          }
-        } else {
-          tables.add(fieldMapping.table);
-        }
+    }
+
+    for (const filter of filters) {
+      const mapping = this.getFieldMapping(filter.field, 'filter');
+      if (mapping.table === 'calculated') {
+        throw new QueryBuilderValidationError(`Filtering by calculated field is not supported: ${filter.field}`);
       }
-    });
-    
-    // اعمال وابستگی‌های جداول
-    // اگر از جدول users استفاده می‌شود، به inventory_entries نیاز است
+      tables.add(mapping.table);
+    }
+
     if (tables.has('users')) {
       tables.add('inventory_entries');
     }
-    
-    // اگر از جدول suppliers استفاده می‌شود، به item_suppliers نیاز است
     if (tables.has('suppliers')) {
       tables.add('item_suppliers');
     }
-    
-    // همیشه جدول items را اضافه کن (جدول اصلی)
     tables.add('items');
-    
+
     return tables;
   }
 
-  /**
-   * ساخت بخش SELECT
-   */
-  private static buildSelectClause(columns: any[]): string {
-    const selectFields: string[] = [];
-    
-    columns.forEach(column => {
-      const fieldMapping = FIELD_MAPPINGS[column.id];
-      if (!fieldMapping) return;
-      
-      let fieldExpression = '';
-      
-      if (fieldMapping.table === 'calculated') {
-        // فیلدهای محاسبه شده
-        if (column.id === 'total_value') {
-          fieldExpression = '(ie.quantity * COALESCE(ie."unitPrice", 0))';
-          // اعمال تجمیع در صورت نیاز
-          if (column.aggregation && column.aggregation !== 'none') {
-            fieldExpression = `SUM(${fieldExpression})`;
-          }
-        } else if (column.id === 'current_stock') {
-          fieldExpression = `(
-            SELECT COALESCE(SUM(
-              CASE WHEN ie2.type = 'IN' THEN ie2.quantity 
-                   WHEN ie2.type = 'OUT' THEN -ie2.quantity 
-                   ELSE 0 END
-            ), 0)
-            FROM "InventoryEntry" ie2 
-            WHERE ie2."itemId" = i.id
-          )`;
-        }
-      } else {
-        // فیلدهای عادی
-        const tableAlias = this.getTableAlias(fieldMapping.table);
-        fieldExpression = `${tableAlias}."${fieldMapping.column}"`;
-        
-        // اعمال تجمیع در صورت نیاز
-        if (column.aggregation && column.aggregation !== 'none') {
-          switch (column.aggregation) {
-            case 'sum':
-              fieldExpression = `SUM(${fieldExpression})`;
-              break;
-            case 'avg':
-              fieldExpression = `AVG(${fieldExpression})`;
-              break;
-            case 'count':
-              fieldExpression = `COUNT(${fieldExpression})`;
-              break;
-            case 'min':
-              fieldExpression = `MIN(${fieldExpression})`;
-              break;
-            case 'max':
-              fieldExpression = `MAX(${fieldExpression})`;
-              break;
-          }
-        }
+  private static buildSelectClause(columns: any[]): Prisma.Sql {
+    const fields: Prisma.Sql[] = [];
+
+    for (const column of columns) {
+      const mapping = this.getFieldMapping(column.id, 'column');
+      const aggregation = column.aggregation || 'none';
+      if (!ALLOWED_AGGREGATIONS.has(aggregation)) {
+        throw new QueryBuilderValidationError(`Unsupported aggregation: ${aggregation}`);
       }
-      
-      selectFields.push(`${fieldExpression} AS "${column.label || column.id}"`);
-    });
-    
-    return selectFields.length > 0 ? selectFields.join(', ') : 'i.id';
+
+      let expression = this.buildFieldExpression(column.id, mapping);
+      if (aggregation !== 'none') {
+        expression = this.wrapAggregation(expression, aggregation);
+      }
+
+      const alias = this.escapeIdentifier(column.label || column.id);
+      fields.push(Prisma.sql`${Prisma.raw(expression)} AS ${Prisma.raw(`"${alias}"`)}`);
+    }
+
+    if (fields.length === 0) {
+      return Prisma.raw('i.id');
+    }
+    return Prisma.join(fields, ', ');
   }
 
-  /**
-   * ساخت بخش FROM و JOIN
-   */
-  private static buildFromClause(tables: Set<string>): string {
+  private static buildFromClause(tables: Set<string>): Prisma.Sql {
     let fromClause = '"Item" i';
-    
-    // Join InventoryEntry if needed
+
     if (tables.has('inventory_entries')) {
       fromClause += ' LEFT JOIN "InventoryEntry" ie ON ie."itemId" = i.id';
     }
-    
-    // Join User only if both users and inventory_entries tables are needed
     if (tables.has('users') && tables.has('inventory_entries')) {
       fromClause += ' LEFT JOIN "User" u ON u.id = ie."userId"';
     }
-    
-    // Join ItemSupplier if needed
     if (tables.has('item_suppliers')) {
       fromClause += ' LEFT JOIN "ItemSupplier" isp ON isp."itemId" = i.id';
     }
-    
-    // Join Supplier only if both suppliers and item_suppliers tables are needed
     if (tables.has('suppliers') && tables.has('item_suppliers')) {
       fromClause += ' LEFT JOIN "Supplier" s ON s.id = isp."supplierId"';
     }
-    
-    return fromClause;
+
+    return Prisma.raw(fromClause);
   }
 
-  /**
-   * ساخت بخش WHERE - CRITICAL: Always include tenant filtering
-   */
-  private static buildWhereClause(filters: any[], parameters?: any, tenantId?: string): string {
-    const conditions: string[] = [];
-    
-    // CRITICAL SECURITY FIX: Always add tenant filtering first to prevent data leakage
-    if (tenantId) {
-      conditions.push(`i."tenantId" = '${tenantId}'`);
-      console.log('DEBUG: Added tenant filtering:', `i."tenantId" = '${tenantId}'`);
-    } else {
-      console.warn('WARNING: No tenantId provided to QueryBuilder - potential data leakage risk!');
-      // For safety, we could throw an error here, but for now we'll log a warning
-      // throw new Error('TenantId is required for security - cannot build query without tenant context');
-    }
-    
-    // فیلتر پیش‌فرض: فقط کالاهای فعال
-    conditions.push('i."isActive" = true');
-    
-    // Add debugging to see what filters are being processed
-    console.log('DEBUG: Processing filters:', JSON.stringify(filters, null, 2));
-    
-    filters.forEach((filter, index) => {
-      console.log(`DEBUG: Processing filter ${index}:`, filter);
-      
-      const fieldMapping = FIELD_MAPPINGS[filter.field];
-      if (!fieldMapping) {
-        console.log(`DEBUG: No field mapping found for: ${filter.field}`);
-        return;
+  private static buildWhereClause(filters: any[], parameters: any, tenantId: string): Prisma.Sql {
+    const conditions: Prisma.Sql[] = [];
+    conditions.push(Prisma.sql`i."tenantId" = ${tenantId}`);
+    conditions.push(Prisma.raw('i."isActive" = true'));
+
+    for (const filter of filters) {
+      const mapping = this.getFieldMapping(filter.field, 'filter');
+      const operator = filter.operator;
+      if (!ALLOWED_OPERATORS.has(operator)) {
+        throw new QueryBuilderValidationError(`Unsupported filter operator: ${operator}`);
       }
-      
-      // Skip empty or invalid filters
-      if (!filter.value || filter.value === '' || filter.value === null || filter.value === undefined) {
-        console.log(`DEBUG: Skipping empty filter for field: ${filter.field}`);
-        return;
+
+      const isEmptyValue =
+        filter.value === '' ||
+        filter.value === null ||
+        filter.value === undefined ||
+        (Array.isArray(filter.value) && filter.value.length === 0);
+      if (isEmptyValue) {
+        throw new QueryBuilderValidationError(`Invalid filter value for field: ${filter.field}`);
       }
-      
-      // Skip calculated field filters completely
-      if (fieldMapping.table === 'calculated') {
-        console.log(`DEBUG: Skipping calculated field filter: ${filter.field}`);
-        return;
+
+      if (mapping.table === 'calculated') {
+        throw new QueryBuilderValidationError(`Filtering by calculated field is not supported: ${filter.field}`);
       }
-      
-      let condition = '';
-      const tableAlias = this.getTableAlias(fieldMapping.table);
-      const fieldName = `${tableAlias}."${fieldMapping.column}"`;
-      
-      console.log(`DEBUG: Building condition for ${filter.field}: ${fieldName} ${filter.operator} ${filter.value}`);
-      
-      switch (filter.operator) {
+
+      const fieldExpression = Prisma.raw(this.getDbFieldName(mapping));
+      switch (operator) {
         case 'equals':
-          condition = `${fieldName} = '${filter.value}'`;
+          conditions.push(Prisma.sql`${fieldExpression} = ${filter.value}`);
           break;
         case 'contains':
-          condition = `${fieldName} ILIKE '%${filter.value}%'`;
+          conditions.push(Prisma.sql`${fieldExpression} ILIKE ${`%${String(filter.value)}%`}`);
           break;
         case 'greater':
-          condition = `${fieldName} > ${filter.value}`;
+          conditions.push(Prisma.sql`${fieldExpression} > ${filter.value}`);
           break;
         case 'less':
-          condition = `${fieldName} < ${filter.value}`;
+          conditions.push(Prisma.sql`${fieldExpression} < ${filter.value}`);
           break;
         case 'between':
-          if (Array.isArray(filter.value) && filter.value.length === 2) {
-            condition = `${fieldName} BETWEEN ${filter.value[0]} AND ${filter.value[1]}`;
+          if (!Array.isArray(filter.value) || filter.value.length !== 2) {
+            throw new QueryBuilderValidationError(`Between filter requires two values: ${filter.field}`);
           }
+          conditions.push(Prisma.sql`${fieldExpression} BETWEEN ${filter.value[0]} AND ${filter.value[1]}`);
           break;
         case 'in':
-          if (Array.isArray(filter.value)) {
-            const values = filter.value.map((v: any) => `'${v}'`).join(', ');
-            condition = `${fieldName} IN (${values})`;
+          if (!Array.isArray(filter.value) || filter.value.length === 0) {
+            throw new QueryBuilderValidationError(`IN filter requires a non-empty list: ${filter.field}`);
           }
+          conditions.push(Prisma.sql`${fieldExpression} IN (${Prisma.join(filter.value)})`);
           break;
-      }
-      
-      if (condition) {
-        console.log(`DEBUG: Adding condition: ${condition}`);
-        conditions.push(condition);
-      }
-    });
-    
-    // اعمال پارامترهای اضافی
-    if (parameters) {
-      if (parameters.dateRange) {
-        const dateCondition = `ie."createdAt" BETWEEN '${parameters.dateRange.start}' AND '${parameters.dateRange.end}'`;
-        console.log(`DEBUG: Adding date range condition: ${dateCondition}`);
-        conditions.push(dateCondition);
-      }
-      
-      if (parameters.itemIds && Array.isArray(parameters.itemIds)) {
-        const itemIds = parameters.itemIds.map((id: any) => `'${id}'`).join(', ');
-        const itemCondition = `i.id IN (${itemIds})`;
-        console.log(`DEBUG: Adding item IDs condition: ${itemCondition}`);
-        conditions.push(itemCondition);
+        default:
+          throw new QueryBuilderValidationError(`Unsupported filter operator: ${operator}`);
       }
     }
-    
-    const finalWhere = conditions.length > 0 ? conditions.join(' AND ') : '';
-    console.log(`DEBUG: Final WHERE clause: ${finalWhere}`);
-    
-    return finalWhere;
+
+    if (parameters?.dateRange) {
+      if (!parameters.dateRange.start || !parameters.dateRange.end) {
+        throw new QueryBuilderValidationError('Date range filter requires start and end');
+      }
+      conditions.push(
+        Prisma.sql`ie."createdAt" BETWEEN ${parameters.dateRange.start} AND ${parameters.dateRange.end}`
+      );
+    }
+
+    if (parameters?.itemIds !== undefined) {
+      if (!Array.isArray(parameters.itemIds) || parameters.itemIds.length === 0) {
+        throw new QueryBuilderValidationError('itemIds must be a non-empty array');
+      }
+      conditions.push(Prisma.sql`i.id IN (${Prisma.join(parameters.itemIds)})`);
+    }
+
+    return Prisma.join(conditions, ' AND ');
   }
 
-  /**
-   * ساخت بخش GROUP BY
-   */
-  private static buildGroupByClause(columns: any[]): string {
+  private static buildGroupByFields(columns: any[]): string[] {
     const groupFields: string[] = [];
-    let hasAggregation = false;
-    
-    columns.forEach(column => {
-      const fieldMapping = FIELD_MAPPINGS[column.id];
-      if (!fieldMapping) return;
-      
-      if (column.aggregation && column.aggregation !== 'none') {
-        hasAggregation = true;
-      } else if (fieldMapping.table !== 'calculated') {
-        // فقط فیلدهای غیر محاسبه شده را در GROUP BY قرار بده
-        const tableAlias = this.getTableAlias(fieldMapping.table);
-        const fieldExpression = `${tableAlias}."${fieldMapping.column}"`;
-        if (!groupFields.includes(fieldExpression)) {
-          groupFields.push(fieldExpression);
+    const hasAggregation = columns.some((column) => (column.aggregation || 'none') !== 'none');
+
+    for (const column of columns) {
+      const mapping = this.getFieldMapping(column.id, 'column');
+      const aggregation = column.aggregation || 'none';
+      if (!ALLOWED_AGGREGATIONS.has(aggregation)) {
+        throw new QueryBuilderValidationError(`Unsupported aggregation: ${aggregation}`);
+      }
+
+      if (aggregation === 'none' && mapping.table !== 'calculated') {
+        const fieldName = this.getDbFieldName(mapping);
+        if (!groupFields.includes(fieldName)) {
+          groupFields.push(fieldName);
         }
       }
-    });
-    
-    // اگر تجمیع وجود دارد، GROUP BY اعمال شود
-    return hasAggregation && groupFields.length > 0 ? groupFields.join(', ') : '';
+    }
+
+    return hasAggregation ? groupFields : [];
   }
 
-  /**
-   * ساخت بخش ORDER BY
-   */
-  private static buildOrderByClause(sorting: any[], hasGroupBy: boolean = false, groupByFields: string[] = []): string {
-    const orderFields: string[] = [];
-    
-    sorting.forEach(sort => {
-      const fieldMapping = FIELD_MAPPINGS[sort.field];
-      if (!fieldMapping) return;
-      
-      const tableAlias = this.getTableAlias(fieldMapping.table);
-      const fieldExpression = `${tableAlias}."${fieldMapping.column}"`;
+  private static buildOrderByClause(sorting: any[], groupByFields: string[]): Prisma.Sql | null {
+    const hasGroupBy = groupByFields.length > 0;
+    const orderFields: Prisma.Sql[] = [];
+
+    for (const sort of sorting) {
+      const mapping = this.getFieldMapping(sort.field, 'sorting');
       const direction = sort.direction === 'desc' ? 'DESC' : 'ASC';
-      
-      // اگر GROUP BY وجود دارد، فقط فیلدهای موجود در GROUP BY یا تجمیع شده را استفاده کن
-      if (hasGroupBy) {
-        if (groupByFields.includes(fieldExpression)) {
-          orderFields.push(`${fieldExpression} ${direction}`);
-        }
-      } else {
-        orderFields.push(`${fieldExpression} ${direction}`);
+      const fieldExpression = this.buildFieldExpression(sort.field, mapping);
+
+      if (hasGroupBy && mapping.table !== 'calculated' && !groupByFields.includes(fieldExpression)) {
+        throw new QueryBuilderValidationError(`Sort field is not available in grouped query: ${sort.field}`);
       }
-    });
-    
-    // اگر هیچ ORDER BY معتبری وجود ندارد و GROUP BY نداریم، از پیش‌فرض استفاده کن
+
+      orderFields.push(Prisma.sql`${Prisma.raw(fieldExpression)} ${Prisma.raw(direction)}`);
+    }
+
     if (orderFields.length === 0 && !hasGroupBy) {
-      return 'i."createdAt" DESC';
+      return Prisma.raw('i."createdAt" DESC');
     }
-    
-    // اگر GROUP BY داریم و هیچ ORDER BY معتبری نیست، از اولین فیلد GROUP BY استفاده کن
-    if (orderFields.length === 0 && hasGroupBy && groupByFields.length > 0) {
-      return `${groupByFields[0]} ASC`;
+    if (orderFields.length === 0 && hasGroupBy) {
+      return Prisma.raw(`${groupByFields[0]} ASC`);
     }
-    
-    return orderFields.join(', ');
+    return Prisma.join(orderFields, ', ');
   }
 
-  /**
-   * دریافت نام مستعار جدول
-   */
+  private static getFieldMapping(fieldId: string, source: 'column' | 'filter' | 'sorting') {
+    const mapping = FIELD_MAPPINGS[fieldId];
+    if (!mapping) {
+      throw new QueryBuilderValidationError(`Unsupported ${source} field: ${fieldId}`);
+    }
+    return mapping;
+  }
+
+  private static getDbFieldName(mapping: { table: string; column: string }): string {
+    const tableAlias = this.getTableAlias(mapping.table);
+    return `${tableAlias}."${mapping.column}"`;
+  }
+
+  private static buildFieldExpression(fieldId: string, mapping: { table: string; column: string }): string {
+    if (mapping.table !== 'calculated') {
+      return this.getDbFieldName(mapping);
+    }
+
+    if (fieldId === 'total_value') {
+      return '(ie.quantity * COALESCE(ie."unitPrice", 0))';
+    }
+
+    if (fieldId === 'current_stock') {
+      return `(
+        SELECT COALESCE(SUM(
+          CASE
+            WHEN ie2.type = 'IN' THEN ie2.quantity
+            WHEN ie2.type = 'OUT' THEN -ie2.quantity
+            ELSE 0
+          END
+        ), 0)
+        FROM "InventoryEntry" ie2
+        WHERE ie2."itemId" = i.id
+      )`;
+    }
+
+    throw new QueryBuilderValidationError(`Unsupported calculated field: ${fieldId}`);
+  }
+
+  private static wrapAggregation(expression: string, aggregation: string): string {
+    switch (aggregation) {
+      case 'sum':
+        return `SUM(${expression})`;
+      case 'avg':
+        return `AVG(${expression})`;
+      case 'count':
+        return `COUNT(${expression})`;
+      case 'min':
+        return `MIN(${expression})`;
+      case 'max':
+        return `MAX(${expression})`;
+      default:
+        throw new QueryBuilderValidationError(`Unsupported aggregation: ${aggregation}`);
+    }
+  }
+
   private static getTableAlias(tableName: string): string {
     const aliases: { [key: string]: string } = {
-      'items': 'i',
-      'inventory_entries': 'ie',
-      'users': 'u',
-      'suppliers': 's',
-      'item_suppliers': 'isp',
-      'calculated': 'calc' // for calculated fields
+      items: 'i',
+      inventory_entries: 'ie',
+      users: 'u',
+      suppliers: 's',
+      item_suppliers: 'isp',
+      calculated: 'calc'
     };
-    
     return aliases[tableName] || tableName;
   }
 
-  /**
-   * اعتبارسنجی کوئری برای امنیت
-   */
-  static validateQuery(query: string): boolean {
-    // کلمات کلیدی خطرناک
-    const dangerousKeywords = [
-      'DROP', 'DELETE', 'UPDATE', 'INSERT', 'ALTER', 'CREATE', 'TRUNCATE',
-      'EXEC', 'EXECUTE', 'DECLARE', 'CURSOR', 'PROCEDURE', 'FUNCTION'
-    ];
-    
-    const upperQuery = query.toUpperCase();
-    
-    for (const keyword of dangerousKeywords) {
-      if (upperQuery.includes(keyword)) {
-        return false;
-      }
-    }
-    
+  private static escapeIdentifier(input: string): string {
+    return String(input).replace(/"/g, '""').slice(0, 64);
+  }
+
+  static validateQuery(_query: string): boolean {
     return true;
   }
 
-  /**
-   * دریافت فیلدهای موجود برای گزارش‌سازی
-   */
   static getAvailableFields(): any[] {
     return Object.entries(FIELD_MAPPINGS).map(([id, mapping]) => ({
       id,
@@ -504,60 +398,46 @@ export class QueryBuilder {
       type: mapping.type,
       table: mapping.table,
       label: this.getFieldLabel(id),
-      aggregation: 'none' // Default to no aggregation, let user choose
+      aggregation: 'none'
     }));
   }
 
-  /**
-   * دریافت برچسب فیلد
-   */
   private static getFieldLabel(fieldId: string): string {
     const labels: Record<string, string> = {
-      // Primary field mappings
-      'item_name': 'نام کالا',
-      'item_category': 'دسته‌بندی',
-      'quantity': 'تعداد',
-      'unit_price': 'قیمت واحد',
-      'total_value': 'ارزش کل',
-      'entry_date': 'تاریخ ورود/خروج',
-      'entry_type': 'نوع تراکنش',
-      'user_name': 'نام کاربر',
-      'supplier_name': 'نام تأمین‌کننده',
-      'current_stock': 'موجودی فعلی',
-      
-      // Additional item fields
-      'item_unit': 'واحد',
-      'item_description': 'توضیحات',
-      'item_barcode': 'بارکد',
-      'item_min_stock': 'حداقل موجودی',
-      'item_is_active': 'وضعیت فعال',
-      'item_created_at': 'تاریخ ایجاد کالا',
-      
-      // Inventory fields
-      'inventory_quantity': 'مقدار تراکنش',
-      'inventory_type': 'نوع تراکنش',
-      'inventory_unit_price': 'قیمت واحد تراکنش',
-      'inventory_note': 'یادداشت',
-      'inventory_batch_number': 'شماره دسته',
-      'inventory_expiry_date': 'تاریخ انقضا',
-      'inventory_created_at': 'تاریخ تراکنش',
-      
-      // User fields
-      'user_email': 'ایمیل کاربر',
-      'user_role': 'نقش کاربر',
-      'user_active': 'وضعیت کاربر',
-      'user_created_at': 'تاریخ عضویت',
-      
-      // Supplier fields
-      'supplier_contact_name': 'نام تماس',
-      'supplier_email': 'ایمیل تأمین‌کننده',
-      'supplier_phone': 'تلفن',
-      'supplier_address': 'آدرس',
-      'supplier_is_active': 'وضعیت تأمین‌کننده',
-      
-      // Item-Supplier fields
-      'item_supplier_unit_price': 'قیمت از تأمین‌کننده',
-      'item_supplier_preferred': 'تأمین‌کننده ترجیحی'
+      item_name: 'Ù†Ø§Ù… Ú©Ø§Ù„Ø§',
+      item_category: 'Ø¯Ø³ØªÙ‡â€ŒØ¨Ù†Ø¯ÛŒ',
+      quantity: 'ØªØ¹Ø¯Ø§Ø¯',
+      unit_price: 'Ù‚ÛŒÙ…Øª ÙˆØ§Ø­Ø¯',
+      total_value: 'Ø§Ø±Ø²Ø´ Ú©Ù„',
+      entry_date: 'ØªØ§Ø±ÛŒØ® ÙˆØ±ÙˆØ¯/Ø®Ø±ÙˆØ¬',
+      entry_type: 'Ù†ÙˆØ¹ ØªØ±Ø§Ú©Ù†Ø´',
+      user_name: 'Ù†Ø§Ù… Ú©Ø§Ø±Ø¨Ø±',
+      supplier_name: 'Ù†Ø§Ù… ØªØ£Ù…ÛŒÙ†â€ŒÚ©Ù†Ù†Ø¯Ù‡',
+      current_stock: 'Ù…ÙˆØ¬ÙˆØ¯ÛŒ ÙØ¹Ù„ÛŒ',
+      item_unit: 'ÙˆØ§Ø­Ø¯',
+      item_description: 'ØªÙˆØ¶ÛŒØ­Ø§Øª',
+      item_barcode: 'Ø¨Ø§Ø±Ú©Ø¯',
+      item_min_stock: 'Ø­Ø¯Ø§Ù‚Ù„ Ù…ÙˆØ¬ÙˆØ¯ÛŒ',
+      item_is_active: 'ÙˆØ¶Ø¹ÛŒØª ÙØ¹Ø§Ù„',
+      item_created_at: 'ØªØ§Ø±ÛŒØ® Ø§ÛŒØ¬Ø§Ø¯ Ú©Ø§Ù„Ø§',
+      inventory_quantity: 'Ù…Ù‚Ø¯Ø§Ø± ØªØ±Ø§Ú©Ù†Ø´',
+      inventory_type: 'Ù†ÙˆØ¹ ØªØ±Ø§Ú©Ù†Ø´',
+      inventory_unit_price: 'Ù‚ÛŒÙ…Øª ÙˆØ§Ø­Ø¯ ØªØ±Ø§Ú©Ù†Ø´',
+      inventory_note: 'ÛŒØ§Ø¯Ø¯Ø§Ø´Øª',
+      inventory_batch_number: 'Ø´Ù…Ø§Ø±Ù‡ Ø¯Ø³ØªÙ‡',
+      inventory_expiry_date: 'ØªØ§Ø±ÛŒØ® Ø§Ù†Ù‚Ø¶Ø§',
+      inventory_created_at: 'ØªØ§Ø±ÛŒØ® ØªØ±Ø§Ú©Ù†Ø´',
+      user_email: 'Ø§ÛŒÙ…ÛŒÙ„ Ú©Ø§Ø±Ø¨Ø±',
+      user_role: 'Ù†Ù‚Ø´ Ú©Ø§Ø±Ø¨Ø±',
+      user_active: 'ÙˆØ¶Ø¹ÛŒØª Ú©Ø§Ø±Ø¨Ø±',
+      user_created_at: 'ØªØ§Ø±ÛŒØ® Ø¹Ø¶ÙˆÛŒØª',
+      supplier_contact_name: 'Ù†Ø§Ù… ØªÙ…Ø§Ø³',
+      supplier_email: 'Ø§ÛŒÙ…ÛŒÙ„ ØªØ£Ù…ÛŒÙ†â€ŒÚ©Ù†Ù†Ø¯Ù‡',
+      supplier_phone: 'ØªÙ„ÙÙ†',
+      supplier_address: 'Ø¢Ø¯Ø±Ø³',
+      supplier_is_active: 'ÙˆØ¶Ø¹ÛŒØª ØªØ£Ù…ÛŒÙ†â€ŒÚ©Ù†Ù†Ø¯Ù‡',
+      item_supplier_unit_price: 'Ù‚ÛŒÙ…Øª Ø§Ø² ØªØ£Ù…ÛŒÙ†â€ŒÚ©Ù†Ù†Ø¯Ù‡',
+      item_supplier_preferred: 'ØªØ£Ù…ÛŒÙ†â€ŒÚ©Ù†Ù†Ø¯Ù‡ ØªØ±Ø¬ÛŒØ­ÛŒ'
     };
     return labels[fieldId] || fieldId;
   }

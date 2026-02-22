@@ -92,14 +92,12 @@ function InvitationForm() {
     setError('');
     
     try {
-      // Here you would typically verify the code with backend
-      // For now, we'll simulate verification
-      if (verificationCode === '12345' || process.env.NODE_ENV === 'development') {
-        setStep('registration');
-        setSuccess('شماره تلفن تایید شد. لطفاً اطلاعات خود را وارد کنید');
-      } else {
-        setError('کد تایید اشتباه است');
-      }
+      await smsService.verifyCode({
+        phoneNumber: phoneValidation.formatted!,
+        code: verificationCode
+      });
+      setStep('registration');
+      setSuccess('شماره تلفن تایید شد. لطفاً اطلاعات خود را وارد کنید');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'خطا در تایید کد');
     } finally {

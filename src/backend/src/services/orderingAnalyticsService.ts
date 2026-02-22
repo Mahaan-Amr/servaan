@@ -1,7 +1,6 @@
 import { PrismaClient, OrderStatus, PaymentMethod, OrderType } from '../../../shared/generated/client';
 import { AppError } from '../utils/AppError';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 // ==================== INTERFACES ====================
 
@@ -400,6 +399,8 @@ export class OrderingAnalyticsService {
     startDate: Date,
     endDate: Date
   ): Promise<{ totalRevenue: number; totalOrders: number; averageOrderValue: number }> {
+    // CRITICAL FIX: Filter for COMPLETED + PAID orders only (Option A consistency)
+    // This ensures analytics revenue matches dashboard and reflects actual cash flow
     const result = await prisma.order.aggregate({
       where: {
         tenantId,
@@ -407,9 +408,8 @@ export class OrderingAnalyticsService {
           gte: startDate,
           lte: endDate
         },
-        status: {
-          notIn: ['CANCELLED', 'REFUNDED']
-        }
+        status: 'COMPLETED',
+        paymentStatus: 'PAID'
       },
       _sum: {
         totalAmount: true
@@ -431,6 +431,7 @@ export class OrderingAnalyticsService {
     startDate: Date,
     endDate: Date
   ): Promise<{ totalCustomers: number; newCustomers: number; repeatCustomers: number; averageOrderValue: number }> {
+    // CRITICAL FIX: Filter for COMPLETED + PAID orders only (Option A consistency)
     // Get unique customers in period
     const uniqueCustomers = await prisma.order.groupBy({
       by: ['customerId'],
@@ -440,9 +441,8 @@ export class OrderingAnalyticsService {
           gte: startDate,
           lte: endDate
         },
-        status: {
-          notIn: ['CANCELLED', 'REFUNDED']
-        },
+        status: 'COMPLETED',
+        paymentStatus: 'PAID',
         customerId: { not: null }
       }
     });
@@ -458,9 +458,8 @@ export class OrderingAnalyticsService {
           gte: startDate,
           lte: endDate
         },
-        status: {
-          notIn: ['CANCELLED', 'REFUNDED']
-        },
+        status: 'COMPLETED',
+        paymentStatus: 'PAID',
         customerId: { not: null }
       },
       _min: {
@@ -478,7 +477,9 @@ export class OrderingAnalyticsService {
             customerId: customer.customerId,
             orderDate: {
               lt: customer._min.orderDate
-            }
+            },
+            status: 'COMPLETED',
+            paymentStatus: 'PAID'
           }
         });
         return earlierOrders === 0 ? 1 : 0;
@@ -513,6 +514,7 @@ export class OrderingAnalyticsService {
       const salesData = await this.getCurrentPeriodSalesData(tenantId, startDate, endDate);
       totalRevenue = salesData.totalRevenue;
     }
+    // CRITICAL FIX: Filter for COMPLETED + PAID orders only (Option A consistency)
     const topItems = await prisma.orderItem.groupBy({
       by: ['itemName', 'menuItemId'],
       where: {
@@ -522,9 +524,8 @@ export class OrderingAnalyticsService {
             gte: startDate,
             lte: endDate
           },
-          status: {
-            notIn: ['CANCELLED', 'REFUNDED']
-          }
+          status: 'COMPLETED',
+          paymentStatus: 'PAID'
         }
       },
       _sum: {
@@ -556,6 +557,7 @@ export class OrderingAnalyticsService {
     startDate: Date,
     endDate: Date
   ): Promise<Array<{ hour: number; orders: number; revenue: number }>> {
+    // CRITICAL FIX: Filter for COMPLETED + PAID orders only (Option A consistency)
     const hourlyData = await prisma.$queryRaw`
       SELECT 
         EXTRACT(HOUR FROM "orderDate") as hour,
@@ -565,7 +567,8 @@ export class OrderingAnalyticsService {
       WHERE "tenantId" = ${tenantId}
         AND "orderDate" >= ${startDate}
         AND "orderDate" <= ${endDate}
-        AND status NOT IN ('CANCELLED', 'REFUNDED')
+        AND status = 'COMPLETED'
+        AND "paymentStatus" = 'PAID'
       GROUP BY EXTRACT(HOUR FROM "orderDate")
       ORDER BY hour
     ` as Array<{ hour: number; orders: bigint; revenue: any }>;
@@ -582,6 +585,8 @@ export class OrderingAnalyticsService {
     startDate: Date,
     endDate: Date
   ): Promise<Array<{ date: string; revenue: number; orders: number }>> {
+    // CRITICAL FIX: Filter for COMPLETED + PAID orders only (matching getTodaysSummary Option A)
+    // This ensures daily revenue only reflects actual received payments
     const dailyData = await prisma.$queryRaw`
       SELECT 
         DATE("orderDate") as date,
@@ -591,7 +596,8 @@ export class OrderingAnalyticsService {
       WHERE "tenantId" = ${tenantId}
         AND "orderDate" >= ${startDate}
         AND "orderDate" <= ${endDate}
-        AND status NOT IN ('CANCELLED', 'REFUNDED')
+        AND status = 'COMPLETED'
+        AND "paymentStatus" = 'PAID'
       GROUP BY DATE("orderDate")
       ORDER BY date
     ` as Array<{ date: Date; orders: bigint; revenue: any }>;

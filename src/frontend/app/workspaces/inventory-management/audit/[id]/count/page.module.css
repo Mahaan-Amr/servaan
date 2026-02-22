@@ -1,0 +1,28 @@
+/* Progress bar styling */
+.progressFill {
+  background-color: rgb(37, 99, 235); /* bg-blue-600 */
+  height: 0.75rem; /* h-3 */
+  border-radius: 9999px; /* rounded-full */
+  transition: width 300ms ease-in-out; /* transition-all duration-300 */
+  width: var(--progress-width, 0%);
+  display: block;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .progressBackground {
+    background-color: rgb(55, 65, 81); /* dark:bg-gray-700 */
+  }
+}
+
+/* Alternative approach: use data attributes for width - supports up to 10% increments */
+.progressFill[data-width="10"] { width: 10%; }
+.progressFill[data-width="20"] { width: 20%; }
+.progressFill[data-width="30"] { width: 30%; }
+.progressFill[data-width="40"] { width: 40%; }
+.progressFill[data-width="50"] { width: 50%; }
+.progressFill[data-width="60"] { width: 60%; }
+.progressFill[data-width="70"] { width: 70%; }
+.progressFill[data-width="80"] { width: 80%; }
+.progressFill[data-width="90"] { width: 90%; }
+.progressFill[data-width="100"] { width: 100%; }

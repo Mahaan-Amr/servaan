@@ -49,7 +49,7 @@ export declare function getResourceAuditLogs(resourceId: string, resourceType: s
     logs: ({
         adminUser: {
             email: string;
-            role: string;
+            role: import("../../../../shared/generated/client").$Enums.AdminRole;
         };
     } & {
         id: string;

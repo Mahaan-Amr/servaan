@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import * as itemService from '../../../../../services/itemService';
 import toast from 'react-hot-toast';
 import { FormattedNumberInput } from '../../../../../components/ui/FormattedNumberInput';
+import { Button, Card, Section } from '../../../../../components/ui';
 
 export default function AddItemPage() {
   const [loading, setLoading] = useState(false);
@@ -210,8 +211,8 @@ export default function AddItemPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 sm:p-6">
+    <Section className="space-y-4 sm:space-y-6">
+      <Card className="p-3 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
@@ -221,7 +222,7 @@ export default function AddItemPage() {
               {isEditMode ? 'اطلاعات کالا را ویرایش کنید' : 'اطلاعات کالای جدید را وارد کنید'}
             </p>
           </div>
-          <button
+          <Button
             onClick={() => {
               const returnUrl = searchParams.get('returnUrl');
               if (returnUrl) {
@@ -230,14 +231,15 @@ export default function AddItemPage() {
                 router.push('/workspaces/inventory-management/items');
               }
             }}
-            className="px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base"
+            variant="secondary"
+            size="small"
           >
             بازگشت
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 sm:p-6">
+      <Card className="p-3 sm:p-6">
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <div className="col-span-2 sm:col-span-1">
@@ -421,10 +423,10 @@ export default function AddItemPage() {
             >
               لغو
             </Link>
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
+              className="disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
@@ -437,10 +439,10 @@ export default function AddItemPage() {
               ) : (
                 'ذخیره کالا'
               )}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </Card>
+    </Section>
   );
-} 
+}

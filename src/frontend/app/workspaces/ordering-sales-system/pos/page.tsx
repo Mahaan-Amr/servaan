@@ -326,6 +326,34 @@ export default function POSInterface() {
       }
     });
 
+    // Listen for real-time stock updates
+    newSocket.on('inventory:stock-updated', (data: {
+      updates: Array<{
+        itemId: string;
+        itemName: string;
+        previousStock: number;
+        currentStock: number;
+        change: number;
+        reason: string;
+        orderId?: string;
+        orderNumber?: string;
+      }>;
+    }) => {
+      console.log('📦 [POS] Stock update received:', data);
+      
+      // Show toast notifications for stock changes
+      data.updates.forEach(update => {
+        const changeText = update.change > 0 ? `+${update.change}` : `${update.change}`;
+        const reasonText = update.reason === 'order_completed' 
+          ? `سفارش ${update.orderNumber || ''} تکمیل شد`
+          : update.reason === 'order_cancelled'
+          ? `سفارش ${update.orderNumber || ''} لغو شد`
+          : '';
+
+        toast.success(`موجودی ${update.itemName}: ${update.previousStock} → ${update.currentStock} (${changeText}) ${reasonText}`);
+      });
+    });
+
     return () => {
       newSocket.disconnect();
     };
@@ -1174,21 +1202,90 @@ export default function POSInterface() {
   }, [orderItems.length, calculateTotal]); // Run only on mount
 
   return (
-    <div className="h-screen flex bg-gray-50 dark:bg-gray-900 overflow-hidden" dir="rtl">
-      {/* Mobile Sidebar Overlay */}
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden" dir="rtl">
+      {/* Offline Status Bar */}
+      <OfflineStatusBar />
+      
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-3 sm:p-4 flex-shrink-0">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">ثبت سفارش جدید</h1>
+            <div className="flex flex-wrap items-center gap-2 sm:space-x-2 sm:space-x-reverse">
+              <span className="text-sm text-gray-500 dark:text-gray-400">نوع سفارش:</span>
+              <select
+                value={orderType}
+                onChange={(e) => setOrderType(e.target.value as OrderType)}
+                className="w-full sm:w-auto text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                title="انتخاب نوع سفارش"
+                aria-label="نوع سفارش"
+              >
+                <option value={OrderType.DINE_IN}>صرف در محل</option>
+                <option value={OrderType.TAKEAWAY}>بیرون بر</option>
+                <option value={OrderType.DELIVERY}>تحویل</option>
+              </select>
+            </div>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:space-x-2 sm:space-x-reverse">
+            <Link href="/workspaces/ordering-sales-system/orders">
+              <button className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
+                <FaList className="inline mr-2" />
+                سفارش‌ها
+              </button>
+            </Link>
+          </div>
+          
+          {/* Printer settings quick access */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:space-x-2 sm:space-x-reverse">
+            {defaultPrinter && (
+              <span className="hidden sm:inline text-xs text-gray-500 dark:text-gray-400">
+                چاپگر: {defaultPrinter} {alwaysSilent ? '• بی‌صدا' : ''}
+              </span>
+            )}
+            <button
+              onClick={() => setShowPrinterSettings(true)}
+              className="inline-flex w-full sm:w-auto items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+              title="تنظیمات چاپگر"
+            >
+              <FaCog className="w-4 h-4" />
+              <span className="text-sm">تنظیمات چاپگر</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Order Creation Disabled Banner */}
+      {!orderCreationEnabled && (
+        <div className="mx-3 sm:mx-4 mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex-shrink-0">
+          <div className="flex items-center space-x-3 space-x-reverse">
+            <svg className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-red-800 dark:text-red-200">
+                ثبت سفارش غیرفعال است
+              </h3>
+              <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                ثبت سفارشات جدید در حال حاضر غیرفعال است. لطفاً با مدیر تماس بگیرید.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Category Drawer */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
-      {/* Left Sidebar - Categories */}
-      <div className={`fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto transform transition-transform duration-300 ease-in-out ${
-        isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-      } w-56 sm:w-60 lg:w-72 xl:w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col flex-shrink-0`}>
+      <div className={`fixed md:hidden right-0 top-0 h-full bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 shadow-lg transition-all duration-300 ease-in-out z-40 flex flex-col w-72
+        ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         {/* Categories Header */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">دسته‌بندی‌ها</h2>
@@ -1197,7 +1294,9 @@ export default function POSInterface() {
             {/* Mobile Close Button */}
             <button
               onClick={() => setIsSidebarOpen(false)}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
+              title="بستن"
+              aria-label="بستن منو دسته‌بندی"
             >
               <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1223,122 +1322,38 @@ export default function POSInterface() {
             </div>
           ) : (
             <div className="p-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-full">
-                {categories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => {
-                      setSelectedCategory(category.id);
-                      // Close sidebar on mobile after selection
-                      if (window.innerWidth < 1024) {
-                        setIsSidebarOpen(false);
-                      }
-                    }}
-                    className={`w-full text-right p-2 rounded-lg transition-all duration-200 ${
-                      selectedCategory === category.id
-                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400 border-2 border-amber-300 dark:border-amber-600 shadow-sm'
-                        : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm leading-tight" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{category.name}</span>
-                      {selectedCategory === category.id && (
-                        <svg className="w-3 h-3 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => {
+                    setSelectedCategory(category.id);
+                    setIsSidebarOpen(false);
+                  }}
+                  className={`w-full text-right p-3 rounded-lg transition-all duration-200 mb-2 ${
+                    selectedCategory === category.id
+                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400 border-2 border-amber-300 dark:border-amber-600 shadow-sm'
+                      : 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-600'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{category.name}</span>
+                    {selectedCategory === category.id && (
+                      <svg className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                </button>
+              ))}
             </div>
           )}
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Offline Status Bar */}
-        <OfflineStatusBar />
-        
-        {/* Header */}
-        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center space-x-4 space-x-reverse">
-              {/* Mobile Menu Toggle */}
-              <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <svg className="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-              
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">ثبت سفارش جدید</h1>
-              <div className="flex items-center space-x-2 space-x-reverse">
-                <span className="text-sm text-gray-500 dark:text-gray-400">نوع سفارش:</span>
-                <select
-                  value={orderType}
-                  onChange={(e) => setOrderType(e.target.value as OrderType)}
-                  className="text-sm border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                >
-                  <option value={OrderType.DINE_IN}>صرف در محل</option>
-                  <option value={OrderType.TAKEAWAY}>بیرون بر</option>
-                  <option value={OrderType.DELIVERY}>تحویل</option>
-                </select>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2 space-x-reverse">
-              <Link href="/workspaces/ordering-sales-system/orders">
-                <button className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors">
-                  <FaList className="inline mr-2" />
-                  سفارش‌ها
-                </button>
-              </Link>
-            </div>
-            
-            {/* Printer settings quick access */}
-            <div className="flex items-center space-x-2 space-x-reverse">
-              {defaultPrinter && (
-                <span className="hidden sm:inline text-xs text-gray-500 dark:text-gray-400">
-                  چاپگر: {defaultPrinter} {alwaysSilent ? '• بی‌صدا' : ''}
-                </span>
-              )}
-              <button
-                onClick={() => setShowPrinterSettings(true)}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                title="تنظیمات چاپگر"
-              >
-                <FaCog className="w-4 h-4" />
-                <span className="text-sm">تنظیمات چاپگر</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Order Creation Disabled Banner */}
-        {!orderCreationEnabled && (
-          <div className="mx-3 sm:mx-4 mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <div className="flex items-center space-x-3 space-x-reverse">
-              <svg className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold text-red-800 dark:text-red-200">
-                  ثبت سفارش غیرفعال است
-                </h3>
-                <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                  ثبت سفارشات جدید در حال حاضر غیرفعال است. لطفاً با مدیر تماس بگیرید.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Menu Items Grid */}
-        <div className="flex-1 p-3 sm:p-4 overflow-y-auto pb-24 sm:pb-4">
+      {/* Content Container - Flex Row for Main Area + Right Panel */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Main Content Area - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 pb-32 md:pb-4">
           {selectedCategory ? (
             <>
               {/* Selected Category Header */}
@@ -1450,11 +1465,9 @@ export default function POSInterface() {
             </div>
           )}
         </div>
-      </div>
 
-      {/* Right Panel - Order Cart */}
-      {/* Desktop/Tablet Cart Panel */}
-      <div className="hidden sm:flex w-full sm:w-[320px] md:w-[380px] lg:w-[480px] bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex-col flex-shrink-0">
+        {/* Right Panel - Order Cart (Desktop/Tablet) */}
+        <div className="hidden sm:flex w-full sm:w-[320px] md:w-[380px] lg:w-[480px] bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex-col flex-shrink-0">
         {/* Cart Header */}
         <div className="p-3 md:p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
@@ -1546,6 +1559,8 @@ export default function POSInterface() {
                           </p>
                           <div className="flex items-center space-x-1 space-x-reverse">
                             <button
+                              title="کاهش"
+                              aria-label="کاهش تعداد"
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
                               className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
                             >
@@ -1559,6 +1574,8 @@ export default function POSInterface() {
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
                               className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-600 flex items-center justify-center hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+                              title="افزایش"
+                              aria-label="افزایش تعداد"
                             >
                               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -1567,6 +1584,8 @@ export default function POSInterface() {
                             <button
                               onClick={() => removeFromOrder(item.id)}
                               className="w-6 h-6 rounded bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center justify-center hover:bg-red-200 dark:hover:bg-red-900/40 transition-colors"
+                              title="حذف"
+                              aria-label="حذف آیتم"
                             >
                               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1664,7 +1683,7 @@ export default function POSInterface() {
             </div>
             <div
               className="px-3 pb-2 flex items-center justify-between"
-              style={{ touchAction: 'none' }}
+              style={{ touchAction: 'none' } as React.CSSProperties}
               onPointerDown={onHandlePointerDown}
               onPointerMove={onHandlePointerMove}
               onPointerUp={onHandlePointerUp}
@@ -1716,15 +1735,15 @@ export default function POSInterface() {
                           </div>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2 space-x-reverse">
-                              <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                              <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center" title="کاهش" aria-label="کاهش تعداد">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
                               </button>
                               <span className="w-8 text-center font-bold text-gray-900 dark:text-white text-sm">{item.quantity}</span>
-                              <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                              <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center" title="افزایش" aria-label="افزایش تعداد">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                               </button>
                             </div>
-                            <button onClick={() => removeFromOrder(item.id)} className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center justify-center">
+                            <button onClick={() => removeFromOrder(item.id)} className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center justify-center" title="حذف" aria-label="حذف آیتم">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                             </button>
                           </div>
@@ -1818,6 +1837,8 @@ export default function POSInterface() {
               <button
                 onClick={() => setShowTableSelector(false)}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                title="بستن"
+                aria-label="بستن انتخاب میز"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1885,7 +1906,7 @@ export default function POSInterface() {
               orderItems={orderItems}
               calculation={calculation}
               options={orderOptions}
-              paymentData={paymentData}
+              paymentData={paymentData!}
               businessInfo={{
                 name: tenant?.displayName || tenant?.name || 'کافه سروان',
                 address: tenant?.address || (tenant?.city ? `${tenant.city}، ${tenant.state || ''}`.trim() : 'تهران، خیابان ولیعصر'),
@@ -2022,5 +2043,6 @@ export default function POSInterface() {
         overrideRequired={stockValidationData?.overrideRequired || false}
       />
     </div>
+    </div>
   );
-} 
+}

@@ -1,7 +1,7 @@
 import { PrismaClient, JournalStatus, SourceType } from '../../../shared/generated/client';
 import { getTenantPrefix } from '../utils/orderUtils';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
+import { BaseService } from './BaseService';
 
 export interface JournalEntryData {
   entryDate: Date;
@@ -37,7 +37,7 @@ export interface JournalEntryFilter {
  * Journal Entry Service
  * سرویس اسناد حسابداری
  */
-export class JournalEntryService {
+export class JournalEntryService extends BaseService {
 
   /**
    * Create journal entry with validation
@@ -45,10 +45,10 @@ export class JournalEntryService {
    */
   static async createJournalEntry(data: JournalEntryData, createdBy: string, tenantId: string) {
     // Validate double-entry bookkeeping
-    this.validateDoubleEntry(data.lines);
+    JournalEntryService.validateDoubleEntry(data.lines);
 
     // Generate entry number
-    const entryNumber = await this.generateEntryNumber(tenantId);
+    const entryNumber = await JournalEntryService.generateEntryNumber(tenantId);
 
     // Calculate totals
     const totalDebit = data.lines.reduce((sum, line) => sum + line.debitAmount, 0);
@@ -125,7 +125,7 @@ export class JournalEntryService {
       costCenterId: line.costCenterId,
       projectCode: line.projectCode
     }));
-    this.validateDoubleEntry(linesForValidation);
+    JournalEntryService.validateDoubleEntry(linesForValidation);
 
     return await prisma.journalEntry.update({
       where: { id },
@@ -174,7 +174,7 @@ export class JournalEntryService {
       });
 
       // Create reversal entry
-      const reversalEntryNumber = await this.generateEntryNumber(tenantId);
+      const reversalEntryNumber = await JournalEntryService.generateEntryNumber(tenantId);
       const reversalLines = originalEntry.lines.map(line => ({
         accountId: line.accountId,
         description: `ابطال: ${line.description || ''}`,
@@ -184,7 +184,7 @@ export class JournalEntryService {
         projectCode: line.projectCode
       }));
 
-      return await this.createJournalEntry({
+      return await JournalEntryService.createJournalEntry({
         entryDate: new Date(),
         description: `ابطال سند شماره ${originalEntry.entryNumber}: ${reversalReason}`,
         reference: `REV-${originalEntry.entryNumber}`,
@@ -333,7 +333,7 @@ export class JournalEntryService {
     }
 
     if (data.lines) {
-      this.validateDoubleEntry(data.lines);
+      JournalEntryService.validateDoubleEntry(data.lines);
     }
 
     return await prisma.$transaction(async (tx) => {
@@ -511,7 +511,7 @@ export class JournalEntryService {
       }
     }
 
-    return await this.createJournalEntry({
+    return await JournalEntryService.createJournalEntry({
       entryDate: new Date(),
       description: `فروش - شماره فروش: ${saleData.saleId}`,
       reference: `SALE-${saleData.saleId}`,
@@ -602,7 +602,7 @@ export class JournalEntryService {
       }
     }
 
-    return await this.createJournalEntry({
+    return await JournalEntryService.createJournalEntry({
       entryDate: new Date(),
       description: `خرید - شماره خرید: ${purchaseData.purchaseId}`,
       reference: `PURCHASE-${purchaseData.purchaseId}`,

@@ -3,28 +3,24 @@ import { compare, hash } from 'bcryptjs';
 import { prisma } from './dbService';
 import { AppError } from '../middlewares/errorHandler';
 
-// Environment variables
 const JWT_SECRET = process.env.JWT_SECRET || 'servaan-super-secret-key';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
-// Generate JWT token
 export const generateToken = (userId: string, expiresIn: string = JWT_EXPIRES_IN): string => {
   // @ts-ignore - Ignoring TypeScript error with jwt.sign
   const token = sign({ id: userId }, JWT_SECRET, { expiresIn });
   return token;
 };
 
-// Verify JWT token
 export const verifyToken = (token: string): { id: string } => {
   try {
     // @ts-ignore - Ignoring TypeScript error with jwt.verify
     return verify(token, JWT_SECRET) as { id: string };
-  } catch (error) {
-    throw new AppError('توکن نامعتبر یا منقضی شده', 401);
+  } catch (_error) {
+    throw new AppError('ØªÙˆÚ©Ù† Ù†Ø§Ù…Ø¹ØªØ¨Ø± ÛŒØ§ Ù…Ù†Ù‚Ø¶ÛŒ Ø´Ø¯Ù‡', 401);
   }
 };
 
-// Get token from local storage
 export const getToken = (): string | null => {
   if (typeof window !== 'undefined') {
     return localStorage.getItem('token');
@@ -32,7 +28,6 @@ export const getToken = (): string | null => {
   return null;
 };
 
-// Get current user from local storage
 export const getCurrentUser = () => {
   if (typeof window !== 'undefined') {
     const userStr = localStorage.getItem('user');
@@ -41,7 +36,6 @@ export const getCurrentUser = () => {
   return null;
 };
 
-// Logout - clear local storage
 export const logout = () => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('token');
@@ -49,24 +43,30 @@ export const logout = () => {
   }
 };
 
-// Login user with tenant context
 export const loginUser = async (email: string, password: string, tenantId?: string, rememberMe: boolean = false) => {
+  const requestId = `auth_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  console.info('[AUTH] Login attempt', {
+    requestId,
+    tenantId: tenantId || 'universal',
+    emailDomain: email.includes('@') ? email.split('@')[1] : 'unknown'
+  });
+
   let user;
-  
+
   if (tenantId) {
-    // Specific tenant login - search only in that tenant
+    console.info('[AUTH] Tenant-scoped lookup', { requestId, tenantId });
     user = await prisma.user.findFirst({
-      where: { 
+      where: {
         email,
-        tenantId 
+        tenantId
       },
       include: { tenant: true }
     });
   } else {
-    // Universal login - search across ALL tenants
+    console.info('[AUTH] Universal lookup', { requestId });
     user = await prisma.user.findFirst({
       where: { email },
-      include: { 
+      include: {
         tenant: {
           select: {
             id: true,
@@ -80,25 +80,44 @@ export const loginUser = async (email: string, password: string, tenantId?: stri
     });
   }
 
-  // Check if user exists and password is correct
-  if (!user || !(await compare(password, user.password))) {
-    throw new AppError('ایمیل یا رمز عبور اشتباه است', 401);
+  const passwordMatch = user ? await compare(password, user.password) : false;
+
+  if (!user || !passwordMatch) {
+    console.warn('[AUTH] Login failed', {
+      requestId,
+      tenantId: tenantId || 'universal',
+      reason: 'INVALID_CREDENTIALS'
+    });
+    throw new AppError('Ø§ÛŒÙ…ÛŒÙ„ ÛŒØ§ Ø±Ù…Ø² Ø¹Ø¨ÙˆØ± Ø§Ø´ØªØ¨Ø§Ù‡ Ø§Ø³Øª', 401);
   }
 
   if (!user.active) {
-    throw new AppError('حساب کاربری شما غیرفعال شده است', 403);
+    console.warn('[AUTH] Login failed', {
+      requestId,
+      tenantId: user.tenantId,
+      reason: 'USER_INACTIVE'
+    });
+    throw new AppError('Ø­Ø³Ø§Ø¨ Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø´Ù…Ø§ ØºÛŒØ±ÙØ¹Ø§Ù„ Ø´Ø¯Ù‡ Ø§Ø³Øª', 403);
   }
 
-  // Check if user's tenant is active
   if (user.tenant && !user.tenant.isActive) {
-    throw new AppError('حساب کاربری شما غیرفعال شده است', 403);
+    console.warn('[AUTH] Login failed', {
+      requestId,
+      tenantId: user.tenantId,
+      reason: 'TENANT_INACTIVE'
+    });
+    throw new AppError('Ø­Ø³Ø§Ø¨ Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø´Ù…Ø§ ØºÛŒØ±ÙØ¹Ø§Ù„ Ø´Ø¯Ù‡ Ø§Ø³Øª', 403);
   }
 
-  // Generate token with longer expiry if rememberMe is true
   const expiresIn = rememberMe ? '30d' : JWT_EXPIRES_IN;
   const token = generateToken(user.id, expiresIn);
 
-  // Return user info with tenant information for redirection
+  console.info('[AUTH] Login success', {
+    requestId,
+    tenantId: user.tenantId,
+    userId: user.id
+  });
+
   return {
     id: user.id,
     name: user.name,
@@ -111,31 +130,27 @@ export const loginUser = async (email: string, password: string, tenantId?: stri
   };
 };
 
-// Register new user with tenant context
 export const registerUser = async (
-  name: string, 
-  email: string, 
-  password: string, 
+  name: string,
+  email: string,
+  password: string,
   tenantId: string,
   role: 'ADMIN' | 'MANAGER' | 'STAFF' = 'STAFF',
   phoneNumber?: string
 ) => {
-  // Check if user already exists in this tenant
   const existingUser = await prisma.user.findFirst({
-    where: { 
+    where: {
       email,
-      tenantId 
+      tenantId
     }
   });
 
   if (existingUser) {
-    throw new AppError('این ایمیل قبلا ثبت شده است', 400);
+    throw new AppError('Ø§ÛŒÙ† Ø§ÛŒÙ…ÛŒÙ„ Ù‚Ø¨Ù„Ø§ Ø«Ø¨Øª Ø´Ø¯Ù‡ Ø§Ø³Øª', 400);
   }
 
-  // Hash password
   const hashedPassword = await hash(password, 10);
 
-  // Create new user with tenant context
   const newUser = await prisma.user.create({
     data: {
       name,
@@ -147,10 +162,8 @@ export const registerUser = async (
     }
   });
 
-  // Generate token
   const token = generateToken(newUser.id);
 
-  // Return user info and token
   return {
     id: newUser.id,
     name: newUser.name,
@@ -160,7 +173,6 @@ export const registerUser = async (
   };
 };
 
-// Types for frontend
 export interface User {
   id: string;
   name: string;
@@ -181,4 +193,4 @@ export interface RegisterData {
   password: string;
   role?: 'ADMIN' | 'MANAGER' | 'STAFF';
   phoneNumber?: string;
-} 
+}

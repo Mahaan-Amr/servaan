@@ -6,7 +6,7 @@ import * as path from 'path';
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 
 export interface ExportOptions {
-  format: 'PDF' | 'EXCEL' | 'CSV';
+  format: 'PDF' | 'EXCEL' | 'CSV' | 'JSON' | 'PNG' | 'SVG';
   data: any[];
   reportName: string;
   columns?: { key: string; label: string }[];
@@ -26,6 +26,12 @@ export class ExportService {
         return await this.exportToExcel(data, reportName);
       case 'CSV':
         return await this.exportToCSV(data, reportName);
+      case 'JSON':
+        return await this.exportToJSON(data, reportName);
+      case 'PNG':
+        return await this.exportToPNG(data, reportName);
+      case 'SVG':
+        return await this.exportToSVG(data, reportName);
       default:
         throw new Error('فرمت صادرات پشتیبانی نمی‌شود');
     }
@@ -479,6 +485,217 @@ export class ExportService {
     } catch (error) {
       console.error('Error cleaning up temp file:', error);
     }
+  }
+
+  /**
+   * Export to JSON
+   */
+  private static async exportToJSON(data: any[], reportName: string): Promise<{ filePath: string; mimeType: string; filename: string }> {
+    try {
+      if (!data || data.length === 0) {
+        throw new Error('داده‌ای برای صادرات وجود ندارد');
+      }
+
+      // Create JSON structure with metadata
+      const jsonData = {
+        reportName,
+        generatedAt: new Date().toISOString(),
+        recordCount: data.length,
+        columns: Object.keys(data[0] || {}),
+        data
+      };
+
+      const filename = this.createSafeFilename(reportName, 'json');
+      const filePath = path.join(process.cwd(), 'temp', filename);
+      
+      // Ensure temp directory exists
+      const tempDir = path.dirname(filePath);
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+      
+      // Write JSON file with pretty formatting
+      fs.writeFileSync(filePath, JSON.stringify(jsonData, null, 2), 'utf8');
+      
+      return {
+        filePath,
+        mimeType: 'application/json',
+        filename
+      };
+    } catch (error) {
+      console.error('Error generating JSON:', error);
+      throw new Error('خطا در تولید فایل JSON');
+    }
+  }
+
+  /**
+   * Export to PNG image (table visualization)
+   */
+  private static async exportToPNG(data: any[], reportName: string): Promise<{ filePath: string; mimeType: string; filename: string }> {
+    try {
+      if (!data || data.length === 0) {
+        throw new Error('داده‌ای برای صادرات وجود ندارد');
+      }
+
+      // Generate HTML table
+      const htmlContent = this.generateHTMLTable(data, reportName, false);
+      
+      // Use Puppeteer to render HTML and capture as PNG
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      });
+      
+      const page = await browser.newPage();
+      await page.setViewport({ width: 1200, height: 800 });
+      await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+      
+      // Create temporary file path - ensure it ends with .png
+      const filename = this.createSafeFilename(reportName, 'png');
+      const filePath = path.join(process.cwd(), 'temp', filename);
+      
+      // Ensure temp directory exists
+      const tempDir = path.dirname(filePath);
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+      
+      // Capture screenshot - use Buffer approach to avoid type issues
+      const screenshotBuffer = await page.screenshot({
+        fullPage: true,
+        type: 'png'
+      });
+      
+      // Write buffer to file
+      fs.writeFileSync(filePath, screenshotBuffer);
+      
+      await browser.close();
+      
+      return {
+        filePath,
+        mimeType: 'image/png',
+        filename
+      };
+    } catch (error) {
+      console.error('Error generating PNG:', error);
+      throw new Error('خطا در تولید فایل PNG');
+    }
+  }
+
+  /**
+   * Export to SVG (table visualization)
+   */
+  private static async exportToSVG(data: any[], reportName: string): Promise<{ filePath: string; mimeType: string; filename: string }> {
+    try {
+      if (!data || data.length === 0) {
+        throw new Error('داده‌ای برای صادرات وجود ندارد');
+      }
+
+      const headers = Object.keys(data[0]);
+      
+      // Generate SVG table
+      const svgContent = this.generateSVGTable(data, reportName, headers);
+      
+      const filename = this.createSafeFilename(reportName, 'svg');
+      const filePath = path.join(process.cwd(), 'temp', filename);
+      
+      // Ensure temp directory exists
+      const tempDir = path.dirname(filePath);
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+      
+      // Write SVG file
+      fs.writeFileSync(filePath, svgContent, 'utf8');
+      
+      return {
+        filePath,
+        mimeType: 'image/svg+xml',
+        filename
+      };
+    } catch (error) {
+      console.error('Error generating SVG:', error);
+      throw new Error('خطا در تولید فایل SVG');
+    }
+  }
+
+  /**
+   * Generate SVG table
+   */
+  private static generateSVGTable(data: any[], reportName: string, headers: string[]): string {
+    const cellPadding = 8;
+    const cellHeight = 30;
+    const headerHeight = 40;
+    const fontSize = 12;
+    const headerFontSize = 14;
+    
+    // Calculate column widths
+    const columnWidths = headers.map(header => {
+      const headerLength = header.length;
+      const maxDataLength = Math.max(
+        ...data.slice(0, 100).map(row => {
+          const value = row[header];
+          return value ? String(value).length : 0;
+        })
+      );
+      return Math.max(headerLength, maxDataLength) * 8 + cellPadding * 2;
+    });
+    
+    const tableWidth = columnWidths.reduce((sum, width) => sum + width, 0);
+    const tableHeight = headerHeight + (data.length * cellHeight);
+    
+    let currentX = 0;
+    let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${tableWidth}" height="${tableHeight + 60}" dir="rtl">
+      <defs>
+        <style>
+          .header { font-weight: bold; fill: #333; }
+          .cell { fill: #fff; }
+          .row-even { fill: #f9f9f9; }
+        </style>
+      </defs>
+      <text x="${tableWidth / 2}" y="25" text-anchor="middle" font-size="16" font-weight="bold">${reportName}</text>
+      <text x="${tableWidth / 2}" y="45" text-anchor="middle" font-size="10" fill="#666">${new Date().toLocaleDateString('fa-IR')} | ${data.length} رکورد</text>
+      <g transform="translate(0, 60)">`;
+    
+    // Header row
+    currentX = 0;
+    svg += `<rect x="0" y="0" width="${tableWidth}" height="${headerHeight}" fill="#f8f9fa" stroke="#ddd"/>`;
+    headers.forEach((header, index) => {
+      const width = columnWidths[index];
+      svg += `<rect x="${currentX}" y="0" width="${width}" height="${headerHeight}" fill="#f8f9fa" stroke="#ddd"/>`;
+      svg += `<text x="${currentX + width / 2}" y="${headerHeight / 2 + 5}" text-anchor="middle" font-size="${headerFontSize}" class="header">${this.escapeXml(header)}</text>`;
+      currentX += width;
+    });
+    
+    // Data rows
+    data.forEach((row, rowIndex) => {
+      const y = headerHeight + (rowIndex * cellHeight);
+      const rowClass = rowIndex % 2 === 0 ? 'cell' : 'row-even';
+      
+      currentX = 0;
+      headers.forEach((header, colIndex) => {
+        const width = columnWidths[colIndex];
+        const value = row[header] != null ? String(row[header]) : '-';
+        svg += `<rect x="${currentX}" y="${y}" width="${width}" height="${cellHeight}" class="${rowClass}" stroke="#ddd"/>`;
+        svg += `<text x="${currentX + cellPadding}" y="${y + cellHeight / 2 + 5}" font-size="${fontSize}" fill="#333">${this.escapeXml(value)}</text>`;
+        currentX += width;
+      });
+    });
+    
+    svg += `</g></svg>`;
+    return svg;
+  }
+
+  /**
+   * Escape XML special characters
+   */
+  private static escapeXml(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
   }
 
   /**

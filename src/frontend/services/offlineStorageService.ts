@@ -76,6 +76,12 @@ class OfflineStorageService {
    * Initialize IndexedDB
    */
   async init(): Promise<void> {
+    // Check if we're in a browser environment
+    if (typeof window === 'undefined' || typeof indexedDB === 'undefined') {
+      console.warn('⚠️ [OFFLINE_STORAGE] IndexedDB not available (SSR or unsupported browser)');
+      return Promise.resolve();
+    }
+
     if (this.initPromise) {
       return this.initPromise;
     }
@@ -146,6 +152,11 @@ class OfflineStorageService {
    * Ensure DB is initialized
    */
   private async ensureDB(): Promise<IDBDatabase> {
+    // Check if we're in a browser environment
+    if (typeof window === 'undefined' || typeof indexedDB === 'undefined') {
+      throw new Error('IndexedDB is not available (SSR or unsupported browser)');
+    }
+
     if (!this.db) {
       await this.init();
     }

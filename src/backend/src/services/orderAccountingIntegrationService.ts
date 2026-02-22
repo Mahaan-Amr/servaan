@@ -2,8 +2,7 @@ import { PrismaClient, PaymentMethod } from '../../../shared/generated/client';
 import { AppError } from '../utils/AppError';
 import { JournalEntryService, JournalEntryLineData } from './journalEntryService';
 import { OrderInventoryIntegrationService } from './orderInventoryIntegrationService';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 export interface RecipeOrderJournalEntry {
   orderId: string;

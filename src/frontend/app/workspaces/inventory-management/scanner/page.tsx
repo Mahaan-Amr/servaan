@@ -8,6 +8,7 @@ import * as inventoryService from '../../../../services/inventoryService';
 import UniversalScanner from '../../../../components/scanner/UniversalScanner';
 import toast from 'react-hot-toast';
 import { FormattedNumberInput } from '../../../../components/ui/FormattedNumberInput';
+import { Card, Section } from '../../../../components/ui';
 
 interface UniversalScanResult {
   code: string;
@@ -343,9 +344,9 @@ export default function ScannerPage() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <Section className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 sm:p-6">
+      <Card className="p-3 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
           <div>
             <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
@@ -362,7 +363,7 @@ export default function ScannerPage() {
             بازگشت
           </Link>
         </div>
-      </div>
+      </Card>
 
       {/* Scanner */}
       <UniversalScanner
@@ -861,6 +862,6 @@ export default function ScannerPage() {
           </div>
         </div>
       )}
-    </div>
+    </Section>
   );
-} 
+}

@@ -1,7 +1,6 @@
 import { PrismaClient } from '../../../shared/generated/client';
 import { calculateCurrentStock } from './inventoryService';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 export interface CreateAuditCycleData {
   name: string;
@@ -144,48 +143,28 @@ export async function addAuditEntry(
   // Calculate discrepancy
   const discrepancy = data.countedQuantity - systemQuantity;
 
-  // Check if entry already exists for this item in this cycle
-  const existingEntry = await prisma.inventoryAuditEntry.findFirst({
+  /**
+   * FIXED: Race condition prevention
+   * Before: Check if exists -> Create/Update (2-step, vulnerable to race)
+   * After: Upsert with composite unique key [auditCycleId, itemId] (atomic)
+   * The unique constraint ensures only one entry per cycle+item combination
+   */
+  return await prisma.inventoryAuditEntry.upsert({
     where: {
-      auditCycleId: data.auditCycleId,
-      itemId: data.itemId
-    }
-  });
-
-  if (existingEntry) {
-    // Update existing entry
-    return await prisma.inventoryAuditEntry.update({
-      where: { id: existingEntry.id },
-      data: {
-        countedQuantity: data.countedQuantity,
-        systemQuantity,
-        discrepancy,
-        reason: data.reason,
-        countedBy,
-        countedAt: new Date()
-      },
-      include: {
-        item: {
-          select: {
-            id: true,
-            name: true,
-            category: true,
-            unit: true
-          }
-        },
-        countedByUser: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
+      auditCycleId_itemId: {
+        auditCycleId: data.auditCycleId,
+        itemId: data.itemId
       }
-    });
-  }
-
-  // Create new entry
-  return await prisma.inventoryAuditEntry.create({
-    data: {
+    },
+    update: {
+      countedQuantity: data.countedQuantity,
+      systemQuantity,
+      discrepancy,
+      reason: data.reason,
+      countedBy,
+      countedAt: new Date()
+    },
+    create: {
       auditCycleId: data.auditCycleId,
       tenantId,
       itemId: data.itemId,

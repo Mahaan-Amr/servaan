@@ -11,6 +11,7 @@ import { AuditCycle, AuditEntry } from '../../../../../../services/auditService'
 import { InventoryStatus } from '../../../../../../../shared/types';
 import toast from 'react-hot-toast';
 import { FormattedNumberInput } from '../../../../../../components/ui/FormattedNumberInput';
+import styles from './page.module.css';
 
 // localStorage key for auto-save
 const AUTO_SAVE_KEY = (auditCycleId: string) => `audit_count_draft_${auditCycleId}`;
@@ -436,6 +437,29 @@ export default function CountAuditPage() {
     return { total, counted, percentage: total > 0 ? Math.round((counted / total) * 100) : 0 };
   }, [items, getItemStatus]);
 
+
+  // Progress bar component with dynamic width
+  const ProgressBar: React.FC<{ percentage: number }> = ({ percentage }) => {
+    const roundedPercentage = Math.round(Math.min(Math.max(percentage, 0), 100));
+    const safePercentage = Math.min(Math.max(percentage, 0), 100);
+    
+    return (
+      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+        <div
+          className={`${styles.progressFill}`}
+          style={{ '--progress-width': `${safePercentage}%` } as React.CSSProperties}
+          role="progressbar"
+          aria-label="پیشرفت شمارش فیزیکی"
+          aria-valuetext={`${roundedPercentage}% شمارش شده`}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={roundedPercentage}
+          data-progress={roundedPercentage}
+        />
+      </div>
+    );
+  };
+
   // Get available categories
   const availableCategories = useMemo(() => {
     return Array.from(new Set(items.map(item => item.category))).sort();
@@ -499,10 +523,7 @@ export default function CountAuditPage() {
           </span>
         </div>
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-          <div
-            className="bg-blue-600 h-3 rounded-full transition-all duration-300"
-            style={{ width: `${progress.percentage}%` }}
-          ></div>
+          <ProgressBar percentage={progress.percentage} />
         </div>
       </div>
 
@@ -520,6 +541,8 @@ export default function CountAuditPage() {
 
           {/* Category Filter */}
           <select
+            id="category-filter"
+            aria-label="فیلتر دسته‌بندی"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -532,6 +555,8 @@ export default function CountAuditPage() {
 
           {/* Status Filter */}
           <select
+            id="status-filter"
+            aria-label="فیلتر وضعیت"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -544,6 +569,8 @@ export default function CountAuditPage() {
 
           {/* Discrepancy Filter */}
           <select
+            id="discrepancy-filter"
+            aria-label="فیلتر اختلاف"
             value={discrepancyFilter}
             onChange={(e) => setDiscrepancyFilter(e.target.value as typeof discrepancyFilter)}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -613,9 +640,11 @@ export default function CountAuditPage() {
                 <div className="md:col-span-1">
                   <div className="flex items-start gap-3">
                     <input
+                      id={`item-checkbox-${item.id}`}
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => toggleItemSelection(item.id)}
+                      aria-label={`انتخاب ${item.name}`}
                       className="mt-1 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                     />
                     <div className="flex-1">

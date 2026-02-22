@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import Image from 'next/image';
+import { io } from 'socket.io-client';
 import {
   DndContext,
   closestCenter,
@@ -27,6 +28,8 @@ import { getItems } from '../../../../services/itemService';
 import { MenuCategory, MenuItem } from '../../../../types/ordering';
 import { Item } from '../../../../types';
 import { FormattedNumberInput } from '../../../../components/ui/FormattedNumberInput';
+import { BASE_URL } from '../../../../lib/apiUtils';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 interface MenuStats {
   totalCategories: number;
@@ -349,6 +352,8 @@ function SortableCategory({ category, onEdit, onDelete, onToggleActive }: {
 }
 
 export default function MenuManagementPage() {
+  const { user } = useAuth();
+  
   // Core state
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
@@ -490,6 +495,68 @@ export default function MenuManagementPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Initialize WebSocket connection for real-time recipe cost updates
+  useEffect(() => {
+    if (!user) return;
+
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (!token) return;
+
+    const socket = io(BASE_URL, {
+      auth: { token },
+      transports: ['websocket', 'polling']
+    });
+
+    socket.on('connect', () => {
+      console.log('✅ [MENU] Connected to real-time cost update server');
+    });
+
+    socket.on('disconnect', () => {
+      console.log('❌ [MENU] Disconnected from real-time cost update server');
+    });
+
+    // Listen for recipe cost updates
+    socket.on('recipe:cost-updated', (data: {
+      itemId: string;
+      itemName: string;
+      oldPrice: number;
+      newPrice: number;
+      affectedRecipes: Array<{
+        recipeId: string;
+        recipeName: string;
+        menuItemId: string;
+        menuItemName: string;
+        oldCost: number;
+        newCost: number;
+        oldProfitMargin: number;
+        newProfitMargin: number;
+      }>;
+    }) => {
+      console.log('💰 [MENU] Recipe cost update received:', data);
+      
+      // Show toast notifications for affected recipes
+      data.affectedRecipes.forEach(recipe => {
+        const costChange = recipe.newCost - recipe.oldCost;
+        const marginChange = recipe.newProfitMargin - recipe.oldProfitMargin;
+        const costChangeText = costChange > 0 ? `+${costChange.toFixed(2)}` : `${costChange.toFixed(2)}`;
+        const marginChangeText = marginChange > 0 ? `+${marginChange.toFixed(1)}%` : `${marginChange.toFixed(1)}%`;
+        
+        toast.success(
+          `هزینه "${recipe.menuItemName}" به‌روزرسانی شد: ${recipe.oldCost.toFixed(2)} → ${recipe.newCost.toFixed(2)} (${costChangeText})\n` +
+          `حاشیه سود: ${recipe.oldProfitMargin.toFixed(1)}% → ${recipe.newProfitMargin.toFixed(1)}% (${marginChangeText})`,
+          { duration: 6000 }
+        );
+      });
+
+      // Refresh menu items to show updated costs
+      loadData();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user]);
 
   // Debug newIngredient state
   useEffect(() => {
@@ -1130,12 +1197,12 @@ export default function MenuManagementPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="card">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
               مدیریت منو
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
@@ -1145,7 +1212,7 @@ export default function MenuManagementPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4">
             <div className="flex items-center">
               <div className="p-2 bg-blue-500 rounded-lg">
@@ -1204,10 +1271,10 @@ export default function MenuManagementPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-1 space-x-reverse bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+        <div className="flex space-x-1 space-x-reverse bg-gray-100 dark:bg-gray-700 rounded-lg p-1 overflow-x-auto whitespace-nowrap">
           <button
             onClick={() => setActiveTab('categories')}
-            className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
+            className={`flex-1 min-w-[160px] py-2 px-3 sm:px-4 text-sm font-medium rounded-md transition-colors ${
               activeTab === 'categories'
                 ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -1217,7 +1284,7 @@ export default function MenuManagementPage() {
           </button>
           <button
             onClick={() => setActiveTab('items')}
-            className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
+            className={`flex-1 min-w-[160px] py-2 px-3 sm:px-4 text-sm font-medium rounded-md transition-colors ${
               activeTab === 'items'
                 ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'

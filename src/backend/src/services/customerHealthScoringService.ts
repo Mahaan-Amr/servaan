@@ -3,8 +3,7 @@ import { AppError } from '../utils/AppError';
 import { generateCustomerInsights } from './customerInsightsService';
 import { getCustomerCommunicationHistory } from './communicationTrackingService';
 import { generateEnhancedCustomerProfile } from './enhancedCustomerProfileService';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 // In-memory cache for health scores (in production, you'd use Redis or a dedicated table)
 const healthScoreCache = new Map<string, { score: CustomerHealthScore; timestamp: number }>();

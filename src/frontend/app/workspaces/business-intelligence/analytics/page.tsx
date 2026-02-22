@@ -1,17 +1,20 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useBIWorkspace } from '../../../../contexts/BIWorkspaceContext';
 import { biService } from '../../../../services/biService';
 import { 
   AnalyticsSummary, 
   CategoryData, 
   TrendData, 
-  MonthlyData,
-  EnhancedTrendDataPoint,
-  EnhancedTrendAnalysisData
+  MonthlyData
 } from '../../../../types/bi';
+import { CustomLineChart } from '../../../../components/charts/LineChart';
+import { CustomBarChart } from '../../../../components/charts/BarChart';
+import { Button, Card, Section } from '../../../../components/ui';
 
 export default function AnalyticsReportsPage() {
+  const { workspace, isInventoryWorkspace, isMergedWorkspace } = useBIWorkspace();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [generatingPDF, setGeneratingPDF] = useState(false);
@@ -79,53 +82,75 @@ export default function AnalyticsReportsPage() {
       
       setSummary(summaryData);
 
-      // Fetch dashboard data for charts
-      const dashboard = await biService.getDashboard(`${period}d`);
-      
-      // Extract category data from dashboard with fallback
-      const categoryChart = dashboard.charts?.categoryChart;
-      const categoryData: CategoryData[] = Array.isArray(categoryChart?.labels) && categoryChart.labels.length > 0
-        ? categoryChart.labels.map((name: string, idx: number) => ({
-            name,
-            value: categoryChart.datasets?.[0]?.data?.[idx] ?? 0,
-            color: categoryChart.datasets?.[0]?.backgroundColor?.[idx] ?? '#8884d8',
-          }))
-        : []; // No fallback data - show empty state
-      setCategoryData(categoryData);
+      // Fetch category consumption data - only for inventory and merged workspaces
+      if (isInventoryWorkspace || isMergedWorkspace) {
+        try {
+          const categoryResponse = await biService.getConsumptionByCategory(period);
+          if (Array.isArray(categoryResponse) && categoryResponse.length > 0) {
+            // Calculate total for percentage calculation
+            const totalValue = categoryResponse.reduce((sum, item) => sum + (item.value || 0), 0);
+            
+            // Calculate percentages from raw values
+            const categoryData: CategoryData[] = categoryResponse.map((item) => {
+              const percentage = totalValue > 0 ? (item.value / totalValue) * 100 : 0;
+              return {
+                name: item.name,
+                value: Math.round(percentage * 100) / 100, // Round to 2 decimal places
+                color: item.color || '#8884d8',
+              };
+            });
+            setCategoryData(categoryData);
+          } else {
+            setCategoryData([]); // No data - show empty state
+          }
+        } catch (categoryError) {
+          console.warn('Category data not available:', categoryError);
+          setCategoryData([]); // Empty array instead of mock data
+        }
 
-      // Fetch trend data using trend analysis with fallback
-      try {
-        const trendRaw = await biService.getTrendAnalysis('sales_volume', `${trendPeriod}d`, 'day') as EnhancedTrendAnalysisData;
-        const trendData: TrendData[] = Array.isArray(trendRaw?.dataPoints) && trendRaw.dataPoints.length > 0
-          ? trendRaw.dataPoints.map((t: EnhancedTrendDataPoint) => ({
-              date: t.period || t.date || '',
-              stock: t.value || 0, // Backend returns 'value', not 'stock'
-              totalIn: Math.floor((t.value || 0) * 0.6), // Estimate 60% as input
-              totalOut: Math.floor((t.value || 0) * 0.4), // Estimate 40% as output
-            }))
-          : []; // No fallback data - show empty state
-        setTrendData(trendData);
-      } catch (trendError) {
-        console.warn('Trend data not available:', trendError);
-        setTrendData([]); // Empty array instead of mock data
-      }
+        // Fetch inventory trend data - only for inventory and merged workspaces
+        try {
+          const trendResponse = await biService.getInventoryTrends(trendPeriod);
+          if (Array.isArray(trendResponse) && trendResponse.length > 0) {
+            const trendData: TrendData[] = trendResponse.map((item) => ({
+              date: item.date || '',
+              stock: item.stock || 0,
+              totalIn: item.totalIn || 0,
+              totalOut: Math.abs(item.totalOut || 0), // Ensure positive for display
+            }));
+            setTrendData(trendData);
+          } else {
+            setTrendData([]); // No data - show empty state
+          }
+        } catch (trendError) {
+          console.warn('Trend data not available:', trendError);
+          setTrendData([]); // Empty array instead of mock data
+        }
 
-      // Fetch monthly data with fallback
-      try {
-        const monthlyRaw = await biService.getTrendAnalysis('sales_volume', `${monthlyPeriod}m`, 'month') as EnhancedTrendAnalysisData;
-        const monthlyData: MonthlyData[] = Array.isArray(monthlyRaw?.dataPoints) && monthlyRaw.dataPoints.length > 0
-          ? monthlyRaw.dataPoints.map((m: EnhancedTrendDataPoint) => ({
-              month: formatPersianMonth(m.period || m.date || ''),
-              monthKey: m.period || m.date || '',
-              in: Math.floor((m.value || 0) * 0.6), // Estimate 60% as input
-              out: Math.floor((m.value || 0) * 0.4), // Estimate 40% as output
-              net: Math.floor((m.value || 0) * 0.2), // Net is 20% of total
-            }))
-          : []; // No fallback data - show empty state
-        setMonthlyData(monthlyData);
-      } catch (monthlyError) {
-        console.warn('Monthly data not available:', monthlyError);
-        setMonthlyData([]); // Empty array instead of mock data
+        // Fetch monthly movements data - only for inventory and merged workspaces
+        try {
+          const monthlyResponse = await biService.getMonthlyMovements(monthlyPeriod);
+          if (Array.isArray(monthlyResponse) && monthlyResponse.length > 0) {
+            const monthlyData: MonthlyData[] = monthlyResponse.map((item) => ({
+              month: item.month || formatPersianMonth(item.monthKey || ''),
+              monthKey: item.monthKey || '',
+              in: item.in || 0,
+              out: Math.abs(item.out || 0), // Ensure positive for display
+              net: item.net || 0,
+            }));
+            setMonthlyData(monthlyData);
+          } else {
+            setMonthlyData([]); // No data - show empty state
+          }
+        } catch (monthlyError) {
+          console.warn('Monthly data not available:', monthlyError);
+          setMonthlyData([]); // Empty array instead of mock data
+        }
+      } else {
+        // For ordering workspace, set empty data
+        setCategoryData([]);
+        setTrendData([]);
+        setMonthlyData([]);
       }
     } catch (error) {
       console.error('Error fetching analytics data:', error);
@@ -144,7 +169,7 @@ export default function AnalyticsReportsPage() {
     } finally {
       setLoading(false);
     }
-  }, [period, trendPeriod, monthlyPeriod]);
+  }, [period, trendPeriod, monthlyPeriod, isInventoryWorkspace, isMergedWorkspace]);
 
   // Quick action handlers
   const handleViewLowStockItems = () => {
@@ -200,7 +225,7 @@ export default function AnalyticsReportsPage() {
   }
   
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <Section className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">گزارش آماری</h1>
@@ -216,17 +241,19 @@ export default function AnalyticsReportsPage() {
             <option value="30">۳۰ روز گذشته</option>
             <option value="90">۹۰ روز گذشته</option>
           </select>
-          <button
+          <Button
             onClick={fetchAnalyticsData}
-            className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
+            size="small"
           >
             بروزرسانی
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      {loading ? (
+      {/* Summary Cards - Show only for inventory and merged workspaces */}
+      {(isInventoryWorkspace || isMergedWorkspace) && (
+        <>
+          {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="bg-gray-50 dark:bg-gray-800 p-4 sm:p-6 rounded-lg animate-pulse">
@@ -310,7 +337,7 @@ export default function AnalyticsReportsPage() {
               <div className="mr-3 sm:mr-4">
                 <h3 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">ارزش کل موجودی</h3>
                 <p className="text-lg sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
-                  {summary?.totalInventoryValue ? summary.totalInventoryValue.toLocaleString('fa-IR') : '0'} ریال
+                  {summary?.totalInventoryValue ? summary.totalInventoryValue.toLocaleString('fa-IR') : '0'} تومان
                 </p>
               </div>
             </div>
@@ -327,11 +354,33 @@ export default function AnalyticsReportsPage() {
           </div>
         </div>
       )}
+        </>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Category Distribution */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">مصرف به تفکیک دسته‌بندی</h3>
+      )}
+
+      {/* Show message if workspace doesn't support analytics summary */}
+      {workspace === 'ordering' && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 sm:p-6">
+          <div className="flex items-center">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600 dark:text-yellow-400 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <h3 className="text-sm sm:text-base font-medium text-yellow-800 dark:text-yellow-300">گزارش آماری موجودی</h3>
+              <p className="text-xs sm:text-sm text-yellow-700 dark:text-yellow-400 mt-1">
+                گزارش آماری موجودی فقط برای workspace موجودی و ترکیبی در دسترس است. برای مشاهده گزارش‌های سفارشات، از داشبورد سفارشات استفاده کنید.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Category Distribution and Trends - Show only for inventory and merged workspaces */}
+      {(isInventoryWorkspace || isMergedWorkspace) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          {/* Category Distribution */}
+          <Card className="p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">مصرف به تفکیک دسته‌بندی</h3>
           {categoryData.length > 0 ? (
             <div className="space-y-3 sm:space-y-4">
               {categoryData.map((item, index) => (
@@ -344,13 +393,15 @@ export default function AnalyticsReportsPage() {
                     <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">{item.name}</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 ml-2">{item.value}%</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white ml-2 min-w-[60px] text-left">
+                      {item.value.toFixed(1)}%
+                    </span>
                     <div className="w-16 sm:w-20 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                       <div 
-                        className="h-2 rounded-full"
+                        className="h-2 rounded-full transition-all"
                         style={{ 
                           backgroundColor: item.color,
-                          width: `${item.value}%`
+                          width: `${Math.min(item.value, 100)}%` // Cap at 100% to prevent overflow
                         }}
                       ></div>
                     </div>
@@ -369,24 +420,29 @@ export default function AnalyticsReportsPage() {
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">برای مشاهده نمودار، تراکنش‌های فروش ایجاد کنید</p>
             </div>
           )}
-        </div>
+          </Card>
 
-        {/* Recent Trends */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">روند موجودی اخیر</h3>
+          {/* Recent Trends */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">روند موجودی اخیر</h3>
           {trendData.length > 0 ? (
-            <div className="space-y-2 sm:space-y-3">
-              {trendData.slice(-5).map((item, index) => (
-                <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 sm:p-3 rounded bg-gray-50 dark:bg-gray-700 gap-2 sm:gap-0">
-                  <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">{item.date}</span>
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-1 sm:space-y-0 sm:space-x-4 sm:space-x-reverse text-xs sm:text-sm">
-                    <span className="text-green-600 dark:text-green-400">ورودی: {item.totalIn}</span>
-                    <span className="text-red-600 dark:text-red-400">خروجی: {item.totalOut}</span>
-                    <span className="text-blue-600 dark:text-blue-400">موجودی: {item.stock}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <CustomLineChart
+              data={trendData.map((item) => ({
+                date: item.date,
+                ورودی: item.totalIn,
+                خروجی: item.totalOut,
+                موجودی: item.stock,
+              }))}
+              lines={[
+                { dataKey: 'ورودی', stroke: '#22c55e', name: 'ورودی', fill: '#22c55e' },
+                { dataKey: 'خروجی', stroke: '#ef4444', name: 'خروجی', fill: '#ef4444' },
+                { dataKey: 'موجودی', stroke: '#3b82f6', name: 'موجودی', fill: '#3b82f6' },
+              ]}
+              xAxisKey="date"
+              height={300}
+              enableExport={true}
+              chartId="inventory-trend-chart"
+            />
           ) : (
             <div className="text-center py-6 sm:py-8">
               <div className="text-gray-400 dark:text-gray-500 mb-2">
@@ -398,36 +454,31 @@ export default function AnalyticsReportsPage() {
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">برای مشاهده روند، تراکنش‌های موجودی ایجاد کنید</p>
             </div>
           )}
-        </div>
-      </div>
-        
-      {/* Monthly Data */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">روند ماهانه ورود و خروج کالا</h3>
-        {monthlyData.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-            {monthlyData.slice(-8).map((item, index) => (
-              <div key={index} className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-                <h4 className="text-sm sm:text-base font-medium text-gray-900 dark:text-white mb-2">{item.month}</h4>
-                <div className="space-y-1 text-xs sm:text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">ورودی:</span>
-                    <span className="text-green-600 dark:text-green-400">{item.in}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">خروجی:</span>
-                    <span className="text-red-600 dark:text-red-400">{item.out}</span>
-                  </div>
-                  <div className="flex justify-between border-t border-gray-200 dark:border-gray-700 pt-1">
-                    <span className="text-gray-600 dark:text-gray-400">خالص:</span>
-                    <span className={`font-medium ${item.net >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-orange-600 dark:text-orange-400'}`}>
-                      {item.net >= 0 ? '+' : ''}{item.net}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
+        </div>
+      )}
+
+      {/* Monthly Data - Show only for inventory and merged workspaces */}
+      {(isInventoryWorkspace || isMergedWorkspace) && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">روند ماهانه ورود و خروج کالا</h3>
+        {monthlyData.length > 0 ? (
+          <CustomBarChart
+            data={monthlyData.map((item) => ({
+              month: item.month,
+              ورودی: item.in,
+              خروجی: item.out,
+              خالص: item.net,
+            }))}
+            bars={[
+              { dataKey: 'ورودی', fill: '#22c55e', name: 'ورودی' },
+              { dataKey: 'خروجی', fill: '#ef4444', name: 'خروجی' },
+            ]}
+            xAxisKey="month"
+            height={300}
+            enableExport={true}
+            chartId="monthly-movements-chart"
+          />
         ) : (
           <div className="text-center py-6 sm:py-8">
             <div className="text-gray-400 dark:text-gray-500 mb-2">
@@ -439,10 +490,12 @@ export default function AnalyticsReportsPage() {
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">برای مشاهده روند ماهانه، تراکنش‌های موجودی ایجاد کنید</p>
           </div>
         )}
-      </div>
-        
-      {/* Quick Actions */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 sm:p-6">
+        </div>
+      )}
+
+      {/* Quick Actions - Show only for inventory and merged workspaces */}
+      {(isInventoryWorkspace || isMergedWorkspace) && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 sm:p-6">
         <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">اقدامات سریع</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-3 sm:p-4">
@@ -496,7 +549,8 @@ export default function AnalyticsReportsPage() {
             </button>
           </div>
         </div>
-      </div>
-    </div>
+        </div>
+      )}
+    </Section>
   );
-} 
+}

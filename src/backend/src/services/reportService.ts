@@ -1,7 +1,5 @@
-import { PrismaClient } from '../../../shared/generated/client';
-import { QueryBuilder } from './queryBuilder';
-
-const prisma = new PrismaClient();
+import { QueryBuilder, QueryBuilderValidationError } from './queryBuilder';
+import { prisma } from './dbService';
 
 export interface ReportField {
   id: string;
@@ -42,13 +40,44 @@ export interface ReportExecutionResult {
   executedBy: string;
   executionTime: number;
   resultCount: number;
-  data: any[];
-  format: string;
+  data?: any[]; // Optional - only included for VIEW format
+  format: 'VIEW' | 'PDF' | 'EXCEL' | 'CSV' | 'JSON' | 'PNG' | 'SVG';
   status: 'SUCCESS' | 'ERROR' | 'TIMEOUT';
   errorMessage?: string;
+  exportFile?: {
+    filePath: string;
+    mimeType: string;
+    filename: string;
+  };
+}
+
+export class ReportServiceExecutionError extends Error {
+  public readonly code: 'VALIDATION_ERROR' | 'EXECUTION_ERROR';
+  public readonly statusCode: number;
+
+  constructor(code: 'VALIDATION_ERROR' | 'EXECUTION_ERROR', statusCode: number, message: string) {
+    super(message);
+    this.code = code;
+    this.statusCode = statusCode;
+    this.name = 'ReportServiceExecutionError';
+  }
 }
 
 export class ReportService {
+  private static toExecutionError(error: unknown): ReportServiceExecutionError {
+    if (error instanceof ReportServiceExecutionError) {
+      return error;
+    }
+    if (error instanceof QueryBuilderValidationError) {
+      return new ReportServiceExecutionError('VALIDATION_ERROR', 400, error.message);
+    }
+    return new ReportServiceExecutionError(
+      'EXECUTION_ERROR',
+      500,
+      error instanceof Error ? error.message : 'Ø®Ø·Ø§ÛŒ Ù†Ø§Ù…Ø´Ø®Øµ'
+    );
+  }
+
   /**
    * ایجاد گزارش سفارشی جدید
    */
@@ -118,7 +147,8 @@ export class ReportService {
     limit: number = 10,
     search?: string,
     reportType?: string,
-    tags?: string[]
+    tags?: string[],
+    tenantId?: string // CRITICAL: Add tenantId for multi-tenancy
   ): Promise<{ reports: any[]; pagination: any }> {
     try {
       const skip = (page - 1) * limit;
@@ -127,6 +157,8 @@ export class ReportService {
       const where: any = {
         AND: [
           { isActive: true },
+          // CRITICAL: Filter by tenantId for multi-tenancy
+          ...(tenantId ? [{ tenantId }] : []),
           {
             OR: [
               { createdBy: userId },
@@ -206,22 +238,30 @@ export class ReportService {
   /**
    * دریافت گزارش سفارشی بر اساس ID
    */
-  static async getReportById(reportId: string, userId: string): Promise<any> {
+  static async getReportById(reportId: string, userId: string, tenantId?: string): Promise<any> {
     try {
-      const report = await prisma.customReport.findFirst({
-        where: {
-          id: reportId,
-          isActive: true,
-          OR: [
-            { createdBy: userId },
-            { isPublic: true },
-            {
-              sharedWith: {
-                string_contains: userId
+      const where: any = {
+        id: reportId,
+        isActive: true,
+        AND: [
+          // CRITICAL: Filter by tenantId for multi-tenancy
+          ...(tenantId ? [{ tenantId }] : []),
+          {
+            OR: [
+              { createdBy: userId },
+              { isPublic: true },
+              {
+                sharedWith: {
+                  string_contains: userId
+                }
               }
-            }
-          ]
-        },
+            ]
+          }
+        ]
+      };
+
+      const report = await prisma.customReport.findFirst({
+        where,
         include: {
           creator: {
             select: {
@@ -264,7 +304,7 @@ export class ReportService {
     userId: string,
     tenantId: string, // CRITICAL: tenantId is required for security
     parameters?: any,
-    exportFormat: 'VIEW' | 'PDF' | 'EXCEL' | 'CSV' | 'JSON' = 'VIEW'
+    exportFormat: 'VIEW' | 'PDF' | 'EXCEL' | 'CSV' | 'JSON' | 'PNG' | 'SVG' = 'VIEW'
   ): Promise<ReportExecutionResult> {
     const startTime = Date.now();
     
@@ -337,7 +377,7 @@ export class ReportService {
           executionTime,
           resultCount,
           parameters: JSON.stringify(parameters || {}),
-          exportFormat,
+          exportFormat: exportFormat as 'VIEW' | 'PDF' | 'EXCEL' | 'CSV' | 'JSON',
           status: 'SUCCESS',
           tenantId // Added tenantId
         }
@@ -346,21 +386,38 @@ export class ReportService {
       // بروزرسانی آمار گزارش
       await this.updateReportStats(reportId, executionTime);
 
+      // If export format is not VIEW, generate export file
+      let exportFile: { filePath: string; mimeType: string; filename: string } | null = null;
+      if (exportFormat !== 'VIEW') {
+        try {
+          exportFile = await this.exportReport(data, report.name, exportFormat);
+        } catch (exportError) {
+          console.error('Error exporting report:', exportError);
+          // Continue with execution result even if export fails
+        }
+      }
+
       return {
         reportId,
         executedAt: new Date(),
         executedBy: userId,
         executionTime,
         resultCount,
-        data,
+        data: exportFormat === 'VIEW' ? data : undefined, // Only include data for VIEW format
         format: exportFormat,
-        status: 'SUCCESS'
+        status: 'SUCCESS',
+        exportFile: exportFile ? {
+          filePath: exportFile.filePath,
+          mimeType: exportFile.mimeType,
+          filename: exportFile.filename
+        } : undefined
       };
 
     } catch (error) {
       const executionTime = Date.now() - startTime;
       
-      console.error('Error executing saved report:', error);
+      const executionError = this.toExecutionError(error);
+      console.error('Error executing saved report:', executionError);
       
       // ثبت خطا در تاریخچه
       await prisma.reportExecution.create({
@@ -370,14 +427,14 @@ export class ReportService {
           executionTime,
           resultCount: 0,
           parameters: JSON.stringify(parameters || {}),
-          exportFormat,
+          exportFormat: exportFormat as 'VIEW' | 'PDF' | 'EXCEL' | 'CSV' | 'JSON', // Type assertion - Prisma client needs regeneration
           status: 'ERROR',
-          errorMessage: error instanceof Error ? error.message : 'خطای نامشخص',
+          errorMessage: executionError.message,
           tenantId // Added tenantId
         }
       });
 
-      throw new Error('خطا در اجرای گزارش: ' + (error instanceof Error ? error.message : 'خطای نامشخص'));
+      throw executionError;
     }
   }
 
@@ -388,7 +445,7 @@ export class ReportService {
     reportId: string,
     userId: string,
     parameters?: any,
-    exportFormat: 'VIEW' | 'PDF' | 'EXCEL' | 'CSV' | 'JSON' = 'VIEW',
+    exportFormat: 'VIEW' | 'PDF' | 'EXCEL' | 'CSV' | 'JSON' | 'PNG' | 'SVG' = 'VIEW',
     tenantId?: string
   ): Promise<ReportExecutionResult> {
     // CRITICAL: tenantId is required for security
@@ -405,16 +462,24 @@ export class ReportService {
   static async updateReport(
     reportId: string,
     userId: string,
-    updates: Partial<ReportConfig>
+    updates: Partial<ReportConfig>,
+    tenantId?: string // CRITICAL: Add tenantId for multi-tenancy
   ): Promise<any> {
     try {
       // بررسی دسترسی
+      const where: any = {
+        id: reportId,
+        createdBy: userId,
+        isActive: true
+      };
+      
+      // CRITICAL: Filter by tenantId for multi-tenancy
+      if (tenantId) {
+        where.tenantId = tenantId;
+      }
+      
       const existingReport = await prisma.customReport.findFirst({
-        where: {
-          id: reportId,
-          createdBy: userId,
-          isActive: true
-        }
+        where
       });
 
       if (!existingReport) {
@@ -462,15 +527,22 @@ export class ReportService {
   /**
    * حذف گزارش سفارشی
    */
-  static async deleteReport(reportId: string, userId: string): Promise<void> {
+  static async deleteReport(reportId: string, userId: string, tenantId?: string): Promise<void> {
     try {
       // بررسی دسترسی
+      const where: any = {
+        id: reportId,
+        createdBy: userId,
+        isActive: true
+      };
+      
+      // CRITICAL: Filter by tenantId for multi-tenancy
+      if (tenantId) {
+        where.tenantId = tenantId;
+      }
+      
       const existingReport = await prisma.customReport.findFirst({
-        where: {
-          id: reportId,
-          createdBy: userId,
-          isActive: true
-        }
+        where
       });
 
       if (!existingReport) {
@@ -778,20 +850,9 @@ export class ReportService {
       };
 
     } catch (error) {
-      const executionTime = Date.now() - startTime;
-      console.error('Error executing temporary report:', error);
-      
-      return {
-        reportId: 'temp',
-        executedAt: new Date(),
-        executedBy: userId,
-        executionTime,
-        resultCount: 0,
-        data: [],
-        format: 'VIEW',
-        status: 'ERROR',
-        errorMessage: error instanceof Error ? error.message : 'خطای نامشخص'
-      };
+      const executionError = this.toExecutionError(error);
+      console.error('Error executing temporary report:', executionError);
+      throw executionError;
     }
   }
 
@@ -840,7 +901,7 @@ export class ReportService {
   /**
    * صادرات گزارش به فرمت‌های مختلف
    */
-  static async exportReport(data: any[], reportName: string, format: 'PDF' | 'EXCEL' | 'CSV'): Promise<{ filePath: string; mimeType: string; filename: string }> {
+  static async exportReport(data: any[], reportName: string, format: 'PDF' | 'EXCEL' | 'CSV' | 'JSON' | 'PNG' | 'SVG'): Promise<{ filePath: string; mimeType: string; filename: string }> {
     try {
       const { ExportService } = await import('./exportService');
       

@@ -1,6 +1,5 @@
 import { PrismaClient, AccountType, StatementType } from '../../../shared/generated/client';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 export interface BalanceSheetData {
   assets: {

@@ -2,8 +2,7 @@ import { PrismaClient, TableStatus, Table, TableReservation } from '../../../sha
 import { AppError } from '../utils/AppError';
 import { tableCacheService } from './tableCacheService';
 import { tableRealTimeService } from './tableRealTimeService';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 export interface CreateTableData {
   tableNumber: string;

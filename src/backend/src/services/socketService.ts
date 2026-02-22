@@ -382,6 +382,30 @@ class SocketService {
       timestamp: new Date().toISOString()
     });
   }
+
+  // === Inventory Stock Updates ===
+
+  // Send real-time stock level updates
+  sendStockUpdate(tenantId: string, updates: Array<{
+    itemId: string;
+    itemName: string;
+    previousStock: number;
+    currentStock: number;
+    change: number; // positive for IN, negative for OUT
+    reason: 'order_completed' | 'order_cancelled' | 'order_item_prepared' | 'manual_adjustment' | 'purchase';
+    orderId?: string;
+    orderNumber?: string;
+    orderItemId?: string;
+  }>) {
+    if (!this.io) return;
+    
+    // Broadcast to all users in the tenant (inventory managers, POS staff, etc.)
+    this.io.to(`tenant:${tenantId}`).emit('inventory:stock-updated', {
+      tenantId,
+      updates,
+      timestamp: new Date().toISOString()
+    });
+  }
 }
 
 // Export singleton instance

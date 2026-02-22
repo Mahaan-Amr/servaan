@@ -599,9 +599,9 @@ export default function KitchenDisplayPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Enhanced Header with Controls */}
       <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="px-6 py-4">
-      <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 space-x-reverse">
+        <div className="px-3 sm:px-4 md:px-6 py-4">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:space-x-4 sm:space-x-reverse">
         <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                   🍳 نمایشگر آشپزخانه
@@ -625,7 +625,7 @@ export default function KitchenDisplayPage() {
           </div>
           
             {/* Control Panel */}
-            <div className="flex items-center space-x-3 space-x-reverse">
+            <div className="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-2 sm:space-x-3 sm:space-x-reverse">
               {/* Sound Toggle */}
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
@@ -690,7 +690,8 @@ export default function KitchenDisplayPage() {
           </div>
           
           {/* Tab Switcher */}
-          <div className="flex items-center space-x-2 space-x-reverse mt-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="mt-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex overflow-x-auto whitespace-nowrap space-x-2 space-x-reverse">
             <button
               onClick={() => setActiveTab('orders')}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
@@ -711,15 +712,16 @@ export default function KitchenDisplayPage() {
             >
               آمار و تحلیل
             </button>
+            </div>
           </div>
 
           {/* Station Selector and Info */}
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center space-x-4 space-x-reverse">
+          <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto]">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:space-x-4 sm:space-x-reverse">
           <select
             value={selectedStation}
             onChange={(e) => setSelectedStation(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-600 text-sm font-medium"
+                className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-600 text-sm font-medium"
           >
             {stations.map((station) => (
               <option key={station.name} value={station.displayName}>
@@ -733,8 +735,8 @@ export default function KitchenDisplayPage() {
         </div>
       </div>
 
-            <div className="flex items-center space-x-4 space-x-reverse">
-              <div className="flex items-center space-x-2 space-x-reverse text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:space-x-4 sm:space-x-reverse">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600 dark:text-gray-400">
                 <span>کل سفارشات: {toFarsiDigits(orders.length)}</span>
                 <span>•</span>
                 <span>در انتظار: {toFarsiDigits(orders.filter(o => o.status === OrderStatus.PENDING).length)}</span>
@@ -744,7 +746,7 @@ export default function KitchenDisplayPage() {
               
               <button
                 onClick={handleFixExistingEntries}
-                className="px-3 py-1 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
+                className="w-full sm:w-auto px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
                 title="رفع مشکل ورودی‌های نمایشگر آشپزخانه موجود"
               >
                 رفع مشکل ورودی‌های موجود
@@ -757,8 +759,8 @@ export default function KitchenDisplayPage() {
 
       {/* Filters Panel */}
       {showFilters && (
-        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 sm:px-4 md:px-6 py-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             {/* Status Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

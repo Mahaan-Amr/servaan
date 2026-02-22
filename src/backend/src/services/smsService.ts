@@ -4,8 +4,7 @@ import { config } from '../config';
 import axios from 'axios';
 import https from 'https';
 import { URLSearchParams } from 'url';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 // Initialize Kavenegar API
 const kavenegarApi = Kavenegar.KavenegarApi({

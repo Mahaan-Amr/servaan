@@ -7,6 +7,7 @@ import type { OrderStatus } from '../../../../types/ordering';
 import OrderEditModal from '../pos/components/OrderEditModal';
 import { FaUtensils, FaTruck, FaList, FaSearch, FaEdit, FaTrash, FaTable, FaTh, FaList as FaListView } from 'react-icons/fa';
 import Link from 'next/link';
+import { Button, Card } from '../../../../components/ui';
 
 interface Order {
   id: string;
@@ -600,7 +601,7 @@ export default function OrdersPage() {
         {/* Tabs */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-3 sm:mb-4">
           <div className="border-b border-gray-200 dark:border-gray-700">
-            <nav className="flex space-x-3 sm:space-x-6 space-x-reverse px-2 sm:px-6 overflow-x-auto whitespace-nowrap" aria-label="Tabs">
+            <nav className="mobile-tabs-rail space-x-3 sm:space-x-6 space-x-reverse px-2 sm:px-6" aria-label="Tabs">
               <button
                 onClick={() => setActiveTab('all')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
@@ -650,54 +651,24 @@ export default function OrdersPage() {
         </div>
 
         {/* Filters + Bulk actions */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-2 sm:p-4 mb-3 sm:mb-4">
-           <div className="flex flex-col md:flex-row gap-2 sm:gap-3 items-stretch md:items-center">
-            <div className="flex-1">
-              <div className="relative">
-                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="جستجو در سفارش‌ها..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
-                />
-              </div>
+        <Card className="mb-3 sm:mb-4 p-3 sm:p-4">
+          <div className="space-y-3">
+            <div className="relative">
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="جستجو در سفارش‌ها..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
+              />
             </div>
 
-            <div className="flex items-center justify-between md:justify-start space-x-2 sm:space-x-4 space-x-reverse w-full md:w-auto">
-              {/* Bulk actions */}
-              <div className="flex items-center gap-2">
-                <select
-                  value={bulkStatus}
-                  onChange={(e) => setBulkStatus(e.target.value as OrderStatus)}
-                  className="px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-xs sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                >
-                  {allowedBulkStatuses.map(s => (
-                    <option key={s} value={s}>{getStatusLabel(s)}</option>
-                  ))}
-                </select>
-                <button
-                  onClick={() => bulkUpdateOrderStatus('selected', bulkStatus)}
-                  className="px-3 py-2 rounded-lg bg-amber-500 text-white text-xs sm:text-sm hover:bg-amber-600 disabled:opacity-50"
-                  disabled={selectedIds.size === 0}
-                  title="تغییر وضعیت سفارش‌های انتخاب‌شده"
-                >
-                  اعمال به انتخاب‌شده‌ها ({selectedIds.size})
-                </button>
-                <button
-                  onClick={() => bulkUpdateOrderStatus('all', bulkStatus)}
-                  className="px-3 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs sm:text-sm hover:bg-gray-300 dark:hover:bg-gray-600"
-                  title="تغییر وضعیت همه سفارش‌های لیست فعلی"
-                >
-                  اعمال به همه
-                </button>
-              </div>
-
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 dark:bg-gray-700 dark:text-white"
               >
                 <option value="all">همه وضعیت‌ها</option>
                 <option value="SUBMITTED">ثبت شده</option>
@@ -711,10 +682,10 @@ export default function OrdersPage() {
                 <option value="PARTIALLY_PAID">پرداخت جزئی</option>
               </select>
 
-              <div className="flex items-center space-x-2 space-x-reverse">
+              <div className="flex items-center justify-start sm:justify-end space-x-2 space-x-reverse">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-lg ${
+                  className={`p-2.5 rounded-lg ${
                     viewMode === 'grid'
                       ? 'bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-400'
                       : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
@@ -724,7 +695,7 @@ export default function OrdersPage() {
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-lg ${
+                  className={`p-2.5 rounded-lg ${
                     viewMode === 'list'
                       ? 'bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-400'
                       : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
@@ -734,8 +705,39 @@ export default function OrdersPage() {
                 </button>
               </div>
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2">
+              <select
+                value={bulkStatus}
+                onChange={(e) => setBulkStatus(e.target.value as OrderStatus)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                {allowedBulkStatuses.map((s) => (
+                  <option key={s} value={s}>{getStatusLabel(s)}</option>
+                ))}
+              </select>
+              <Button
+                onClick={() => bulkUpdateOrderStatus('selected', bulkStatus)}
+                variant="warning"
+                size="small"
+                disabled={selectedIds.size === 0}
+                title="تغییر وضعیت سفارش‌های انتخاب‌شده"
+                className="w-full"
+              >
+                اعمال به انتخاب‌شده‌ها ({selectedIds.size})
+              </Button>
+              <Button
+                onClick={() => bulkUpdateOrderStatus('all', bulkStatus)}
+                variant="secondary"
+                size="small"
+                title="تغییر وضعیت همه سفارش‌های لیست فعلی"
+                className="w-full"
+              >
+                اعمال به همه
+              </Button>
+            </div>
           </div>
-        </div>
+        </Card>
 
         {/* Orders Display */}
         {activeTab === 'DINE_IN' ? (

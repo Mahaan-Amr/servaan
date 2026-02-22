@@ -11,7 +11,7 @@ export declare class AdminUserService {
         users: {
             id: string;
             email: string;
-            role: string;
+            role: import("../../../../shared/generated/client").$Enums.AdminRole;
             isActive: boolean;
             lastLogin: Date | null;
             createdAt: Date;
@@ -31,20 +31,20 @@ export declare class AdminUserService {
     }): Promise<{
         id: string;
         email: string;
-        role: string;
+        role: import("../../../../shared/generated/client").$Enums.AdminRole;
         isActive: boolean;
         createdAt: Date;
     }>;
     static updateRole(id: string, role: AdminUserRole): Promise<{
         id: string;
         email: string;
-        role: string;
+        role: import("../../../../shared/generated/client").$Enums.AdminRole;
         isActive: boolean;
     }>;
     static setActive(id: string, isActive: boolean): Promise<{
         id: string;
         email: string;
-        role: string;
+        role: import("../../../../shared/generated/client").$Enums.AdminRole;
         isActive: boolean;
     }>;
     static resetPassword(id: string, newPassword: string): Promise<{

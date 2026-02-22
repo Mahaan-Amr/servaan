@@ -1,8 +1,7 @@
 import { PrismaClient, Prisma } from '../../../shared/generated/client';
 import { AppError } from '../middlewares/errorHandler';
 import { addLoyaltyPoints, calculatePointsFromAmount } from './loyaltyService';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 // Types and Interfaces
 export interface VisitFilter {

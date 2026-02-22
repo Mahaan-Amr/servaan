@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
+import { Badge, Button, Card, Section } from '../../../components/ui';
 import { useWorkspace } from '../../../contexts/WorkspaceContext';
 import { OrderService, InventoryIntegrationService } from '../../../services/orderingService';
 import { PaymentMethod } from '../../../types/ordering';
@@ -255,14 +256,14 @@ export default function OrderingSystemDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-[50vh] items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-amber-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-6">
       {/* Welcome Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -289,33 +290,27 @@ export default function OrderingSystemDashboard() {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-end space-x-3 space-x-reverse">
-        <button
-          onClick={updateMenuAvailability}
-          className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
-        >
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end sm:space-x-3 sm:space-x-reverse">
+        <Button onClick={updateMenuAvailability} className="bg-amber-500 hover:bg-amber-600">
           به‌روزرسانی وضعیت منو
-        </button>
-        <button
-          onClick={updateRecipeCosts}
-          className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-        >
+        </Button>
+        <Button onClick={updateRecipeCosts} className="bg-green-500 hover:bg-green-600">
           به‌روزرسانی هزینه‌ها
-        </button>
+        </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
         {loading ? (
           // Loading skeleton
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="card flex items-center p-6 animate-pulse">
+            <Card key={i} className="flex items-center p-6 animate-pulse">
               <div className="p-3 rounded-lg bg-gray-200 dark:bg-gray-700 w-12 h-12 ml-4"></div>
               <div className="flex-1">
                 <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
                 <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
               </div>
-            </div>
+            </Card>
           ))
         ) : stats ? (
           [
@@ -352,7 +347,7 @@ export default function OrderingSystemDashboard() {
               gradient: 'from-purple-500 to-purple-600'
             }
           ].map((stat) => (
-            <div key={stat.id} className="card flex items-center p-6 hover:shadow-lg transition-shadow">
+            <Card key={stat.id} className="flex items-center p-6 hover:shadow-lg transition-shadow">
               <div className={`p-3 rounded-lg ${stat.color} ml-4`}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={stat.icon} />
@@ -362,7 +357,7 @@ export default function OrderingSystemDashboard() {
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{stat.name}</p>
                 <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stat.value}</p>
               </div>
-            </div>
+            </Card>
           ))
         ) : (
           // Fallback when stats is null
@@ -400,7 +395,7 @@ export default function OrderingSystemDashboard() {
               gradient: 'from-purple-500 to-purple-600'
             }
           ].map((stat) => (
-            <div key={stat.id} className="card flex items-center p-6 hover:shadow-lg transition-shadow">
+            <Card key={stat.id} className="flex items-center p-6 hover:shadow-lg transition-shadow">
               <div className={`p-3 rounded-lg ${stat.color} ml-4`}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={stat.icon} />
@@ -410,20 +405,20 @@ export default function OrderingSystemDashboard() {
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{stat.name}</p>
                 <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stat.value}</p>
               </div>
-            </div>
+            </Card>
           ))
         )}
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
         {quickActions.map((action) => (
           <Link
             key={action.id}
             href={action.href}
             className="group block"
           >
-            <div className="card p-6 hover:shadow-lg transition-all duration-200 group-hover:scale-105">
+            <Card className="p-6 hover:shadow-lg transition-all duration-200 group-hover:scale-105">
               <div className="flex items-center">
                 <div className={`p-3 rounded-lg ${action.color} ml-4`}>
                   <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -439,15 +434,15 @@ export default function OrderingSystemDashboard() {
                   </p>
                 </div>
               </div>
-            </div>
+            </Card>
           </Link>
         ))}
       </div>
 
       {/* Additional Information Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Payment Methods */}
-        <div className="card p-6">
+        <Section title="روش‌های پرداخت امروز">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">روش‌های پرداخت امروز</h3>
           {stats?.paymentMethods?.length ? (
             <div className="space-y-3">
@@ -461,11 +456,10 @@ export default function OrderingSystemDashboard() {
           ) : (
             <div className="text-sm text-gray-500 dark:text-gray-400">هیچ پرداختی ثبت نشده</div>
           )}
-        </div>
+        </Section>
 
         {/* Table Status */}
-        <div className="card p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">وضعیت میزها</h3>
+        <Section title="وضعیت میزها">
           {stats?.tableStatus?.length ? (
             <div className="space-y-3">
               {stats.tableStatus.map((status, index) => (
@@ -478,13 +472,12 @@ export default function OrderingSystemDashboard() {
           ) : (
             <div className="text-sm text-gray-500 dark:text-gray-400">هیچ میزی موجود نیست</div>
           )}
-        </div>
+        </Section>
       </div>
 
       {/* Inventory Status */}
       {inventoryStatus && (
-        <div className="card p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">وضعیت موجودی</h3>
+        <Section title="وضعیت موجودی">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{inventoryStatus.totalMenuItems}</div>
@@ -503,13 +496,12 @@ export default function OrderingSystemDashboard() {
               <div className="text-sm text-gray-600 dark:text-gray-400">آیتم‌های با دستور پخت</div>
             </div>
           </div>
-        </div>
+        </Section>
       )}
 
       {/* Low Stock Alerts */}
       {lowStockAlerts.length > 0 && (
-        <div className="card p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">هشدارهای موجودی کم</h3>
+        <Section title="هشدارهای موجودی کم">
           <div className="space-y-3">
             {lowStockAlerts.slice(0, 5).map((alert, index) => (
               <div key={index} className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
@@ -519,17 +511,13 @@ export default function OrderingSystemDashboard() {
                     موجودی فعلی: {alert.currentStock} {alert.unit}
                   </div>
                 </div>
-                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  alert.priority === 'high' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                  alert.priority === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                  'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
-                }`}>
+                <Badge tone={alert.priority === 'high' ? 'danger' : alert.priority === 'medium' ? 'warning' : 'info'}>
                   {alert.priority === 'high' ? 'بالا' : alert.priority === 'medium' ? 'متوسط' : 'کم'}
-                </div>
+                </Badge>
               </div>
             ))}
           </div>
-        </div>
+        </Section>
       )}
     </div>
   );

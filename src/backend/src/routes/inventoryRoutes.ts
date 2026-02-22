@@ -5,9 +5,10 @@ import { InventoryEntryType } from '../../../shared/types';
 import { authenticate, authorize } from '../middlewares/authMiddleware';
 import { requireTenant } from '../middlewares/tenantMiddleware';
 import { notificationService } from '../services/notificationService';
-import { getStockDeficits, getDeficitSummary, adjustStock } from '../services/inventoryService';
+import { getStockDeficits, getDeficitSummary, adjustStock, canDeleteInventoryEntry } from '../services/inventoryService';
 import { InventoryController } from '../controllers/inventoryController';
 import stockValidationRoutes from './stockValidationRoutes';
+import * as inventoryService from '../services/inventoryService';
 
 const router = Router();
 
@@ -1034,6 +1035,56 @@ router.post('/', authenticate, requireTenant, async (req, res) => {
         // Log but don't affect main transaction
       }
     });
+
+    // Hook: Check for WAC changes and trigger recipe cost updates (non-blocking)
+    // Only for IN entries with unitPrice (purchases that affect WAC)
+    if (validatedData.type === 'IN' && validatedData.unitPrice && validatedData.unitPrice > 0) {
+      setImmediate(async () => {
+        try {
+          const { calculateWeightedAverageCost, notifyPriceChange } = await import('../services/inventoryService');
+          
+          // Calculate old WAC by excluding the entry we just created
+          const oldEntries = await prisma.inventoryEntry.findMany({
+            where: {
+              itemId: validatedData.itemId,
+              tenantId: req.tenant!.id,
+              type: 'IN',
+              deletedAt: null,
+              unitPrice: { not: null },
+              id: { not: result.id } // Exclude the entry we just created
+            },
+            select: {
+              quantity: true,
+              unitPrice: true
+            }
+          });
+
+          let oldWAC = 0;
+          if (oldEntries.length > 0) {
+            const totalQuantity = oldEntries.reduce((sum, entry) => sum + Number(entry.quantity), 0);
+            const totalValue = oldEntries.reduce((sum, entry) => sum + (Number(entry.quantity) * Number(entry.unitPrice)), 0);
+            oldWAC = totalQuantity > 0 ? totalValue / totalQuantity : 0;
+          }
+          
+          // Calculate new WAC (including the entry we just created)
+          const newWAC = await calculateWeightedAverageCost(validatedData.itemId, req.tenant!.id);
+          
+          // Only trigger update if WAC changed significantly (>1% threshold)
+          if (oldWAC > 0 && Math.abs(newWAC - oldWAC) / oldWAC > 0.01) {
+            const percentChange = ((newWAC - oldWAC) / oldWAC * 100).toFixed(2);
+            console.log(`📊 [WAC_CHANGE] Item ${result.item.name}: ${oldWAC.toFixed(2)} → ${newWAC.toFixed(2)} (${percentChange}%)`);
+            await notifyPriceChange(validatedData.itemId, newWAC, oldWAC);
+          } else if (oldWAC === 0 && newWAC > 0) {
+            // First price entry - still trigger update
+            console.log(`📊 [WAC_CHANGE] Item ${result.item.name}: First price entry (${newWAC.toFixed(2)})`);
+            await notifyPriceChange(validatedData.itemId, newWAC, 0);
+          }
+        } catch (priceChangeError) {
+          console.error('Error checking WAC change for recipe cost update:', priceChangeError);
+          // Don't fail the main transaction
+        }
+      });
+    }
     
     res.status(201).json(result);
   } catch (error) {
@@ -1364,15 +1415,24 @@ router.put('/:id', authenticate, requireTenant, authorize(['ADMIN', 'MANAGER']),
 });
 
 // DELETE /api/inventory/:id - Delete an inventory entry (soft delete)
-router.delete('/:id', authenticate, requireTenant, authorize(['ADMIN', 'MANAGER']), async (req, res) => {
+// ENHANCED: Now enforces 7-day deletion limit on backend (not just frontend)
+router.delete('/:id', authenticate, requireTenant, authorize(['ADMIN', 'MANAGER', 'STAFF']), async (req, res) => {
   try {
     const { id } = req.params;
     const userId = (req as any).user.id;
-    
+    const userRole = (req as any).user.role;
+
+    // Check deletion permissions (7-day limit, role-based access)
+    const permission = await inventoryService.canDeleteInventoryEntry(id, userId, userRole);
+    if (!permission.allowed) {
+      return res.status(403).json({ message: permission.reason || 'حذف مجاز نیست' });
+    }
+
     // Check if entry exists and is not already deleted
     const existingEntry = await prisma.inventoryEntry.findFirst({
       where: { 
         id,
+        tenantId: (req as any).tenant.id, // Ensure tenant isolation
         deletedAt: null // Only find non-deleted entries
       }
     });
@@ -1398,7 +1458,7 @@ router.delete('/:id', authenticate, requireTenant, authorize(['ADMIN', 'MANAGER'
 });
 
 // PATCH /api/inventory/:itemId/barcode - Update item barcode
-router.patch('/:itemId/barcode', authenticate, authorize(['ADMIN', 'MANAGER']), async (req, res) => {
+router.patch('/:itemId/barcode', authenticate, requireTenant, authorize(['ADMIN', 'MANAGER']), async (req, res) => {
   try {
     const { itemId } = req.params;
     const { barcode } = req.body;
@@ -1410,8 +1470,11 @@ router.patch('/:itemId/barcode', authenticate, authorize(['ADMIN', 'MANAGER']), 
     }
 
     // Check if item exists
-    const item = await prisma.item.findUnique({
-      where: { id: itemId },
+    const item = await prisma.item.findFirst({
+      where: {
+        id: itemId,
+        tenantId: req.tenant!.id
+      },
     });
 
     if (!item) {

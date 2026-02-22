@@ -153,7 +153,7 @@ export const PREDEFINED_WORKSPACES: Workspace[] = [
     title: 'سیستم حسابداری',
     titleEn: 'Accounting System',
     description: 'سیستم حسابداری کامل ایرانی با دفتر کل، سند حسابداری و گزارش‌های مالی',
-    status: 'active',
+    status: 'maintenance',
     icon: WORKSPACE_ICONS['accounting-system'],
     color: WORKSPACE_COLORS['accounting-system'],
     gradient: 'bg-gradient-to-br from-green-500 to-green-600',

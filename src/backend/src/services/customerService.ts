@@ -1,7 +1,6 @@
 import { PrismaClient } from '../../../shared/generated/client';
 import { AppError } from '../middlewares/errorHandler';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 // Types and Interfaces
 export interface CustomerFilter {

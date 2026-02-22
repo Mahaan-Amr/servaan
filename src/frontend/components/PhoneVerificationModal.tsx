@@ -124,8 +124,8 @@ export const PhoneVerificationModal: React.FC<PhoneVerificationModalProps> = ({
     e.preventDefault();
     e.stopPropagation();
     
-    if (!verificationCode || verificationCode.length !== 6) {
-      setError('کد تایید باید 6 رقم باشد');
+    if (!verificationCode || verificationCode.length !== 5) {
+      setError('کد تایید باید 5 رقم باشد');
       return;
     }
 
@@ -133,8 +133,10 @@ export const PhoneVerificationModal: React.FC<PhoneVerificationModalProps> = ({
     setError('');
 
     try {
-      // Simulate verification process
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await smsService.verifyCode({
+        phoneNumber: phoneValidation.formatted!,
+        code: verificationCode
+      });
       
       setSuccess('شماره تلفن با موفقیت تایید شد');
       
@@ -235,7 +237,7 @@ export const PhoneVerificationModal: React.FC<PhoneVerificationModalProps> = ({
           <p className="text-sm text-gray-600 dark:text-gray-400">
             {step === 'phone' 
               ? 'شماره تلفن همراه خود را وارد کنید'
-              : `کد 6 رقمی ارسال شده به ${phoneValidation.formatted} را وارد کنید`
+              : `کد 5 رقمی ارسال شده به ${phoneValidation.formatted} را وارد کنید`
             }
           </p>
         </div>
@@ -331,10 +333,10 @@ export const PhoneVerificationModal: React.FC<PhoneVerificationModalProps> = ({
                   type="text"
                   id="verificationCode"
                   value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 5))}
                   className="w-full px-4 py-3 text-2xl text-center tracking-widest border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  placeholder="- - - - - -"
-                  maxLength={6}
+                  placeholder="- - - - -"
+                  maxLength={5}
                   required
                   dir="ltr"
                   disabled={loading}
@@ -392,7 +394,7 @@ export const PhoneVerificationModal: React.FC<PhoneVerificationModalProps> = ({
                 </button>
                 <button
                   type="submit"
-                  disabled={loading || verificationCode.length !== 6}
+                  disabled={loading || verificationCode.length !== 5}
                   className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                 >
                   {loading ? (

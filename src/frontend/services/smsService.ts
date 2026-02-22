@@ -8,6 +8,7 @@ export interface PhoneValidationResult {
 }
 
 export interface SMSResponse {
+  success?: boolean;
   message: string;
   phoneNumber?: string;
   messageId?: string;
@@ -102,6 +103,14 @@ export const sendBusinessInvitation = async (data: BusinessInvitationData): Prom
 
 // Send verification code SMS
 export const sendVerificationCode = async (data: VerificationCodeData): Promise<SMSResponse> => {
+  try {
+    return await apiClient.post<SMSResponse>('/sms/send-verification', data);
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const verifyCode = async (data: { phoneNumber: string; code: string }): Promise<SMSResponse> => {
   try {
     return await apiClient.post<SMSResponse>('/sms/verify', data);
   } catch (error) {

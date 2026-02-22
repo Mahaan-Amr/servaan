@@ -219,7 +219,7 @@ export default function BulkAddInventoryPage() {
                     مقدار *
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    قیمت واحد (ریال)
+                    قیمت واحد (تومان)
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     شماره دسته
@@ -345,7 +345,7 @@ export default function BulkAddInventoryPage() {
               <div className="text-sm text-green-700 dark:text-green-300">
                 <p>تعداد ردیف‌ها: {rows.length}</p>
                 <p className="font-medium">
-                  مبلغ کل: {getTotalValue().toLocaleString('fa-IR')} ریال
+                  مبلغ کل: {getTotalValue().toLocaleString('fa-IR')} تومان
                 </p>
               </div>
             </div>

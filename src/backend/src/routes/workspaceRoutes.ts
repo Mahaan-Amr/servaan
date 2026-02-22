@@ -57,10 +57,10 @@ router.get('/user-access/:userId', authenticate, async (req, res) => {
           hasAccess: req.tenant.features?.hasAnalyticsBI || false,
           level: user.role === 'ADMIN' ? 'full' : (user.role === 'MANAGER' ? 'full' : 'none')
         },
-        // Accounting System
+        // Accounting System - DEACTIVATED (Maintenance)
         'accounting-system': {
-          hasAccess: req.tenant.features?.hasAccountingSystem || false,
-          level: user.role === 'ADMIN' ? 'full' : (user.role === 'MANAGER' ? 'full' : 'none')
+          hasAccess: false, // Deactivated - will be re-enabled in future
+          level: 'none'
         },
         // Customer Relationship Management - DEACTIVATED (Maintenance)
         'customer-relationship-management': {

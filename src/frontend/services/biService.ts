@@ -27,17 +27,38 @@ export interface KPIMetric {
 class BiService {
   /**
    * دریافت داشبورد Business Intelligence
+   * Supports workspace selector: 'ordering', 'inventory', or 'merged'
    */
-  async getDashboard(period: string = '30d', startDate?: string, endDate?: string): Promise<BIDashboard> {
+  async getDashboard(
+    period: string = '30d', 
+    startDate?: string, 
+    endDate?: string,
+    workspace: 'ordering' | 'inventory' | 'merged' = 'merged'
+  ): Promise<BIDashboard> {
     try {
-      const params: Record<string, string> = { period };
+      const params: Record<string, string> = { period, workspace };
       if (startDate && endDate) {
         params.startDate = startDate;
         params.endDate = endDate;
       }
       
-      const response = await apiClient.get<BIDashboard>('/bi/dashboard', params);
-      return response;
+      const response = await apiClient.get<{
+        success?: boolean;
+        data?: BIDashboard;
+        message?: string;
+      } | BIDashboard>('/bi/dashboard', params);
+      
+      // Extract data from wrapped response if present
+      if (response && typeof response === 'object' && 'success' in response && 'data' in response) {
+        const wrappedResponse = response as { success: boolean; data: BIDashboard; message?: string };
+        if (wrappedResponse.success && wrappedResponse.data) {
+          return wrappedResponse.data;
+        }
+        throw new Error(wrappedResponse.message || 'خطا در دریافت داشبورد');
+      }
+      
+      // Direct response structure (backward compatibility)
+      return response as BIDashboard;
     } catch (error) {
       console.error('Error fetching BI dashboard:', error);
       throw error;
@@ -117,6 +138,75 @@ class BiService {
   }
 
   /**
+   * دریافت روند موجودی اخیر
+   */
+  async getInventoryTrends(period: string = '90'): Promise<Array<{
+    date: string;
+    stock: number;
+    totalIn: number;
+    totalOut: number;
+  }>> {
+    try {
+      const response = await apiClient.get<Array<{
+        date: string;
+        stock: number;
+        totalIn: number;
+        totalOut: number;
+      }>>('/analytics/inventory-trends', { period });
+      return response;
+    } catch (error) {
+      console.error('Error fetching inventory trends:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * دریافت روند ماهانه ورود و خروج کالا
+   */
+  async getMonthlyMovements(months: string = '12'): Promise<Array<{
+    month: string;
+    monthKey: string;
+    in: number;
+    out: number;
+    net: number;
+  }>> {
+    try {
+      const response = await apiClient.get<Array<{
+        month: string;
+        monthKey: string;
+        in: number;
+        out: number;
+        net: number;
+      }>>('/analytics/monthly-movements', { months });
+      return response;
+    } catch (error) {
+      console.error('Error fetching monthly movements:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * دریافت مصرف به تفکیک دسته‌بندی
+   */
+  async getConsumptionByCategory(period: string = '30'): Promise<Array<{
+    name: string;
+    value: number;
+    color: string;
+  }>> {
+    try {
+      const response = await apiClient.get<Array<{
+        name: string;
+        value: number;
+        color: string;
+      }>>('/analytics/consumption-by-category', { period });
+      return response;
+    } catch (error) {
+      console.error('Error fetching consumption by category:', error);
+      throw error;
+    }
+  }
+
+  /**
    * دریافت بینش‌ها
    */
   async getInsights(period: string = '30d'): Promise<unknown> {
@@ -181,6 +271,44 @@ class BiService {
       return response;
     } catch (error) {
       console.error('Error executing report:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * دریافت گزارش بر اساس ID
+   */
+  async getReportById(reportId: string): Promise<unknown> {
+    try {
+      const response = await apiClient.get<unknown>(`/bi/reports/${reportId}`);
+      return response;
+    } catch (error) {
+      console.error('Error fetching report by ID:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * بروزرسانی گزارش
+   */
+  async updateReport(reportId: string, updates: unknown): Promise<unknown> {
+    try {
+      const response = await apiClient.put<unknown>(`/bi/reports/${reportId}`, updates);
+      return response;
+    } catch (error) {
+      console.error('Error updating report:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * حذف گزارش
+   */
+  async deleteReport(reportId: string): Promise<void> {
+    try {
+      await apiClient.delete<void>(`/bi/reports/${reportId}`);
+    } catch (error) {
+      console.error('Error deleting report:', error);
       throw error;
     }
   }
@@ -480,6 +608,181 @@ class BiService {
       return response;
     } catch (error) {
       console.error('Error fetching reports with filters and date:', error);
+      throw error;
+    }
+  }
+
+  // ===================== NEW DATA AGGREGATION ENDPOINTS =====================
+
+  /**
+   * Execute aggregation queries across multiple workspaces
+   */
+  async aggregate(query: {
+    workspaces: string[];
+    joinType: 'INNER' | 'LEFT' | 'UNION' | 'CROSS';
+    joinKeys?: Array<{ from: string; to: string }>;
+    fields: Array<{
+      workspace: string;
+      table: string;
+      field: string;
+      alias?: string;
+      aggregation?: 'sum' | 'avg' | 'count' | 'min' | 'max' | 'none';
+    }>;
+    filters?: Array<{
+      workspace: string;
+      table: string;
+      field: string;
+      operator: 'equals' | 'notEquals' | 'greaterThan' | 'lessThan' | 'contains' | 'in' | 'between';
+      value: unknown;
+    }>;
+    groupBy?: string[];
+    orderBy?: Array<{ field: string; direction: 'asc' | 'desc' }>;
+    limit?: number;
+    offset?: number;
+  }): Promise<{
+    rows: unknown[];
+    columns: string[];
+    rowCount: number;
+    metadata?: {
+      workspaces: string[];
+      joinType: string;
+      executionTime: number;
+      cached: boolean;
+    };
+  }> {
+    try {
+      const response = await apiClient.post<{
+        success: boolean;
+        data: {
+          rows: unknown[];
+          columns: string[];
+          rowCount: number;
+          metadata?: {
+            workspaces: string[];
+            joinType: string;
+            executionTime: number;
+            cached: boolean;
+          };
+        };
+        message?: string;
+      }>('/bi/aggregate', query);
+      
+      // Extract data from response wrapper
+      if (response.success && response.data) {
+        return response.data;
+      }
+      throw new Error(response.message || 'خطا در تجمیع داده‌ها');
+    } catch (error) {
+      console.error('Error aggregating data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get available data schemas from workspace connectors
+   */
+  async getSchema(workspace?: 'ordering' | 'inventory'): Promise<{
+    workspace?: string;
+    name?: string;
+    schema?: unknown;
+    workspaces?: Array<{
+      workspace: string;
+      name: string;
+      schema: unknown;
+    }>;
+  }> {
+    try {
+      const params: Record<string, string> = {};
+      if (workspace) {
+        params.workspace = workspace;
+      }
+      
+      const response = await apiClient.get<{
+        success: boolean;
+        data: {
+          workspace?: string;
+          name?: string;
+          schema?: unknown;
+          workspaces?: Array<{
+            workspace: string;
+            name: string;
+            schema: unknown;
+          }>;
+        };
+        message?: string;
+      }>('/bi/schema', params);
+      
+      // Extract data from response wrapper
+      if (response.success && response.data) {
+        return response.data;
+      }
+      throw new Error(response.message || 'خطا در دریافت schema');
+    } catch (error) {
+      console.error('Error getting schema:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Data exploration endpoint (simplified query interface)
+   */
+  async explore(query: {
+    workspaces: string[];
+    fields: Array<{
+      workspace: string;
+      table: string;
+      field: string;
+      alias?: string;
+      aggregation?: 'sum' | 'avg' | 'count' | 'min' | 'max' | 'none';
+    }>;
+    filters?: Array<{
+      workspace: string;
+      table: string;
+      field: string;
+      operator?: 'equals' | 'notEquals' | 'greaterThan' | 'lessThan' | 'contains' | 'in' | 'between';
+      value: unknown;
+    }>;
+    groupBy?: string[];
+    orderBy?: Array<{ field: string; direction?: 'asc' | 'desc' }>;
+    limit?: number;
+    offset?: number;
+    joinType?: 'INNER' | 'LEFT' | 'UNION' | 'CROSS';
+    joinKeys?: Array<{ from: string; to: string }>;
+  }): Promise<{
+    rows: unknown[];
+    columns: string[];
+    rowCount: number;
+    metadata?: {
+      workspaces: string[];
+      joinType: string;
+      executionTime: number;
+      cached: boolean;
+    };
+  }> {
+    try {
+      const response = await apiClient.post<{
+        success: boolean;
+        data: {
+          rows: unknown[];
+          columns: string[];
+          rowCount: number;
+          metadata?: {
+            workspaces: string[];
+            joinType: string;
+            executionTime: number;
+            cached: boolean;
+          };
+        };
+        message?: string;
+      }>('/bi/explore', query);
+      
+      // Extract data from response wrapper
+      if (response.success && response.data) {
+        return response.data;
+      }
+      throw new Error(response.message || 'خطا در اکتشاف داده');
+    } catch (error) {
+      console.error('Error exploring data:', error);
       throw error;
     }
   }

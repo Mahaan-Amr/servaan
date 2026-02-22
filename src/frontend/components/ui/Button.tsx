@@ -22,7 +22,8 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   // Base styles
-  const baseStyles = 'inline-flex items-center justify-center font-medium transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2';
+  const baseStyles =
+    'inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 min-h-[2.5rem]';
   
   // Variant styles
   const variantStyles = {
@@ -37,9 +38,9 @@ export const Button: React.FC<ButtonProps> = ({
   
   // Size styles
   const sizeStyles = {
-    small: 'text-xs py-1 px-2',
-    medium: 'text-sm py-2 px-4',
-    large: 'text-base py-2.5 px-5'
+    small: 'text-xs px-3 py-2',
+    medium: 'text-sm px-4 py-2.5',
+    large: 'text-base px-5 py-3'
   };
   
   // Width styles

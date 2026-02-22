@@ -1,14 +1,17 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useBIWorkspace } from '../../../../contexts/BIWorkspaceContext';
 import { biService } from '../../../../services/biService';
 import { 
   ABCAnalysisData, 
   ABCProduct, 
   ABCSummary 
 } from '../../../../types/bi';
+import { Card, Section } from '../../../../components/ui';
 
 export default function ABCAnalysisPage() {
+  const { workspace, isInventoryWorkspace, isMergedWorkspace } = useBIWorkspace();
   const [abcData, setAbcData] = useState<ABCAnalysisData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -135,18 +138,37 @@ export default function ABCAnalysisPage() {
     }
   }, [period]);
 
-  // Load ABC analysis data
+  // Load ABC analysis data - only for inventory and merged workspaces
   useEffect(() => {
-    loadABCAnalysis();
-  }, [loadABCAnalysis]); // Add loadABCAnalysis as dependency since it's now useCallback
+    if (isInventoryWorkspace || isMergedWorkspace) {
+      loadABCAnalysis();
+    }
+  }, [loadABCAnalysis, isInventoryWorkspace, isMergedWorkspace]);
+
+  // Show message if workspace doesn't support ABC analysis
+  if (workspace === 'ordering') {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <div className="text-center max-w-md">
+          <div className="bg-yellow-100 dark:bg-yellow-900/20 rounded-full p-4 mx-auto w-16 h-16 flex items-center justify-center mb-4">
+            <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">تحلیل ABC در دسترس نیست</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            تحلیل ABC فقط برای workspace موجودی و ترکیبی در دسترس است. لطفاً workspace را تغییر دهید.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('fa-IR', {
-      style: 'currency',
-      currency: 'IRR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(value);
+    }).format(value) + ' تومان';
   };
 
   // Sort products by total sales (descending)
@@ -267,9 +289,9 @@ export default function ABCAnalysisPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <Section className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
@@ -294,7 +316,7 @@ export default function ABCAnalysisPage() {
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -568,6 +590,6 @@ export default function ABCAnalysisPage() {
           </table>
         </div>
       </div>
-    </div>
+    </Section>
   );
-} 
+}

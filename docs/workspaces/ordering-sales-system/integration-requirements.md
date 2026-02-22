@@ -23,46 +23,62 @@ This document outlines the integration requirements between the Ordering & Sales
 - ✅ RecipeIngredient model with inventory item relationships
 
 **Integration Points:**
-- [ ] **Recipe-Based Stock Validation** (HIGH PRIORITY)
-  - Check ingredient availability for menu items with recipes
-  - Validate sufficient stock for all recipe ingredients during order creation
-  - Show real-time stock levels for recipe ingredients in POS interface
-  - Auto-disable menu items when critical ingredients are out of stock
-  - Handle optional vs required ingredient availability
+- [x] **Recipe-Based Stock Validation** ✅ (COMPLETE - 2025-01-27)
+  - ✅ Check ingredient availability for menu items with recipes
+  - ✅ Validate sufficient stock for all recipe ingredients during order creation
+  - ✅ Real-time stock updates via WebSocket (IMPLEMENTED)
+  - ✅ Auto-disable menu items when critical ingredients are out of stock
+  - ✅ Handle optional vs required ingredient availability
+  - ⏭️ Show real-time stock levels in POS interface (future enhancement)
 
-- [ ] **Advanced Stock Deduction** (HIGH PRIORITY)
-  - Deduct multiple ingredients when order with recipe items is completed
-  - Handle ingredient quantity calculations based on recipe portions
-  - Support partial stock deductions for partially fulfilled orders
-  - Maintain detailed audit trail of ingredient stock movements
-  - Handle recipe modifications and ingredient substitutions
+- [x] **Advanced Stock Deduction** ✅ (COMPLETE - 2025-01-27)
+  - ✅ Deduct multiple ingredients when order with recipe items is completed
+  - ✅ Handle ingredient quantity calculations based on recipe portions
+  - ✅ Support partial stock deductions for partially fulfilled orders (IMPLEMENTED)
+  - ✅ Maintain detailed audit trail of ingredient stock movements
+  - ✅ Order references in inventory entries (orderId, orderItemId fields)
+  - ✅ Stock deduction when individual items marked as prepared
+  - ⏭️ Handle recipe modifications and ingredient substitutions (future enhancement)
 
-- [ ] **Recipe Cost Integration** (MEDIUM PRIORITY)
-  - Retrieve current cost price for recipe ingredients for COGS calculation
-  - Track cost variations over time for recipe profitability analysis
-  - Calculate profit margins automatically using real ingredient costs
-  - Support weighted average cost method for recipe costing
-  - Update menu item costs when ingredient prices change
+- [x] **Recipe Cost Integration** ✅ (COMPLETE - 2025-01-27)
+  - ✅ Retrieve current cost price for recipe ingredients for COGS calculation
+  - ✅ Track cost variations over time for recipe profitability analysis
+  - ✅ Calculate profit margins automatically using real ingredient costs
+  - ✅ Support weighted average cost method for recipe costing
+  - ✅ Update menu item costs when ingredient prices change (AUTOMATIC)
+  - ✅ Real-time cost updates via WebSocket notifications
 
-- [ ] **Enhanced Low Stock Alerts** (MEDIUM PRIORITY)
-  - Generate alerts when recipe ingredients are running low
-  - Prioritize alerts based on ingredient usage frequency
-  - Integrate with existing notification system for real-time alerts
-  - Support customizable stock level thresholds per ingredient
-  - Provide purchase recommendations with recipe demand forecasting
+- [x] **Enhanced Low Stock Alerts** ✅ (COMPLETE)
+  - ✅ Generate alerts when recipe ingredients are running low
+  - ✅ Prioritize alerts based on ingredient usage frequency
+  - ✅ Integrate with existing notification system for real-time alerts
+  - ✅ Support customizable stock level thresholds per ingredient
+  - ⏭️ Provide purchase recommendations with recipe demand forecasting (future enhancement)
 
-**Required API Endpoints:**
+**Implemented API Endpoints:**
 ```typescript
-// Enhanced for Recipe System
-GET /api/inventory/items/:itemId/stock
-POST /api/inventory/deduct-recipe-ingredients
-GET /api/inventory/recipe-ingredients/:menuItemId/availability  
-POST /api/inventory/recipe-cost-analysis
-GET /api/inventory/low-stock-alerts/recipe-based
+// Recipe-Based Stock Validation
+GET /api/inventory/stock-validation/:menuItemId
+POST /api/inventory/validate-order-stock
+POST /api/inventory/stock-override
+GET /api/inventory/low-stock-alerts
+POST /api/inventory/update-menu-availability
+
+// Stock Deduction
+POST /api/ordering/orders/items/:orderItemId/prepare  // NEW: Partial stock deduction
+// Stock deduction happens automatically on order completion and item preparation
+
+// Recipe Cost Integration
+POST /api/inventory/update-recipe-costs
+GET /api/inventory/integration-status
+
+// WebSocket Events
+inventory:stock-updated  // Real-time stock updates
+recipe:cost-updated      // Real-time recipe cost updates
 ```
 
-**Implementation Priority**: **HIGH - IMMEDIATE**
-**Estimated Integration Time**: 12 hours (expanded for recipe complexity)
+**Implementation Status**: ✅ **COMPLETE** - 2025-01-27
+**Implementation Time**: Completed in phases (2025-01-27)
 
 ---
 
@@ -173,22 +189,23 @@ JournalEntryService.getRecipeProfitabilityReport(dateRange: DateRange)
 #### **نقش**: به‌روزرسانی زنده برای نمایشگر آشپزخانه و موجودی با در نظر گیری دستور پخت
 
 **Integration Points:**
-- [ ] **Recipe-Aware Kitchen Display** (HIGH PRIORITY)
-  - Real-time order updates with recipe ingredient details
-  - Display ingredient preparation instructions and quantities
-  - Show cooking time estimates based on recipe complexity
-  - Alert kitchen staff about ingredient substitutions or shortages
-  - Track preparation progress for multi-ingredient recipes
+- [x] **Recipe-Aware Kitchen Display** ✅ (COMPLETE)
+  - ✅ Real-time order updates with recipe ingredient details
+  - ✅ Display ingredient preparation instructions and quantities
+  - ✅ Show cooking time estimates based on recipe complexity
+  - ✅ Track preparation progress for multi-ingredient recipes
+  - ✅ Automatic stock deduction when items marked as READY
+  - ⏭️ Alert kitchen staff about ingredient substitutions or shortages (future enhancement)
 
-- [ ] **Real-time Inventory Updates** (MEDIUM PRIORITY)
-  - Live stock level updates when recipe orders are completed
-  - Real-time cost updates when ingredient prices change
-  - Instant menu item availability updates based on ingredient stock
-  - Live profit margin updates as costs fluctuate
-  - Real-time alerts for ingredient shortages affecting recipes
+- [x] **Real-time Inventory Updates** ✅ (COMPLETE - 2025-01-27)
+  - ✅ Live stock level updates when recipe orders are completed (WebSocket)
+  - ✅ Real-time cost updates when ingredient prices change (WebSocket)
+  - ✅ Instant menu item availability updates based on ingredient stock
+  - ✅ Live profit margin updates as costs fluctuate
+  - ✅ Real-time alerts for ingredient shortages affecting recipes
 
-**Implementation Priority**: **HIGH for Kitchen Display, MEDIUM for Inventory**
-**Estimated Integration Time**: 10 hours
+**Implementation Status**: ✅ **COMPLETE** - 2025-01-27
+**Implementation Time**: Completed in phases (2025-01-27)
 
 ---
 
@@ -201,24 +218,27 @@ JournalEntryService.getRecipeProfitabilityReport(dateRange: DateRange)
 - ✅ **API Infrastructure**: Recipe-related endpoints (10+ new endpoints)
 - ✅ **Frontend Interface**: Advanced menu management with recipe UI
 
-### **🔄 PHASE 3: CRITICAL INTEGRATIONS (NEXT 7 days)**
+### **✅ PHASE 3: CRITICAL INTEGRATIONS (COMPLETE - 2025-01-27)**
 
-#### **Day 1-3: Inventory Integration** 
-1. **Recipe Stock Validation**: Implement ingredient availability checking
-2. **Cost Integration**: Connect recipe costs with inventory prices
-3. **Stock Deduction**: Handle multi-ingredient deductions
-4. **Availability Updates**: Auto-disable items when ingredients are out
+#### **✅ Inventory Integration** (COMPLETE)
+1. ✅ **Recipe Stock Validation**: Implemented ingredient availability checking
+2. ✅ **Cost Integration**: Connected recipe costs with inventory prices (automatic updates)
+3. ✅ **Stock Deduction**: Implemented multi-ingredient deductions with partial order support
+4. ✅ **Availability Updates**: Auto-disable items when ingredients are out
+5. ✅ **Order References**: Direct foreign key relationships (orderId, orderItemId)
+6. ✅ **Stock Restoration**: Automatic restoration on order cancellation
 
-#### **Day 4-6: Accounting Integration**
-1. **Recipe COGS**: Calculate accurate costs using ingredient data
-2. **Journal Entries**: Auto-generate sales entries with recipe breakdown
-3. **Profit Analysis**: Real-time profit tracking with ingredient costs
-4. **Tax Handling**: Iranian tax calculations with recipe context
+#### **⏭️ Accounting Integration** (FUTURE - Accounting workspace disabled)
+1. ⏭️ **Recipe COGS**: Calculate accurate costs using ingredient data
+2. ⏭️ **Journal Entries**: Auto-generate sales entries with recipe breakdown
+3. ⏭️ **Profit Analysis**: Real-time profit tracking with ingredient costs
+4. ⏭️ **Tax Handling**: Iranian tax calculations with recipe context
 
-#### **Day 7: Real-time Features**
-1. **Kitchen Display**: Recipe-aware order display
-2. **Live Updates**: WebSocket integration for inventory/kitchen
-3. **Testing**: Integration testing across all systems
+#### **✅ Real-time Features** (COMPLETE - 2025-01-27)
+1. ✅ **Kitchen Display**: Recipe-aware order display with automatic stock deduction
+2. ✅ **Live Updates**: WebSocket integration for inventory/kitchen (COMPLETE)
+3. ✅ **Real-time Stock Updates**: Live stock level updates via WebSocket
+4. ✅ **Real-time Cost Updates**: Automatic recipe cost updates when prices change
 
 ### **🎨 PHASE 4: ADVANCED UI (Following Integrations)**
 - **Table Management**: Visual layout and reservations
@@ -267,6 +287,6 @@ JournalEntryService.getRecipeProfitabilityReport(dateRange: DateRange)
 ---
 
 *Last Updated: January 27, 2025*
-*Version: 3.0*
-*Status: Menu Management Complete, Critical Integrations Next*
-*Priority: Inventory Integration → Accounting Integration → Real-time Features* 
+*Version: 4.0*
+*Status: Inventory Integration Complete (95%), Real-time Features Complete, Accounting Integration Disabled*
+*Priority: Testing & Validation → Future Enhancements (Ingredient Substitution, Recipe Yield Management)* 

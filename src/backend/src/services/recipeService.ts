@@ -1,8 +1,7 @@
 import { PrismaClient, Recipe, RecipeIngredient } from '../../../shared/generated/client';
 import { AppError } from '../utils/AppError';
 // import { getInventoryPrice, calculateWeightedAverageCost } from './inventoryService';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 export interface CreateRecipeData {
   menuItemId: string;

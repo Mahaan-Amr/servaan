@@ -16,6 +16,7 @@ export default function CrmLayout({ children }: CrmLayoutProps) {
   const { user } = useAuth();
   const { workspaces } = useWorkspace();
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Find the CRM workspace
   const crmWorkspace = workspaces.find(w => w.id === 'customer-relationship-management');
@@ -83,17 +84,38 @@ export default function CrmLayout({ children }: CrmLayoutProps) {
   return (
     <WorkspaceProtection workspaceId="customer-relationship-management">
       <div className="w-full bg-gray-50 dark:bg-gray-900" dir="rtl">
+        {/* Mobile Menu Button */}
+        <div className="md:hidden fixed top-16 right-4 z-40">
+          <button
+            onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+            className="p-2 rounded-lg bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-shadow"
+            aria-label="تنظیمات منو"
+          >
+            <svg className="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+        
+        {/* Mobile Overlay */}
+        {isMobileSidebarOpen && (
+          <div
+            className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30 top-16"
+            onClick={() => setIsMobileSidebarOpen(false)}
+          />
+        )}
+
         <div className="flex min-h-[calc(100vh-8rem)]">
-          {/* Collapsible Hover Sidebar */}
+          {/* Desktop Sidebar - Hidden on Mobile */}
           <div 
-            className={`fixed right-0 top-16 h-[calc(100vh-4rem)] bg-white dark:bg-gray-800 shadow-lg border-l border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out z-50 ${
+            className={`hidden md:flex fixed right-0 top-16 h-[calc(100vh-4rem)] bg-white dark:bg-gray-800 shadow-lg border-l border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out z-50 flex-col ${
               isSidebarExpanded ? 'w-80' : 'w-16'
             }`}
             onMouseEnter={() => setIsSidebarExpanded(true)}
             onMouseLeave={() => setIsSidebarExpanded(false)}
           >
             {/* Workspace Header */}
-            <div className={`p-4 border-b border-gray-200 dark:border-gray-700 ${isSidebarExpanded ? 'p-6' : 'p-3'}`}>
+            <div className={`p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 ${isSidebarExpanded ? 'p-6' : 'p-3'}`}>
               {isSidebarExpanded ? (
                 <>
                   <div className="flex items-center space-x-4 space-x-reverse mb-4">
@@ -158,7 +180,7 @@ export default function CrmLayout({ children }: CrmLayoutProps) {
             </div>
 
             {/* Navigation Menu */}
-            <nav className="flex-1 p-2">
+            <nav className="flex-1 overflow-y-auto overflow-x-hidden p-2">
               <div className="space-y-1">
                 {navigationItems.map((item) => {
                   const isActive = isItemActive(item.href);
@@ -208,7 +230,7 @@ export default function CrmLayout({ children }: CrmLayoutProps) {
             </nav>
 
             {/* User Info */}
-            <div className={`p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 ${
+            <div className={`p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 ${
               !isSidebarExpanded ? 'p-2' : ''
             }`}>
               {isSidebarExpanded ? (
@@ -235,9 +257,101 @@ export default function CrmLayout({ children }: CrmLayoutProps) {
             </div>
           </div>
 
+          {/* Mobile Sidebar Sheet - Pink for CRM */}
+          <div className={`md:hidden fixed right-0 top-16 h-[calc(100vh-4rem)] bg-white dark:bg-gray-800 shadow-lg border-l border-gray-200 dark:border-gray-700 transition-transform duration-300 ease-in-out z-40 flex flex-col w-80 ${
+            isMobileSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}>
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+              <div className="flex items-center space-x-4 space-x-reverse mb-4">
+                <button
+                  onClick={() => setIsMobileSidebarOpen(false)}
+                  className="inline-flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                >
+                  <svg className="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  بستن منو
+                </button>
+              </div>
+              
+              {/* Workspace Info */}
+              <div className="flex items-center space-x-4 space-x-reverse">
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center shadow-lg`}>
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zM16 16a5 5 0 01-10 0" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h1 className="text-xl font-bold text-gray-900 dark:text-white">مشتریان</h1>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">CRM</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Navigation */}
+            <nav className="flex-1 overflow-y-auto overflow-x-hidden p-2">
+              <div className="space-y-1">
+                {navigationItems.map((item) => {
+                  const isActive = isItemActive(item.href);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setIsMobileSidebarOpen(false)}
+                      className={`group flex items-center rounded-lg transition-all duration-200 px-4 py-3 ${
+                        isActive
+                          ? 'bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-300'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
+                      }`}
+                    >
+                      <svg
+                        className={`h-5 w-5 ml-3 transition-colors ${
+                          isActive ? 'text-pink-500' : 'text-gray-400 group-hover:text-gray-500'
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d={item.icon}
+                        />
+                      </svg>
+                      <div className="flex-1">
+                        <div className="font-medium text-sm">{item.name}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{item.description}</div>
+                      </div>
+                      {isActive && (
+                        <div className="w-2 h-2 bg-pink-500 rounded-full"></div>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </nav>
+
+            {/* User Info at Bottom */}
+            {user && (
+              <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+                <div className="flex items-center space-x-3 space-x-reverse">
+                  <div className="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-medium">{user.name.charAt(0)}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                      {user.role === 'ADMIN' ? 'مدیر سیستم' : user.role === 'MANAGER' ? 'مدیر' : 'کاربر'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Main Content */}
-          <div className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarExpanded ? 'mr-80' : 'mr-16'
+          <div className="flex-1 transition-all duration-300 mr-0 md:mr-16 ease-in-out">
           }`}>
             <div className="w-full">
               {children}

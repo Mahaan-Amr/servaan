@@ -184,8 +184,36 @@ zero_downtime_deployment() {
     # Step 6: Final health check
     print_status "Performing final health checks..."
     perform_final_health_checks
+
+    # Step 7: Reload Nginx if available (non-fatal)
+    reload_nginx_if_available
     
     print_success "Zero-downtime deployment completed successfully!"
+}
+
+# Function to reload Nginx if available (non-fatal)
+reload_nginx_if_available() {
+    print_status "Attempting to reload Nginx..."
+
+    if ! command_exists nginx; then
+        print_warning "Nginx not installed; skipping reload."
+        return 0
+    fi
+
+    if ! systemctl is-active --quiet nginx; then
+        print_warning "Nginx service is not active; skipping reload."
+        return 0
+    fi
+
+    if nginx -t; then
+        if systemctl reload nginx; then
+            print_success "Nginx reloaded successfully"
+        else
+            print_warning "Failed to reload Nginx (non-fatal)."
+        fi
+    else
+        print_warning "Nginx configuration test failed; skipping reload."
+    fi
 }
 
 # Function to perform comprehensive health checks

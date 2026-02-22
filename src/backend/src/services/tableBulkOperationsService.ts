@@ -2,8 +2,7 @@ import { PrismaClient, TableStatus, Table, TableReservation } from '../../../sha
 import { AppError } from '../utils/AppError';
 import { TableService } from './tableService';
 import { tableCacheService } from './tableCacheService';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 export interface BulkStatusChangeRequest {
   tableIds: string[];

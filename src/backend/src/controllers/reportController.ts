@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ReportService } from '../services/reportService';
+import { ReportService, ReportServiceExecutionError } from '../services/reportService';
 
 export class ReportController {
   /**
@@ -136,6 +136,13 @@ export class ReportController {
       });
     } catch (error) {
       console.error('Error in executeReport:', error);
+      if (error instanceof ReportServiceExecutionError && error.code === 'VALIDATION_ERROR') {
+        return res.status(400).json({
+          error: 'پیکربندی گزارش نامعتبر است',
+          code: error.code,
+          details: error.message
+        });
+      }
       res.status(500).json({
         error: 'خطا در اجرای گزارش',
         details: error instanceof Error ? error.message : 'Unknown error'
@@ -360,6 +367,13 @@ export class ReportController {
       });
     } catch (error) {
       console.error('Error in executeTemporaryReport:', error);
+      if (error instanceof ReportServiceExecutionError && error.code === 'VALIDATION_ERROR') {
+        return res.status(400).json({
+          error: 'پیکربندی گزارش نامعتبر است',
+          code: error.code,
+          details: error.message
+        });
+      }
       res.status(500).json({
         error: 'خطا در اجرای گزارش موقت',
         details: error instanceof Error ? error.message : 'Unknown error'

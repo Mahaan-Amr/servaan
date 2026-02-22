@@ -3,11 +3,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { io } from 'socket.io-client';
 import { Item, InventoryStatus } from '../../../../../shared/types';
 import * as itemService from '../../../../services/itemService';
 import * as inventoryService from '../../../../services/inventoryService';
 import toast from 'react-hot-toast';
 import { ConfirmationModal } from '../../../../components/ui/ConfirmationModal';
+import { BASE_URL } from '../../../../lib/apiUtils';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 export default function ItemsPage() {
   const [loading, setLoading] = useState(true);
@@ -28,35 +31,109 @@ export default function ItemsPage() {
   const [pendingDeleteItem, setPendingDeleteItem] = useState<{ id: string; name: string } | null>(null);
   const [pendingResetItem, setPendingResetItem] = useState<{ id: string; name: string; currentStock: number } | null>(null);
 
-  // Load items and inventory data
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const [itemsData, inventoryData] = await Promise.all([
-          itemService.getItems(),
-          inventoryService.getCurrentInventory()
-        ]);
-        
-        setItems(itemsData);
-        setInventoryStatus(inventoryData);
-        
-        // Extract unique categories for filtering - Fixed TypeScript issue
-        const categories = Array.from(new Set(itemsData.map(item => item.category)));
-        setAvailableCategories(categories);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'خطا در دریافت اطلاعات';
-        setError(errorMessage);
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { user } = useAuth();
 
-    loadData();
+  // Load items and inventory data
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const [itemsData, inventoryData] = await Promise.all([
+        itemService.getItems(),
+        inventoryService.getCurrentInventory()
+      ]);
+      
+      setItems(itemsData);
+      setInventoryStatus(inventoryData);
+      
+      // Extract unique categories for filtering - Fixed TypeScript issue
+      const categories = Array.from(new Set(itemsData.map(item => item.category)));
+      setAvailableCategories(categories);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'خطا در دریافت اطلاعات';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Initialize WebSocket connection for real-time stock updates
+  useEffect(() => {
+    if (!user) return;
+
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (!token) return;
+
+    const socket = io(BASE_URL, {
+      auth: { token },
+      transports: ['websocket', 'polling']
+    });
+
+    socket.on('connect', () => {
+      console.log('✅ [INVENTORY] Connected to real-time stock update server');
+    });
+
+    socket.on('disconnect', () => {
+      console.log('❌ [INVENTORY] Disconnected from real-time stock update server');
+    });
+
+    // Listen for real-time stock updates
+    socket.on('inventory:stock-updated', (data: {
+      updates: Array<{
+        itemId: string;
+        itemName: string;
+        previousStock: number;
+        currentStock: number;
+        change: number;
+        reason: string;
+        orderId?: string;
+        orderNumber?: string;
+      }>;
+    }) => {
+      console.log('📦 [INVENTORY] Stock update received:', data);
+      
+      // Update local inventory status (only update existing items)
+      data.updates.forEach(update => {
+        setInventoryStatus(prev => {
+          const existing = prev.find(s => s.itemId === update.itemId);
+          if (existing) {
+            // Update existing item's current stock
+            return prev.map(s => 
+              s.itemId === update.itemId 
+                ? { ...s, current: update.currentStock }
+                : s
+            );
+          }
+          // If item doesn't exist in inventory status, refresh data from server
+          // This ensures we have all required fields (itemName, category, unit, etc.)
+          return prev;
+        });
+
+        // Show toast notification
+        const changeText = update.change > 0 ? `+${update.change}` : `${update.change}`;
+        const reasonText = update.reason === 'order_completed' 
+          ? `سفارش ${update.orderNumber || ''} تکمیل شد`
+          : update.reason === 'order_cancelled'
+          ? `سفارش ${update.orderNumber || ''} لغو شد`
+          : '';
+
+        toast.success(`موجودی ${update.itemName}: ${update.previousStock} → ${update.currentStock} (${changeText}) ${reasonText}`);
+      });
+
+      // Refresh inventory data to ensure consistency
+      loadData();
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user, loadData]);
 
   // Get current stock for an item
   const getCurrentStock = useCallback((itemId: string): number => {

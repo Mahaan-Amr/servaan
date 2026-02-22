@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import { useSearchParams } from 'next/navigation';
 import { FarsiDatePicker } from '../../../../../components/ui/FarsiDatePicker';
 import { FormattedNumberInput } from '../../../../../components/ui/FormattedNumberInput';
+import { Button, Card, Section } from '../../../../../components/ui';
 
 export default function AddInventoryPage() {
   const [items, setItems] = useState<Item[]>([]);
@@ -98,8 +99,8 @@ export default function AddInventoryPage() {
   const selectedItem = items.find(item => item.id === formData.itemId);
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+    <Section className="space-y-6">
+      <Card className="p-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -109,7 +110,7 @@ export default function AddInventoryPage() {
               ثبت ورود کالای جدید به انبار
             </p>
           </div>
-          <button
+          <Button
             onClick={() => {
               const returnUrl = searchParams.get('returnUrl');
               if (returnUrl) {
@@ -118,14 +119,14 @@ export default function AddInventoryPage() {
                 router.push('/workspaces/inventory-management/inventory');
               }
             }}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            variant="secondary"
           >
             بازگشت
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+      <Card className="p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
@@ -190,7 +191,7 @@ export default function AddInventoryPage() {
 
             <div>
               <FormattedNumberInput
-                label="قیمت واحد (ریال)"
+                label="قیمت واحد (تومان)"
                 value={formData.unitPrice}
                 onChange={(value: string) => handleChange({ target: { name: 'unitPrice', value } } as React.ChangeEvent<HTMLInputElement>)}
                 placeholder="قیمت خرید"
@@ -249,9 +250,9 @@ export default function AddInventoryPage() {
               <h3 className="text-sm font-medium text-green-800 dark:text-green-400 mb-2">خلاصه ورود</h3>
               <div className="text-sm text-green-700 dark:text-green-300">
                 <p>مقدار: {parseFloat(formData.quantity).toLocaleString('fa-IR')} {selectedItem?.unit || ''}</p>
-                <p>قیمت واحد: {parseFloat(formData.unitPrice).toLocaleString('fa-IR')} ریال</p>
+                <p>قیمت واحد: {parseFloat(formData.unitPrice).toLocaleString('fa-IR')} تومان</p>
                 <p className="font-medium">
-                  مبلغ کل: {(parseFloat(formData.quantity) * parseFloat(formData.unitPrice)).toLocaleString('fa-IR')} ریال
+                  مبلغ کل: {(parseFloat(formData.quantity) * parseFloat(formData.unitPrice)).toLocaleString('fa-IR')} تومان
                 </p>
               </div>
             </div>
@@ -264,10 +265,11 @@ export default function AddInventoryPage() {
             >
               انصراف
             </Link>
-            <button
+            <Button
               type="submit"
               disabled={loading || !formData.itemId || !formData.quantity}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+              variant="success"
+              className="disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
@@ -280,10 +282,10 @@ export default function AddInventoryPage() {
               ) : (
                 'ثبت ورود کالا'
               )}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </Card>
+    </Section>
   );
-} 
+}

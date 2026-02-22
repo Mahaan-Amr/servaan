@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useBIWorkspace } from '../../../../contexts/BIWorkspaceContext';
 import { ProfitData } from '../../../../types/bi';
 import { biService } from '../../../../services/biService';
 import { ChartDataTransformer } from '../../../../services/chartDataTransformer';
@@ -10,6 +11,7 @@ import { CustomScatterChart } from '../../../../components/charts/ScatterChart';
 import { CustomDonutChart } from '../../../../components/charts/DonutChart';
 import { CustomMatrixChart } from '../../../../components/charts/MatrixChart';
 import { CustomTopProductsChart } from '../../../../components/charts/TopProductsChart';
+import { Button, Card, Section } from '../../../../components/ui';
 
 // Backend response interfaces
 interface BackendProfitItem {
@@ -59,6 +61,7 @@ const getProfitBadge = (margin: number) => {
 };
 
 export default function ProfitAnalysisPage() {
+  const { workspace, isOrderingWorkspace, isMergedWorkspace } = useBIWorkspace();
   const [profitData, setProfitData] = useState<ProfitData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -184,9 +187,31 @@ export default function ProfitAnalysisPage() {
     }
   }, [period, groupBy]);
 
+  // Load profit analysis data - only for ordering and merged workspaces
   useEffect(() => {
-    loadProfitAnalysis();
-  }, [loadProfitAnalysis]); // Add loadProfitAnalysis as dependency since it's now useCallback
+    if (isOrderingWorkspace || isMergedWorkspace) {
+      loadProfitAnalysis();
+    }
+  }, [loadProfitAnalysis, isOrderingWorkspace, isMergedWorkspace]);
+
+  // Show message if workspace doesn't support profit analysis
+  if (workspace === 'inventory') {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <div className="text-center max-w-md">
+          <div className="bg-yellow-100 dark:bg-yellow-900/20 rounded-full p-4 mx-auto w-16 h-16 flex items-center justify-center mb-4">
+            <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">تحلیل سودآوری در دسترس نیست</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            تحلیل سودآوری فقط برای workspace سفارشات و ترکیبی در دسترس است. لطفاً workspace را تغییر دهید.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Enhanced data transformation functions using the new ChartDataTransformer
   // These maintain full backward compatibility while providing better type safety
@@ -238,21 +263,22 @@ export default function ProfitAnalysisPage() {
           </div>
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2">خطا در بارگذاری داده‌ها</h3>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-          <button
-            onClick={loadProfitAnalysis}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors text-sm sm:text-base"
-          >
-            تلاش مجدد
-          </button>
+          <Button
+              onClick={loadProfitAnalysis}
+              variant="success"
+              size="small"
+            >
+              Refresh
+            </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+    <Section className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
         <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
@@ -264,16 +290,20 @@ export default function ProfitAnalysisPage() {
       </div>
           <div className="flex flex-col sm:flex-row gap-3 sm:space-x-4 sm:space-x-reverse">
             <select
+              id="profit-groupby-select"
               value={groupBy}
               onChange={(e) => setGroupBy(e.target.value as 'item' | 'category')}
+              aria-label="نوع گروه‌بندی"
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 dark:text-white text-sm sm:text-base"
             >
               <option value="item">بر اساس کالا</option>
               <option value="category">بر اساس دسته‌بندی</option>
             </select>
             <select
+              id="profit-period-select"
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
+              aria-label="بازه زمانی"
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white dark:bg-gray-700 dark:text-white text-sm sm:text-base"
             >
               <option value="7d">۷ روز گذشته</option>
@@ -281,15 +311,16 @@ export default function ProfitAnalysisPage() {
               <option value="90d">۹۰ روز گذشته</option>
               <option value="1y">یک سال گذشته</option>
             </select>
-            <button
+            <Button
               onClick={loadProfitAnalysis}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm sm:text-base"
+              variant="success"
+              size="small"
             >
               بروزرسانی
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Summary Cards */}
       {profitData && (
@@ -303,7 +334,7 @@ export default function ProfitAnalysisPage() {
               </div>
               <div className="mr-3 sm:mr-4">
                 <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">کل درآمد</p>
-                <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(profitData.totalRevenue)} ریال</p>
+                <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(profitData.totalRevenue)} تومان</p>
               </div>
             </div>
           </div>
@@ -317,7 +348,7 @@ export default function ProfitAnalysisPage() {
               </div>
               <div className="mr-3 sm:mr-4">
                 <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">کل هزینه</p>
-                <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(profitData.totalCost)} ریال</p>
+                <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(profitData.totalCost)} تومان</p>
               </div>
             </div>
           </div>
@@ -332,7 +363,7 @@ export default function ProfitAnalysisPage() {
               <div className="mr-3 sm:mr-4">
                 <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">سود خالص</p>
                 <p className={`text-lg sm:text-xl font-bold ${profitData.overallMargin >= 20 ? 'text-green-600 dark:text-green-400' : profitData.overallMargin >= 10 ? 'text-yellow-600 dark:text-yellow-400' : profitData.overallMargin >= 0 ? 'text-orange-600 dark:text-orange-400' : 'text-red-600 dark:text-red-400'}`}>
-                  {formatCurrency(profitData.totalProfit)} ریال
+                  {formatCurrency(profitData.totalProfit)} تومان
                 </p>
               </div>
             </div>
@@ -369,7 +400,7 @@ export default function ProfitAnalysisPage() {
             />
           </div>
 
-          {/* Charts Grid - Two Row Layout */}
+          {/* Charts Grid - Three Row Layout */}
           <div className="space-y-4 sm:space-y-6">
             {/* First Row - Revenue vs Profit + Margin Distribution */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
@@ -386,36 +417,39 @@ export default function ProfitAnalysisPage() {
 
               {/* Profit Margin Distribution - 4 columns */}
               <div className="lg:col-span-4">
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6 space-y-4 sm:space-y-6">
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
                   <CustomDonutChart
                     data={getProfitMarginDistributionData()}
                     title="توزیع حاشیه سود"
-                  />
-
-                  <CustomBarChart
-                    data={getCostVsRevenueComparisonData().map(item => ({
-                      name: item.name,
-                      revenue: item.revenue,
-                      cost: item.cost,
-                      profit: item.profit,
-                      fill: '#3B82F6'
-                    }))}
-                    bars={[
-                      { dataKey: 'revenue', name: 'درآمد', fill: '#10B981' },
-                      { dataKey: 'cost', name: 'هزینه', fill: '#EF4444' }
-                    ]}
-                    title="مقایسه هزینه و درآمد"
-                    xAxisKey="name"
-                    height={250}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Second Row - Cost vs Revenue + Matrix */}
+            {/* Second Row - Cost vs Revenue Comparison (Full Width) */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+              <CustomBarChart
+                data={getCostVsRevenueComparisonData().map(item => ({
+                  name: item.name,
+                  revenue: item.revenue,
+                  cost: item.cost,
+                  profit: item.profit,
+                  fill: '#3B82F6'
+                }))}
+                bars={[
+                  { dataKey: 'revenue', name: 'درآمد', fill: '#10B981' },
+                  { dataKey: 'cost', name: 'هزینه', fill: '#EF4444' }
+                ]}
+                title="مقایسه هزینه و درآمد"
+                xAxisKey="name"
+                height={350}
+              />
+            </div>
+
+            {/* Third Row - Profit Performance Matrix */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
-              {/* Cost vs Revenue Comparison - 6 columns */}
-              <div className="lg:col-span-6">
+              {/* Profit Performance Matrix - 12 columns (full width) */}
+              <div className="lg:col-span-12">
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
                   <CustomMatrixChart
                     data={getProfitPerformanceMatrixData()}
@@ -474,13 +508,13 @@ export default function ProfitAnalysisPage() {
                       {item.quantity}
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-900 dark:text-white">
-                      {formatCurrency(item.revenue)} ریال
+                      {formatCurrency(item.revenue)} تومان
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-900 dark:text-white">
-                      {formatCurrency(item.cost)} ریال
+                      {formatCurrency(item.cost)} تومان
                     </td>
                     <td className={`px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium ${getProfitColor(item.profitMargin)}`}>
-                      {formatCurrency(item.profit)} ریال
+                      {formatCurrency(item.profit)} تومان
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${getProfitBadge(item.profitMargin)}`}>
@@ -555,6 +589,6 @@ export default function ProfitAnalysisPage() {
           </div>
         </div>
       )}
-    </div>
+    </Section>
   );
-} 
+}

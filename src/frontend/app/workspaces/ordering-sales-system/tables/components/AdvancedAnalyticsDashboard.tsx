@@ -68,10 +68,10 @@ export default function AdvancedAnalyticsDashboard({ isOpen, onClose }: Advanced
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-7xl h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-3 sm:p-4 z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-7xl h-[90vh] max-h-[95vh] overflow-hidden">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col gap-3 lg:flex-row lg:justify-between lg:items-center p-3 sm:p-4 md:p-6 border-b border-gray-200 dark:border-gray-700">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               داشبورد تحلیل پیشرفته میزها
@@ -81,9 +81,9 @@ export default function AdvancedAnalyticsDashboard({ isOpen, onClose }: Advanced
             </p>
           </div>
           
-          <div className="flex items-center space-x-4 rtl:space-x-reverse">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:space-x-4 rtl:space-x-reverse">
             {/* Date Range Selector */}
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:space-x-2 rtl:space-x-reverse">
               <FarsiDatePicker
                 value={dateRange.startDate}
                 onChange={(value) => setDateRange(prev => ({ ...prev, startDate: value }))}
@@ -113,7 +113,7 @@ export default function AdvancedAnalyticsDashboard({ isOpen, onClose }: Advanced
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex space-x-1 rtl:space-x-reverse border-b border-gray-200 dark:border-gray-700 px-6">
+        <div className="mobile-tabs-rail rtl:space-x-reverse border-b border-gray-200 dark:border-gray-700 px-3 sm:px-6">
           <button
             onClick={() => setActiveTab('overview')}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
@@ -172,7 +172,7 @@ export default function AdvancedAnalyticsDashboard({ isOpen, onClose }: Advanced
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
           {loading && (
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>

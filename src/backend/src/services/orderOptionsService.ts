@@ -1,8 +1,7 @@
 import { PrismaClient } from '../../../shared/generated/client';
 import { AppError } from '../utils/AppError';
 import { OrderCalculationService, OrderOptions, BusinessPreset } from './orderCalculationService';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 export interface CreateOrderOptionsData {
   orderId: string;

@@ -17,18 +17,18 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   className = ''
 }) => {
   return (
-    <div className={`flex flex-col md:flex-row md:items-center justify-between mb-6 ${className}`}>
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
+    <div className={`ui-page-header ${className}`}>
+      <div className="min-w-0">
+        <h1 className="ui-page-header__title">{title}</h1>
         {description && (
-          <p className="mt-1 text-gray-500 dark:text-gray-400">{description}</p>
+          <p className="ui-page-header__description">{description}</p>
         )}
       </div>
 
       {actionButtonText && onActionButtonClick && (
         <button
           onClick={onActionButtonClick}
-          className="mt-4 md:mt-0 btn btn-primary flex items-center gap-2 whitespace-nowrap"
+          className="btn btn-primary inline-flex items-center gap-2 whitespace-nowrap"
         >
           <FaPlus size={14} />
           {actionButtonText}

@@ -1,8 +1,7 @@
 import { PrismaClient, OrderStatus } from '../../../shared/generated/client';
 import { AppError } from '../utils/AppError';
 import { OrderAccountingIntegrationService } from './orderAccountingIntegrationService';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 export interface BulkOrderStatusChangeRequest {
   orderIds: string[];

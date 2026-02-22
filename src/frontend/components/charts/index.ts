@@ -12,4 +12,8 @@ export { CustomAreaChart } from './AreaChart';
 export { CustomForecastChart } from './ForecastChart';
 export { CustomMultiMetricChart } from './MultiMetricChart';
 export { CustomInsightsCard } from './InsightsCard';
-export { CustomKPIScorecard } from './KPIScorecard'; 
+export { CustomKPIScorecard } from './KPIScorecard';
+
+// Advanced visualization charts (Week 11)
+export { CustomHeatmapChart } from './HeatmapChart';
+export { CustomTreemapChart } from './TreemapChart'; 

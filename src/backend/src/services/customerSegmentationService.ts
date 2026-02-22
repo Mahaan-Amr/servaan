@@ -1,8 +1,7 @@
 import { PrismaClient } from '../../../shared/generated/client';
 import { AppError } from '../middlewares/errorHandler';
 import { getTenantPrefix } from '../utils/orderUtils';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 // Utility function to convert BigInt values to numbers
 function convertBigIntToNumber(obj: any): any {

@@ -273,8 +273,8 @@ export default function TableLayoutDesigner({
   return (
     <div className="space-y-4">
       {/* Controls */}
-      <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-        <div className="flex items-center space-x-4 space-x-reverse">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between bg-white dark:bg-gray-800 rounded-lg p-3 sm:p-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:space-x-4 sm:space-x-reverse">
           {/* Floor Selector */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -283,7 +283,7 @@ export default function TableLayoutDesigner({
             <select
               value={selectedFloor}
               onChange={(e) => setSelectedFloor(Number(e.target.value))}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-gray-700 dark:text-white"
+              className="w-full sm:w-auto px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-gray-700 dark:text-white"
             >
               {floors.map(floor => (
                 <option key={floor} value={floor}>طبقه {floor}</option>
@@ -299,7 +299,7 @@ export default function TableLayoutDesigner({
             <select
               value={selectedSection}
               onChange={(e) => setSelectedSection(e.target.value)}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-gray-700 dark:text-white"
+              className="w-full sm:w-auto px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 dark:bg-gray-700 dark:text-white"
             >
               {sections.map(section => (
                 <option key={section} value={section}>{section}</option>
@@ -308,7 +308,7 @@ export default function TableLayoutDesigner({
           </div>
         </div>
 
-        <div className="flex items-center space-x-4 space-x-reverse">
+        <div className="flex flex-wrap items-center gap-2 sm:space-x-4 sm:space-x-reverse">
           {/* Edit Mode Toggle */}
           <button
             onClick={() => setEditMode(!editMode)}

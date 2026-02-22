@@ -1,12 +1,23 @@
 import { Router } from 'express';
 import { biController } from '../controllers/biController';
 import { authenticate } from '../middlewares/authMiddleware';
+import { resolveTenant, requireTenant, requireFeature } from '../middlewares/tenantMiddleware';
 import { prisma } from '../services/dbService';
 
 const router = Router();
 
-// تمام route های BI نیاز به احراز هویت دارند
+// CRITICAL: Tenant resolution middleware (extracts subdomain)
+// Note: resolveTenant is already applied globally in index.ts, but we ensure it here too
+// router.use(resolveTenant); // Already applied globally
+
+// CRITICAL: Authentication middleware
 router.use(authenticate);
+
+// CRITICAL: Require tenant context for all BI routes
+router.use(requireTenant);
+
+// CRITICAL: Check if tenant has BI feature enabled
+router.use(requireFeature('hasAnalyticsBI'));
 
 /**
  * Dashboard و KPI Routes
@@ -166,6 +177,28 @@ router.post('/reports/:id/share', biController.shareReport);
 // اجرای گزارش سفارشی
 router.post('/reports/:id/execute', biController.executeReport);
 
+/**
+ * Template Routes
+ */
+
+// دریافت لیست قالب‌های گزارش
+router.get('/templates', biController.getTemplates);
+
+// دریافت قالب گزارش بر اساس ID
+router.get('/templates/:id', biController.getTemplateById);
+
+// ایجاد قالب گزارش جدید
+router.post('/templates', biController.createTemplate);
+
+// بروزرسانی قالب گزارش
+router.put('/templates/:id', biController.updateTemplate);
+
+// حذف قالب گزارش
+router.delete('/templates/:id', biController.deleteTemplate);
+
+// ایجاد گزارش از قالب
+router.post('/templates/:id/create-report', biController.createReportFromTemplate);
+
 // دریافت تاریخچه اجرای گزارش
 router.get('/reports/:id/executions', biController.getExecutionHistory);
 
@@ -182,5 +215,18 @@ router.get('/export/:reportId', biController.exportReport);
 
 // دریافت بینش‌های هوشمند
 router.get('/insights', biController.getInsights);
+
+/**
+ * Data Aggregation Routes (New)
+ */
+
+// Execute aggregation queries across multiple workspaces
+router.post('/aggregate', biController.aggregate);
+
+// Get available data schemas from workspace connectors
+router.get('/schema', biController.getSchema);
+
+// Data exploration endpoint (simplified query interface)
+router.post('/explore', biController.explore);
 
 export default router; 

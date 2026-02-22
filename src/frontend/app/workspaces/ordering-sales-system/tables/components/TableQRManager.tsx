@@ -251,7 +251,7 @@ export const TableQRManager: React.FC<TableQRManagerProps> = ({
     >
       <div className="space-y-6">
         {/* Tab Navigation */}
-        <div className="flex space-x-1 rtl:space-x-reverse border-b border-gray-200 dark:border-gray-700">
+        <div className="mobile-tabs-rail rtl:space-x-reverse border-b border-gray-200 dark:border-gray-700">
           <button
             onClick={() => setActiveTab('generate')}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
@@ -360,7 +360,7 @@ export const TableQRManager: React.FC<TableQRManagerProps> = ({
             {/* QR Code Display */}
             {qrCodeData && (
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                <div className="flex justify-between items-center mb-4">
+                <div className="mobile-control-stack sm:justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     QR Code for Table {qrCodeData.tableNumber}
                   </h3>
@@ -450,7 +450,7 @@ export const TableQRManager: React.FC<TableQRManagerProps> = ({
         {/* Analytics */}
         {activeTab === 'analytics' && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="mobile-control-stack sm:justify-between">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 QR Code Analytics
               </h3>
@@ -517,7 +517,7 @@ export const TableQRManager: React.FC<TableQRManagerProps> = ({
         {/* Print and Share */}
         {activeTab === 'print' && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="mobile-control-stack sm:justify-between">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Print & Share QR Code
               </h3>
@@ -531,7 +531,7 @@ export const TableQRManager: React.FC<TableQRManagerProps> = ({
             {qrCodeData ? (
               <div className="space-y-4">
                 {/* Action Buttons */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                   <button
                     onClick={printQRCode}
                     className="flex flex-col items-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"

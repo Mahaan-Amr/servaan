@@ -1,6 +1,5 @@
 import { PrismaClient } from '../../../shared/generated/client';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 export interface StockMovementFilter {
   page?: number;
@@ -32,18 +31,69 @@ export interface DeletionPermission {
 }
 
 /**
- * Calculate current stock for an item
+ * Get stock summary for all items (optimized - single query)
+ * Returns stock level for all items in one aggregation query
+ */
+async function getItemsStockSummary(tenantId: string): Promise<Map<string, number>> {
+  const entries = await prisma.inventoryEntry.groupBy({
+    by: ['itemId'],
+    where: {
+      tenantId,
+      deletedAt: null
+    },
+    _sum: {
+      quantity: true
+    }
+  });
+
+  const stockMap = new Map<string, number>();
+  for (const entry of entries) {
+    stockMap.set(entry.itemId, entry._sum.quantity || 0);
+  }
+  return stockMap;
+}
+
+/**
+ * Get weighted average cost for all items (optimized - single query)
+ */
+async function getItemsWACMap(tenantId: string): Promise<Map<string, number>> {
+  const inEntries = await prisma.inventoryEntry.groupBy({
+    by: ['itemId'],
+    where: {
+      tenantId,
+      type: 'IN',
+      deletedAt: null,
+      unitPrice: { not: null }
+    },
+    _sum: {
+      quantity: true,
+      unitPrice: true
+    }
+  });
+
+  const wacMap = new Map<string, number>();
+  for (const entry of inEntries) {
+    if (entry._sum.quantity && entry._sum.unitPrice) {
+      const wac = Number(entry._sum.unitPrice) / Number(entry._sum.quantity);
+      wacMap.set(entry.itemId, wac);
+    }
+  }
+  return wacMap;
+}
+
+/**
+ * Get current stock for an item
  */
 export async function calculateCurrentStock(
   itemId: string, 
-  tenantId: string, // Added tenantId
+  tenantId: string,
   startDate?: Date, 
   endDate?: Date
 ): Promise<number> {
   const whereClause: any = { 
     itemId,
-    tenantId, // Added tenantId filter
-    deletedAt: null // Exclude soft-deleted entries
+    tenantId,
+    deletedAt: null
   };
   
   if (startDate || endDate) {
@@ -54,16 +104,14 @@ export async function calculateCurrentStock(
 
   const result = await prisma.inventoryEntry.aggregate({
     where: whereClause,
-    _sum: {
-      quantity: true
-    }
+    _sum: { quantity: true }
   });
 
   return result._sum.quantity || 0;
 }
 
 /**
- * Get items with negative stock (deficits)
+ * Get items with negative stock (OPTIMIZED - single query instead of N+1)
  */
 export async function getStockDeficits(tenantId: string): Promise<Array<{
   itemId: string;
@@ -74,6 +122,7 @@ export async function getStockDeficits(tenantId: string): Promise<Array<{
   deficitAmount: number;
   tenantId: string;
 }>> {
+  // Get all items
   const items = await prisma.item.findMany({
     where: { 
       isActive: true,
@@ -88,10 +137,13 @@ export async function getStockDeficits(tenantId: string): Promise<Array<{
     }
   });
 
+  // Get stock for ALL items in ONE query
+  const stockMap = await getItemsStockSummary(tenantId);
+
   const deficits = [];
   
   for (const item of items) {
-    const currentStock = await calculateCurrentStock(item.id, item.tenantId);
+    const currentStock = stockMap.get(item.id) || 0;
     if (currentStock < 0) {
       deficits.push({
         itemId: item.id,
@@ -109,7 +161,7 @@ export async function getStockDeficits(tenantId: string): Promise<Array<{
 }
 
 /**
- * Get deficit summary statistics
+ * Get deficit summary statistics (OPTIMIZED - uses pre-fetched data)
  */
 export async function getDeficitSummary(tenantId: string): Promise<{
   totalDeficitItems: number;
@@ -119,13 +171,16 @@ export async function getDeficitSummary(tenantId: string): Promise<{
 }> {
   const deficits = await getStockDeficits(tenantId);
   
+  // Fetch WAC map once for all items
+  const wacMap = await getItemsWACMap(tenantId);
+  
   let totalDeficitValue = 0;
   let criticalDeficits = 0;
   let moderateDeficits = 0;
 
   for (const deficit of deficits) {
-    // Calculate approximate value (using average cost if available)
-    const averageCost = await calculateWeightedAverageCost(deficit.itemId, deficit.tenantId);
+    // Use pre-fetched WAC data instead of querying for each item
+    const averageCost = wacMap.get(deficit.itemId) || 0;
     const deficitValue = deficit.deficitAmount * averageCost;
     totalDeficitValue += deficitValue;
 
@@ -201,6 +256,10 @@ export async function getStockMovements(itemId: string, filter: StockMovementFil
 /**
  * Validate stock entry data
  */
+/**
+ * Validate stock entry data with comprehensive input checks
+ * ENHANCED: Added barcode format, minStock validation, and date range checks
+ */
 export function validateStockEntry(entry: {
   itemId: string;
   quantity: number;
@@ -208,15 +267,23 @@ export function validateStockEntry(entry: {
   note?: string;
   unitPrice?: number;
   expiryDate?: Date;
+  barcode?: string;
+  minStock?: number;
+  dateRange?: { startDate: Date; endDate: Date };
 }): ValidationResult {
   const errors: string[] = [];
 
-  // Check quantity
+  // Validate itemId
+  if (!entry.itemId || entry.itemId.trim() === '') {
+    errors.push('شناسه کالا الزامی است');
+  }
+
+  // Validate quantity is not zero
   if (entry.quantity === 0) {
     errors.push('مقدار باید غیر صفر باشد');
   }
 
-  // Check quantity sign matches type
+  // Validate quantity sign matches type
   if (entry.type === 'IN' && entry.quantity < 0) {
     errors.push('مقدار ورودی باید مثبت باشد');
   }
@@ -225,18 +292,42 @@ export function validateStockEntry(entry: {
     errors.push('مقدار خروجی باید منفی باشد');
   }
 
-  // Check unit price for IN entries
+  // Validate unit price for IN entries
   if (entry.type === 'IN' && (!entry.unitPrice || entry.unitPrice <= 0)) {
-    errors.push('قیمت واحد برای ورودی الزامی است');
+    errors.push('قیمت واحد برای ورودی الزامی و مثبت باشد');
   }
 
   if (entry.unitPrice && entry.unitPrice < 0) {
     errors.push('قیمت واحد باید مثبت باشد');
   }
 
-  // Check expiry date
-  if (entry.expiryDate && entry.expiryDate < new Date()) {
-    errors.push('تاریخ انقضا باید در آینده باشد');
+  // Validate expiry date (must be in future)
+  if (entry.expiryDate) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (entry.expiryDate < today) {
+      errors.push('تاریخ انقضا باید در آینده باشد');
+    }
+  }
+
+  // NEW: Validate barcode format (alphanumeric, 4-50 chars)
+  if (entry.barcode) {
+    const barcodeRegex = /^[a-zA-Z0-9]{4,50}$/;
+    if (!barcodeRegex.test(entry.barcode)) {
+      errors.push('بارکد باید 4-50 کاراکتر حروف و اعداد باشد');
+    }
+  }
+
+  // NEW: Validate minStock >= 0
+  if (entry.minStock !== undefined && entry.minStock < 0) {
+    errors.push('حد اقل موجودی نمی‌تواند منفی باشد');
+  }
+
+  // NEW: Validate date range
+  if (entry.dateRange) {
+    if (entry.dateRange.startDate >= entry.dateRange.endDate) {
+      errors.push('تاریخ شروع باید قبل از تاریخ پایان باشد');
+    }
   }
 
   return {
@@ -295,28 +386,41 @@ export async function calculateWeightedAverageCost(itemId: string, tenantId: str
 /**
  * Calculate inventory valuation
  */
-export async function calculateInventoryValuation(tenantId: string): Promise<InventoryValuation> { // Added tenantId parameter
+/**
+ * Calculate total inventory valuation for reporting
+ * OPTIMIZED: Fetches stock and WAC for all items in parallel single queries
+ * Before: 2N queries (N calls to calculateCurrentStock + N calls to calculateWeightedAverageCost)
+ * After: 3 queries total (items query + 1 groupBy for stock + 1 groupBy for WAC)
+ */
+export async function calculateInventoryValuation(tenantId: string): Promise<InventoryValuation> {
   // Get all items with their current stock
   const items = await prisma.item.findMany({
     where: { 
       isActive: true,
-      tenantId // Added tenantId filter
+      tenantId
     },
     select: {
       id: true,
       name: true,
-      tenantId: true // Added tenantId to select
+      tenantId: true
     }
   });
+
+  // Fetch both stock and WAC in parallel with single queries each (not per-item loops)
+  const [stockMap, wacMap] = await Promise.all([
+    getItemsStockSummary(tenantId),
+    getItemsWACMap(tenantId)
+  ]);
 
   const valuationItems = [];
   let totalValue = 0;
 
   for (const item of items) {
-    const currentStock = await calculateCurrentStock(item.id, item.tenantId);
+    // Use pre-calculated maps instead of querying for each item
+    const currentStock = stockMap.get(item.id) || 0;
     
     if (currentStock > 0) {
-      const averageCost = await calculateWeightedAverageCost(item.id, item.tenantId);
+      const averageCost = wacMap.get(item.id) || 0;
       const itemTotalValue = currentStock * averageCost;
       
       valuationItems.push({
@@ -560,7 +664,7 @@ export async function validatePriceConsistency(tenantId: string): Promise<Array<
 
 /**
  * Notify recipe system when inventory prices change
- * Triggers recipe cost recalculation
+ * Triggers recipe cost recalculation and menu item profitability updates
  */
 export async function notifyPriceChange(itemId: string, newPrice: number, oldPrice: number): Promise<void> {
   try {
@@ -571,28 +675,136 @@ export async function notifyPriceChange(itemId: string, newPrice: number, oldPri
       },
       include: {
         recipe: {
-          select: {
-            id: true,
-            name: true,
-            tenantId: true
+          include: {
+            menuItem: {
+              select: {
+                id: true,
+                displayName: true,
+                menuPrice: true,
+                tenantId: true
+              }
+            }
           }
         }
       }
     });
 
     if (affectedRecipes.length > 0) {
-      console.log(`📊 Price change detected for item ${itemId}: ${oldPrice} → ${newPrice}`);
+      console.log(`📊 Price change detected for item ${itemId}: ${oldPrice.toFixed(2)} → ${newPrice.toFixed(2)}`);
       console.log(`📋 Affecting ${affectedRecipes.length} recipes`);
       
-      // Import recipe service for cost recalculation
+      // Import services
       const { RecipeService } = await import('./recipeService');
+      const { socketService } = await import('./socketService');
       
-      // Recalculate costs for all affected recipes
+      const costUpdates: Array<{
+        recipeId: string;
+        recipeName: string;
+        menuItemId: string;
+        menuItemName: string;
+        oldCost: number;
+        newCost: number;
+        oldProfitMargin: number;
+        newProfitMargin: number;
+      }> = [];
+
+      // Group by tenant to batch updates
+      const recipesByTenant = new Map<string, typeof affectedRecipes>();
       for (const ingredient of affectedRecipes) {
-        try {
-          await RecipeService.recalculateRecipeCost(ingredient.recipe.tenantId, ingredient.recipeId);
-        } catch (error) {
-          console.error(`Failed to recalculate recipe ${ingredient.recipeId}:`, error);
+        const tenantId = ingredient.recipe.tenantId;
+        if (!recipesByTenant.has(tenantId)) {
+          recipesByTenant.set(tenantId, []);
+        }
+        recipesByTenant.get(tenantId)!.push(ingredient);
+      }
+
+      // Process each tenant's recipes
+      for (const [tenantId, tenantRecipes] of recipesByTenant.entries()) {
+        // Update ingredient unit cost first
+        for (const ingredient of tenantRecipes) {
+          try {
+            // Update ingredient unit cost
+            const newTotalCost = Number(ingredient.quantity) * newPrice;
+            await prisma.recipeIngredient.update({
+              where: { id: ingredient.id },
+              data: {
+                unitCost: newPrice,
+                totalCost: newTotalCost
+              }
+            });
+
+            // Recalculate recipe cost
+            await RecipeService.recalculateRecipeCost(tenantId, ingredient.recipeId);
+            
+            // Get updated recipe with menu item
+            const updatedRecipe = await prisma.recipe.findUnique({
+              where: { id: ingredient.recipeId },
+              include: {
+                menuItem: {
+                  select: {
+                    id: true,
+                    displayName: true,
+                    menuPrice: true
+                  }
+                }
+              }
+            });
+
+            if (updatedRecipe && updatedRecipe.menuItem) {
+              const menuPrice = Number(updatedRecipe.menuItem.menuPrice);
+              const newCostPerServing = Number(updatedRecipe.costPerServing);
+              const oldCostPerServing = Number(ingredient.recipe.costPerServing || 0);
+              
+              // Calculate profit margins
+              const oldProfit = menuPrice - oldCostPerServing;
+              const newProfit = menuPrice - newCostPerServing;
+              const oldProfitMargin = menuPrice > 0 ? (oldProfit / menuPrice) * 100 : 0;
+              const newProfitMargin = menuPrice > 0 ? (newProfit / menuPrice) * 100 : 0;
+
+              costUpdates.push({
+                recipeId: ingredient.recipeId,
+                recipeName: ingredient.recipe.name,
+                menuItemId: updatedRecipe.menuItem.id,
+                menuItemName: updatedRecipe.menuItem.displayName,
+                oldCost: oldCostPerServing,
+                newCost: newCostPerServing,
+                oldProfitMargin,
+                newProfitMargin
+              });
+            }
+          } catch (error) {
+            console.error(`Failed to update recipe ${ingredient.recipeId}:`, error);
+          }
+        }
+
+        // Emit WebSocket notification for cost updates
+        if (costUpdates.length > 0) {
+          try {
+            const item = await prisma.item.findUnique({ 
+              where: { id: itemId }, 
+              select: { name: true } 
+            });
+            
+            socketService.broadcast('recipe:cost-updated', {
+              itemId,
+              itemName: item?.name || 'Unknown Item',
+              oldPrice,
+              newPrice,
+              affectedRecipes: costUpdates.map(update => ({
+                recipeId: update.recipeId,
+                recipeName: update.recipeName,
+                menuItemId: update.menuItemId,
+                menuItemName: update.menuItemName,
+                oldCost: update.oldCost,
+                newCost: update.newCost,
+                oldProfitMargin: update.oldProfitMargin,
+                newProfitMargin: update.newProfitMargin
+              }))
+            }, tenantId);
+            console.log(`📡 [COST_UPDATE] Emitted cost update notifications for ${costUpdates.length} recipes`);
+          } catch (socketError) {
+            console.error('Failed to emit cost update notification:', socketError);
+          }
         }
       }
     }

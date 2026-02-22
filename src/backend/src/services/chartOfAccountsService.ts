@@ -1,6 +1,5 @@
 import { PrismaClient, AccountType, BalanceType } from '../../../shared/generated/client';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 export interface ChartOfAccountData {
   accountCode: string;

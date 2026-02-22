@@ -31,8 +31,13 @@ export function useOfflineStatus(): OfflineStatus {
       setSync(status);
     });
 
-    // Check pending operations periodically
+    // Check pending operations periodically (only in browser)
     const checkPending = async () => {
+      // Only run in browser environment
+      if (typeof window === 'undefined' || typeof indexedDB === 'undefined') {
+        return;
+      }
+
       try {
         const { offlineStorage } = await import('../services/offlineStorageService');
         await offlineStorage.init();
@@ -47,13 +52,19 @@ export function useOfflineStatus(): OfflineStatus {
       }
     };
 
-    checkPending();
-    const pendingInterval = setInterval(checkPending, 5000);
+    // Only check pending operations in browser
+    let pendingInterval: NodeJS.Timeout | null = null;
+    if (typeof window !== 'undefined') {
+      checkPending();
+      pendingInterval = setInterval(checkPending, 5000);
+    }
 
     return () => {
       unsubscribeConnection();
       unsubscribeSync();
-      clearInterval(pendingInterval);
+      if (pendingInterval) {
+        clearInterval(pendingInterval);
+      }
     };
   }, []);
 

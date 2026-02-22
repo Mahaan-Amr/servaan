@@ -1,7 +1,6 @@
 import { PrismaClient, TableStatus } from '../../../shared/generated/client';
 import { AppError } from '../utils/AppError';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 export interface DateRange {
   start: Date;

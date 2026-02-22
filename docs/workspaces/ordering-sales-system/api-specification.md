@@ -1,6 +1,6 @@
 # Ordering & Sales System – API Specification (Refactored)
 
-Last updated: 2025-10-20
+Last updated: 2025-01-27
 Status: Current and authoritative for the deployed codebase
 
 ## 1) Authentication, Tenanting, RBAC
@@ -43,7 +43,19 @@ Controlled status transitions; validation enforced.
 Sets order to COMPLETED, triggers accounting integration and KDS sync.
 
 ### POST /api/orders/:id/cancel
-Cancels order, updates KDS entry accordingly.
+Cancels order, updates KDS entry accordingly. If order was completed, automatically restores stock for recipe ingredients.
+
+### POST /api/ordering/orders/items/:orderItemId/prepare
+**NEW** (2025-01-27): Marks an individual order item as prepared and deducts stock for recipe ingredients.
+- **Purpose**: Supports partial order fulfillment with per-item stock deduction
+- **Authorization**: STAFF, MANAGER, ADMIN
+- **Response**: `{ success: true, data: { deducted: boolean, items: Array<{itemId, itemName, quantity}> } }`
+- **Behavior**: 
+  - Checks if item has recipe with ingredients
+  - Deducts stock for each ingredient (quantity × orderItem.quantity)
+  - Idempotent: prevents duplicate deductions
+  - Emits real-time stock update via WebSocket
+  - Automatically triggered when kitchen display status = READY
 
 ### Ancillary
 - POST `/api/orders/:id/add-items`
@@ -90,12 +102,72 @@ Priority must be between 0 and 5.
 ## 8) Integrations leveraged by Ordering
 - Inventory stock check: POST `/api/inventory/validate-order-stock`
 - Menu availability sync: POST `/api/inventory/update-menu-availability`
+- Stock validation: GET `/api/inventory/stock-validation/:menuItemId`
+- Low stock alerts: GET `/api/inventory/low-stock-alerts`
+- Recipe cost updates: POST `/api/inventory/update-recipe-costs`
+- Integration status: GET `/api/inventory/integration-status`
 
 ## 9) WebSocket Events (tenant-scoped)
-- `kitchen:order:update`
-- `kitchen:stock:alert`
-- `kitchen:menu:availability`
-- `kitchen:profitability:update`
+
+### Kitchen Events
+- `kitchen:order:update` — Order status changes in kitchen display
+- `kitchen:stock:alert` — Stock alerts for kitchen staff
+- `kitchen:menu:availability` — Menu item availability changes
+- `kitchen:profitability:update` — Profitability updates
+
+### Inventory Events (NEW - 2025-01-27)
+- `inventory:stock-updated` — Real-time stock level updates
+  - **Payload**: 
+    ```typescript
+    {
+      tenantId: string;
+      updates: Array<{
+        itemId: string;
+        itemName: string;
+        previousStock: number;
+        currentStock: number;
+        change: number; // positive for IN, negative for OUT
+        reason: 'order_completed' | 'order_cancelled' | 'manual_adjustment' | 'purchase' | 'order_item_prepared';
+        orderId?: string;
+        orderNumber?: string;
+        orderItemId?: string;
+      }>;
+      timestamp: string;
+    }
+    ```
+  - **Triggers**: 
+    - Order completion (recipe stock deduction)
+    - Order cancellation (stock restoration)
+    - Individual item preparation (partial deduction)
+    - Manual inventory adjustments
+    - Purchase entries
+
+### Recipe Events (NEW - 2025-01-27)
+- `recipe:cost-updated` — Real-time recipe cost updates when ingredient prices change
+  - **Payload**:
+    ```typescript
+    {
+      itemId: string;
+      itemName: string;
+      oldPrice: number;
+      newPrice: number;
+      affectedRecipes: Array<{
+        recipeId: string;
+        recipeName: string;
+        menuItemId: string;
+        menuItemName: string;
+        oldCost: number;
+        newCost: number;
+        oldProfitMargin: number;
+        newProfitMargin: number;
+      }>;
+      timestamp: string;
+    }
+    ```
+  - **Triggers**: 
+    - Inventory entry creation with new unitPrice (WAC change >1%)
+    - Automatic recipe cost recalculation
+    - Menu item profitability updates
 
 ---
 

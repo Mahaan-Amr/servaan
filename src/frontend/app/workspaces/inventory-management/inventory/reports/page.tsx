@@ -8,6 +8,7 @@ import * as itemService from '../../../../../services/itemService';
 import toast from 'react-hot-toast';
 import type { WorkBook, WorkSheet } from 'xlsx';
 import { FarsiDatePicker } from '../../../../../components/ui/FarsiDatePicker';
+import { Card, Section } from '../../../../../components/ui';
 
 interface InventoryReportSummary {
   totalItems: number;
@@ -476,9 +477,9 @@ export default function InventoryReportsPage() {
   const filteredInventory = getFilteredInventory();
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <Section className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 sm:p-6">
+      <Card className="p-3 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
           <div>
         <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
@@ -515,7 +516,7 @@ export default function InventoryReportsPage() {
             </Link>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Summary Cards */}
       {summary && (
@@ -745,14 +746,14 @@ export default function InventoryReportsPage() {
 
       {/* Transaction History Section */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
+        <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="mobile-control-stack sm:justify-between">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               تاریخچه تراکنش‌ها
             </h3>
             <button
               onClick={() => setShowTransactionHistory(!showTransactionHistory)}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              className="w-full sm:w-auto flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
             >
               <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showTransactionHistory ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"} />
@@ -763,9 +764,9 @@ export default function InventoryReportsPage() {
         </div>
 
         {showTransactionHistory && (
-          <div className="p-6">
+          <div className="p-3 sm:p-6">
             {/* Transaction Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
                 <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {filteredTransactions.length}
@@ -795,7 +796,7 @@ export default function InventoryReportsPage() {
             {/* Transaction Filters */}
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-6">
               <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-4">فیلترهای تراکنش</h4>
-              <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     نوع تراکنش
@@ -875,7 +876,7 @@ export default function InventoryReportsPage() {
                 </div>
               </div>
               
-              <div className="mt-4 flex justify-end">
+              <div className="mt-4 mobile-action-group justify-end">
                 <button
                   onClick={() => setTransactionFilter({
                     type: 'ALL',
@@ -988,14 +989,14 @@ export default function InventoryReportsPage() {
 
       {/* Supplier Performance Reports */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
+        <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="mobile-control-stack sm:justify-between">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               گزارش عملکرد تأمین‌کنندگان
             </h3>
             <button
               onClick={() => setShowSupplierPerformance(!showSupplierPerformance)}
-              className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+              className="w-full sm:w-auto flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
             >
               <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showSupplierPerformance ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"} />
@@ -1006,9 +1007,9 @@ export default function InventoryReportsPage() {
         </div>
 
         {showSupplierPerformance && (
-          <div className="p-6">
+          <div className="p-3 sm:p-6">
             {/* Supplier Performance Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
                 <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {Array.from(new Set(items.flatMap(item => item.suppliers?.map(s => s.supplierId) || []))).length}
@@ -1196,6 +1197,6 @@ export default function InventoryReportsPage() {
           </div>
         )}
       </div>
-    </div>
+    </Section>
   );
-} 
+}

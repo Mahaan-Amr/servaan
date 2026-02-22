@@ -9,6 +9,7 @@ import { InventoryStatus, InventoryEntryType } from '../../../../../../shared/ty
 import toast from 'react-hot-toast';
 import { FormattedNumberInput } from '../../../../../components/ui/FormattedNumberInput';
 import { FarsiDatePicker } from '../../../../../components/ui/FarsiDatePicker';
+import { Card, Section } from '../../../../../components/ui';
 
 // localStorage key for purchase lists
 const PURCHASE_LISTS_KEY = 'inventory_purchase_lists';
@@ -626,7 +627,7 @@ export default function PurchaseListPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-2 mt-4">
+                <div className="flex flex-wrap gap-2 mt-4">
                   {list.status === 'active' && (
                     <>
                       <button
@@ -659,8 +660,8 @@ export default function PurchaseListPage() {
 
         {/* Create List Modal */}
         {showCreateListModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                 ایجاد لیست خرید جدید
               </h2>
@@ -738,9 +739,9 @@ export default function PurchaseListPage() {
 
   // Edit View - Edit a specific purchase list
   return (
-    <div className="space-y-6">
+    <Section className="space-y-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+      <Card className="p-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -788,7 +789,7 @@ export default function PurchaseListPage() {
             </Link>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Summary */}
       {items.length > 0 && (
@@ -997,8 +998,8 @@ export default function PurchaseListPage() {
 
       {/* Add Custom Item Modal */}
       {showAddCustomModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
               افزودن کالای سفارشی
             </h2>
@@ -1082,8 +1083,8 @@ export default function PurchaseListPage() {
 
       {/* Add Existing Item Modal */}
       {showAddItemModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
               افزودن کالا از موجودی
             </h2>
@@ -1131,8 +1132,8 @@ export default function PurchaseListPage() {
 
       {/* Add to Inventory Modal */}
       {showAddToInventoryModal && selectedItemForInventory && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
               ثبت ورود کالا به انبار
             </h2>
@@ -1247,6 +1248,6 @@ export default function PurchaseListPage() {
           </div>
         </div>
       )}
-    </div>
+    </Section>
   );
 }

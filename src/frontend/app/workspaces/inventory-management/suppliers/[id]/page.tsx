@@ -433,7 +433,7 @@ const SupplierItemModal: React.FC<SupplierItemModalProps> = ({ supplier, onClose
             {/* Unit Price */}
             <div>
               <FormattedNumberInput
-                label="قیمت واحد (ریال)"
+                label="قیمت واحد (تومان)"
                 value={formData.unitPrice}
                 onChange={(value: string) => handleChange({ target: { name: 'unitPrice', value } } as React.ChangeEvent<HTMLInputElement>)}
                 placeholder="قیمت واحد از این تأمین‌کننده"
@@ -788,7 +788,7 @@ export default function SupplierDetailPage() {
                           <div>دسته: {itemSupplier.item.category}</div>
                         )}
                         {itemSupplier.unitPrice && (
-                          <div>قیمت: {itemSupplier.unitPrice.toLocaleString('fa-IR')} ریال</div>
+                          <div>قیمت: {itemSupplier.unitPrice.toLocaleString('fa-IR')} تومان</div>
                         )}
                       </div>
                     </td>
@@ -800,7 +800,7 @@ export default function SupplierDetailPage() {
                     <td className="px-4 py-4 hidden lg:table-cell">
                       <div className="text-sm text-gray-900 dark:text-white break-words">
                         {itemSupplier.unitPrice ? 
-                          `${itemSupplier.unitPrice.toLocaleString('fa-IR')} ریال` : 
+                          `${itemSupplier.unitPrice.toLocaleString('fa-IR')} تومان` : 
                           'تعیین نشده'
                         }
                       </div>

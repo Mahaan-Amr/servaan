@@ -425,9 +425,9 @@ export default function PaymentsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <FaDollarSign className="text-amber-500" />
@@ -439,7 +439,7 @@ export default function PaymentsPage() {
         </div>
         <button
           onClick={() => loadPayments()}
-          className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+          className="flex items-center justify-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors w-full sm:w-auto"
         >
           <FaSync />
           بروزرسانی
@@ -447,10 +447,10 @@ export default function PaymentsPage() {
       </div>
 
       {/* View Tabs */}
-      <div className="flex gap-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex gap-2 sm:gap-4 border-b border-gray-200 dark:border-gray-700 overflow-x-auto whitespace-nowrap pb-1">
         <button
           onClick={() => setActiveView('list')}
-          className={`px-4 py-2 font-medium transition-colors ${
+          className={`px-3 sm:px-4 py-2 font-medium transition-colors text-sm sm:text-base ${
             activeView === 'list'
               ? 'text-amber-600 border-b-2 border-amber-500'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
@@ -461,7 +461,7 @@ export default function PaymentsPage() {
         </button>
         <button
           onClick={() => setActiveView('statistics')}
-          className={`px-4 py-2 font-medium transition-colors ${
+          className={`px-3 sm:px-4 py-2 font-medium transition-colors text-sm sm:text-base ${
             activeView === 'statistics'
               ? 'text-amber-600 border-b-2 border-amber-500'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
@@ -472,7 +472,7 @@ export default function PaymentsPage() {
         </button>
         <button
           onClick={() => setActiveView('cash')}
-          className={`px-4 py-2 font-medium transition-colors ${
+          className={`px-3 sm:px-4 py-2 font-medium transition-colors text-sm sm:text-base ${
             activeView === 'cash'
               ? 'text-amber-600 border-b-2 border-amber-500'
               : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'

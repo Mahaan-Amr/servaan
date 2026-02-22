@@ -2,8 +2,8 @@ import { PrismaClient } from '../../../shared/generated/client';
 import { AppError } from '../utils/AppError';
 import { TableService } from './tableService';
 import { getTenantPrefix } from '../utils/orderUtils';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
+import { BaseService } from './BaseService';
 
 export interface CreateOrderData {
   tenantId: string;
@@ -68,9 +68,9 @@ export interface PaymentData {
   notes?: string;
 }
 
-export class OrderService {
+export class OrderService extends BaseService {
   // Create a new order with flexible payment options
-  async createOrder(data: CreateOrderData): Promise<any> {
+  static async createOrder(data: CreateOrderData): Promise<any> {
     console.log('🏗️ [ORDER_SERVICE] Starting createOrder method');
     console.log('🏗️ [ORDER_SERVICE] Input data:', {
       tenantId: data.tenantId,
@@ -107,7 +107,7 @@ export class OrderService {
     return await prisma.$transaction(async (tx: any) => {
       // Generate order number INSIDE transaction to prevent race conditions
       console.log('🔢 [ORDER_SERVICE] Generating order number for tenant:', tenantId);
-      const orderNumber = await this.generateOrderNumberInTransaction(tx, tenantId);
+      const orderNumber = await OrderService.generateOrderNumberInTransaction(tx, tenantId);
       console.log('🔢 [ORDER_SERVICE] Generated order number:', orderNumber);
 
       // Create the order
@@ -234,7 +234,7 @@ export class OrderService {
         await tx.orderPayment.create({
           data: {
             tenantId,
-            paymentNumber: await this.generatePaymentNumber(tenantId),
+            paymentNumber: await OrderService.generatePaymentNumber(tenantId),
             orderId: order.id,
             amount: paidAmount,
             paymentMethod: paymentMethod!,
@@ -252,7 +252,7 @@ export class OrderService {
   }
 
   // Add real-time table status update after order creation
-  async createOrderWithTableUpdate(data: CreateOrderData): Promise<any> {
+  static async createOrderWithTableUpdate(data: CreateOrderData): Promise<any> {
     console.log('🔄 [ORDER_SERVICE] Starting createOrderWithTableUpdate');
     const order = await this.createOrder(data);
     console.log('✅ [ORDER_SERVICE] Order created, now updating table status');
@@ -279,7 +279,8 @@ export class OrderService {
   }
 
   // Add items to an existing order
-  async addItemsToOrder(orderId: string, items: Array<{
+  // Add items to an existing order
+  static async addItemsToOrder(tenantId: string, orderId: string, items: Array<{
     itemId: string;
     quantity: number;
     unitPrice: number;
@@ -382,7 +383,8 @@ export class OrderService {
   }
 
   // Process payment for an order
-  async processPayment(data: PaymentData): Promise<any> {
+  // Process payment with optional payment gateway
+  static async processPayment(data: PaymentData): Promise<any> {
     const {
       orderId,
       amount,
@@ -415,7 +417,7 @@ export class OrderService {
       const payment = await tx.orderPayment.create({
         data: {
           tenantId: order.tenantId,
-          paymentNumber: await this.generatePaymentNumber(order.tenantId),
+          paymentNumber: await OrderService.generatePaymentNumber(order.tenantId),
           orderId,
           amount,
           paymentMethod,
@@ -453,7 +455,8 @@ export class OrderService {
   }
 
   // Get order with all related data
-  async getOrder(orderId: string): Promise<any | null> {
+  // Get order by ID with all related data
+  static async getOrder(tenantId: string, orderId: string): Promise<any | null> {
     return await prisma.order.findUnique({
       where: { id: orderId },
       include: {
@@ -475,7 +478,7 @@ export class OrderService {
   }
 
   // Get orders with filters
-  async getOrders(filters: {
+  static async getOrders(filters: {
     tenantId: string;
     status?: any[];
     orderType?: string[];
@@ -537,7 +540,7 @@ export class OrderService {
   }
 
   // Generate globally unique order number per tenant (INSIDE transaction)
-  private async generateOrderNumberInTransaction(tx: any, tenantId: string): Promise<string> {
+  private static async generateOrderNumberInTransaction(tx: any, tenantId: string): Promise<string> {
     console.log('🔢 [ORDER_SERVICE] Generating globally unique order number for tenant:', tenantId);
 
     const today = new Date();
@@ -595,7 +598,7 @@ export class OrderService {
   }
 
   // Generate numeric order number that resets daily per tenant and starts at 100 (OUTSIDE transaction - for backward compatibility)
-  private async generateOrderNumber(tenantId: string): Promise<string> {
+  private static async generateOrderNumber(tenantId: string): Promise<string> {
     console.log('🔢 [ORDER_SERVICE] Generating order number for tenant:', tenantId);
     const today = new Date();
     const datePrefix = today.toISOString().slice(0, 10).replace(/-/g, '');
@@ -644,7 +647,7 @@ export class OrderService {
   }
 
   // Generate unique payment number
-  private async generatePaymentNumber(tenantId: string): Promise<string> {
+  private static async generatePaymentNumber(tenantId: string): Promise<string> {
     const today = new Date();
     const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
     const tenantPrefix = getTenantPrefix(tenantId);
@@ -671,7 +674,7 @@ export class OrderService {
   }
 
   // Update order with enhanced functionality
-  async updateOrder(tenantId: string, orderId: string, updateData: UpdateOrderData, updatedBy: string): Promise<any> {
+  static async updateOrder(tenantId: string, orderId: string, updateData: UpdateOrderData, updatedBy: string): Promise<any> {
     return await prisma.$transaction(async (tx: any) => {
       const order = await tx.order.findUnique({
           where: { id: orderId, tenantId },
@@ -808,7 +811,8 @@ export class OrderService {
   }
 
   // Complete order with enhanced functionality
-  async completeOrder(tenantId: string, orderId: string, completedBy: string): Promise<any> {
+  // Complete order with final accounting entries
+  static async completeOrder(tenantId: string, orderId: string, completedBy: string): Promise<any> {
     return await prisma.$transaction(async (tx: any) => {
       const order = await tx.order.findUnique({
         where: { id: orderId, tenantId },
@@ -861,6 +865,78 @@ export class OrderService {
         });
       }
 
+      // Check if stock was already deducted for individual items (partial deduction scenario)
+      // If items were deducted when marked as prepared, skip full order deduction
+      const alreadyDeductedItems = await tx.inventoryEntry.findMany({
+        where: {
+          tenantId,
+          orderId: orderId,
+          type: 'OUT',
+          deletedAt: null,
+          orderItemId: { not: null } // Items with specific orderItemId were already deducted
+        },
+        select: {
+          orderItemId: true
+        },
+        distinct: ['orderItemId']
+      });
+
+      const deductedOrderItemIds = new Set(alreadyDeductedItems.map((e: any) => e.orderItemId).filter(Boolean));
+      const allItemsDeducted = order.items.every((item: any) => deductedOrderItemIds.has(item.id));
+
+      // Only deduct stock if not all items were already deducted individually
+      if (!allItemsDeducted) {
+        // Check if any stock was deducted at all (to avoid duplicate full-order deduction)
+        const hasAnyStockDeductions = await tx.inventoryEntry.findFirst({
+          where: {
+            tenantId,
+            orderId: orderId,
+            type: 'OUT',
+            deletedAt: null
+          }
+        });
+
+        if (!hasAnyStockDeductions) {
+          // No stock deducted yet - deduct for all items
+          try {
+            const { OrderInventoryIntegrationService } = await import('./orderInventoryIntegrationService');
+            // Note: processRecipeStockDeduction uses prisma directly, not tx
+            // This is acceptable as it's idempotent and will be called after transaction commits
+            await OrderInventoryIntegrationService.processRecipeStockDeduction(
+              tenantId,
+              orderId,
+              completedBy
+            );
+            console.log(`🔄 [ORDER_SERVICE] Stock deducted for completed order ${orderId}`);
+          } catch (stockDeductionError) {
+            console.error(`❌ [ORDER_SERVICE] Failed to deduct stock for completed order ${orderId}:`, stockDeductionError);
+            // Don't fail the entire operation if stock deduction fails
+          }
+        } else {
+          // Some items already deducted - only deduct for remaining items
+            const remainingItems = order.items.filter((item: any) => !deductedOrderItemIds.has(item.id));
+            if (remainingItems.length > 0) {
+              console.log(`🔄 [ORDER_SERVICE] Partial stock deduction: ${remainingItems.length} items remaining for order ${orderId}`);
+              // Deduct stock for remaining items individually
+              try {
+                const { OrderInventoryIntegrationService } = await import('./orderInventoryIntegrationService');
+                for (const item of remainingItems as any[]) {
+                  await OrderInventoryIntegrationService.deductStockForPreparedItem(
+                    tenantId,
+                    item.id,
+                    completedBy
+                  );
+                }
+              console.log(`🔄 [ORDER_SERVICE] Stock deducted for ${remainingItems.length} remaining items in order ${orderId}`);
+            } catch (stockDeductionError) {
+              console.error(`❌ [ORDER_SERVICE] Failed to deduct stock for remaining items in order ${orderId}:`, stockDeductionError);
+            }
+          }
+        }
+      } else {
+        console.log(`✅ [ORDER_SERVICE] All items already deducted individually for order ${orderId} - skipping full order deduction`);
+      }
+
       // Automatically sync kitchen display status when order is completed
       try {
         const { KitchenDisplayService } = await import('./kitchenDisplayService');
@@ -876,7 +952,7 @@ export class OrderService {
   }
 
   // Cancel order with enhanced functionality
-  async cancelOrder(tenantId: string, orderId: string, reason: string, cancelledBy: string): Promise<any> {
+  static async cancelOrder(tenantId: string, orderId: string, reason: string, cancelledBy: string): Promise<any> {
     return await prisma.$transaction(async (tx: any) => {
       const order = await tx.order.findUnique({
           where: { id: orderId, tenantId },
@@ -887,9 +963,24 @@ export class OrderService {
           throw new AppError('Order not found', 404);
         }
 
-      if (order.status === 'COMPLETED' || order.status === 'CANCELLED') {
-        throw new AppError('Order is already completed or cancelled', 400);
+      // Allow cancelling completed orders (for refund scenarios)
+      // Only prevent cancelling if already cancelled
+      if (order.status === 'CANCELLED') {
+        throw new AppError('Order is already cancelled', 400);
       }
+
+      // Check if order was completed (stock was deducted)
+      const wasCompleted = order.status === 'COMPLETED';
+      
+      // Check if stock was deducted for this order
+      const hasStockDeductions = wasCompleted ? await tx.inventoryEntry.findFirst({
+        where: {
+          tenantId,
+          orderId: orderId,
+          type: 'OUT',
+          deletedAt: null
+        }
+      }) : null;
 
         // Update order status
         const updatedOrder = await tx.order.update({
@@ -900,6 +991,26 @@ export class OrderService {
             updatedAt: new Date()
           }
         });
+
+      // Restore stock if order was completed (stock was deducted)
+      if (hasStockDeductions) {
+        try {
+          const { OrderInventoryIntegrationService } = await import('./orderInventoryIntegrationService');
+          // Note: restoreStockFromOrder uses prisma directly, not tx, so it's outside the transaction
+          // This is acceptable as it's idempotent and will be called after transaction commits
+          await OrderInventoryIntegrationService.restoreStockFromOrder(
+            tenantId,
+            orderId,
+            cancelledBy,
+            reason
+          );
+          console.log(`✅ [ORDER_SERVICE] Stock restored for cancelled order ${orderId}`);
+        } catch (restoreError) {
+          console.error(`❌ [ORDER_SERVICE] Failed to restore stock for cancelled order ${orderId}:`, restoreError);
+          // Don't fail the entire operation if stock restoration fails
+          // Log error for manual review
+        }
+      }
 
       // Update table status if table was assigned
       if (order.tableId) {
@@ -924,7 +1035,7 @@ export class OrderService {
   }
 
   // Remove items from an existing order
-  async removeItemsFromOrder(orderId: string, itemIds: string[], modifiedBy: string): Promise<any> {
+  static async removeItemsFromOrder(tenantId: string, orderId: string, itemIds: string[], modifiedBy: string): Promise<any> {
     return await prisma.$transaction(async (tx: any) => {
       const order = await tx.order.findUnique({
         where: { id: orderId },
@@ -987,7 +1098,7 @@ export class OrderService {
   }
 
   // Update item quantities in an existing order
-  async updateItemQuantities(orderId: string, itemUpdates: Array<{
+  static async updateItemQuantities(tenantId: string, orderId: string, itemUpdates: Array<{
     itemId: string;
     newQuantity: number;
   }>, modifiedBy: string): Promise<any> {

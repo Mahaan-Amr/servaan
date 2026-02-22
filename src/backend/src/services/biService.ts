@@ -1,9 +1,9 @@
 import { PrismaClient } from '../../../shared/generated/client';
 import { KPIMetric, DateRange, ExecutiveDashboard, ABCAnalysis, TrendAnalysis, ProfitAnalysis } from '../types/bi';
+import { prisma } from './dbService';
+import { BaseService } from './BaseService';
 
-const prisma = new PrismaClient();
-
-export class BiService {
+export class BiService extends BaseService {
   // =================== KPI CALCULATIONS ===================
 
   /**
@@ -11,9 +11,9 @@ export class BiService {
    */
   static async calculateTotalRevenue(period: DateRange, tenantId: string): Promise<KPIMetric> {
     try {
-      const currentRevenue = await this.getRevenueForPeriod(period, tenantId);
-      const previousPeriod = this.getPreviousPeriod(period);
-      const previousRevenue = await this.getRevenueForPeriod(previousPeriod, tenantId);
+      const currentRevenue = await BiService.getRevenueForPeriod(period, tenantId);
+      const previousPeriod = BiService.getPreviousPeriod(period);
+      const previousRevenue = await BiService.getRevenueForPeriod(previousPeriod, tenantId);
 
       const change = currentRevenue - previousRevenue;
       const changePercent = previousRevenue > 0 ? (change / previousRevenue) * 100 : 0;
@@ -26,7 +26,7 @@ export class BiService {
         trend: change > 0 ? 'UP' : change < 0 ? 'DOWN' : 'STABLE',
         unit: 'تومان',
         description: 'مجموع درآمد از فروش',
-        status: this.determineStatusByGrowth(changePercent, 5, 0), // 5% growth target
+        status: BiService.determineStatusByGrowth(changePercent, 5, 0), // 5% growth target
         target: previousRevenue * 1.05 // 5% growth target
       };
     } catch (error) {
@@ -39,13 +39,13 @@ export class BiService {
    */
   static async calculateNetProfit(period: DateRange, tenantId: string): Promise<KPIMetric> {
     try {
-      const revenue = await this.getRevenueForPeriod(period, tenantId);
-      const costs = await this.getTotalCostsForPeriod(period, tenantId);
+      const revenue = await BiService.getRevenueForPeriod(period, tenantId);
+      const costs = await BiService.getTotalCostsForPeriod(period, tenantId);
       const netProfit = revenue - costs;
 
-      const previousPeriod = this.getPreviousPeriod(period);
-      const previousRevenue = await this.getRevenueForPeriod(previousPeriod, tenantId);
-      const previousCosts = await this.getTotalCostsForPeriod(previousPeriod, tenantId);
+      const previousPeriod = BiService.getPreviousPeriod(period);
+      const previousRevenue = await BiService.getRevenueForPeriod(previousPeriod, tenantId);
+      const previousCosts = await BiService.getTotalCostsForPeriod(previousPeriod, tenantId);
       const previousProfit = previousRevenue - previousCosts;
 
       const change = netProfit - previousProfit;
@@ -59,7 +59,7 @@ export class BiService {
         trend: change > 0 ? 'UP' : change < 0 ? 'DOWN' : 'STABLE',
         unit: 'تومان',
         description: 'سود خالص پس از کسر تمام هزینه‌ها',
-        status: this.determineStatusByValue(netProfit, previousProfit * 1.1, previousProfit * 1.05)
+        status: BiService.determineStatusByValue(netProfit, previousProfit * 1.1, previousProfit * 1.05)
       };
     } catch (error) {
       throw new Error(`خطا در محاسبه سود خالص: ${(error as Error).message}`);
@@ -71,14 +71,14 @@ export class BiService {
    */
   static async calculateProfitMargin(period: DateRange, tenantId: string): Promise<KPIMetric> {
     try {
-      const revenue = await this.getRevenueForPeriod(period, tenantId);
-      const costs = await this.getTotalCostsForPeriod(period, tenantId);
+      const revenue = await BiService.getRevenueForPeriod(period, tenantId);
+      const costs = await BiService.getTotalCostsForPeriod(period, tenantId);
       const netProfit = revenue - costs;
       const margin = revenue > 0 ? (netProfit / revenue) * 100 : 0;
 
-      const previousPeriod = this.getPreviousPeriod(period);
-      const previousRevenue = await this.getRevenueForPeriod(previousPeriod, tenantId);
-      const previousCosts = await this.getTotalCostsForPeriod(previousPeriod, tenantId);
+      const previousPeriod = BiService.getPreviousPeriod(period);
+      const previousRevenue = await BiService.getRevenueForPeriod(previousPeriod, tenantId);
+      const previousCosts = await BiService.getTotalCostsForPeriod(previousPeriod, tenantId);
       const previousMargin = previousRevenue > 0 ? ((previousRevenue - previousCosts) / previousRevenue) * 100 : 0;
 
       const change = margin - previousMargin;
@@ -105,13 +105,13 @@ export class BiService {
    */
   static async calculateInventoryTurnover(period: DateRange, tenantId: string): Promise<KPIMetric> {
     try {
-      const cogs = await this.getCostOfGoodsSold(period, tenantId);
-      const avgInventory = await this.getAverageInventoryValue(period, tenantId);
+      const cogs = await BiService.getCostOfGoodsSold(period, tenantId);
+      const avgInventory = await BiService.getAverageInventoryValue(period, tenantId);
       const turnover = avgInventory > 0 ? cogs / avgInventory : 0;
 
-      const previousPeriod = this.getPreviousPeriod(period);
-      const previousCogs = await this.getCostOfGoodsSold(previousPeriod, tenantId);
-      const previousAvgInventory = await this.getAverageInventoryValue(previousPeriod, tenantId);
+      const previousPeriod = BiService.getPreviousPeriod(period);
+      const previousCogs = await BiService.getCostOfGoodsSold(previousPeriod, tenantId);
+      const previousAvgInventory = await BiService.getAverageInventoryValue(previousPeriod, tenantId);
       const previousTurnover = previousAvgInventory > 0 ? previousCogs / previousAvgInventory : 0;
 
       const change = turnover - previousTurnover;
@@ -155,7 +155,7 @@ export class BiService {
       const orderCount = transactions.length;
       const aov = orderCount > 0 ? totalRevenue / orderCount : 0;
 
-      const previousPeriod = this.getPreviousPeriod(period);
+      const previousPeriod = BiService.getPreviousPeriod(period);
       const previousTransactions = await prisma.inventoryEntry.findMany({
         where: {
           type: 'OUT',
@@ -228,14 +228,14 @@ export class BiService {
 
       // محاسبه موجودی فعلی هر کالا و بررسی صفر بودن
       const stockoutCount = stockoutItems.filter(item => {
-        const currentStock = this.calculateCurrentStock(item.inventoryEntries);
+        const currentStock = BiService.calculateCurrentStock(item.inventoryEntries);
         return currentStock <= 0;
       }).length;
 
       const stockoutRate = totalItems > 0 ? (stockoutCount / totalItems) * 100 : 0;
 
-      const previousPeriod = this.getPreviousPeriod(period);
-      const previousStockoutRate = await this.calculateStockoutRateForPeriod(previousPeriod);
+      const previousPeriod = BiService.getPreviousPeriod(period);
+      const previousStockoutRate = await BiService.calculateStockoutRateForPeriod(previousPeriod);
 
       const change = stockoutRate - previousStockoutRate;
       const changePercent = previousStockoutRate > 0 ? (change / previousStockoutRate) * 100 : 0;
@@ -679,7 +679,7 @@ export class BiService {
       const dataPoints = results.map(row => ({
         period: row.period,
         value: Number(row.value) || 0,
-        date: this.parseFormattedDate(row.period, granularity)
+        date: BiService.parseFormattedDate(row.period, granularity)
       }));
 
       // If no data points, return empty data instead of mock data
@@ -707,7 +707,7 @@ export class BiService {
       }
 
       // محاسبه روند
-      const trend = this.calculateTrend(dataPoints.map(p => p.value));
+      const trend = BiService.calculateTrend(dataPoints.map(p => p.value));
       const seasonality = this.detectSeasonality(dataPoints);
       const forecast = this.generateForecast(dataPoints, 5); // پیش‌بینی 5 دوره آینده
 
@@ -747,22 +747,22 @@ export class BiService {
         stockoutRate,
         activeProductsCount
       ] = await Promise.all([
-        this.calculateTotalRevenue(period, tenantId),
-        this.calculateNetProfit(period, tenantId),
-        this.calculateProfitMargin(period, tenantId),
-        this.calculateInventoryTurnover(period, tenantId),
-        this.calculateAverageOrderValue(period, tenantId),
-        this.calculateStockoutRate(period, tenantId),
-        this.getActiveProductsCount(tenantId)
+        BiService.calculateTotalRevenue(period, tenantId),
+        BiService.calculateNetProfit(period, tenantId),
+        BiService.calculateProfitMargin(period, tenantId),
+        BiService.calculateInventoryTurnover(period, tenantId),
+        BiService.calculateAverageOrderValue(period, tenantId),
+        BiService.calculateStockoutRate(period, tenantId),
+        BiService.getActiveProductsCount(tenantId)
       ]);
 
       // چارت‌های داشبورد
-      const revenueChart = await this.getRevenueChart(period, tenantId);
-      const topProductsChart = await this.getTopProductsChart(period, tenantId);
-      const categoryChart = await this.getCategoryBreakdownChart(period, tenantId);
+      const revenueChart = await BiService.getRevenueChart(period, tenantId);
+      const topProductsChart = await BiService.getTopProductsChart(period, tenantId);
+      const categoryChart = await BiService.getCategoryBreakdownChart(period, tenantId);
 
       // هشدارهای مهم
-      const alerts = await this.getActiveAlerts(userId);
+      const alerts = await BiService.getActiveAlerts(userId);
 
       return {
         period,
@@ -842,13 +842,13 @@ export class BiService {
   }
 
   private static async getCostOfGoodsSold(period: DateRange, tenantId: string): Promise<number> {
-    return this.getTotalCostsForPeriod(period, tenantId);
+    return BiService.getTotalCostsForPeriod(period, tenantId);
   }
 
   private static async getAverageInventoryValue(period: DateRange, tenantId: string): Promise<number> {
     // محاسبه میانگین ارزش موجودی در طول دوره
-    const startOfPeriod = await this.getInventoryValueAtDate(period.start, tenantId);
-    const endOfPeriod = await this.getInventoryValueAtDate(period.end, tenantId);
+    const startOfPeriod = await BiService.getInventoryValueAtDate(period.start, tenantId);
+    const endOfPeriod = await BiService.getInventoryValueAtDate(period.end, tenantId);
     
     return (startOfPeriod + endOfPeriod) / 2;
   }
@@ -873,7 +873,7 @@ export class BiService {
     });
 
     return items.reduce((total, item) => {
-      const currentStock = this.calculateCurrentStock(item.inventoryEntries);
+      const currentStock = BiService.calculateCurrentStock(item.inventoryEntries);
       const unitPrice = item.suppliers[0]?.unitPrice || 0;
       return total + (currentStock * unitPrice);
     }, 0);
@@ -959,7 +959,7 @@ export class BiService {
   private static generateForecast(dataPoints: any[], periods: number): any[] {
     // پیش‌بینی ساده بر اساس روند خطی
     const values = dataPoints.map(p => p.value);
-    const trend = this.calculateTrend(values);
+    const trend = BiService.calculateTrend(values);
     
     const lastValue = values[values.length - 1];
     const forecast = [];
@@ -1334,3 +1334,4 @@ export class BiService {
     });
   }
 } 
+

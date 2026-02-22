@@ -192,10 +192,10 @@ export default function TableAnalyticsDashboard({ isOpen, onClose }: TableAnalyt
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-7xl h-full max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-3 sm:p-4 z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-7xl h-full max-h-[95vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between p-3 sm:p-4 md:p-6 border-b border-gray-200 dark:border-gray-700">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               داشبورد تحلیلی میزها
@@ -204,9 +204,9 @@ export default function TableAnalyticsDashboard({ isOpen, onClose }: TableAnalyt
               تحلیل عملکرد، درآمد و بهینه‌سازی ظرفیت میزها
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-4">
             {/* Date Range Filter */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
               <FarsiDatePicker
                 value={dateRange.startDate}
                 onChange={(value) => setDateRange(prev => ({ ...prev, startDate: value }))}
@@ -243,7 +243,7 @@ export default function TableAnalyticsDashboard({ isOpen, onClose }: TableAnalyt
 
         {/* Tabs */}
         <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="flex space-x-8 px-6">
+          <nav className="mobile-tabs-rail space-x-8 px-3 sm:px-6">
             {[
               { id: 'overview', label: 'نمای کلی', icon: FaChartLine },
               { id: 'utilization', label: 'نرخ استفاده', icon: FaUsers },
@@ -268,7 +268,7 @@ export default function TableAnalyticsDashboard({ isOpen, onClose }: TableAnalyt
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-3 sm:p-4 md:p-6">
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>

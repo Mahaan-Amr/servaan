@@ -233,7 +233,7 @@ export const ReservationManager: React.FC<ReservationManagerProps> = ({
     >
       <div className="space-y-6">
         {/* Tab Navigation */}
-        <div className="flex space-x-1 rtl:space-x-reverse border-b border-gray-200 dark:border-gray-700">
+        <div className="mobile-tabs-rail rtl:space-x-reverse border-b border-gray-200 dark:border-gray-700">
           <button
             onClick={() => setActiveTab('calendar')}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
@@ -279,13 +279,13 @@ export const ReservationManager: React.FC<ReservationManagerProps> = ({
         {/* Calendar View */}
         {activeTab === 'calendar' && (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
+            <div className="mobile-control-stack sm:justify-between">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 تقویم رزروها
               </h3>
               <button
                 onClick={() => setIsCalendarOpen(true)}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                className="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
               >
                 <FaCalendarAlt className="inline ml-2" />
                 باز کردن تقویم کامل
@@ -428,7 +428,7 @@ export const ReservationManager: React.FC<ReservationManagerProps> = ({
             </div>
 
             {/* Form Actions */}
-            <div className="flex justify-end space-x-3 rtl:space-x-reverse">
+            <div className="mobile-action-group justify-end rtl:space-x-reverse">
               <button
                 type="button"
                 onClick={() => setActiveTab('calendar')}
@@ -450,13 +450,13 @@ export const ReservationManager: React.FC<ReservationManagerProps> = ({
         {/* Reservation List */}
         {activeTab === 'list' && (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
+            <div className="mobile-control-stack sm:justify-between">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 لیست رزروها
               </h3>
               <button
                 onClick={() => setActiveTab('form')}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                className="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
               >
                 <FaPlus className="inline ml-2" />
                 رزرو جدید

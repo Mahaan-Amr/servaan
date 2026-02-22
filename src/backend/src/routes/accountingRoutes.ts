@@ -1,14 +1,16 @@
 import { Router } from 'express';
 import { AccountingController } from '../controllers/accountingController';
 import { authenticate } from '../middlewares/authMiddleware';
+import { requireTenant } from '../middlewares/tenantMiddleware';
 import { validateRequest } from '../middlewares/validation';
 import { body, query, param } from 'express-validator';
 import { prisma } from '../services/dbService';
 
 const router = Router();
 
-// Apply authentication middleware to all routes
+// Apply authentication and tenant context middleware to all routes
 router.use(authenticate);
+router.use(requireTenant);
 
 // Custom CUID validator
 const isCuid = (value: string) => {

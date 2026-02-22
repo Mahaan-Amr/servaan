@@ -226,7 +226,7 @@ export default function TableForm({ isOpen, onClose, editingTable, onTableSaved 
           </div>
 
           {/* Action Buttons */}
-          <div className="flex space-x-3 space-x-reverse pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:space-x-3 sm:space-x-reverse pt-4">
             <button
               type="button"
               onClick={onClose}

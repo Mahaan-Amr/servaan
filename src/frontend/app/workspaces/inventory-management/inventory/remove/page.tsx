@@ -7,6 +7,7 @@ import * as inventoryService from '../../../../../services/inventoryService';
 import * as itemService from '../../../../../services/itemService';
 import toast from 'react-hot-toast';
 import { FormattedNumberInput } from '../../../../../components/ui/FormattedNumberInput';
+import { Button, Card, Section } from '../../../../../components/ui';
 
 export default function RemoveInventoryPage() {
   const [loading, setLoading] = useState(false);
@@ -115,8 +116,8 @@ export default function RemoveInventoryPage() {
   const maxQuantity = currentStock?.current || 0;
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+    <Section className="space-y-6">
+      <Card className="p-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -126,7 +127,7 @@ export default function RemoveInventoryPage() {
               ثبت خروج کالا از انبار
             </p>
           </div>
-          <button
+          <Button
             onClick={() => {
               const returnUrl = searchParams.get('returnUrl');
               if (returnUrl) {
@@ -135,14 +136,14 @@ export default function RemoveInventoryPage() {
                 router.push('/workspaces/inventory-management/inventory');
               }
             }}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            variant="secondary"
           >
             بازگشت
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+      <Card className="p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
@@ -302,7 +303,7 @@ export default function RemoveInventoryPage() {
           )}
 
           <div className="flex justify-end space-x-4 space-x-reverse">
-            <button
+            <Button
               onClick={() => {
                 const returnUrl = searchParams.get('returnUrl');
                 if (returnUrl) {
@@ -311,14 +312,16 @@ export default function RemoveInventoryPage() {
                   router.push('/workspaces/inventory-management/inventory');
                 }
               }}
-              className={`px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${loading ? 'pointer-events-none opacity-50' : ''}`}
+              variant="outline"
+              className={loading ? 'pointer-events-none opacity-50' : ''}
             >
               انصراف
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={loading || !formData.itemId || !formData.quantity || !formData.note || (!allowNegativeStock && (parseFloat(formData.quantity || '0') > maxQuantity || maxQuantity === 0))}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+              variant="danger"
+              className="disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
@@ -331,10 +334,10 @@ export default function RemoveInventoryPage() {
               ) : (
                 'ثبت خروج کالا'
               )}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </Card>
+    </Section>
   );
-} 
+}

@@ -1,7 +1,6 @@
 import { PrismaClient, OrderStatus, KitchenDisplay } from '../../../shared/generated/client';
 import { AppError } from '../utils/AppError';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 export interface CreateKitchenDisplayData {
   orderId: string;
@@ -406,6 +405,18 @@ export class KitchenDisplayService {
           data: updateData
         });
 
+        // Get order items for this order (to trigger stock deduction per item)
+        const orderItems = await tx.orderItem.findMany({
+          where: {
+            orderId: display.orderId,
+            tenantId
+          },
+          select: {
+            id: true,
+            menuItemId: true
+          }
+        });
+
         // Update corresponding order items status if this is item-specific
         await tx.orderItem.updateMany({
           where: {
@@ -417,6 +428,35 @@ export class KitchenDisplayService {
             ...(status === OrderStatus.READY && { prepCompletedAt: new Date() })
           }
         });
+
+        // Trigger stock deduction when items are marked as READY (non-blocking)
+        if (status === OrderStatus.READY && orderItems.length > 0) {
+          // Use setImmediate to avoid blocking the transaction
+          setImmediate(async () => {
+            try {
+              const { OrderInventoryIntegrationService } = await import('./orderInventoryIntegrationService');
+              const userId = updatedBy || 'system';
+              
+              // Deduct stock for each order item that was marked as ready
+              for (const orderItem of orderItems) {
+                try {
+                  await OrderInventoryIntegrationService.deductStockForPreparedItem(
+                    tenantId,
+                    orderItem.id,
+                    userId
+                  );
+                  console.log(`📦 [KITCHEN_DISPLAY] Stock deducted for prepared item ${orderItem.id}`);
+                } catch (itemError) {
+                  console.error(`❌ [KITCHEN_DISPLAY] Failed to deduct stock for item ${orderItem.id}:`, itemError);
+                  // Continue with other items even if one fails
+                }
+              }
+            } catch (error) {
+              console.error('❌ [KITCHEN_DISPLAY] Error in stock deduction for prepared items:', error);
+              // Don't fail the main operation
+            }
+          });
+        }
 
         // Check if all kitchen displays for this order are ready
         const allDisplays = await tx.kitchenDisplay.findMany({

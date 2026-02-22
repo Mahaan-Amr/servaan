@@ -503,6 +503,11 @@ export declare class TenantService {
         id: string;
         email: string;
         name: string | null;
+        phoneNumber: string | null;
+        role: string;
+        active: boolean;
+        lastLogin: Date | null;
+        createdAt: Date;
     }>>;
 }
 //# sourceMappingURL=TenantService.d.ts.map

@@ -6,6 +6,7 @@ import { InventoryEntry, InventoryEntryType } from '../../../../../../shared/typ
 import * as inventoryService from '../../../../../services/inventoryService';
 import toast from 'react-hot-toast';
 import { FarsiDatePicker } from '../../../../../components/ui/FarsiDatePicker';
+import { Card, Section, Table } from '../../../../../components/ui';
 
 export default function InventoryTransactionsPage() {
   const [loading, setLoading] = useState(true);
@@ -178,8 +179,8 @@ export default function InventoryTransactionsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+    <Section className="space-y-6">
+      <Card className="p-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -204,10 +205,10 @@ export default function InventoryTransactionsPage() {
             </Link>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+      <Card className="p-6">
         <div className="flex items-center space-x-4 space-x-reverse">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">فیلتر:</span>
           <div className="flex space-x-2 space-x-reverse">
@@ -269,13 +270,12 @@ export default function InventoryTransactionsPage() {
             </div>
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Transactions List */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+      <Card className="overflow-hidden">
         {filteredEntries.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <Table className="p-0">
               <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -355,8 +355,7 @@ export default function InventoryTransactionsPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
+          </Table>
         ) : (
           <div className="text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -387,7 +386,7 @@ export default function InventoryTransactionsPage() {
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </Card>
+    </Section>
   );
-} 
+}

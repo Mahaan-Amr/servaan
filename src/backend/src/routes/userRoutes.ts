@@ -27,7 +27,18 @@ const updateUserSchema = z.object({
 // GET /api/users - Get all users
 router.get('/', authenticate, authorize(['ADMIN', 'MANAGER']), async (req, res) => {
   try {
+    if (!req.tenant) {
+      return res.status(400).json({
+        success: false,
+        message: 'نیاز به شناسایی مجموعه',
+        error: 'Tenant context required'
+      });
+    }
+
     const users = await prisma.user.findMany({
+      where: {
+        tenantId: req.tenant.id  // Filter by tenant - CRITICAL FIX
+      },
       select: {
         id: true,
         name: true,
@@ -267,13 +278,32 @@ router.delete('/:id', authenticate, authorize(['ADMIN', 'MANAGER']), async (req,
 });
 
 // Get workspace user access
-router.get('/workspace/user_access/:userId', async (req, res) => {
+router.get('/workspace/user_access/:userId', authenticate, async (req, res) => {
   try {
     const { userId } = req.params;
+
+    if (!req.tenant?.id || !req.user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Tenant context required'
+      });
+    }
+
+    const isSelf = req.user.id === userId;
+    const canReadOthers = req.user.role === 'ADMIN' || req.user.role === 'MANAGER';
+    if (!isSelf && !canReadOthers) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not allowed to view this user access profile'
+      });
+    }
     
     // For now, return basic access info - this can be expanded later
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    const user = await prisma.user.findFirst({
+      where: {
+        id: userId,
+        tenantId: req.tenant.id
+      },
       select: {
         id: true,
         name: true,

@@ -560,6 +560,43 @@ router.patch('/kitchen/displays/:id/priority', async (req: Request, res: Respons
   }
 });
 
+// POST /api/ordering/orders/items/:orderItemId/prepare
+// Mark an order item as prepared and deduct stock
+router.post('/orders/items/:orderItemId/prepare', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.user?.tenantId;
+    const orderItemId = req.params.orderItemId;
+    const userId = req.user?.id;
+
+    if (!tenantId || !userId) {
+      throw new AppError('Authentication required', 401);
+    }
+
+    if (!orderItemId) {
+      throw new AppError('Order item ID is required', 400);
+    }
+
+    const { OrderInventoryIntegrationService } = await import('../services/orderInventoryIntegrationService');
+    const result = await OrderInventoryIntegrationService.deductStockForPreparedItem(
+      tenantId,
+      orderItemId,
+      userId
+    );
+
+    res.json({
+      success: true,
+      data: result,
+      message: result.deducted 
+        ? (result.items.length > 0 
+          ? `Stock deducted for ${result.items.length} ingredient(s)` 
+          : 'Stock was already deducted for this item')
+        : 'No recipe found for this item - no stock to deduct'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get('/kitchen/performance', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.user?.tenantId;

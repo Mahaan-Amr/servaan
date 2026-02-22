@@ -390,7 +390,7 @@ export default function TablesPage() {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="p-3 sm:p-4 lg:p-6">
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
         </div>
@@ -399,10 +399,10 @@ export default function TablesPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-3 sm:p-4 lg:p-6">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="mobile-control-stack lg:justify-between">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
               مدیریت میزها
@@ -413,7 +413,7 @@ export default function TablesPage() {
           </div>
           
           {/* View Mode Buttons */}
-          <div className="flex flex-wrap gap-2">
+          <div className="mobile-action-group">
             <button
               onClick={() => setViewMode('grid')}
               className={`px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-colors ${
@@ -451,7 +451,7 @@ export default function TablesPage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap gap-2">
+        <div className="mobile-action-group">
           <button
             onClick={() => setIsReservationModalOpen(true)}
             className="px-3 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"

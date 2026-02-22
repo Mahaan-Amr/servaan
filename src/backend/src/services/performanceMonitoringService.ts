@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '../../../shared/generated/client';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 /**
  * Performance Monitoring Service

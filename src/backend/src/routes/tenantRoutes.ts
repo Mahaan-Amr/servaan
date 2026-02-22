@@ -1,6 +1,7 @@
 import express from 'express';
 import { Prisma } from '../../../shared/generated/client';
 import { validateSubdomain } from '../middlewares/tenantMiddleware';
+import { authenticateAdminPlatform, authorizeAdminPlatform } from '../middlewares/adminPlatformAuth';
 import { prisma } from '../services/dbService';
 
 const router = express.Router();
@@ -9,7 +10,11 @@ const router = express.Router();
  * Create a new tenant (for admin/onboarding system)
  * POST /api/tenants
  */
-router.post('/', async (req, res) => {
+router.post(
+  '/',
+  authenticateAdminPlatform,
+  authorizeAdminPlatform(['SUPER_ADMIN', 'PLATFORM_ADMIN']),
+  async (req, res) => {
   try {
     const {
       subdomain,
@@ -309,7 +314,11 @@ router.get('/:subdomain', async (req, res) => {
  * Update tenant information
  * PUT /api/tenants/:subdomain
  */
-router.put('/:subdomain', async (req, res) => {
+router.put(
+  '/:subdomain',
+  authenticateAdminPlatform,
+  authorizeAdminPlatform(['SUPER_ADMIN', 'PLATFORM_ADMIN']),
+  async (req, res) => {
   try {
     const { subdomain } = req.params;
     const updateData = req.body;
@@ -347,7 +356,11 @@ router.put('/:subdomain', async (req, res) => {
  * Update tenant features
  * PUT /api/tenants/:subdomain/features
  */
-router.put('/:subdomain/features', async (req, res) => {
+router.put(
+  '/:subdomain/features',
+  authenticateAdminPlatform,
+  authorizeAdminPlatform(['SUPER_ADMIN', 'PLATFORM_ADMIN']),
+  async (req, res) => {
   try {
     const { subdomain } = req.params;
     const featuresData = req.body;
@@ -393,7 +406,11 @@ router.put('/:subdomain/features', async (req, res) => {
  * List all tenants (admin only)
  * GET /api/tenants
  */
-router.get('/', async (req, res) => {
+router.get(
+  '/',
+  authenticateAdminPlatform,
+  authorizeAdminPlatform(['SUPER_ADMIN', 'PLATFORM_ADMIN', 'SUPPORT']),
+  async (req, res) => {
   try {
     const { page = 1, limit = 10, search } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
@@ -445,7 +462,11 @@ router.get('/', async (req, res) => {
  * Deactivate tenant
  * DELETE /api/tenants/:subdomain
  */
-router.delete('/:subdomain', async (req, res) => {
+router.delete(
+  '/:subdomain',
+  authenticateAdminPlatform,
+  authorizeAdminPlatform(['SUPER_ADMIN', 'PLATFORM_ADMIN']),
+  async (req, res) => {
   try {
     const { subdomain } = req.params;
 

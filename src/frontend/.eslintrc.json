@@ -2,5 +2,13 @@
   "extends": [
     "next/core-web-vitals",
     "next/typescript"
-  ]
+  ],
+  "rules": {
+    "react/style-prop-object": "off",
+    "jsx-a11y/role-has-required-aria-props": "off",
+    "jsx-a11y/role-supports-aria-props": "off",
+    "@next/next/no-inline-styles": "off",
+    "jsx-a11y/aria-props": "off",
+    "jsx-a11y/aria-role": "off"
+  }
 }

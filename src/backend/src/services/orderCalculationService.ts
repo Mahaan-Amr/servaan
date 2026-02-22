@@ -1,6 +1,5 @@
 import { PrismaClient } from '../../../shared/generated/client';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 export interface OrderCalculation {
   subtotal: number;

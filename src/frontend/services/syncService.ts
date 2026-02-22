@@ -15,7 +15,10 @@ class SyncService {
   private syncListeners: Set<(status: SyncStatus) => void> = new Set();
 
   constructor() {
-    this.init();
+    // Only initialize in browser environment
+    if (typeof window !== 'undefined') {
+      this.init();
+    }
   }
 
   /**
@@ -57,6 +60,12 @@ class SyncService {
     this.notifyListeners({ status: 'syncing', progress: 0 });
 
     try {
+      // Check if we're in a browser environment
+      if (typeof window === 'undefined' || typeof indexedDB === 'undefined') {
+        console.log('📴 [SYNC] Cannot sync - not in browser environment');
+        return { success: false, message: 'Not in browser environment' };
+      }
+
       console.log('🔄 [SYNC] Starting full sync...');
 
       // Initialize offline storage

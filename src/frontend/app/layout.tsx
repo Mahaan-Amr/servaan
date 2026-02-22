@@ -3,9 +3,8 @@ import { AuthProvider } from '../contexts/AuthContext';
 import { NotificationProvider } from '../contexts/NotificationContext';
 import { WorkspaceProvider } from '../contexts/WorkspaceContext';
 import { TenantProvider } from '../contexts/TenantContext';
-import { Navbar } from '../components/Navbar';
 import { ClientInitializer } from '../components/ClientInitializer';
-import { TenantAwareFooter } from '../components/TenantAwareFooter';
+import { MainAppShell } from '../components/layout/MainAppShell';
 import { Toaster } from 'react-hot-toast';
 
 // Client-side initialization of axios interceptors - moved to a client component
@@ -23,59 +22,53 @@ export default function RootLayout({
     <html lang="fa" dir="rtl">
       <body className="flex flex-col min-h-screen">
         <TenantProvider>
-        <AuthProvider>
-          <WorkspaceProvider>
-            <NotificationProvider>
-              <ClientInitializer />
-              <Navbar />
-              <main className="flex-1 bg-gray-50 dark:bg-gray-900">
-                <div className="container mx-auto px-4 pt-6 pb-6">
-                  {children}
-                </div>
-              </main>
-              <TenantAwareFooter />
-              {/* Toast Notifications */}
-              <Toaster
-                position="top-center"
-                reverseOrder={false}
-                gutter={8}
-                containerClassName=""
-                containerStyle={{}}
-                toastOptions={{
-                  // Default options for all toasts
-                  className: '',
-                  duration: 4000,
-                  style: {
-                    background: '#363636',
-                    color: '#fff',
-                    direction: 'rtl',
-                    fontFamily: 'inherit',
-                  },
-                  // Default options for specific types
-                  success: {
-                    duration: 3000,
+          <AuthProvider>
+            <WorkspaceProvider>
+              <NotificationProvider>
+                <ClientInitializer />
+                <MainAppShell>{children}</MainAppShell>
+                {/* Toast Notifications */}
+                <Toaster
+                  position="top-center"
+                  reverseOrder={false}
+                  gutter={8}
+                  containerClassName=""
+                  containerStyle={{}}
+                  toastOptions={{
+                    // Default options for all toasts
+                    className: '',
+                    duration: 4000,
                     style: {
-                      background: '#10B981',
+                      background: '#363636',
+                      color: '#fff',
+                      direction: 'rtl',
+                      fontFamily: 'inherit',
                     },
-                  },
-                  error: {
-                    duration: 5000,
-                    style: {
-                      background: '#EF4444',
+                    // Default options for specific types
+                    success: {
+                      duration: 3000,
+                      style: {
+                        background: '#10B981',
+                      },
                     },
-                  },
-                  loading: {
-                    style: {
-                      background: '#3B82F6',
+                    error: {
+                      duration: 5000,
+                      style: {
+                        background: '#EF4444',
+                      },
                     },
-                  },
-                }}
-              />
-            </NotificationProvider>
-          </WorkspaceProvider>
-        </AuthProvider>
+                    loading: {
+                      style: {
+                        background: '#3B82F6',
+                      },
+                    },
+                  }}
+                />
+              </NotificationProvider>
+            </WorkspaceProvider>
+          </AuthProvider>
         </TenantProvider>
       </body>
     </html>
   );
-} 
+}

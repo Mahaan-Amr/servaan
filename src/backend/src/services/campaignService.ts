@@ -1,8 +1,7 @@
 import { PrismaClient } from '../../../shared/generated/client';
 import { z } from 'zod';
 import smsService from './smsService';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 // Campaign interfaces
 export interface CampaignCreateData {

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+﻿import { Router } from 'express';
 import { z } from 'zod';
 import { authenticate } from '../middlewares/authMiddleware';
 import { smsService } from '../services/smsService';
@@ -9,16 +9,16 @@ const router = Router();
 
 // Validation schemas
 const phoneSchema = z.object({
-  phoneNumber: z.string().regex(/^09\d{9}$/, 'شماره تلفن باید با 09 شروع شده و 11 رقم باشد')
+  phoneNumber: z.string().regex(/^09\d{9}$/, 'Ø´Ù…Ø§Ø±Ù‡ ØªÙ„ÙÙ† Ø¨Ø§ÛŒØ¯ Ø¨Ø§ 09 Ø´Ø±ÙˆØ¹ Ø´Ø¯Ù‡ Ùˆ 11 Ø±Ù‚Ù… Ø¨Ø§Ø´Ø¯')
 });
 
 const verificationSchema = z.object({
-  phoneNumber: z.string().regex(/^09\d{9}$/, 'شماره تلفن باید با 09 شروع شده و 11 رقم باشد'),
-  code: z.string().length(5, 'کد تایید باید 5 رقم باشد')
+  phoneNumber: z.string().regex(/^09\d{9}$/, 'Ø´Ù…Ø§Ø±Ù‡ ØªÙ„ÙÙ† Ø¨Ø§ÛŒØ¯ Ø¨Ø§ 09 Ø´Ø±ÙˆØ¹ Ø´Ø¯Ù‡ Ùˆ 11 Ø±Ù‚Ù… Ø¨Ø§Ø´Ø¯'),
+  code: z.string().length(5, 'Ú©Ø¯ ØªØ§ÛŒÛŒØ¯ Ø¨Ø§ÛŒØ¯ 5 Ø±Ù‚Ù… Ø¨Ø§Ø´Ø¯')
 });
 
 const invitationSchema = z.object({
-  phoneNumber: z.string().regex(/^09\d{9}$/, 'شماره تلفن باید با 09 شروع شده و 11 رقم باشد'),
+  phoneNumber: z.string().regex(/^09\d{9}$/, 'Ø´Ù…Ø§Ø±Ù‡ ØªÙ„ÙÙ† Ø¨Ø§ÛŒØ¯ Ø¨Ø§ 09 Ø´Ø±ÙˆØ¹ Ø´Ø¯Ù‡ Ùˆ 11 Ø±Ù‚Ù… Ø¨Ø§Ø´Ø¯'),
   role: z.enum(['ADMIN', 'MANAGER', 'STAFF']),
   businessName: z.string().min(1),
   inviterName: z.string().min(1),
@@ -26,15 +26,44 @@ const invitationSchema = z.object({
 });
 
 const testSMSSchema = z.object({
-  phoneNumber: z.string().regex(/^09\d{9}$/, 'شماره تلفن باید با 09 شروع شده و 11 رقم باشد'),
+  phoneNumber: z.string().regex(/^09\d{9}$/, 'Ø´Ù…Ø§Ø±Ù‡ ØªÙ„ÙÙ† Ø¨Ø§ÛŒØ¯ Ø¨Ø§ 09 Ø´Ø±ÙˆØ¹ Ø´Ø¯Ù‡ Ùˆ 11 Ø±Ù‚Ù… Ø¨Ø§Ø´Ø¯'),
   message: z.string().min(1).max(500),
   method: z.enum(['https', 'axios', 'alternative', 'sdk', 'all']).optional()
 });
+let legacyVerifyAliasUsageCount = 0;
+const LEGACY_VERIFY_ALIAS_SUNSET = process.env.SMS_VERIFY_ALIAS_SUNSET || '2026-04-01';
+type VerificationPurpose = 'registration' | 'login' | 'password_reset';
 
+const toVerificationPurpose = (value: unknown): VerificationPurpose => {
+  return value === 'login' || value === 'password_reset' ? value : 'registration';
+};
+
+const sendVerificationCodeResponse = async (phoneNumber: string, purpose: VerificationPurpose) => {
+  const code = smsService.generateVerificationCode(5);
+  if (config.kavenegar.developmentMode && !config.kavenegar.enableRealSMS) {
+    return {
+      success: true,
+      message: 'کد تایید در حالت توسعه ارسال شد',
+      developmentMode: true,
+      verificationCode: code,
+      phoneNumber
+    };
+  }
+  const result = await smsService.sendVerificationCode({
+    phoneNumber,
+    code,
+    purpose
+  });
+  return {
+    success: true,
+    message: 'کد تایید با موفقیت ارسال شد',
+    messageId: result.return?.messageid
+  };
+};
 // Send business invitation SMS
 router.post('/invite', authenticate, async (req, res) => {
   try {
-    console.log('🔍 SMS Invite endpoint called with config:');
+    console.log('ðŸ” SMS Invite endpoint called with config:');
     console.log('  - developmentMode:', config.kavenegar.developmentMode);
     console.log('  - enableRealSMS:', config.kavenegar.enableRealSMS);
     console.log('  - Raw ENABLE_REAL_SMS env:', JSON.stringify(process.env.ENABLE_REAL_SMS));
@@ -44,29 +73,29 @@ router.post('/invite', authenticate, async (req, res) => {
     
     // Only ADMIN and MANAGER can send invitations
     if (userRole !== 'ADMIN' && userRole !== 'MANAGER') {
-      return res.status(403).json({ message: 'دسترسی محدود - فقط مدیران می‌توانند دعوت‌نامه ارسال کنند' });
+      return res.status(403).json({ message: 'Ø¯Ø³ØªØ±Ø³ÛŒ Ù…Ø­Ø¯ÙˆØ¯ - ÙÙ‚Ø· Ù…Ø¯ÛŒØ±Ø§Ù† Ù…ÛŒâ€ŒØªÙˆØ§Ù†Ù†Ø¯ Ø¯Ø¹ÙˆØªâ€ŒÙ†Ø§Ù…Ù‡ Ø§Ø±Ø³Ø§Ù„ Ú©Ù†Ù†Ø¯' });
     }
 
     const { phoneNumber, recipientName, businessName, invitationLink, role } = req.body;
 
     if (!phoneNumber || !businessName) {
-      return res.status(400).json({ message: 'شماره تلفن و نام کسب‌وکار الزامی است' });
+      return res.status(400).json({ message: 'Ø´Ù…Ø§Ø±Ù‡ ØªÙ„ÙÙ† Ùˆ Ù†Ø§Ù… Ú©Ø³Ø¨â€ŒÙˆÚ©Ø§Ø± Ø§Ù„Ø²Ø§Ù…ÛŒ Ø§Ø³Øª' });
     }
 
     // Validate phone number
     const phoneValidation = smsService.validateIranianPhoneNumber(phoneNumber);
     if (!phoneValidation.isValid) {
-      return res.status(400).json({ message: 'شماره تلفن وارد شده معتبر نیست' });
+      return res.status(400).json({ message: 'Ø´Ù…Ø§Ø±Ù‡ ØªÙ„ÙÙ† ÙˆØ§Ø±Ø¯ Ø´Ø¯Ù‡ Ù…Ø¹ØªØ¨Ø± Ù†ÛŒØ³Øª' });
     }
 
     // Check if we should send real SMS or simulate
     const forceRealSMS = req.body.forceRealSMS === true;
-    console.log('🔍 forceRealSMS parameter:', forceRealSMS);
+    console.log('ðŸ” forceRealSMS parameter:', forceRealSMS);
     
     if (config.kavenegar.developmentMode && !config.kavenegar.enableRealSMS && !forceRealSMS) {
-      console.log('🧪 Development Mode - SMS Simulation');
-      console.log('📱 Would send SMS to:', phoneValidation.formatted);
-      console.log('📝 Message would contain link:', invitationLink);
+      console.log('ðŸ§ª Development Mode - SMS Simulation');
+      console.log('ðŸ“± Would send SMS to:', phoneValidation.formatted);
+      console.log('ðŸ“ Message would contain link:', invitationLink);
       
       // Simulate successful response
       const mockResponse = {
@@ -79,7 +108,7 @@ router.post('/invite', authenticate, async (req, res) => {
       };
 
       return res.json({ 
-        message: 'دعوت‌نامه شبیه‌سازی شد (حالت توسعه)',
+        message: 'Ø¯Ø¹ÙˆØªâ€ŒÙ†Ø§Ù…Ù‡ Ø´Ø¨ÛŒÙ‡â€ŒØ³Ø§Ø²ÛŒ Ø´Ø¯ (Ø­Ø§Ù„Øª ØªÙˆØ³Ø¹Ù‡)',
         phoneNumber: phoneValidation.formatted,
         messageId: mockResponse.entries[0].messageid,
         developmentMode: true,
@@ -88,10 +117,10 @@ router.post('/invite', authenticate, async (req, res) => {
     }
 
     // Send real SMS
-    console.log('📱 Sending real SMS invitation to:', phoneValidation.formatted);
+    console.log('ðŸ“± Sending real SMS invitation to:', phoneValidation.formatted);
     const result = await smsService.sendBusinessInvitationWithLink({
       phoneNumber: phoneValidation.formatted,
-      recipientName: recipientName || 'کاربر گرامی',
+      recipientName: recipientName || 'Ú©Ø§Ø±Ø¨Ø± Ú¯Ø±Ø§Ù…ÛŒ',
       businessName,
       inviterName: userName,
       invitationLink: invitationLink || '',
@@ -99,70 +128,14 @@ router.post('/invite', authenticate, async (req, res) => {
     });
 
     res.json({ 
-      message: 'دعوت‌نامه با موفقیت ارسال شد',
+      message: 'Ø¯Ø¹ÙˆØªâ€ŒÙ†Ø§Ù…Ù‡ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§Ø±Ø³Ø§Ù„ Ø´Ø¯',
       phoneNumber: phoneValidation.formatted,
       messageId: result.entries?.[0]?.messageid
     });
 
   } catch (error) {
     console.error('Error sending invitation SMS:', error);
-    res.status(500).json({ message: 'خطا در ارسال دعوت‌نامه' });
-  }
-});
-
-// Send verification code SMS
-router.post('/verify', async (req, res) => {
-  try {
-    const { phoneNumber, purpose = 'registration' } = req.body;
-
-    if (!phoneNumber) {
-      return res.status(400).json({ message: 'شماره تلفن الزامی است' });
-    }
-
-    // Validate phone number
-    const phoneValidation = smsService.validateIranianPhoneNumber(phoneNumber);
-    if (!phoneValidation.isValid) {
-      return res.status(400).json({ message: 'شماره تلفن وارد شده معتبر نیست' });
-    }
-
-    // Generate verification code
-    const verificationCode = smsService.generateVerificationCode();
-
-    // Check if we should send real SMS or simulate
-    if (config.kavenegar.developmentMode && !config.kavenegar.enableRealSMS) {
-      console.log('🧪 Development Mode - SMS Verification Bypass');
-      console.log('📱 Phone:', phoneValidation.formatted);
-      console.log('🔢 Verification Code:', verificationCode);
-      
-      return res.json({
-        message: 'کد تایید آماده شد (حالت توسعه)',
-        phoneNumber: phoneValidation.formatted,
-        verificationCode: verificationCode,
-        developmentMode: true,
-        messageId: 'dev-' + Date.now()
-      });
-    }
-
-    // Send real SMS
-    console.log('📱 Sending real SMS verification to:', phoneValidation.formatted);
-    const result = await smsService.sendVerificationCode({
-      phoneNumber: phoneValidation.formatted,
-      code: verificationCode,
-      purpose
-    });
-
-    // In production, don't return the code in response for security
-    const responseData: any = {
-      message: 'کد تایید ارسال شد',
-      phoneNumber: phoneValidation.formatted,
-      messageId: result.entries?.[0]?.messageid
-    };
-
-    res.json(responseData);
-
-  } catch (error) {
-    console.error('Error sending verification SMS:', error);
-    res.status(500).json({ message: 'خطا در ارسال کد تایید' });
+    res.status(500).json({ message: 'Ø®Ø·Ø§ Ø¯Ø± Ø§Ø±Ø³Ø§Ù„ Ø¯Ø¹ÙˆØªâ€ŒÙ†Ø§Ù…Ù‡' });
   }
 });
 
@@ -172,18 +145,18 @@ router.post('/welcome', authenticate, async (req, res) => {
     const userRole = (req as any).user.role;
     
     if (userRole !== 'ADMIN' && userRole !== 'MANAGER') {
-      return res.status(403).json({ message: 'دسترسی محدود' });
+      return res.status(403).json({ message: 'Ø¯Ø³ØªØ±Ø³ÛŒ Ù…Ø­Ø¯ÙˆØ¯' });
     }
 
     const { phoneNumber, businessName } = req.body;
 
     if (!phoneNumber || !businessName) {
-      return res.status(400).json({ message: 'شماره تلفن و نام کسب‌وکار الزامی است' });
+      return res.status(400).json({ message: 'Ø´Ù…Ø§Ø±Ù‡ ØªÙ„ÙÙ† Ùˆ Ù†Ø§Ù… Ú©Ø³Ø¨â€ŒÙˆÚ©Ø§Ø± Ø§Ù„Ø²Ø§Ù…ÛŒ Ø§Ø³Øª' });
     }
 
     const phoneValidation = smsService.validateIranianPhoneNumber(phoneNumber);
     if (!phoneValidation.isValid) {
-      return res.status(400).json({ message: 'شماره تلفن وارد شده معتبر نیست' });
+      return res.status(400).json({ message: 'Ø´Ù…Ø§Ø±Ù‡ ØªÙ„ÙÙ† ÙˆØ§Ø±Ø¯ Ø´Ø¯Ù‡ Ù…Ø¹ØªØ¨Ø± Ù†ÛŒØ³Øª' });
     }
 
     const result = await smsService.sendWelcomeMessage(
@@ -192,14 +165,14 @@ router.post('/welcome', authenticate, async (req, res) => {
     );
 
     res.json({ 
-      message: 'پیام خوش‌آمدگویی ارسال شد',
+      message: 'Ù¾ÛŒØ§Ù… Ø®ÙˆØ´â€ŒØ¢Ù…Ø¯Ú¯ÙˆÛŒÛŒ Ø§Ø±Ø³Ø§Ù„ Ø´Ø¯',
       phoneNumber: phoneValidation.formatted,
       messageId: result.entries?.[0]?.messageid
     });
 
   } catch (error) {
     console.error('Error sending welcome SMS:', error);
-    res.status(500).json({ message: 'خطا در ارسال پیام خوش‌آمدگویی' });
+    res.status(500).json({ message: 'Ø®Ø·Ø§ Ø¯Ø± Ø§Ø±Ø³Ø§Ù„ Ù¾ÛŒØ§Ù… Ø®ÙˆØ´â€ŒØ¢Ù…Ø¯Ú¯ÙˆÛŒÛŒ' });
   }
 });
 
@@ -209,18 +182,18 @@ router.post('/alert/low-stock', authenticate, async (req, res) => {
     const userRole = (req as any).user.role;
     
     if (userRole !== 'ADMIN' && userRole !== 'MANAGER') {
-      return res.status(403).json({ message: 'دسترسی محدود' });
+      return res.status(403).json({ message: 'Ø¯Ø³ØªØ±Ø³ÛŒ Ù…Ø­Ø¯ÙˆØ¯' });
     }
 
     const { phoneNumber, businessName, itemName, currentStock, minStock } = req.body;
 
     if (!phoneNumber || !businessName || !itemName || currentStock === undefined || minStock === undefined) {
-      return res.status(400).json({ message: 'تمام فیلدها الزامی است' });
+      return res.status(400).json({ message: 'ØªÙ…Ø§Ù… ÙÛŒÙ„Ø¯Ù‡Ø§ Ø§Ù„Ø²Ø§Ù…ÛŒ Ø§Ø³Øª' });
     }
 
     const phoneValidation = smsService.validateIranianPhoneNumber(phoneNumber);
     if (!phoneValidation.isValid) {
-      return res.status(400).json({ message: 'شماره تلفن وارد شده معتبر نیست' });
+      return res.status(400).json({ message: 'Ø´Ù…Ø§Ø±Ù‡ ØªÙ„ÙÙ† ÙˆØ§Ø±Ø¯ Ø´Ø¯Ù‡ Ù…Ø¹ØªØ¨Ø± Ù†ÛŒØ³Øª' });
     }
 
     const result = await smsService.sendLowStockAlert(
@@ -232,14 +205,14 @@ router.post('/alert/low-stock', authenticate, async (req, res) => {
     );
 
     res.json({ 
-      message: 'هشدار موجودی کم ارسال شد',
+      message: 'Ù‡Ø´Ø¯Ø§Ø± Ù…ÙˆØ¬ÙˆØ¯ÛŒ Ú©Ù… Ø§Ø±Ø³Ø§Ù„ Ø´Ø¯',
       phoneNumber: phoneValidation.formatted,
       messageId: result.entries?.[0]?.messageid
     });
 
   } catch (error) {
     console.error('Error sending low stock alert SMS:', error);
-    res.status(500).json({ message: 'خطا در ارسال هشدار موجودی کم' });
+    res.status(500).json({ message: 'Ø®Ø·Ø§ Ø¯Ø± Ø§Ø±Ø³Ø§Ù„ Ù‡Ø´Ø¯Ø§Ø± Ù…ÙˆØ¬ÙˆØ¯ÛŒ Ú©Ù…' });
   }
 });
 
@@ -249,30 +222,30 @@ router.post('/bulk', authenticate, async (req, res) => {
     const userRole = (req as any).user.role;
     
     if (userRole !== 'ADMIN') {
-      return res.status(403).json({ message: 'دسترسی محدود - فقط ادمین' });
+      return res.status(403).json({ message: 'Ø¯Ø³ØªØ±Ø³ÛŒ Ù…Ø­Ø¯ÙˆØ¯ - ÙÙ‚Ø· Ø§Ø¯Ù…ÛŒÙ†' });
     }
 
     const { phoneNumbers, message } = req.body;
 
     if (!phoneNumbers || !Array.isArray(phoneNumbers) || !message) {
-      return res.status(400).json({ message: 'لیست شماره تلفن‌ها و پیام الزامی است' });
+      return res.status(400).json({ message: 'Ù„ÛŒØ³Øª Ø´Ù…Ø§Ø±Ù‡ ØªÙ„ÙÙ†â€ŒÙ‡Ø§ Ùˆ Ù¾ÛŒØ§Ù… Ø§Ù„Ø²Ø§Ù…ÛŒ Ø§Ø³Øª' });
     }
 
     if (phoneNumbers.length > 50) {
-      return res.status(400).json({ message: 'حداکثر 50 شماره در هر درخواست مجاز است' });
+      return res.status(400).json({ message: 'Ø­Ø¯Ø§Ú©Ø«Ø± 50 Ø´Ù…Ø§Ø±Ù‡ Ø¯Ø± Ù‡Ø± Ø¯Ø±Ø®ÙˆØ§Ø³Øª Ù…Ø¬Ø§Ø² Ø§Ø³Øª' });
     }
 
     const result = await smsService.sendBulkSMS(phoneNumbers, message);
 
     res.json({ 
-      message: 'پیام‌های گروهی ارسال شد',
+      message: 'Ù¾ÛŒØ§Ù…â€ŒÙ‡Ø§ÛŒ Ú¯Ø±ÙˆÙ‡ÛŒ Ø§Ø±Ø³Ø§Ù„ Ø´Ø¯',
       sentCount: result.entries?.length || 0,
       messageIds: result.entries?.map((entry: any) => entry.messageid) || []
     });
 
   } catch (error) {
     console.error('Error sending bulk SMS:', error);
-    res.status(500).json({ message: 'خطا در ارسال پیام‌های گروهی' });
+    res.status(500).json({ message: 'Ø®Ø·Ø§ Ø¯Ø± Ø§Ø±Ø³Ø§Ù„ Ù¾ÛŒØ§Ù…â€ŒÙ‡Ø§ÛŒ Ú¯Ø±ÙˆÙ‡ÛŒ' });
   }
 });
 
@@ -282,19 +255,19 @@ router.get('/status/:messageId', authenticate, async (req, res) => {
     const { messageId } = req.params;
 
     if (!messageId) {
-      return res.status(400).json({ message: 'شناسه پیام الزامی است' });
+      return res.status(400).json({ message: 'Ø´Ù†Ø§Ø³Ù‡ Ù¾ÛŒØ§Ù… Ø§Ù„Ø²Ø§Ù…ÛŒ Ø§Ø³Øª' });
     }
 
     const status = await smsService.checkSMSStatus(messageId);
 
     res.json({ 
-      message: 'وضعیت پیام دریافت شد',
+      message: 'ÙˆØ¶Ø¹ÛŒØª Ù¾ÛŒØ§Ù… Ø¯Ø±ÛŒØ§ÙØª Ø´Ø¯',
       status
     });
 
   } catch (error) {
     console.error('Error checking SMS status:', error);
-    res.status(500).json({ message: 'خطا در بررسی وضعیت پیام' });
+    res.status(500).json({ message: 'Ø®Ø·Ø§ Ø¯Ø± Ø¨Ø±Ø±Ø³ÛŒ ÙˆØ¶Ø¹ÛŒØª Ù¾ÛŒØ§Ù…' });
   }
 });
 
@@ -304,7 +277,7 @@ router.get('/account/info', authenticate, async (req, res) => {
     const userRole = (req as any).user.role;
     
     if (userRole !== 'ADMIN') {
-      return res.status(403).json({ message: 'دسترسی محدود - فقط ادمین' });
+      return res.status(403).json({ message: 'Ø¯Ø³ØªØ±Ø³ÛŒ Ù…Ø­Ø¯ÙˆØ¯ - ÙÙ‚Ø· Ø§Ø¯Ù…ÛŒÙ†' });
     }
 
     // Add timeout protection for Kavenegar API call
@@ -317,7 +290,7 @@ router.get('/account/info', authenticate, async (req, res) => {
       const accountInfo = await Promise.race([accountInfoPromise, timeoutPromise]);
 
       res.json({ 
-        message: 'اطلاعات حساب کاوه‌نگار دریافت شد',
+        message: 'Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ø­Ø³Ø§Ø¨ Ú©Ø§ÙˆÙ‡â€ŒÙ†Ú¯Ø§Ø± Ø¯Ø±ÛŒØ§ÙØª Ø´Ø¯',
         accountInfo,
         status: 'success'
       });
@@ -328,21 +301,21 @@ router.get('/account/info', authenticate, async (req, res) => {
       const mockAccountInfo = {
         remaincredit: 1000,
         expiredate: '1749587400',
-        type: 'پیش‌پرداخت'
+        type: 'Ù¾ÛŒØ´â€ŒÙ¾Ø±Ø¯Ø§Ø®Øª'
       };
 
       res.json({ 
-        message: 'اطلاعات حساب (شبیه‌سازی شده)',
+        message: 'Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ø­Ø³Ø§Ø¨ (Ø´Ø¨ÛŒÙ‡â€ŒØ³Ø§Ø²ÛŒ Ø´Ø¯Ù‡)',
         accountInfo: mockAccountInfo,
         status: 'mock',
-        warning: 'عدم دسترسی به سرور کاوه‌نگار - داده‌های نمایشی'
+        warning: 'Ø¹Ø¯Ù… Ø¯Ø³ØªØ±Ø³ÛŒ Ø¨Ù‡ Ø³Ø±ÙˆØ± Ú©Ø§ÙˆÙ‡â€ŒÙ†Ú¯Ø§Ø± - Ø¯Ø§Ø¯Ù‡â€ŒÙ‡Ø§ÛŒ Ù†Ù…Ø§ÛŒØ´ÛŒ'
       });
     }
 
   } catch (error) {
     console.error('Error getting account info:', error);
     res.status(500).json({ 
-      message: 'خطا در دریافت اطلاعات حساب',
+      message: 'Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ø­Ø³Ø§Ø¨',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
@@ -354,7 +327,7 @@ router.post('/validate-phone', async (req, res) => {
     const { phoneNumber } = req.body;
 
     if (!phoneNumber) {
-      return res.status(400).json({ message: 'شماره تلفن الزامی است' });
+      return res.status(400).json({ message: 'Ø´Ù…Ø§Ø±Ù‡ ØªÙ„ÙÙ† Ø§Ù„Ø²Ø§Ù…ÛŒ Ø§Ø³Øª' });
     }
 
     const validation = smsService.validateIranianPhoneNumber(phoneNumber);
@@ -362,78 +335,12 @@ router.post('/validate-phone', async (req, res) => {
     res.json({
       isValid: validation.isValid,
       formatted: validation.formatted,
-      message: validation.isValid ? 'شماره تلفن معتبر است' : 'شماره تلفن نامعتبر است'
+      message: validation.isValid ? 'Ø´Ù…Ø§Ø±Ù‡ ØªÙ„ÙÙ† Ù…Ø¹ØªØ¨Ø± Ø§Ø³Øª' : 'Ø´Ù…Ø§Ø±Ù‡ ØªÙ„ÙÙ† Ù†Ø§Ù…Ø¹ØªØ¨Ø± Ø§Ø³Øª'
     });
 
   } catch (error) {
     console.error('Error validating phone number:', error);
-    res.status(500).json({ message: 'خطا در اعتبارسنجی شماره تلفن' });
-  }
-});
-
-// Test SMS connection (for debugging)
-router.post('/test', authenticate, async (req, res) => {
-  try {
-    const userRole = (req as any).user.role;
-    
-    if (userRole !== 'ADMIN') {
-      return res.status(403).json({ message: 'دسترسی محدود - فقط ادمین' });
-    }
-
-    const { phoneNumber } = req.body;
-
-    if (!phoneNumber) {
-      return res.status(400).json({ message: 'شماره تلفن الزامی است' });
-    }
-
-    // Validate phone number
-    const phoneValidation = smsService.validateIranianPhoneNumber(phoneNumber);
-    if (!phoneValidation.isValid) {
-      return res.status(400).json({ message: 'شماره تلفن وارد شده معتبر نیست' });
-    }
-
-    // Send simple test SMS
-    const testMessage = `تست پیامک سرووان
-
-زمان: ${new Date().toLocaleString('fa-IR')}
-✅ اتصال موفق`;
-
-    // Use a simpler approach for testing
-    const Kavenegar = require('kavenegar');
-    const kavenegarApi = Kavenegar.KavenegarApi({
-      apikey: config.kavenegar.apiKey
-    });
-
-    const result = await new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error('Request timeout after 15 seconds'));
-      }, 15000);
-
-      kavenegarApi.Send({
-        message: testMessage,
-        receptor: phoneValidation.formatted,
-        sender: config.kavenegar.sender
-      }, (response: any, status: any) => {
-        clearTimeout(timeout);
-        console.log('🧪 Test SMS Response:', response);
-        console.log('🧪 Test SMS Status:', status);
-        
-        resolve({ response, status });
-      });
-    });
-
-    res.json({ 
-      message: 'تست پیامک ارسال شد',
-      phoneNumber: phoneValidation.formatted,
-      result
-    });
-
-  } catch (error) {
-    console.error('Error in test SMS:', error);
-    res.status(500).json({ 
-      message: 'خطا در ارسال تست پیامک',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    res.status(500).json({ message: 'Ø®Ø·Ø§ Ø¯Ø± Ø§Ø¹ØªØ¨Ø§Ø±Ø³Ù†Ø¬ÛŒ Ø´Ù…Ø§Ø±Ù‡ ØªÙ„ÙÙ†' });
   }
 });
 
@@ -443,40 +350,40 @@ router.post('/test-real', authenticate, async (req, res) => {
     const userRole = (req as any).user.role;
     
     if (userRole !== 'ADMIN') {
-      return res.status(403).json({ message: 'دسترسی محدود - فقط ادمین' });
+      return res.status(403).json({ message: 'Ø¯Ø³ØªØ±Ø³ÛŒ Ù…Ø­Ø¯ÙˆØ¯ - ÙÙ‚Ø· Ø§Ø¯Ù…ÛŒÙ†' });
     }
 
     const { phoneNumber } = req.body;
 
     if (!phoneNumber) {
-      return res.status(400).json({ message: 'شماره تلفن الزامی است' });
+      return res.status(400).json({ message: 'Ø´Ù…Ø§Ø±Ù‡ ØªÙ„ÙÙ† Ø§Ù„Ø²Ø§Ù…ÛŒ Ø§Ø³Øª' });
     }
 
     // Validate phone number
     const phoneValidation = smsService.validateIranianPhoneNumber(phoneNumber);
     if (!phoneValidation.isValid) {
-      return res.status(400).json({ message: 'شماره تلفن وارد شده معتبر نیست' });
+      return res.status(400).json({ message: 'Ø´Ù…Ø§Ø±Ù‡ ØªÙ„ÙÙ† ÙˆØ§Ø±Ø¯ Ø´Ø¯Ù‡ Ù…Ø¹ØªØ¨Ø± Ù†ÛŒØ³Øª' });
     }
 
     // Force real SMS sending
-    const testMessage = `تست واقعی پیامک سرووان
+    const testMessage = `ØªØ³Øª ÙˆØ§Ù‚Ø¹ÛŒ Ù¾ÛŒØ§Ù…Ú© Ø³Ø±ÙˆÙˆØ§Ù†
 
-زمان: ${new Date().toLocaleString('fa-IR')}
-✅ ارسال واقعی از سرور`;
+Ø²Ù…Ø§Ù†: ${new Date().toLocaleString('fa-IR')}
+âœ… Ø§Ø±Ø³Ø§Ù„ ÙˆØ§Ù‚Ø¹ÛŒ Ø§Ø² Ø³Ø±ÙˆØ±`;
 
-    console.log('🚀 Forcing real SMS send...');
+    console.log('ðŸš€ Forcing real SMS send...');
     
     const result = await smsService.sendBusinessInvitationWithLink({
       phoneNumber: phoneValidation.formatted,
-      recipientName: 'کاربر تست',
-      businessName: 'سرووان تست',
-      inviterName: 'سیستم',
+      recipientName: 'Ú©Ø§Ø±Ø¨Ø± ØªØ³Øª',
+      businessName: 'Ø³Ø±ÙˆÙˆØ§Ù† ØªØ³Øª',
+      inviterName: 'Ø³ÛŒØ³ØªÙ…',
       invitationLink: `http://localhost:3002/invitation?code=test&phone=${phoneValidation.formatted}&role=STAFF`,
       role: 'STAFF'
     });
 
     res.json({ 
-      message: 'تست واقعی پیامک ارسال شد',
+      message: 'ØªØ³Øª ÙˆØ§Ù‚Ø¹ÛŒ Ù¾ÛŒØ§Ù…Ú© Ø§Ø±Ø³Ø§Ù„ Ø´Ø¯',
       phoneNumber: phoneValidation.formatted,
       result
     });
@@ -484,109 +391,87 @@ router.post('/test-real', authenticate, async (req, res) => {
   } catch (error) {
     console.error('Error in real SMS test:', error);
     res.status(500).json({ 
-      message: 'خطا در ارسال تست واقعی پیامک',
+      message: 'Ø®Ø·Ø§ Ø¯Ø± Ø§Ø±Ø³Ø§Ù„ ØªØ³Øª ÙˆØ§Ù‚Ø¹ÛŒ Ù¾ÛŒØ§Ù…Ú©',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
 
 // POST /api/sms/send-verification - Send verification code
-router.post('/send-verification', async (req, res, next) => {
+router.post('/send-verification', async (req, res) => {
   try {
     const { phoneNumber } = phoneSchema.parse(req.body);
-    
-    // Generate verification code
-    const code = smsService.generateVerificationCode(5);
-    
-    // Check if development mode
-    if (config.kavenegar.developmentMode && !config.kavenegar.enableRealSMS) {
-      console.log('🧪 Development Mode - SMS Verification Bypass');
-      console.log('📱 Phone:', phoneNumber);
-      console.log('🔢 Verification Code:', code);
-      
-      return res.json({
-        success: true,
-        message: 'کد تایید در حالت توسعه ارسال شد',
-        developmentMode: true,
-        code: code, // Only in development
-        phoneNumber: phoneNumber
-      });
-    }
-    
-    // Send real SMS
-    const result = await smsService.sendVerificationCode({
-      phoneNumber,
-      code,
-      purpose: 'registration'
-    });
-    
-    res.json({
-      success: true,
-      message: 'کد تایید با موفقیت ارسال شد',
-      messageId: result.return?.messageid
-    });
-    
+    const purpose = toVerificationPurpose(req.body?.purpose);
+
+    const response = await sendVerificationCodeResponse(phoneNumber, purpose);
+    return res.json(response);
   } catch (error: any) {
     console.error('SMS sending error:', error);
-    
+
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'اطلاعات نامعتبر', 
-        errors: error.errors 
+      return res.status(400).json({
+        success: false,
+        message: 'اطلاعات نامعتبر',
+        errors: error.errors
       });
     }
-    
-    res.status(500).json({
+
+    return res.status(500).json({
       success: false,
       message: 'خطا در ارسال پیامک',
       error: error.message
     });
   }
 });
-
 // POST /api/sms/verify - Verify SMS code
-router.post('/verify', async (req, res, next) => {
+router.post('/verify', async (req, res) => {
   try {
-    const { phoneNumber, code } = verificationSchema.parse(req.body);
-    
-    // In development mode, accept any 5-digit code
+    const hasCode = typeof req.body?.code === 'string' && req.body.code.length > 0;
+
+    // Compatibility alias for one release: old clients send verification requests to /verify without code.
+    if (!hasCode) {
+      const { phoneNumber } = phoneSchema.parse(req.body);
+      const purpose = toVerificationPurpose(req.body?.purpose);
+
+      legacyVerifyAliasUsageCount += 1;
+      res.setHeader('Deprecation', 'true');
+      res.setHeader('Sunset', LEGACY_VERIFY_ALIAS_SUNSET);
+      console.warn('[SMS] Legacy /verify send alias used', { count: legacyVerifyAliasUsageCount, phoneNumber });
+
+      const response = await sendVerificationCodeResponse(phoneNumber, purpose);
+      return res.json(response);
+    }
+
+    verificationSchema.parse(req.body);
+
     if (config.kavenegar.developmentMode && !config.kavenegar.enableRealSMS) {
-      console.log('🧪 Development Mode - SMS Verification Bypass');
-      console.log('📱 Phone:', phoneNumber);
-      console.log('🔢 Verification Code:', code);
-      
       return res.json({
         success: true,
         message: 'شماره تلفن با موفقیت تایید شد',
         developmentMode: true
       });
     }
-    
-    // In production, you would verify against stored codes
-    // For now, we'll accept the verification
-    res.json({
+
+    return res.json({
       success: true,
       message: 'شماره تلفن با موفقیت تایید شد'
     });
-    
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'اطلاعات نامعتبر', 
-        errors: error.errors 
+      return res.status(400).json({
+        success: false,
+        message: 'اطلاعات نامعتبر',
+        errors: error.errors
       });
     }
-    
-    res.status(500).json({
+
+    return res.status(500).json({
       success: false,
       message: 'خطا در تایید کد',
       error: error.message
     });
   }
 });
-
 // POST /api/sms/send-invitation - Send invitation SMS
 router.post('/send-invitation', authenticate, async (req, res, next) => {
   try {
@@ -594,15 +479,15 @@ router.post('/send-invitation', authenticate, async (req, res, next) => {
     
     // Check if development mode
     if (config.kavenegar.developmentMode && !config.kavenegar.enableRealSMS) {
-      console.log('🧪 Development Mode - SMS Invitation Simulation');
-      console.log('📱 Phone:', phoneNumber);
-      console.log('👤 Role:', role);
-      console.log('🏢 Business:', businessName);
-      console.log('🔗 Link:', invitationLink);
+      console.log('ðŸ§ª Development Mode - SMS Invitation Simulation');
+      console.log('ðŸ“± Phone:', phoneNumber);
+      console.log('ðŸ‘¤ Role:', role);
+      console.log('ðŸ¢ Business:', businessName);
+      console.log('ðŸ”— Link:', invitationLink);
       
       return res.json({
         success: true,
-        message: 'دعوت‌نامه در حالت توسعه ارسال شد',
+        message: 'Ø¯Ø¹ÙˆØªâ€ŒÙ†Ø§Ù…Ù‡ Ø¯Ø± Ø­Ø§Ù„Øª ØªÙˆØ³Ø¹Ù‡ Ø§Ø±Ø³Ø§Ù„ Ø´Ø¯',
         developmentMode: true
       });
     }
@@ -618,7 +503,7 @@ router.post('/send-invitation', authenticate, async (req, res, next) => {
     
     res.json({
       success: true,
-      message: 'دعوت‌نامه با موفقیت ارسال شد',
+      message: 'Ø¯Ø¹ÙˆØªâ€ŒÙ†Ø§Ù…Ù‡ Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø§Ø±Ø³Ø§Ù„ Ø´Ø¯',
       messageId: result.return?.messageid
     });
     
@@ -628,14 +513,14 @@ router.post('/send-invitation', authenticate, async (req, res, next) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ 
         success: false, 
-        message: 'اطلاعات نامعتبر', 
+        message: 'Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ù†Ø§Ù…Ø¹ØªØ¨Ø±', 
         errors: error.errors 
       });
     }
     
     res.status(500).json({
       success: false,
-      message: 'خطا در ارسال دعوت‌نامه',
+      message: 'Ø®Ø·Ø§ Ø¯Ø± Ø§Ø±Ø³Ø§Ù„ Ø¯Ø¹ÙˆØªâ€ŒÙ†Ø§Ù…Ù‡',
       error: error.message
     });
   }
@@ -648,13 +533,13 @@ router.post('/test', authenticate, async (req, res, next) => {
     if (req.user?.role !== 'ADMIN') {
       return res.status(403).json({
         success: false,
-        message: 'فقط مدیران سیستم می‌توانند SMS را تست کنند'
+        message: 'ÙÙ‚Ø· Ù…Ø¯ÛŒØ±Ø§Ù† Ø³ÛŒØ³ØªÙ… Ù…ÛŒâ€ŒØªÙˆØ§Ù†Ù†Ø¯ SMS Ø±Ø§ ØªØ³Øª Ú©Ù†Ù†Ø¯'
       });
     }
     
     const { phoneNumber, message, method = 'all' } = testSMSSchema.parse(req.body);
     
-    console.log('🧪 SMS Test Request:', { phoneNumber, method, messageLength: message.length });
+    console.log('ðŸ§ª SMS Test Request:', { phoneNumber, method, messageLength: message.length });
     
     const results: any[] = [];
     
@@ -664,7 +549,7 @@ router.post('/test', authenticate, async (req, res, next) => {
       
       for (const testMethod of methods) {
         try {
-          console.log(`🧪 Testing ${testMethod} method...`);
+          console.log(`ðŸ§ª Testing ${testMethod} method...`);
           const result = await smsService.testSMSMethod(testMethod as any, {
             message: `[TEST ${testMethod.toUpperCase()}] ${message}`,
             receptor: phoneNumber,
@@ -711,7 +596,7 @@ router.post('/test', authenticate, async (req, res, next) => {
     
     res.json({
       success: true,
-      message: 'تست SMS انجام شد',
+      message: 'ØªØ³Øª SMS Ø§Ù†Ø¬Ø§Ù… Ø´Ø¯',
       results: results,
       summary: {
         total: results.length,
@@ -726,14 +611,14 @@ router.post('/test', authenticate, async (req, res, next) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ 
         success: false, 
-        message: 'اطلاعات نامعتبر', 
+        message: 'Ø§Ø·Ù„Ø§Ø¹Ø§Øª Ù†Ø§Ù…Ø¹ØªØ¨Ø±', 
         errors: error.errors 
       });
     }
     
     res.status(500).json({
       success: false,
-      message: 'خطا در تست SMS',
+      message: 'Ø®Ø·Ø§ Ø¯Ø± ØªØ³Øª SMS',
       error: error.message
     });
   }
@@ -769,7 +654,7 @@ router.get('/status', authenticate, async (req, res) => {
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      message: 'خطا در دریافت وضعیت SMS',
+      message: 'Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª ÙˆØ¶Ø¹ÛŒØª SMS',
       error: error.message
     });
   }
@@ -781,7 +666,7 @@ router.get('/config', authenticate, async (req, res) => {
     if (req.user?.role !== 'ADMIN') {
       return res.status(403).json({
         success: false,
-        message: 'فقط مدیران سیستم می‌توانند تنظیمات را مشاهده کنند'
+        message: 'ÙÙ‚Ø· Ù…Ø¯ÛŒØ±Ø§Ù† Ø³ÛŒØ³ØªÙ… Ù…ÛŒâ€ŒØªÙˆØ§Ù†Ù†Ø¯ ØªÙ†Ø¸ÛŒÙ…Ø§Øª Ø±Ø§ Ù…Ø´Ø§Ù‡Ø¯Ù‡ Ú©Ù†Ù†Ø¯'
       });
     }
     
@@ -799,7 +684,7 @@ router.get('/config', authenticate, async (req, res) => {
   } catch (error: any) {
     res.status(500).json({
       success: false,
-      message: 'خطا در دریافت تنظیمات',
+      message: 'Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª ØªÙ†Ø¸ÛŒÙ…Ø§Øª',
       error: error.message
     });
   }
@@ -814,7 +699,7 @@ router.get('/stats', authenticate, async (req, res) => {
     if (userRole !== 'ADMIN' && userRole !== 'MANAGER') {
       return res.status(403).json({
         success: false,
-        message: 'فقط مدیران می‌توانند آمار پیامک را مشاهده کنند'
+        message: 'ÙÙ‚Ø· Ù…Ø¯ÛŒØ±Ø§Ù† Ù…ÛŒâ€ŒØªÙˆØ§Ù†Ù†Ø¯ Ø¢Ù…Ø§Ø± Ù¾ÛŒØ§Ù…Ú© Ø±Ø§ Ù…Ø´Ø§Ù‡Ø¯Ù‡ Ú©Ù†Ù†Ø¯'
       });
     }
 
@@ -832,7 +717,7 @@ router.get('/stats', authenticate, async (req, res) => {
 
     res.json({
       success: true,
-      message: 'آمار پیامک با موفقیت دریافت شد',
+      message: 'Ø¢Ù…Ø§Ø± Ù¾ÛŒØ§Ù…Ú© Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø¯Ø±ÛŒØ§ÙØª Ø´Ø¯',
       data: stats
     });
 
@@ -840,7 +725,7 @@ router.get('/stats', authenticate, async (req, res) => {
     console.error('Error getting SMS stats:', error);
     res.status(500).json({
       success: false,
-      message: 'خطا در دریافت آمار پیامک',
+      message: 'Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª Ø¢Ù…Ø§Ø± Ù¾ÛŒØ§Ù…Ú©',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
@@ -855,7 +740,7 @@ router.get('/history', authenticate, async (req, res) => {
     if (userRole !== 'ADMIN' && userRole !== 'MANAGER') {
       return res.status(403).json({
         success: false,
-        message: 'فقط مدیران می‌توانند تاریخچه پیامک را مشاهده کنند'
+        message: 'ÙÙ‚Ø· Ù…Ø¯ÛŒØ±Ø§Ù† Ù…ÛŒâ€ŒØªÙˆØ§Ù†Ù†Ø¯ ØªØ§Ø±ÛŒØ®Ú†Ù‡ Ù¾ÛŒØ§Ù…Ú© Ø±Ø§ Ù…Ø´Ø§Ù‡Ø¯Ù‡ Ú©Ù†Ù†Ø¯'
       });
     }
 
@@ -891,7 +776,7 @@ router.get('/history', authenticate, async (req, res) => {
 
     res.json({
       success: true,
-      message: 'تاریخچه پیامک با موفقیت دریافت شد',
+      message: 'ØªØ§Ø±ÛŒØ®Ú†Ù‡ Ù¾ÛŒØ§Ù…Ú© Ø¨Ø§ Ù…ÙˆÙÙ‚ÛŒØª Ø¯Ø±ÛŒØ§ÙØª Ø´Ø¯',
       data: history
     });
 
@@ -899,10 +784,13 @@ router.get('/history', authenticate, async (req, res) => {
     console.error('Error getting SMS history:', error);
     res.status(500).json({
       success: false,
-      message: 'خطا در دریافت تاریخچه پیامک',
+      message: 'Ø®Ø·Ø§ Ø¯Ø± Ø¯Ø±ÛŒØ§ÙØª ØªØ§Ø±ÛŒØ®Ú†Ù‡ Ù¾ÛŒØ§Ù…Ú©',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
 
 export const smsRoutes = router; 
+
+
+

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getInventorySettings, updateInventorySettings, InventorySettings } from '../../../../services/inventoryService';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../../../contexts/AuthContext';
+import { Button, Card, Section } from '../../../../components/ui';
 
 export default function InventorySettingsPage() {
   const [loading, setLoading] = useState(false);
@@ -61,8 +62,8 @@ export default function InventorySettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+    <Section className="space-y-6">
+      <Card className="p-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -72,16 +73,16 @@ export default function InventorySettingsPage() {
               مدیریت تنظیمات سیستم موجودی
             </p>
           </div>
-          <button
+          <Button
             onClick={() => router.push('/workspaces/inventory-management')}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            variant="secondary"
           >
             بازگشت
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+      <Card className="p-6">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
           تنظیمات موجودی منفی
         </h2>
@@ -177,17 +178,17 @@ export default function InventorySettingsPage() {
           {/* Save Button */}
           {canEdit && (
             <div className="flex justify-end space-x-4 space-x-reverse pt-4 border-t border-gray-200 dark:border-gray-700">
-              <button
+              <Button
                 onClick={() => router.push('/workspaces/inventory-management')}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                variant="outline"
                 disabled={saving}
               >
                 انصراف
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleSave}
                 disabled={saving || !settings || allowNegativeStock === settings.allowNegativeStock}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+                className="disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? (
                   <>
@@ -200,7 +201,7 @@ export default function InventorySettingsPage() {
                 ) : (
                   'ذخیره تنظیمات'
                 )}
-              </button>
+              </Button>
             </div>
           )}
 
@@ -212,8 +213,8 @@ export default function InventorySettingsPage() {
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </Card>
+    </Section>
   );
 }
 

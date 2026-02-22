@@ -2,8 +2,7 @@ import { PrismaClient } from '../../../shared/generated/client';
 import { AppError } from '../utils/AppError';
 // import { calculateWeightedAverageCost, calculateCurrentStock, checkStockAvailability } from './inventoryService';
 // import { RecipeService } from './recipeService';
-
-const prisma = new PrismaClient();
+import { prisma } from './dbService';
 
 export interface RecipeStockValidationResult {
   isAvailable: boolean;
@@ -812,12 +811,12 @@ export class OrderInventoryIntegrationService {
   ): Promise<RecipeBasedStockDeduction[]> {
     try {
       // Idempotency: if we already created OUT entries for this order, skip
-      // We detect by matching note prefix containing the order number
+      // We detect by checking if any inventory entries exist with this orderId
       const existing = await prisma.inventoryEntry.findFirst({
         where: {
           tenantId,
           type: 'OUT',
-          note: { contains: orderId }
+          orderId: orderId
         }
       });
       if (existing) {
@@ -848,6 +847,10 @@ export class OrderInventoryIntegrationService {
       }
 
       const stockDeductions: RecipeBasedStockDeduction[] = [];
+      
+      // Track stock levels before deduction (for WebSocket updates)
+      const stockBeforeMap = new Map<string, number>();
+      const { calculateCurrentStock } = await import('./inventoryService');
 
       // Process each order item
       for (const orderItem of order.items) {
@@ -903,10 +906,16 @@ export class OrderInventoryIntegrationService {
         for (const ingredient of recipe.ingredients) {
           const quantityToDeduct = Number(ingredient.quantity) * orderItem.quantity;
           const { calculateWeightedAverageCost } = await import('./inventoryService');
-        const currentCost = await calculateWeightedAverageCost(ingredient.itemId, tenantId);
+          const currentCost = await calculateWeightedAverageCost(ingredient.itemId, tenantId);
           const totalCost = quantityToDeduct * currentCost;
           
           totalCOGS += totalCost;
+
+          // Store stock BEFORE first deduction (only once per item)
+          if (!stockBeforeMap.has(ingredient.itemId)) {
+            const stockBefore = await calculateCurrentStock(ingredient.itemId, tenantId);
+            stockBeforeMap.set(ingredient.itemId, stockBefore);
+          }
 
           // Create inventory entry for stock deduction
           await prisma.inventoryEntry.create({
@@ -917,6 +926,8 @@ export class OrderInventoryIntegrationService {
               note: `Order ${order.orderNumber} (${order.id}) - Recipe ingredient: ${ingredient.item?.name}`,
               userId,
               tenantId,
+              orderId: orderId,           // Direct reference to order
+              orderItemId: orderItem.id,  // Direct reference to order item
             }
           });
 
@@ -939,10 +950,471 @@ export class OrderInventoryIntegrationService {
         });
       }
 
+      // Emit real-time stock updates via WebSocket
+      if (stockDeductions.length > 0 && stockBeforeMap.size > 0) {
+        try {
+          const allStockUpdates: Array<{
+            itemId: string;
+            itemName: string;
+            previousStock: number;
+            currentStock: number;
+            change: number;
+            reason: 'order_completed';
+            orderId: string;
+            orderNumber: string;
+          }> = [];
+
+          // Aggregate all deductions by item and get final stock
+          const itemDeductionMap = new Map<string, { itemName: string; totalDeduction: number }>();
+          
+          for (const deduction of stockDeductions) {
+            for (const ingredientDeduction of deduction.ingredientDeductions) {
+              const existing = itemDeductionMap.get(ingredientDeduction.itemId);
+              if (existing) {
+                existing.totalDeduction += ingredientDeduction.quantityToDeduct;
+              } else {
+                itemDeductionMap.set(ingredientDeduction.itemId, {
+                  itemName: ingredientDeduction.itemName,
+                  totalDeduction: ingredientDeduction.quantityToDeduct
+                });
+              }
+            }
+          }
+
+          // Create stock updates for each affected item
+          for (const [itemId, deductionInfo] of itemDeductionMap.entries()) {
+            const previousStock = stockBeforeMap.get(itemId) || 0;
+            const currentStock = await calculateCurrentStock(itemId, tenantId);
+            
+            allStockUpdates.push({
+              itemId,
+              itemName: deductionInfo.itemName,
+              previousStock,
+              currentStock,
+              change: -deductionInfo.totalDeduction, // Negative for OUT
+              reason: 'order_completed',
+              orderId: orderId,
+              orderNumber: order.orderNumber
+            });
+          }
+
+          // Emit WebSocket update
+          if (allStockUpdates.length > 0) {
+            const { socketService } = await import('./socketService');
+            socketService.sendStockUpdate(tenantId, allStockUpdates);
+            console.log(`📡 [STOCK_UPDATE] Emitted ${allStockUpdates.length} stock updates for order ${order.orderNumber}`);
+          }
+        } catch (socketError) {
+          // Don't fail the entire operation if WebSocket fails
+          console.error('❌ [STOCK_UPDATE] Failed to emit stock updates:', socketError);
+        }
+      }
+
       return stockDeductions;
 
     } catch (error) {
       throw new AppError('Failed to process recipe stock deduction', 500, error);
+    }
+  }
+
+  /**
+   * Deduct stock for a single prepared order item
+   * Called when kitchen marks an item as "prepared" (READY status)
+   * Supports partial order fulfillment
+   */
+  static async deductStockForPreparedItem(
+    tenantId: string,
+    orderItemId: string,
+    userId: string
+  ): Promise<{
+    deducted: boolean;
+    items: Array<{
+      itemId: string;
+      itemName: string;
+      quantity: number;
+      unit: string;
+    }>;
+  }> {
+    try {
+      // Idempotency: Check if stock was already deducted for this order item
+      const existing = await prisma.inventoryEntry.findFirst({
+        where: {
+          tenantId,
+          orderItemId: orderItemId,
+          type: 'OUT',
+          deletedAt: null
+        }
+      });
+
+      if (existing) {
+        // Already deducted - return success but no new deductions
+        return {
+          deducted: true,
+          items: []
+        };
+      }
+
+      // Get order item with recipe
+      const orderItem = await prisma.orderItem.findFirst({
+        where: {
+          id: orderItemId,
+          tenantId
+        },
+        include: {
+          menuItem: {
+            include: {
+              recipe: {
+                include: {
+                  ingredients: {
+                    include: {
+                      item: {
+                        select: {
+                          id: true,
+                          name: true,
+                          unit: true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          order: {
+            select: {
+              id: true,
+              orderNumber: true
+            }
+          }
+        }
+      });
+
+      if (!orderItem) {
+        throw new AppError('Order item not found', 404);
+      }
+
+      // Check if menu item has a recipe
+      if (!orderItem.menuItem?.recipe || !orderItem.menuItem.recipe.ingredients || orderItem.menuItem.recipe.ingredients.length === 0) {
+        // No recipe - nothing to deduct
+        return {
+          deducted: false,
+          items: []
+        };
+      }
+
+      const deductedItems: Array<{
+        itemId: string;
+        itemName: string;
+        quantity: number;
+        unit: string;
+      }> = [];
+
+      // Track stock levels before deduction (for WebSocket updates)
+      const { calculateCurrentStock } = await import('./inventoryService');
+      const stockBeforeMap = new Map<string, number>();
+
+      // Deduct ingredients for this specific order item
+      for (const ingredient of orderItem.menuItem.recipe.ingredients) {
+        const quantityToDeduct = Number(ingredient.quantity) * orderItem.quantity;
+
+        // Store stock BEFORE first deduction (only once per item)
+        if (!stockBeforeMap.has(ingredient.itemId)) {
+          const stockBefore = await calculateCurrentStock(ingredient.itemId, tenantId);
+          stockBeforeMap.set(ingredient.itemId, stockBefore);
+        }
+
+        // Get current cost for audit trail
+        const { calculateWeightedAverageCost } = await import('./inventoryService');
+        const currentCost = await calculateWeightedAverageCost(ingredient.itemId, tenantId);
+
+        // Create inventory entry for stock deduction
+        await prisma.inventoryEntry.create({
+          data: {
+            itemId: ingredient.itemId,
+            quantity: -quantityToDeduct, // Negative for OUT transaction
+            type: 'OUT',
+            note: `Order ${orderItem.order.orderNumber} - Item prepared: ${orderItem.itemName} (${orderItem.quantity}x) - Recipe ingredient: ${ingredient.item?.name}`,
+            userId,
+            tenantId,
+            orderId: orderItem.orderId,
+            orderItemId: orderItemId // Direct reference to this specific order item
+          }
+        });
+
+        deductedItems.push({
+          itemId: ingredient.itemId,
+          itemName: ingredient.item?.name || 'Unknown Item',
+          quantity: quantityToDeduct,
+          unit: ingredient.item?.unit || 'unit'
+        });
+      }
+
+      // Emit real-time stock updates via WebSocket
+      if (deductedItems.length > 0 && stockBeforeMap.size > 0) {
+        try {
+          const stockUpdates: Array<{
+            itemId: string;
+            itemName: string;
+            previousStock: number;
+            currentStock: number;
+            change: number;
+            reason: 'order_item_prepared';
+            orderId: string;
+            orderNumber: string;
+            orderItemId: string;
+          }> = [];
+
+          // Aggregate deductions by item (in case same ingredient used multiple times)
+          const itemDeductionMap = new Map<string, { itemName: string; totalDeduction: number; unit: string }>();
+          
+          for (const deductedItem of deductedItems) {
+            const existing = itemDeductionMap.get(deductedItem.itemId);
+            if (existing) {
+              existing.totalDeduction += deductedItem.quantity;
+            } else {
+              itemDeductionMap.set(deductedItem.itemId, {
+                itemName: deductedItem.itemName,
+                totalDeduction: deductedItem.quantity,
+                unit: deductedItem.unit
+              });
+            }
+          }
+
+          // Create stock updates for each affected item
+          for (const [itemId, deductionInfo] of itemDeductionMap.entries()) {
+            const previousStock = stockBeforeMap.get(itemId) || 0;
+            const currentStock = await calculateCurrentStock(itemId, tenantId);
+            
+            stockUpdates.push({
+              itemId,
+              itemName: deductionInfo.itemName,
+              previousStock,
+              currentStock,
+              change: -deductionInfo.totalDeduction, // Negative for OUT
+              reason: 'order_item_prepared',
+              orderId: orderItem.orderId,
+              orderNumber: orderItem.order.orderNumber,
+              orderItemId: orderItemId
+            });
+          }
+
+          // Emit WebSocket update
+          if (stockUpdates.length > 0) {
+            const { socketService } = await import('./socketService');
+            socketService.sendStockUpdate(tenantId, stockUpdates);
+            console.log(`📡 [STOCK_UPDATE] Emitted ${stockUpdates.length} stock updates for prepared item ${orderItemId}`);
+          }
+        } catch (socketError) {
+          // Don't fail the entire operation if WebSocket fails
+          console.error('❌ [STOCK_UPDATE] Failed to emit stock updates for prepared item:', socketError);
+        }
+      }
+
+      return {
+        deducted: true,
+        items: deductedItems
+      };
+    } catch (error) {
+      throw new AppError('Failed to deduct stock for prepared item', 500, error);
+    }
+  }
+
+  /**
+   * Restore stock from a cancelled order
+   * Creates reverse IN entries for all OUT entries linked to the order
+   * Used when cancelling completed orders (refund scenario)
+   */
+  static async restoreStockFromOrder(
+    tenantId: string,
+    orderId: string,
+    userId: string,
+    cancellationReason?: string
+  ): Promise<{
+    restored: number;
+    restoredItems: Array<{
+      itemId: string;
+      itemName: string;
+      quantity: number;
+      unit: string;
+    }>;
+  }> {
+    try {
+      // Idempotency: if we already created IN entries for this order restoration, skip
+      // We detect by checking if any IN entries exist with this orderId and a note containing "Restored from cancelled order"
+      const existing = await prisma.inventoryEntry.findFirst({
+        where: {
+          tenantId,
+          type: 'IN',
+          orderId: orderId,
+          note: { contains: 'Restored from cancelled order' }
+        }
+      });
+      if (existing) {
+        return {
+          restored: 0,
+          restoredItems: []
+        };
+      }
+
+      // Get order details
+      const order = await prisma.order.findFirst({
+        where: { id: orderId, tenantId },
+        select: {
+          id: true,
+          orderNumber: true,
+          status: true
+        }
+      });
+
+      if (!order) {
+        throw new AppError('Order not found', 404);
+      }
+
+      // Find all OUT inventory entries linked to this order
+      const outEntries = await prisma.inventoryEntry.findMany({
+        where: {
+          tenantId,
+          orderId: orderId,
+          type: 'OUT',
+          deletedAt: null
+        },
+        include: {
+          item: {
+            select: {
+              id: true,
+              name: true,
+              unit: true
+            }
+          }
+        },
+        orderBy: {
+          createdAt: 'asc'
+        }
+      });
+
+      if (outEntries.length === 0) {
+        // No stock was deducted for this order, nothing to restore
+        return {
+          restored: 0,
+          restoredItems: []
+        };
+      }
+
+      const restoredItems: Array<{
+        itemId: string;
+        itemName: string;
+        quantity: number;
+        unit: string;
+      }> = [];
+
+      // Track stock levels before restoration (for WebSocket updates)
+      const { calculateCurrentStock } = await import('./inventoryService');
+      const stockBeforeMap = new Map<string, number>();
+
+      // Create reverse IN entries for each OUT entry
+      for (const outEntry of outEntries) {
+        // The quantity in OUT entries is negative, so we restore the absolute value
+        const quantityToRestore = Math.abs(Number(outEntry.quantity));
+        
+        // Store stock BEFORE restoration (only once per item)
+        if (!stockBeforeMap.has(outEntry.itemId)) {
+          const stockBefore = await calculateCurrentStock(outEntry.itemId, tenantId);
+          stockBeforeMap.set(outEntry.itemId, stockBefore);
+        }
+        
+        // Get current WAC for cost tracking (optional, for audit purposes)
+        const { calculateWeightedAverageCost } = await import('./inventoryService');
+        const currentCost = await calculateWeightedAverageCost(outEntry.itemId, tenantId);
+
+        // Create reverse IN entry
+        await prisma.inventoryEntry.create({
+          data: {
+            itemId: outEntry.itemId,
+            quantity: quantityToRestore, // Positive for IN transaction
+            type: 'IN',
+            note: `Restored from cancelled order ${order.orderNumber} (${order.id})${cancellationReason ? ` - Reason: ${cancellationReason}` : ''} - Original deduction: ${outEntry.note || 'N/A'}`,
+            userId,
+            tenantId,
+            orderId: orderId,           // Keep reference to original order
+            orderItemId: outEntry.orderItemId, // Keep reference to original order item if available
+            unitPrice: currentCost      // Store current cost for audit trail
+          }
+        });
+
+        restoredItems.push({
+          itemId: outEntry.itemId,
+          itemName: outEntry.item?.name || 'Unknown Item',
+          quantity: quantityToRestore,
+          unit: outEntry.item?.unit || 'unit'
+        });
+      }
+
+      // Emit real-time stock updates via WebSocket
+      if (restoredItems.length > 0 && stockBeforeMap.size > 0) {
+        try {
+          const stockUpdates: Array<{
+            itemId: string;
+            itemName: string;
+            previousStock: number;
+            currentStock: number;
+            change: number;
+            reason: 'order_cancelled';
+            orderId: string;
+            orderNumber: string;
+          }> = [];
+
+          // Aggregate restorations by item (in case same item restored multiple times)
+          const itemRestorationMap = new Map<string, { itemName: string; totalRestored: number; unit: string }>();
+          
+          for (const restoredItem of restoredItems) {
+            const existing = itemRestorationMap.get(restoredItem.itemId);
+            if (existing) {
+              existing.totalRestored += restoredItem.quantity;
+            } else {
+              itemRestorationMap.set(restoredItem.itemId, {
+                itemName: restoredItem.itemName,
+                totalRestored: restoredItem.quantity,
+                unit: restoredItem.unit
+              });
+            }
+          }
+
+          // Create stock updates for each affected item
+          for (const [itemId, restorationInfo] of itemRestorationMap.entries()) {
+            const previousStock = stockBeforeMap.get(itemId) || 0;
+            const currentStock = await calculateCurrentStock(itemId, tenantId);
+            
+            stockUpdates.push({
+              itemId,
+              itemName: restorationInfo.itemName,
+              previousStock,
+              currentStock,
+              change: restorationInfo.totalRestored, // Positive for IN
+              reason: 'order_cancelled',
+              orderId: orderId,
+              orderNumber: order.orderNumber
+            });
+          }
+
+          // Emit WebSocket update
+          if (stockUpdates.length > 0) {
+            const { socketService } = await import('./socketService');
+            socketService.sendStockUpdate(tenantId, stockUpdates);
+            console.log(`📡 [STOCK_UPDATE] Emitted ${stockUpdates.length} stock restoration updates for order ${order.orderNumber}`);
+          }
+        } catch (socketError) {
+          // Don't fail the entire operation if WebSocket fails
+          console.error('❌ [STOCK_UPDATE] Failed to emit stock restoration updates:', socketError);
+        }
+      }
+
+      return {
+        restored: restoredItems.length,
+        restoredItems
+      };
+
+    } catch (error) {
+      throw new AppError('Failed to restore stock from order', 500, error);
     }
   }
 

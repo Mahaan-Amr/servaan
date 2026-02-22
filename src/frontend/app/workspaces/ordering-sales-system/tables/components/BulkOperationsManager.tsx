@@ -112,7 +112,7 @@ export const BulkOperationsManager: React.FC<BulkOperationsManagerProps> = ({
     >
       <div className="space-y-6">
         {/* Tab Navigation */}
-        <div className="flex space-x-1 rtl:space-x-reverse border-b border-gray-200 dark:border-gray-700">
+        <div className="mobile-tabs-rail rtl:space-x-reverse border-b border-gray-200 dark:border-gray-700">
           <button
             onClick={() => setActiveTab('status')}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
@@ -238,8 +238,8 @@ export const BulkOperationsManager: React.FC<BulkOperationsManagerProps> = ({
             </div>
 
             {/* Bulk Actions */}
-            <div className="flex justify-between items-center">
-              <div className="flex space-x-2 rtl:space-x-reverse">
+            <div className="mobile-control-stack sm:justify-between">
+              <div className="mobile-action-group rtl:space-x-reverse">
                 <button
                   onClick={() => setSelectedTables(tables)}
                   className="px-3 py-2 text-sm bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
@@ -257,7 +257,7 @@ export const BulkOperationsManager: React.FC<BulkOperationsManagerProps> = ({
               <button
                 onClick={handleBulkStatusChange}
                 disabled={loading || selectedTables.length === 0}
-                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'در حال تغییر...' : `تغییر ${selectedTables.length} میز`}
               </button>

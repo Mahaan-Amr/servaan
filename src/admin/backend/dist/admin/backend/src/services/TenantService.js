@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -46,6 +79,7 @@ class TenantService {
                 businessType: data.businessType || null,
                 city: data.city || null,
                 country: data.country || null,
+                currency: 'IRR', // Hotfix: match DB VARCHAR(3) constraint
                 // Optional nested features creation if provided
                 ...(data.features && {
                     features: {
@@ -69,6 +103,18 @@ class TenantService {
             },
             include: { features: true }
         });
+        // Idempotent COA seeding: only if no accounts exist
+        try {
+            const existingCoaCount = await prisma_1.prisma.chartOfAccount.count({ where: { tenantId: tenant.id } });
+            if (existingCoaCount === 0 && tenant.features?.hasAccountingSystem !== false) {
+                const { ChartOfAccountsService } = await Promise.resolve().then(() => __importStar(require('../../../../backend/src/services/chartOfAccountsService')));
+                await ChartOfAccountsService.initializeIranianChartOfAccounts(tenant.id);
+            }
+        }
+        catch (seedError) {
+            console.error('Failed to seed Chart of Accounts for tenant', tenant.subdomain, seedError);
+            // Non-fatal: admin can initialize later via API
+        }
         return tenant;
     }
     /**
@@ -694,14 +740,24 @@ class TenantService {
         if (search && search.trim().length > 0) {
             where.OR = [
                 { email: { contains: search, mode: 'insensitive' } },
-                // If your schema has name/fullName fields, include them; harmless if not present at runtime selection time is controlled below
+                { name: { contains: search, mode: 'insensitive' } },
+                { phoneNumber: { contains: search, mode: 'insensitive' } }
             ];
         }
         const users = await prisma_1.prisma.user.findMany({
             where,
-            select: { id: true, email: true, name: true },
+            select: {
+                id: true,
+                email: true,
+                name: true,
+                phoneNumber: true,
+                role: true,
+                active: true,
+                lastLogin: true,
+                createdAt: true
+            },
             take: limit,
-            orderBy: { email: 'asc' }
+            orderBy: { createdAt: 'desc' }
         });
         return users;
     }

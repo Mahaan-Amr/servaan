@@ -10,9 +10,6 @@ import { PrismaClient } from '../../../shared/generated/client';
 
 const prisma = new PrismaClient();
 
-// Create OrderService instance
-const orderService = new OrderService();
-
 export interface UpdateOrderData {
   items?: Array<{
     itemId: string;
@@ -175,8 +172,8 @@ export class OrderController {
         createdBy: orderData.createdBy
       });
 
-      console.log('🏗️ [ORDER_CREATION] Calling orderService.createOrderWithTableUpdate...');
-      const order = await orderService.createOrderWithTableUpdate(orderData);
+      console.log('🏗️ [ORDER_CREATION] Calling OrderService.createOrderWithTableUpdate...');
+      const order = await OrderService.createOrderWithTableUpdate(orderData);
       console.log('✅ [ORDER_CREATION] Order created successfully:', {
         orderId: order.id,
         orderNumber: order.orderNumber,
@@ -280,7 +277,7 @@ export class OrderController {
         createdBy
       };
 
-      const order = await orderService.createOrder(orderData);
+      const order = await OrderService.createOrder(orderData);
 
       res.status(201).json({
         success: true,
@@ -323,7 +320,7 @@ export class OrderController {
         }
       }
 
-      const updatedOrder = await orderService.addItemsToOrder(orderId, items, modifiedBy);
+      const updatedOrder = await OrderService.addItemsToOrder(tenantId, orderId, items, modifiedBy);
 
       res.json({
         success: true,
@@ -377,7 +374,7 @@ export class OrderController {
         notes
       };
 
-      const updatedOrder = await orderService.processPayment(paymentData);
+      const updatedOrder = await OrderService.processPayment(paymentData);
 
       res.json({
         success: true,
@@ -406,7 +403,7 @@ export class OrderController {
         throw new AppError('Order ID is required', 400);
       }
 
-      const order = await orderService.getOrder(orderId);
+      const order = await OrderService.getOrder(tenantId, orderId);
 
       if (!order) {
         throw new AppError('Order not found', 404);
@@ -482,7 +479,7 @@ export class OrderController {
         filters.paymentStatus = paymentStatusArray;
       }
 
-      const orders = await orderService.getOrders(filters);
+      const orders = await OrderService.getOrders(filters);
 
       res.json({
         success: true,
@@ -511,7 +508,7 @@ export class OrderController {
         throw new AppError('Order ID is required', 400);
       }
 
-      const order = await orderService.getOrder(orderId);
+      const order = await OrderService.getOrder(tenantId, orderId);
 
       if (!order) {
         throw new AppError('Order not found', 404);
@@ -565,7 +562,7 @@ export class OrderController {
         modifiedBy: updatedBy
       };
 
-      const updatedOrder = await orderService.updateOrder(tenantId, orderId, updateData, updatedBy);
+      const updatedOrder = await OrderService.updateOrder(tenantId, orderId, updateData, updatedBy);
 
       res.json({
         success: true,
@@ -603,8 +600,8 @@ export class OrderController {
       // If status is COMPLETED, run full accounting completion (includes stock deduction)
       if (status === 'COMPLETED') {
         // Ensure idempotency: if already completed, short-circuit
-        // We reuse orderService.getOrder to check status quickly
-        const existingOrder = await orderService.getOrder(orderId);
+        // We reuse OrderService.getOrder to check status quickly
+        const existingOrder = await OrderService.getOrder(tenantId, orderId);
         if (existingOrder && existingOrder.status === 'COMPLETED') {
           return res.json({
             success: true,
@@ -633,7 +630,7 @@ export class OrderController {
           modifiedBy: updatedBy
         };
 
-        const updatedOrder = await orderService.updateOrder(
+        const updatedOrder = await OrderService.updateOrder(
           tenantId,
           orderId,
           updateData,
@@ -670,7 +667,7 @@ export class OrderController {
         throw new AppError('Order ID is required', 400);
       }
 
-      const cancelledOrder = await orderService.cancelOrder(
+      const cancelledOrder = await OrderService.cancelOrder(
         tenantId,
         orderId,
         reason,
@@ -707,23 +704,35 @@ export class OrderController {
       endOfDay.setHours(23, 59, 59, 999);
 
       // Get only today's orders
-      const orders = await orderService.getOrders({
+      const orders = await OrderService.getOrders({
         tenantId,
         startDate: startOfDay,
         endDate: endOfDay
       });
 
-      // Calculate summary statistics
-      const totalRevenue = orders.reduce((sum: number, order: any) => sum + Number(order.totalAmount || 0), 0);
-      const completedOrders = orders.filter((order: any) => order.status === 'COMPLETED').length;
-      const pendingOrders = orders.filter((order: any) => ['SUBMITTED', 'CONFIRMED', 'PREPARING', 'READY', 'SERVED'].includes(order.status)).length;
-      const averageOrderValue = orders.length > 0 ? totalRevenue / orders.length : 0;
+      // CRITICAL FIX: Filter for COMPLETED + PAID orders only (Option A - conservative cash-flow approach)
+      // This ensures revenue only reflects actual received payments, not cancelled/refunded orders
+      // See: https://github.com/servaan/issues/revenue-accuracy
+      const paidCompletedOrders = orders.filter((order: any) => 
+        order.status === 'COMPLETED' && order.paymentStatus === 'PAID'
+      );
+
+      // Calculate summary statistics from only valid revenue-generating orders
+      const totalRevenue = paidCompletedOrders.reduce((sum: number, order: any) => sum + Number(order.totalAmount || 0), 0);
+      const completedOrders = paidCompletedOrders.length;
+      const pendingOrders = orders.filter((order: any) => 
+        order.status !== 'COMPLETED' && 
+        order.status !== 'CANCELLED' && 
+        order.status !== 'REFUNDED' &&
+        ['SUBMITTED', 'CONFIRMED', 'PREPARING', 'READY', 'SERVED'].includes(order.status)
+      ).length;
+      const averageOrderValue = paidCompletedOrders.length > 0 ? totalRevenue / paidCompletedOrders.length : 0;
 
       // Debug log kept terse to avoid noisy logs in production
       // console.log(`📊 Daily stats: ${completedOrders} completed, ${pendingOrders} pending, revenue=${totalRevenue}`);
 
-      // Get payment methods breakdown
-      const paymentMethods = orders.reduce((acc: any[], order: any) => {
+      // Get payment methods breakdown (from COMPLETED + PAID orders only)
+      const paymentMethods = paidCompletedOrders.reduce((acc: any[], order: any) => {
         if (order.paymentMethod) {
           const existing = acc.find(pm => pm.method === order.paymentMethod);
           if (existing) {
@@ -740,8 +749,8 @@ export class OrderController {
         return acc;
       }, []);
 
-      // Get table status breakdown
-      const tableStatus = orders.reduce((acc: any[], order: any) => {
+      // Get table status breakdown (from COMPLETED + PAID orders only)
+      const tableStatus = paidCompletedOrders.reduce((acc: any[], order: any) => {
         if (order.tableId) {
           const existing = acc.find(ts => ts.status === 'OCCUPIED');
           if (existing) {
@@ -756,9 +765,9 @@ export class OrderController {
         return acc;
       }, []);
 
-      // Get top selling items
+      // Get top selling items (from COMPLETED + PAID orders only)
       const itemSales = new Map();
-      orders.forEach((order: any) => {
+      paidCompletedOrders.forEach((order: any) => {
         order.items?.forEach((item: any) => {
           const itemName = item.item?.name || item.itemName || 'Unknown Item';
           const existing = itemSales.get(itemName);
@@ -821,7 +830,7 @@ export class OrderController {
         'SUBMITTED', 'CONFIRMED', 'PREPARING', 'READY', 'SERVED'
       ];
 
-      const result = await orderService.getOrders({
+      const result = await OrderService.getOrders({
         tenantId,
         status: activeStatuses
       });
@@ -856,7 +865,7 @@ export class OrderController {
       const status = req.query.status as string;
       const statusFilter = status ? [status] : undefined;
 
-      const result = await orderService.getOrders({
+      const result = await OrderService.getOrders({
         tenantId,
         tableId,
         status: statusFilter
@@ -891,7 +900,7 @@ export class OrderController {
         ? new Date(req.query.endDate as string)
         : new Date();
 
-      const result = await orderService.getOrders({
+      const result = await OrderService.getOrders({
         tenantId,
         startDate,
         endDate
@@ -961,7 +970,7 @@ export class OrderController {
         modifiedBy: updatedBy
       };
 
-      const updatedOrder = await orderService.updateOrder(tenantId, orderId, updateData, updatedBy);
+      const updatedOrder = await OrderService.updateOrder(tenantId, orderId, updateData, updatedBy);
 
       res.json({
         success: true,
@@ -997,7 +1006,7 @@ export class OrderController {
         throw new AppError('Item IDs array is required', 400);
       }
 
-      const updatedOrder = await orderService.removeItemsFromOrder(orderId, itemIds, modifiedBy);
+      const updatedOrder = await OrderService.removeItemsFromOrder(tenantId, orderId, itemIds, modifiedBy);
 
       res.json({
         success: true,
@@ -1040,7 +1049,7 @@ export class OrderController {
         }
       }
 
-      const updatedOrder = await orderService.updateItemQuantities(orderId, itemUpdates, modifiedBy);
+      const updatedOrder = await OrderService.updateItemQuantities(tenantId, orderId, itemUpdates, modifiedBy);
 
       res.json({
         success: true,
@@ -1071,7 +1080,7 @@ export class OrderController {
       }
 
       // Get original order
-      const originalOrder = await orderService.getOrder(orderId);
+      const originalOrder = await OrderService.getOrder(tenantId, orderId);
 
       if (!originalOrder) {
         throw new AppError('Original order not found', 404);
@@ -1109,7 +1118,7 @@ export class OrderController {
         createdBy
       };
 
-      const newOrder = await orderService.createOrder(orderData);
+      const newOrder = await OrderService.createOrder(orderData);
 
       res.status(201).json({
         success: true,
@@ -1140,7 +1149,7 @@ export class OrderController {
       }
 
       // Idempotency: if already completed, short-circuit
-      const existingOrder = await orderService.getOrder(orderId);
+      const existingOrder = await OrderService.getOrder(tenantId, orderId);
       if (existingOrder && existingOrder.status === 'COMPLETED') {
         return res.json({
           success: true,
@@ -1185,7 +1194,7 @@ export class OrderController {
         ? new Date(req.query.endDate as string)
         : new Date();
 
-      const result = await orderService.getOrders({
+      const result = await OrderService.getOrders({
         tenantId,
         startDate,
         endDate
@@ -1251,7 +1260,7 @@ export class OrderController {
       await OrderOptionsService.saveOrderOptions(tenantId, orderId, options);
 
       // Get updated calculation
-      const order = await orderService.getOrder(orderId);
+      const order = await OrderService.getOrder(tenantId, orderId);
       const calculation = OrderCalculationService.calculateOrderTotal(order.items as any, options);
 
       res.json({
@@ -1280,7 +1289,7 @@ export class OrderController {
         throw new AppError('Authentication required', 401);
       }
 
-      const order = await orderService.getOrder(orderId);
+      const order = await OrderService.getOrder(tenantId, orderId);
       const options = await OrderOptionsService.getOrderOptions(orderId);
       const calculation = OrderCalculationService.calculateOrderTotal(order.items as any, options);
 
@@ -1409,7 +1418,7 @@ export class OrderController {
       }
 
       const options = await OrderOptionsService.applyPresetToOrder(tenantId, orderId, presetId);
-      const order = await orderService.getOrder(orderId);
+      const order = await OrderService.getOrder(tenantId, orderId);
       const calculation = OrderCalculationService.calculateOrderTotal(order.items as any, options);
 
       res.json({

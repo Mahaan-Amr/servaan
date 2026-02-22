@@ -1,8 +1,12 @@
 import { Request, Response } from 'express';
 import { BiService } from '../services/biService';
 import { ReportService } from '../services/reportService';
+import { ReportTemplateService } from '../services/reportTemplateService';
 import { QueryBuilder } from '../services/queryBuilder';
 import { DateRange } from '../types/bi';
+import { dataAggregatorService, AggregationQuery } from '../services/bi/aggregators/DataAggregatorService';
+import { OrderingConnector } from '../services/bi/connectors/OrderingConnector';
+import { InventoryConnector } from '../services/bi/connectors/InventoryConnector';
 
 export const biController = {
   /**
@@ -61,7 +65,14 @@ export const biController = {
         dateRange = { start: startTime, end: endTime };
       }
 
-      const dashboard = await BiService.buildExecutiveDashboard(dateRange, userId, req.tenant.id);
+      // Get workspace selector from query (default: 'merged' for backward compatibility)
+      const workspace = (req.query.workspace as string) || 'merged';
+
+      const dashboard = await BiService.buildExecutiveDashboard(
+        dateRange, 
+        userId, 
+        req.tenant.id
+      );
 
       res.json({
         success: true,
@@ -269,7 +280,7 @@ export const biController = {
       const { 
         metric = 'revenue', 
         period = '30d', 
-        granularity = 'daily' 
+        granularity = 'day' 
       } = req.query;
       
       // CRITICAL: Ensure tenant context is available
@@ -281,28 +292,67 @@ export const biController = {
         });
       }
       
+      // Map frontend granularity to backend format
+      const granularityMap: Record<string, 'daily' | 'weekly' | 'monthly'> = {
+        'day': 'daily',
+        'week': 'weekly',
+        'month': 'monthly',
+        'daily': 'daily',
+        'weekly': 'weekly',
+        'monthly': 'monthly'
+      };
+      
+      const backendGranularity = granularityMap[granularity as string] || 'daily';
+      
+      // Parse period string (e.g., '30d', '7d', '90d', '1y')
+      const periodStr = (period as string || '30d').toLowerCase();
+      let days = 30;
+      
+      if (periodStr.endsWith('d')) {
+        days = parseInt(periodStr.replace('d', '')) || 30;
+      } else if (periodStr.endsWith('y')) {
+        const years = parseInt(periodStr.replace('y', '')) || 1;
+        days = years * 365;
+      } else if (periodStr.endsWith('m')) {
+        const months = parseInt(periodStr.replace('m', '')) || 1;
+        days = months * 30;
+      } else {
+        days = parseInt(periodStr) || 30;
+      }
+      
       const endTime = new Date();
       const startTime = new Date();
       
       // تعیین بازه زمانی بر اساس granularity
-      switch (granularity) {
+      switch (backendGranularity) {
         case 'daily':
-          startTime.setDate(endTime.getDate() - parseInt(period as string || '30'));
+          startTime.setDate(endTime.getDate() - days);
           break;
         case 'weekly':
-          startTime.setDate(endTime.getDate() - (parseInt(period as string || '4') * 7));
+          const weeks = Math.ceil(days / 7);
+          startTime.setDate(endTime.getDate() - (weeks * 7));
           break;
         case 'monthly':
-          startTime.setMonth(endTime.getMonth() - parseInt(period as string || '12'));
+          const months = Math.ceil(days / 30);
+          startTime.setMonth(endTime.getMonth() - months);
           break;
       }
       
       const dateRange: DateRange = { start: startTime, end: endTime };
       
+      console.log('🔍 Trend analysis request:', {
+        metric,
+        period: periodStr,
+        days,
+        granularity: backendGranularity,
+        dateRange: { start: startTime.toISOString(), end: endTime.toISOString() },
+        tenantId: req.tenant.id
+      });
+      
       const trendAnalysis = await BiService.performTrendAnalysis(
         metric as 'revenue' | 'profit' | 'sales_volume' | 'customers',
         dateRange,
-        granularity as 'daily' | 'weekly' | 'monthly',
+        backendGranularity,
         req.tenant.id
       );
 
@@ -312,7 +362,8 @@ export const biController = {
         message: 'تحلیل روند با موفقیت انجام شد'
       });
     } catch (error) {
-      console.error('Error performing trend analysis:', error);
+      console.error('❌ Error performing trend analysis:', error);
+      console.error('❌ Error stack:', (error as Error).stack);
       res.status(500).json({
         success: false,
         message: 'خطا در انجام تحلیل روند',
@@ -388,13 +439,22 @@ export const biController = {
 
       const parsedTags = tags ? (Array.isArray(tags) ? tags as string[] : [tags as string]) : undefined;
 
+      // CRITICAL: Ensure tenant context is available
+      if (!req.tenant?.id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Tenant context required'
+        });
+      }
+
       const result = await ReportService.getReports(
         userId,
         parseInt(page as string),
         parseInt(limit as string),
         search as string,
         reportType as string,
-        parsedTags
+        parsedTags,
+        req.tenant.id // CRITICAL: Pass tenantId for security
       );
 
       res.json({
@@ -489,6 +549,43 @@ export const biController = {
 
       // CRITICAL: Pass tenantId for security
       const result = await ReportService.executeReport(id, userId, parameters, exportFormat, req.tenant.id);
+
+      // If export format is not VIEW, send file download
+      if (exportFormat !== 'VIEW' && result.exportFile) {
+        const fileStream = require('fs').createReadStream(result.exportFile.filePath);
+        
+        res.setHeader('Content-Type', result.exportFile.mimeType);
+        
+        // Properly encode filename for Content-Disposition header
+        const encodedFilename = encodeURIComponent(result.exportFile.filename);
+        const safeFilename = result.exportFile.filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+        
+        // Use RFC 6266 compliant format for international filenames
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="${safeFilename}"; filename*=UTF-8''${encodedFilename}`
+        );
+        
+        fileStream.pipe(res);
+        
+        // Clean up file after sending
+        fileStream.on('end', async () => {
+          await ReportService.cleanupTempFile(result.exportFile!.filePath);
+        });
+        
+        fileStream.on('error', async (error: Error) => {
+          console.error('Error streaming file:', error);
+          await ReportService.cleanupTempFile(result.exportFile!.filePath);
+          if (!res.headersSent) {
+            res.status(500).json({
+              success: false,
+              message: 'خطا در ارسال فایل'
+            });
+          }
+        });
+        
+        return;
+      }
 
       res.json({
         success: true,
@@ -770,7 +867,15 @@ export const biController = {
         });
       }
 
-      const report = await ReportService.getReportById(id, userId);
+      // CRITICAL: Ensure tenant context is available
+      if (!req.tenant?.id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Tenant context required'
+        });
+      }
+
+      const report = await ReportService.getReportById(id, userId, req.tenant.id);
 
       res.json({
         success: true,
@@ -811,7 +916,15 @@ export const biController = {
         });
       }
 
-      const updatedReport = await ReportService.updateReport(id, userId, updates);
+      // CRITICAL: Ensure tenant context is available
+      if (!req.tenant?.id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Tenant context required'
+        });
+      }
+
+      const updatedReport = await ReportService.updateReport(id, userId, updates, req.tenant.id);
 
       res.json({
         success: true,
@@ -851,7 +964,15 @@ export const biController = {
         });
       }
 
-      await ReportService.deleteReport(id, userId);
+      // CRITICAL: Ensure tenant context is available
+      if (!req.tenant?.id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Tenant context required'
+        });
+      }
+
+      await ReportService.deleteReport(id, userId, req.tenant.id);
 
       res.json({
         success: true,
@@ -910,6 +1031,554 @@ export const biController = {
       res.status(500).json({
         success: false,
         message: 'خطا در اشتراک‌گذاری گزارش',
+        error: (error as Error).message
+      });
+    }
+  },
+
+  /**
+   * POST /api/bi/aggregate
+   * Execute aggregation queries across multiple workspaces
+   * CRITICAL: All queries are tenant-aware
+   */
+  aggregate: async (req: Request, res: Response) => {
+    try {
+      // CRITICAL: Ensure tenant context is available
+      if (!req.tenant?.id) {
+        return res.status(400).json({
+          success: false,
+          message: 'نیاز به شناسایی مجموعه',
+          error: 'Tenant context required'
+        });
+      }
+
+      const aggregationQuery: AggregationQuery = req.body;
+
+      // Validate required fields
+      if (!aggregationQuery.workspaces || !Array.isArray(aggregationQuery.workspaces) || aggregationQuery.workspaces.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'حداقل یک workspace باید مشخص شود',
+          error: 'At least one workspace is required'
+        });
+      }
+
+      if (!aggregationQuery.joinType) {
+        return res.status(400).json({
+          success: false,
+          message: 'نوع join الزامی است',
+          error: 'Join type is required'
+        });
+      }
+
+      if (!aggregationQuery.fields || !Array.isArray(aggregationQuery.fields) || aggregationQuery.fields.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'حداقل یک فیلد باید مشخص شود',
+          error: 'At least one field is required'
+        });
+      }
+
+      // Log the query for debugging
+      console.log('🔍 Aggregation Query:', JSON.stringify(aggregationQuery, null, 2));
+      console.log('🔍 Tenant ID:', req.tenant.id);
+
+      // CRITICAL: Execute aggregation with tenantId
+      const result = await dataAggregatorService.aggregate(aggregationQuery, req.tenant.id);
+
+      console.log('✅ Aggregation successful, result count:', result.rowCount);
+
+      res.json({
+        success: true,
+        data: result,
+        message: 'داده‌ها با موفقیت تجمیع شدند'
+      });
+    } catch (error) {
+      console.error('❌ Error aggregating data:', error);
+      console.error('❌ Error stack:', (error as Error).stack);
+      res.status(500).json({
+        success: false,
+        message: 'خطا در تجمیع داده‌ها',
+        error: (error as Error).message
+      });
+    }
+  },
+
+  /**
+   * GET /api/bi/schema
+   * Get available data schemas from all workspace connectors
+   * CRITICAL: All schemas are tenant-aware
+   */
+  getSchema: async (req: Request, res: Response) => {
+    try {
+      // CRITICAL: Ensure tenant context is available
+      if (!req.tenant?.id) {
+        return res.status(400).json({
+          success: false,
+          message: 'نیاز به شناسایی مجموعه',
+          error: 'Tenant context required'
+        });
+      }
+
+      const { workspace } = req.query;
+
+      // If specific workspace requested, return only that schema
+      if (workspace) {
+        let connector;
+        if (workspace === 'ordering') {
+          connector = new OrderingConnector();
+        } else if (workspace === 'inventory') {
+          connector = new InventoryConnector();
+        } else {
+          return res.status(400).json({
+            success: false,
+            message: `Workspace نامعتبر: ${workspace}`,
+            error: `Invalid workspace: ${workspace}`
+          });
+        }
+
+        // CRITICAL: Get schema with tenantId
+        const schema = await connector.getSchema(req.tenant.id);
+
+        return res.json({
+          success: true,
+          data: {
+            workspace: connector.workspaceId,
+            name: connector.name,
+            schema
+          },
+          message: 'Schema با موفقیت دریافت شد'
+        });
+      }
+
+      // Return all available schemas
+      const orderingConnector = new OrderingConnector();
+      const inventoryConnector = new InventoryConnector();
+
+      const [orderingSchema, inventorySchema] = await Promise.all([
+        orderingConnector.getSchema(req.tenant.id),
+        inventoryConnector.getSchema(req.tenant.id)
+      ]);
+
+      res.json({
+        success: true,
+        data: {
+          workspaces: [
+            {
+              workspace: orderingConnector.workspaceId,
+              name: orderingConnector.name,
+              schema: orderingSchema
+            },
+            {
+              workspace: inventoryConnector.workspaceId,
+              name: inventoryConnector.name,
+              schema: inventorySchema
+            }
+          ]
+        },
+        message: 'Schema های موجود با موفقیت دریافت شدند'
+      });
+    } catch (error) {
+      console.error('Error getting schema:', error);
+      res.status(500).json({
+        success: false,
+        message: 'خطا در دریافت schema',
+        error: (error as Error).message
+      });
+    }
+  },
+
+  /**
+   * POST /api/bi/explore
+   * Data exploration endpoint - simplified query interface
+   * CRITICAL: All queries are tenant-aware
+   */
+  explore: async (req: Request, res: Response) => {
+    try {
+      // CRITICAL: Ensure tenant context is available
+      if (!req.tenant?.id) {
+        return res.status(400).json({
+          success: false,
+          message: 'نیاز به شناسایی مجموعه',
+          error: 'Tenant context required'
+        });
+      }
+
+      const {
+        workspaces,
+        fields,
+        filters,
+        groupBy,
+        orderBy,
+        limit = 100,
+        offset = 0
+      } = req.body;
+
+      // Validate inputs
+      if (!workspaces || !Array.isArray(workspaces) || workspaces.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'حداقل یک workspace باید مشخص شود',
+          error: 'At least one workspace is required'
+        });
+      }
+
+      if (!fields || !Array.isArray(fields) || fields.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'حداقل یک فیلد باید مشخص شود',
+          error: 'At least one field is required'
+        });
+      }
+
+      // Build aggregation query
+      const aggregationQuery: AggregationQuery = {
+        workspaces,
+        joinType: workspaces.length > 1 ? (req.body.joinType || 'INNER') : 'UNION',
+        joinKeys: req.body.joinKeys,
+        fields: fields.map((f: any) => ({
+          workspace: f.workspace,
+          table: f.table,
+          field: f.field,
+          alias: f.alias,
+          aggregation: f.aggregation || 'none'
+        })),
+        filters: filters?.map((f: any) => ({
+          workspace: f.workspace,
+          table: f.table,
+          field: f.field,
+          operator: f.operator || 'equals',
+          value: f.value
+        })),
+        groupBy,
+        orderBy: orderBy?.map((o: any) => ({
+          field: o.field,
+          direction: o.direction || 'asc'
+        })),
+        limit: Math.min(limit, 1000), // Cap at 1000 rows
+        offset
+      };
+
+      // CRITICAL: Execute exploration with tenantId
+      const result = await dataAggregatorService.aggregate(aggregationQuery, req.tenant.id);
+
+      res.json({
+        success: true,
+        data: result,
+        message: 'اکتشاف داده با موفقیت انجام شد'
+      });
+    } catch (error) {
+      console.error('Error exploring data:', error);
+      res.status(500).json({
+        success: false,
+        message: 'خطا در اکتشاف داده',
+        error: (error as Error).message
+      });
+    }
+  },
+
+  /**
+   * GET /api/bi/templates
+   * دریافت لیست قالب‌های گزارش
+   */
+  getTemplates: async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'کاربر احراز هویت نشده است'
+        });
+      }
+
+      if (!req.tenant?.id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Tenant context required'
+        });
+      }
+
+      const { category, reportType, isPublic, isSystemTemplate, search, tags, page, limit } = req.query;
+
+      const templates = await ReportTemplateService.getTemplates(
+        userId,
+        req.tenant.id,
+        {
+          category: category as string,
+          reportType: reportType as string,
+          isPublic: isPublic === 'true' ? true : isPublic === 'false' ? false : undefined,
+          isSystemTemplate: isSystemTemplate === 'true' ? true : isSystemTemplate === 'false' ? false : undefined,
+          search: search as string,
+          tags: tags ? (tags as string).split(',') : undefined
+        },
+        {
+          page: page ? parseInt(page as string) : 1,
+          limit: limit ? parseInt(limit as string) : 20
+        }
+      );
+
+      // Include system templates
+      const systemTemplates = ReportTemplateService.getSystemTemplates();
+      const allTemplates = {
+        templates: [...systemTemplates, ...templates.templates],
+        pagination: {
+          ...templates.pagination,
+          total: templates.pagination.total + systemTemplates.length
+        }
+      };
+
+      res.json({
+        success: true,
+        data: allTemplates,
+        message: 'قالب‌های گزارش با موفقیت دریافت شدند'
+      });
+    } catch (error) {
+      console.error('Error getting templates:', error);
+      res.status(500).json({
+        success: false,
+        message: 'خطا در دریافت قالب‌های گزارش',
+        error: (error as Error).message
+      });
+    }
+  },
+
+  /**
+   * GET /api/bi/templates/:id
+   * دریافت قالب گزارش بر اساس ID
+   */
+  getTemplateById: async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'کاربر احراز هویت نشده است'
+        });
+      }
+
+      if (!req.tenant?.id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Tenant context required'
+        });
+      }
+
+      const { id } = req.params;
+
+      // Check if it's a system template
+      const systemTemplates = ReportTemplateService.getSystemTemplates();
+      const systemTemplate = systemTemplates.find(t => t.id === id);
+
+      if (systemTemplate) {
+        return res.json({
+          success: true,
+          data: systemTemplate,
+          message: 'قالب گزارش با موفقیت دریافت شد'
+        });
+      }
+
+      const template = await ReportTemplateService.getTemplateById(id, userId, req.tenant.id);
+
+      res.json({
+        success: true,
+        data: template,
+        message: 'قالب گزارش با موفقیت دریافت شد'
+      });
+    } catch (error) {
+      console.error('Error getting template by ID:', error);
+      res.status(500).json({
+        success: false,
+        message: 'خطا در دریافت قالب گزارش',
+        error: (error as Error).message
+      });
+    }
+  },
+
+  /**
+   * POST /api/bi/templates
+   * ایجاد قالب گزارش جدید
+   */
+  createTemplate: async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'کاربر احراز هویت نشده است'
+        });
+      }
+
+      if (!req.tenant?.id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Tenant context required'
+        });
+      }
+
+      const templateData = req.body;
+
+      if (!templateData.name || !templateData.config) {
+        return res.status(400).json({
+          success: false,
+          message: 'نام و تنظیمات قالب الزامی است'
+        });
+      }
+
+      const template = await ReportTemplateService.createTemplate(
+        templateData,
+        userId,
+        req.tenant.id
+      );
+
+      res.json({
+        success: true,
+        data: template,
+        message: 'قالب گزارش با موفقیت ایجاد شد'
+      });
+    } catch (error) {
+      console.error('Error creating template:', error);
+      res.status(500).json({
+        success: false,
+        message: 'خطا در ایجاد قالب گزارش',
+        error: (error as Error).message
+      });
+    }
+  },
+
+  /**
+   * PUT /api/bi/templates/:id
+   * بروزرسانی قالب گزارش
+   */
+  updateTemplate: async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'کاربر احراز هویت نشده است'
+        });
+      }
+
+      if (!req.tenant?.id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Tenant context required'
+        });
+      }
+
+      const { id } = req.params;
+      const updateData = req.body;
+
+      const template = await ReportTemplateService.updateTemplate(
+        id,
+        updateData,
+        userId,
+        req.tenant.id
+      );
+
+      res.json({
+        success: true,
+        data: template,
+        message: 'قالب گزارش با موفقیت بروزرسانی شد'
+      });
+    } catch (error) {
+      console.error('Error updating template:', error);
+      res.status(500).json({
+        success: false,
+        message: 'خطا در بروزرسانی قالب گزارش',
+        error: (error as Error).message
+      });
+    }
+  },
+
+  /**
+   * DELETE /api/bi/templates/:id
+   * حذف قالب گزارش
+   */
+  deleteTemplate: async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'کاربر احراز هویت نشده است'
+        });
+      }
+
+      if (!req.tenant?.id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Tenant context required'
+        });
+      }
+
+      const { id } = req.params;
+
+      await ReportTemplateService.deleteTemplate(id, userId, req.tenant.id);
+
+      res.json({
+        success: true,
+        message: 'قالب گزارش با موفقیت حذف شد'
+      });
+    } catch (error) {
+      console.error('Error deleting template:', error);
+      res.status(500).json({
+        success: false,
+        message: 'خطا در حذف قالب گزارش',
+        error: (error as Error).message
+      });
+    }
+  },
+
+  /**
+   * POST /api/bi/templates/:id/create-report
+   * ایجاد گزارش از قالب
+   */
+  createReportFromTemplate: async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'کاربر احراز هویت نشده است'
+        });
+      }
+
+      if (!req.tenant?.id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Tenant context required'
+        });
+      }
+
+      const { id } = req.params;
+      const { reportName, customizations } = req.body;
+
+      if (!reportName) {
+        return res.status(400).json({
+          success: false,
+          message: 'نام گزارش الزامی است'
+        });
+      }
+
+      const report = await ReportTemplateService.createReportFromTemplate(
+        id,
+        reportName,
+        userId,
+        req.tenant.id,
+        customizations
+      );
+
+      res.json({
+        success: true,
+        data: report,
+        message: 'گزارش از قالب با موفقیت ایجاد شد'
+      });
+    } catch (error) {
+      console.error('Error creating report from template:', error);
+      res.status(500).json({
+        success: false,
+        message: 'خطا در ایجاد گزارش از قالب',
         error: (error as Error).message
       });
     }

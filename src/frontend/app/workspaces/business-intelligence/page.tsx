@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '../../../contexts/AuthContext';
 import { biService } from '../../../services/biService';
 import { BIDashboard, KPIData } from '../../../types/bi';
+import { Button, Card, Section } from '../../../components/ui';
 
 interface BIStats {
   totalSales: number;
@@ -181,7 +182,7 @@ export default function BusinessIntelligenceDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-[50vh] items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 sm:h-32 sm:w-32 border-b-2 border-purple-500 mx-auto"></div>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-4">در حال بارگذاری داده‌های BI...</p>
@@ -192,7 +193,7 @@ export default function BusinessIntelligenceDashboard() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen p-4">
+      <div className="flex min-h-[50vh] items-center justify-center p-4">
         <div className="text-center max-w-md">
           <div className="bg-red-100 dark:bg-red-900/20 rounded-full p-3 sm:p-4 mx-auto w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center mb-3 sm:mb-4">
             <svg className="w-6 h-6 sm:w-8 sm:h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,12 +202,9 @@ export default function BusinessIntelligenceDashboard() {
           </div>
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-2">خطا در بارگذاری داده‌ها</h3>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-          <button
-            onClick={fetchBIData}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm sm:text-base"
-          >
+          <Button onClick={fetchBIData} className="bg-purple-600 hover:bg-purple-700 text-sm sm:text-base">
             تلاش مجدد
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -215,7 +213,7 @@ export default function BusinessIntelligenceDashboard() {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
@@ -234,11 +232,11 @@ export default function BusinessIntelligenceDashboard() {
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
               <svg className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -251,9 +249,9 @@ export default function BusinessIntelligenceDashboard() {
               <p className="text-xs text-green-600 dark:text-green-400">+{stats.monthlyGrowth}% این ماه</p>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center">
             <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
               <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -266,9 +264,9 @@ export default function BusinessIntelligenceDashboard() {
               <p className="text-xs text-gray-500 dark:text-gray-400">حاشیه سود: {stats.profitMargin}%</p>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center">
             <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
               <svg className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -281,12 +279,11 @@ export default function BusinessIntelligenceDashboard() {
               <p className="text-xs text-red-600 dark:text-red-400">{stats.lowStockItems} کم موجود</p>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">ابزارهای تحلیل</h2>
+      <Section title="ابزارهای تحلیل">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {quickActions.map((action, index) => (
             <Link
@@ -310,19 +307,20 @@ export default function BusinessIntelligenceDashboard() {
             </Link>
           ))}
         </div>
-      </div>
+      </Section>
 
       {/* Quick Reports */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2">
-          <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">گزارش‌های سریع</h2>
+      <Section
+        title="گزارش‌های سریع"
+        actions={(
           <Link
             href="/workspaces/business-intelligence/custom-reports"
             className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 text-xs sm:text-sm font-medium"
           >
             مشاهده همه گزارش‌ها
           </Link>
-        </div>
+        )}
+      >
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {reports.map((report) => (
             <div key={report.id} className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
@@ -352,7 +350,7 @@ export default function BusinessIntelligenceDashboard() {
             </div>
           ))}
         </div>
-      </div>
+      </Section>
     </div>
   );
-} 
+}

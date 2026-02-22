@@ -798,6 +798,7 @@ model Item {
   recipeIngredients RecipeIngredient[]
   auditEntries      InventoryAuditEntry[]
 
+  @@unique([tenantId, barcode])
   @@index([category])
   @@index([name])
   @@index([barcode])
@@ -1868,6 +1869,7 @@ model InventoryAuditEntry {
   countedByUser     User                @relation("AuditEntryCountedBy", fields: [countedBy], references: [id])
   createdByUser     User                @relation("AuditEntryCreatedBy", fields: [createdBy], references: [id])
 
+  @@unique([auditCycleId, itemId])
   @@index([auditCycleId])
   @@index([tenantId])
   @@index([itemId])

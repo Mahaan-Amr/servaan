@@ -7,6 +7,7 @@ const express_1 = __importDefault(require("express"));
 const authMiddleware_1 = require("../middlewares/authMiddleware");
 const TenantService_1 = require("../services/TenantService");
 const auditLogger_1 = require("../utils/auditLogger");
+const prisma_1 = require("../lib/prisma");
 const router = express_1.default.Router();
 /**
  * GET /api/admin/tenants
@@ -18,23 +19,23 @@ router.get('/', authMiddleware_1.authenticateAdmin, async (req, res) => {
         const result = await TenantService_1.TenantService.listTenants({
             page: Number(page),
             limit: Number(limit),
-            search: search,
-            status: status,
-            plan: plan,
             sortBy: sortBy || 'createdAt',
             sortDir: sortDir || 'desc',
             refresh: refresh === 'true',
-            // Enhanced filters
-            businessType: businessType,
-            city: city,
-            country: country,
-            createdFrom: createdFrom,
-            createdTo: createdTo,
-            revenueFrom: revenueFrom ? Number(revenueFrom) : undefined,
-            revenueTo: revenueTo ? Number(revenueTo) : undefined,
-            userCountFrom: userCountFrom ? Number(userCountFrom) : undefined,
-            userCountTo: userCountTo ? Number(userCountTo) : undefined,
-            hasFeatures: hasFeatures ? hasFeatures.split(',') : undefined
+            ...(search ? { search: search } : {}),
+            ...(status ? { status: status } : {}),
+            ...(plan ? { plan: plan } : {}),
+            // Enhanced filters (only include when provided)
+            ...(businessType ? { businessType: businessType } : {}),
+            ...(city ? { city: city } : {}),
+            ...(country ? { country: country } : {}),
+            ...(createdFrom ? { createdFrom: createdFrom } : {}),
+            ...(createdTo ? { createdTo: createdTo } : {}),
+            ...(revenueFrom !== undefined ? { revenueFrom: Number(revenueFrom) } : {}),
+            ...(revenueTo ? { revenueTo: Number(revenueTo) } : {}),
+            ...(userCountFrom ? { userCountFrom: Number(userCountFrom) } : {}),
+            ...(userCountTo ? { userCountTo: Number(userCountTo) } : {}),
+            ...(hasFeatures ? { hasFeatures: hasFeatures.split(',') } : {})
         });
         // Audit log
         await (0, auditLogger_1.auditLog)({
@@ -112,20 +113,9 @@ router.get('/export', authMiddleware_1.authenticateAdmin, async (req, res) => {
         const { format = 'csv', search, status, plan, businessType, city, country, createdFrom, createdTo, revenueFrom, revenueTo, userCountFrom, userCountTo, hasFeatures, selectedTenants } = req.query;
         const exportData = await TenantService_1.TenantService.exportTenants({
             format: format,
-            search: search,
-            status: status,
-            plan: plan,
-            businessType: businessType,
-            city: city,
-            country: country,
-            createdFrom: createdFrom,
-            createdTo: createdTo,
-            revenueFrom: revenueFrom ? Number(revenueFrom) : undefined,
-            revenueTo: revenueTo ? Number(revenueTo) : undefined,
-            userCountFrom: userCountFrom ? Number(userCountFrom) : undefined,
-            userCountTo: userCountTo ? Number(userCountTo) : undefined,
-            hasFeatures: hasFeatures ? hasFeatures.split(',') : undefined,
-            selectedTenants: selectedTenants ? selectedTenants.split(',') : undefined
+            ...(search ? { search: search } : {}),
+            ...(status ? { status: status } : {}),
+            ...(plan ? { plan: plan } : {})
         });
         // Set appropriate headers for file download
         const timestamp = new Date().toISOString().split('T')[0];
@@ -647,6 +637,103 @@ router.post('/:id/users/reset-password', authMiddleware_1.authenticateAdmin, (0,
     }
 });
 /**
+ * PUT /api/admin/tenants/:id/users/:userId
+ * Update a user for a specific tenant
+ */
+router.put('/:id/users/:userId', authMiddleware_1.authenticateAdmin, (0, authMiddleware_1.requireRole)(['SUPER_ADMIN', 'PLATFORM_ADMIN']), async (req, res) => {
+    try {
+        const { id, userId } = req.params;
+        const { name, email, phone, role, status } = req.body;
+        // Basic validation
+        if (!name || !email) {
+            return res.status(400).json({
+                success: false,
+                message: 'نام و ایمیل الزامی است'
+            });
+        }
+        // Check if tenant exists
+        const tenant = await prisma_1.prisma.tenant.findUnique({ where: { id } });
+        if (!tenant) {
+            return res.status(404).json({
+                success: false,
+                message: 'مستأجر یافت نشد'
+            });
+        }
+        // Check if user exists in this tenant
+        const existingUser = await prisma_1.prisma.user.findFirst({
+            where: {
+                id: userId,
+                tenantId: id
+            }
+        });
+        if (!existingUser) {
+            return res.status(404).json({
+                success: false,
+                message: 'کاربر در این مستأجر یافت نشد'
+            });
+        }
+        // Check if email is already taken by another user in this tenant
+        if (email !== existingUser.email) {
+            const emailExists = await prisma_1.prisma.user.findFirst({
+                where: {
+                    email: email.toLowerCase(),
+                    tenantId: id,
+                    id: { not: userId }
+                }
+            });
+            if (emailExists) {
+                return res.status(409).json({
+                    success: false,
+                    message: 'کاربری با این ایمیل قبلاً در این مستأجر وجود دارد'
+                });
+            }
+        }
+        // Map role to database role
+        const dbRole = role === 'admin' ? 'ADMIN' :
+            role === 'manager' ? 'MANAGER' :
+                role === 'staff' ? 'STAFF' : 'STAFF'; // Default to STAFF for viewer
+        // Update the user
+        const updatedUser = await prisma_1.prisma.user.update({
+            where: { id: userId },
+            data: {
+                name,
+                email: email.toLowerCase(),
+                phoneNumber: phone || null,
+                role: dbRole,
+                active: status !== 'inactive',
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                phoneNumber: true,
+                role: true,
+                active: true,
+                createdAt: true
+            }
+        });
+        // Audit log
+        await (0, auditLogger_1.auditLog)({
+            adminUserId: req.adminUser.id,
+            action: 'TENANT_USER_UPDATED',
+            details: { tenantId: id, userId: updatedUser.id, changes: { name, email, role, status } },
+            ipAddress: req.ip || 'unknown'
+        });
+        return res.json({
+            success: true,
+            message: 'اطلاعات کاربر با موفقیت به‌روزرسانی شد',
+            data: updatedUser
+        });
+    }
+    catch (error) {
+        console.error('Update tenant user error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'خطا در به‌روزرسانی کاربر'
+        });
+    }
+});
+/**
  * GET /api/admin/tenants/:id/users
  * List tenant users (minimal) with optional ?q= search
  */
@@ -660,6 +747,91 @@ router.get('/:id/users', authMiddleware_1.authenticateAdmin, (0, authMiddleware_
     catch (e) {
         console.error('List tenant users error:', e);
         return res.status(500).json({ success: false, message: 'Failed to list tenant users' });
+    }
+});
+/**
+ * POST /api/admin/tenants/:id/users
+ * Create a new user for a specific tenant
+ */
+router.post('/:id/users', authMiddleware_1.authenticateAdmin, (0, authMiddleware_1.requireRole)(['SUPER_ADMIN', 'PLATFORM_ADMIN']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, email, phone, password, status } = req.body;
+        // Basic validation
+        if (!name || !email) {
+            return res.status(400).json({
+                success: false,
+                message: 'نام و ایمیل الزامی است'
+            });
+        }
+        if (!password || password.length < 8) {
+            return res.status(400).json({
+                success: false,
+                message: 'رمز عبور باید حداقل 8 کاراکتر باشد'
+            });
+        }
+        // Check if tenant exists
+        const tenant = await prisma_1.prisma.tenant.findUnique({ where: { id } });
+        if (!tenant) {
+            return res.status(404).json({
+                success: false,
+                message: 'مستأجر یافت نشد'
+            });
+        }
+        // Check if user already exists with this email in this tenant
+        const existingUser = await prisma_1.prisma.user.findFirst({
+            where: {
+                email: email.toLowerCase(),
+                tenantId: id
+            }
+        });
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                message: 'کاربری با این ایمیل قبلاً در این مستأجر وجود دارد'
+            });
+        }
+        // Hash the password
+        const bcrypt = require('bcryptjs');
+        const passwordHash = await bcrypt.hash(password, 12);
+        // Create the user
+        const newUser = await prisma_1.prisma.user.create({
+            data: {
+                name,
+                email: email.toLowerCase(),
+                password: passwordHash,
+                phoneNumber: phone || null,
+                tenantId: id,
+                active: status !== 'inactive',
+                role: 'STAFF', // Default role
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                phoneNumber: true,
+                createdAt: true
+            }
+        });
+        // Audit log
+        await (0, auditLogger_1.auditLog)({
+            adminUserId: req.adminUser.id,
+            action: 'TENANT_USER_CREATED',
+            details: { tenantId: id, userId: newUser.id, email },
+            ipAddress: req.ip || 'unknown'
+        });
+        return res.status(201).json({
+            success: true,
+            message: 'کاربر با موفقیت ایجاد شد',
+            data: newUser
+        });
+    }
+    catch (error) {
+        console.error('Create tenant user error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'خطا در ایجاد کاربر'
+        });
     }
 });
 //# sourceMappingURL=tenantRoutes.js.map

@@ -1000,6 +1000,13 @@ export class KitchenService {
       method: 'POST',
     });
   }
+
+  // Mark an order item as prepared and deduct stock
+  static async markOrderItemAsPrepared(orderItemId: string) {
+    return apiRequest(`/orders/items/${orderItemId}/prepare`, {
+      method: 'POST',
+    });
+  }
 }
 
 // ==================== ANALYTICS SERVICES ====================
