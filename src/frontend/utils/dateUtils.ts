@@ -138,7 +138,7 @@ export const toFarsiDate = (date: Date) => {
     // But we need to account for the fact that Persian year starts in March
     let persianYear = gregorianYear - 621;
     let persianMonth = gregorianMonth;
-    let persianDay = gregorianDay;
+    const persianDay = gregorianDay;
     
     // Adjust for Persian calendar year start (around March 21st)
     if (gregorianMonth < 3 || (gregorianMonth === 3 && gregorianDay < 21)) {

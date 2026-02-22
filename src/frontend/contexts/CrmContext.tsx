@@ -37,6 +37,13 @@ interface CrmState {
   };
 }
 
+interface PaginationState {
+  currentPage: number;
+  total: number;
+  pages: number;
+  limit: number;
+}
+
 // Initial state
 const initialState: CrmState = {
   customers: [],
@@ -69,12 +76,12 @@ const initialState: CrmState = {
 type CrmAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
-  | { type: 'SET_CUSTOMERS'; payload: { customers: Customer[]; pagination: any } }
+  | { type: 'SET_CUSTOMERS'; payload: { customers: Customer[]; pagination: PaginationState } }
   | { type: 'SET_CURRENT_CUSTOMER'; payload: Customer | null }
   | { type: 'ADD_CUSTOMER'; payload: Customer }
   | { type: 'UPDATE_CUSTOMER'; payload: { id: string; customer: Customer } }
   | { type: 'REMOVE_CUSTOMER'; payload: string }
-  | { type: 'SET_VISITS'; payload: { visits: CustomerVisit[]; pagination: any } }
+  | { type: 'SET_VISITS'; payload: { visits: CustomerVisit[]; pagination: PaginationState } }
   | { type: 'ADD_VISIT'; payload: CustomerVisit }
   | { type: 'UPDATE_VISIT'; payload: { id: string; visit: CustomerVisit } }
   | { type: 'REMOVE_VISIT'; payload: string }

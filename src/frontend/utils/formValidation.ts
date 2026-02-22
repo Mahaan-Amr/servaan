@@ -141,7 +141,7 @@ export class FormValidation {
   /**
    * Custom validation function
    */
-  static custom(value: unknown, validator: (value: unknown) => string | null, fieldName: string): string | null {
+  static custom(value: unknown, validator: (value: unknown) => string | null): string | null {
     return validator(value);
   }
 

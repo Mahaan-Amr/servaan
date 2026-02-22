@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { WorkspaceProtection } from '@/components/workspace/WorkspaceProtection';
+import type { WorkspaceId } from '@/types/workspace';
 
 export interface WorkspaceNavItem {
   name: string;
@@ -15,11 +16,11 @@ export interface WorkspaceNavItem {
 }
 
 interface WorkspaceShellProps {
-  workspaceId: string;
+  workspaceId: WorkspaceId;
   workspaceName: string;
   workspaceDescription: string;
   fallbackGradient: string;
-  accent: 'blue' | 'amber' | 'purple';
+  accent: 'blue' | 'amber' | 'purple' | 'green';
   navigationItems: WorkspaceNavItem[];
   panelContent?: React.ReactNode;
   children: React.ReactNode;
@@ -46,6 +47,13 @@ const accentStyles = {
     activeDot: 'bg-purple-500',
     hover: 'hover:bg-gray-50 dark:hover:bg-gray-700',
     userBadge: 'bg-purple-500',
+  },
+  green: {
+    active: 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300',
+    activeIcon: 'text-green-500',
+    activeDot: 'bg-green-500',
+    hover: 'hover:bg-gray-50 dark:hover:bg-gray-700',
+    userBadge: 'bg-green-500',
   },
 };
 const DESKTOP_SIDEBAR_STORAGE_KEY = 'servaan.workspaceShell.desktopOpen';

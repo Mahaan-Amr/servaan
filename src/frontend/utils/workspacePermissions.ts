@@ -226,8 +226,7 @@ export function filterWorkspacesByAccess(
  * دریافت توصیه‌های امنیتی فضای کاری
  */
 export function getSecurityRecommendations(
-  workspace: WorkspaceWithPermissions,
-  user: User
+  workspace: WorkspaceWithPermissions
 ): string[] {
   const recommendations: string[] = [];
 
