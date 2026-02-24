@@ -22,6 +22,7 @@ import { BASE_URL } from '../../../../lib/apiUtils';
 import PrinterSettingsModal from './components/PrinterSettingsModal';
 import OfflineStatusBar from '../../../../components/ordering/OfflineStatusBar';
 import { offlineStorage } from '../../../../services/offlineStorageService';
+import { connectionMonitor } from '../../../../services/connectionMonitorService';
 
 // Simple toast function for now - we'll replace with proper toast library later
 const toast = {
@@ -283,6 +284,8 @@ export default function POSInterface() {
 
   const [tables, setTables] = useState<Table[]>([]);
   const [showTableSelector, setShowTableSelector] = useState(false);
+  const [isOfflineMode, setIsOfflineMode] = useState<boolean>(() => !connectionMonitor.isCurrentlyOnline());
+  const offlinePaymentMessage = 'این سفارش هنوز با سرور همگام نشده است؛ پرداخت فقط در حالت آنلاین ممکن است.';
 
   // Initialize WebSocket connection for real-time updates
   const initializeWebSocket = useCallback(() => {
@@ -291,15 +294,21 @@ export default function POSInterface() {
 
     const newSocket = io(BASE_URL, {
       auth: { token },
-      transports: ['websocket', 'polling']
+      transports: ['polling', 'websocket']
     });
 
     newSocket.on('connect', () => {
-      console.log('Connected to POS real-time server');
+      console.log('Connected to POS real-time server', {
+        transport: newSocket.io.engine.transport.name
+      });
     });
 
     newSocket.on('disconnect', () => {
       console.log('Disconnected from POS real-time server');
+    });
+
+    newSocket.on('connect_error', (error) => {
+      console.error('POS socket connect_error:', error?.message || error);
     });
 
     // Listen for order status updates
@@ -396,6 +405,13 @@ export default function POSInterface() {
       }
     };
     initOfflineServices();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = connectionMonitor.subscribe((state) => {
+      setIsOfflineMode(!state.isOnline || state.status === 'offline');
+    });
+    return unsubscribe;
   }, []);
 
   // Load ordering settings
@@ -802,9 +818,23 @@ export default function POSInterface() {
 
       setCurrentOrderId(normalized.order.id);
       console.log('Order created successfully with ID:', normalized.order.id);
+      const isServerOrder = !normalized.order.id.startsWith('local_');
+
+      if (!isServerOrder) {
+        toast.success('سفارش در حالت آفلاین ثبت شد و پس از اتصال به اینترنت همگام‌سازی می‌شود');
+        setOrderItems([]);
+        setCustomer({});
+        setSelectedTable(null);
+        setOrderNotes('');
+        return;
+      }
       
       // Handle immediate payment if selected
       if (data.paymentType === 'IMMEDIATE' && data.paymentMethod && data.amountReceived) {
+        if (isOfflineMode) {
+          toast.error(offlinePaymentMessage);
+          return;
+        }
         setPaymentData({
           paymentMethod: data.paymentMethod,
           amountReceived: data.amountReceived,
@@ -813,6 +843,10 @@ export default function POSInterface() {
         setShowPayment(true);
         // Don't reset form yet - wait until payment is complete
       } else if (data.paymentType === 'PARTIAL' && data.paymentMethod && data.selectedItems && data.selectedItems.length > 0) {
+        if (isOfflineMode) {
+          toast.error(offlinePaymentMessage);
+          return;
+        }
         // For partial payments, calculate proportional amount from selected items
         const selectedSubtotal = data.selectedItems.reduce((sum, index) => sum + orderItems[index].totalPrice, 0);
         const subtotalRatio = selectedSubtotal / calculation.subtotal;
@@ -1050,8 +1084,8 @@ export default function POSInterface() {
     amountReceived: number;
     notes?: string;
   }, showReceipt: boolean = true) => {
-    if (!currentOrderId) {
-      toast.error('خطا: شناسه سفارش یافت نشد');
+    if (!currentOrderId || currentOrderId.startsWith('local_') || isOfflineMode) {
+      toast.error(offlinePaymentMessage);
       return;
     }
 

@@ -505,7 +505,7 @@ export default function MenuManagementPage() {
 
     const socket = io(BASE_URL, {
       auth: { token },
-      transports: ['websocket', 'polling']
+      transports: ['polling', 'websocket']
     });
 
     socket.on('connect', () => {
@@ -514,6 +514,10 @@ export default function MenuManagementPage() {
 
     socket.on('disconnect', () => {
       console.log('❌ [MENU] Disconnected from real-time cost update server');
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('[MENU] Socket connect_error:', error?.message || error);
     });
 
     // Listen for recipe cost updates

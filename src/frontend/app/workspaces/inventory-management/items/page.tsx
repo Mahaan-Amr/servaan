@@ -72,7 +72,7 @@ export default function ItemsPage() {
 
     const socket = io(BASE_URL, {
       auth: { token },
-      transports: ['websocket', 'polling']
+      transports: ['polling', 'websocket']
     });
 
     socket.on('connect', () => {
@@ -81,6 +81,10 @@ export default function ItemsPage() {
 
     socket.on('disconnect', () => {
       console.log('❌ [INVENTORY] Disconnected from real-time stock update server');
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('[INVENTORY] Socket connect_error:', error?.message || error);
     });
 
     // Listen for real-time stock updates

@@ -1,7 +1,7 @@
 import { OrderStatus, OrderType, PaymentMethod, TableStatus } from '../types/ordering';
 import { API_URL } from '../lib/apiUtils';
 import { formatCurrency } from '../../shared/utils/currencyUtils';
-import { offlineApiService } from './offlineApiService';
+import { offlineApiService, OfflineQueuedError } from './offlineApiService';
 
 // API Configuration
 const ORDERING_API_BASE = `${API_URL}/ordering`;
@@ -26,6 +26,9 @@ async function apiRequest<T = unknown>(
         shouldCache
       );
     } catch (error) {
+      if (error instanceof OfflineQueuedError) {
+        throw error;
+      }
       // If offline service fails, fall back to regular fetch
       console.warn('⚠️ [API_REQUEST] Offline service failed, falling back to regular fetch:', error);
     }

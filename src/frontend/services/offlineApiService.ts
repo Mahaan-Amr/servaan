@@ -6,15 +6,31 @@
 import { connectionMonitor } from './connectionMonitorService';
 import { offlineStorage } from './offlineStorageService';
 import { API_URL } from '../lib/apiUtils';
-import type { OrderingSettings } from './orderingService';
+import type { OrderingSettings, ProcessPaymentRequest } from './orderingService';
 
 const ORDERING_API_BASE = `${API_URL}/ordering`;
+
+type OperationType = 'order' | 'payment' | 'order_update' | 'payment_update';
 
 export interface OfflineApiRequest {
   endpoint: string;
   options: RequestInit;
   queueIfOffline?: boolean;
   cacheResponse?: boolean;
+}
+
+export class OfflineQueuedError extends Error {
+  code: 'OFFLINE_QUEUED';
+  endpoint: string;
+  operationType: OperationType;
+
+  constructor(message: string, endpoint: string, operationType: OperationType) {
+    super(message);
+    this.name = 'OfflineQueuedError';
+    this.code = 'OFFLINE_QUEUED';
+    this.endpoint = endpoint;
+    this.operationType = operationType;
+  }
 }
 
 class OfflineApiService {
@@ -30,15 +46,14 @@ class OfflineApiService {
     const url = `${ORDERING_API_BASE}${endpoint}`;
     const isOnline = connectionMonitor.isCurrentlyOnline();
 
-    // Prepare headers
     const defaultHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
     };
 
-    const token = typeof window !== 'undefined' 
-      ? localStorage.getItem('token') || sessionStorage.getItem('token') 
+    const token = typeof window !== 'undefined'
+      ? localStorage.getItem('token') || sessionStorage.getItem('token')
       : null;
-    
+
     if (token) {
       defaultHeaders['Authorization'] = `Bearer ${token}`;
     }
@@ -54,58 +69,119 @@ class OfflineApiService {
       cache: 'no-store'
     };
 
-    // If online, try to make the request
     if (isOnline) {
       try {
         const response = await fetch(url, config);
-        
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
 
-        // Cache response if requested
         if (cacheResponse) {
           await this.cacheResponse(endpoint, data);
         }
 
         return data.data || data;
       } catch (error) {
-        // If request fails and we should queue it, add to queue
-        if (queueIfOffline && options.method && options.method !== 'GET') {
-          console.log('📴 [OFFLINE_API] Request failed, queueing for later:', endpoint);
-          await this.queueRequest(endpoint, options);
-          throw new Error('Request queued for offline sync');
+        if (
+          queueIfOffline &&
+          options.method &&
+          options.method !== 'GET' &&
+          this.isNetworkFailure(error)
+        ) {
+          console.log('📴 [OFFLINE_API] Network failure, applying offline mutation strategy:', endpoint);
+          return await this.handleOfflineMutation(endpoint, options);
         }
         throw error;
       }
-    } else {
-      // Offline - queue if it's a mutation
-      if (queueIfOffline && options.method && options.method !== 'GET') {
-        console.log('📴 [OFFLINE_API] Offline, queueing request:', endpoint);
-        await this.queueRequest(endpoint, options);
-        
-        // For POST requests (like order creation), return a local response
-        if (options.method === 'POST' && endpoint.includes('/orders')) {
-          return await this.createLocalOrderResponse(options.body as string) as T;
-        }
-        
-        throw new Error('Request queued for offline sync');
-      }
-
-      // For GET requests, try to return cached data
-      if (options.method === 'GET' || !options.method) {
-        const cached = await this.getCachedResponse(endpoint);
-        if (cached) {
-          console.log('💾 [OFFLINE_API] Returning cached data for:', endpoint);
-          return cached as T;
-        }
-      }
-
-      throw new Error('Offline and no cached data available');
     }
+
+    if (queueIfOffline && options.method && options.method !== 'GET') {
+      console.log('📴 [OFFLINE_API] Offline, applying offline mutation strategy:', endpoint);
+      return await this.handleOfflineMutation(endpoint, options);
+    }
+
+    if (options.method === 'GET' || !options.method) {
+      const cached = await this.getCachedResponse(endpoint);
+      if (cached) {
+        console.log('💾 [OFFLINE_API] Returning cached data for:', endpoint);
+        return cached as T;
+      }
+    }
+
+    throw new Error('Offline and no cached data available');
+  }
+
+  private async handleOfflineMutation<T = unknown>(endpoint: string, options: RequestInit): Promise<T> {
+    await offlineStorage.init();
+    const method = (options.method || 'GET').toUpperCase();
+    const operationType = this.getOperationType(endpoint, method);
+    const payload = this.parseRequestBody(options.body);
+
+    // Dedicated order store path
+    if (operationType === 'order' && method === 'POST') {
+      return await this.createLocalOrderResponse(payload) as T;
+    }
+
+    // Dedicated payment store path
+    if (operationType === 'payment' && method === 'POST') {
+      await this.queueOfflinePayment(payload as ProcessPaymentRequest);
+      throw new OfflineQueuedError(
+        'Payment queued for sync after connectivity is restored',
+        endpoint,
+        operationType
+      );
+    }
+
+    // Generic queue for other mutations
+    await this.queueRequest(endpoint, {
+      ...options,
+      method,
+      body: payload === null ? undefined : JSON.stringify(payload),
+    });
+
+    throw new OfflineQueuedError('Request queued for offline sync', endpoint, operationType);
+  }
+
+  private parseRequestBody(body: BodyInit | null | undefined): unknown {
+    if (!body) return null;
+    if (typeof body === 'string') {
+      try {
+        return JSON.parse(body);
+      } catch {
+        return body;
+      }
+    }
+    return body;
+  }
+
+  private isNetworkFailure(error: unknown): boolean {
+    if (!error) return false;
+    const message = error instanceof Error ? error.message : String(error);
+    const lowered = message.toLowerCase();
+    return (
+      lowered.includes('failed to fetch') ||
+      lowered.includes('networkerror') ||
+      lowered.includes('network request failed') ||
+      lowered.includes('load failed') ||
+      lowered.includes('timeout') ||
+      lowered.includes('aborted')
+    );
+  }
+
+  private async queueOfflinePayment(paymentData: ProcessPaymentRequest): Promise<void> {
+    const localPaymentId = `local_payment_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    await offlineStorage.savePayment({
+      id: localPaymentId,
+      orderId: paymentData.orderId,
+      paymentData,
+      status: 'pending',
+      createdAt: Date.now(),
+      retryCount: 0
+    });
+    console.log('💾 [OFFLINE_STORAGE] Payment saved offline:', localPaymentId);
   }
 
   /**
@@ -113,7 +189,7 @@ class OfflineApiService {
    */
   private async queueRequest(endpoint: string, options: RequestInit): Promise<void> {
     await offlineStorage.init();
-    
+
     let data = null;
     if (options.body) {
       try {
@@ -124,6 +200,11 @@ class OfflineApiService {
     }
 
     const operationType = this.getOperationType(endpoint, options.method || 'GET');
+
+    // Avoid duplicate sync paths for order/payment
+    if (operationType === 'order' || operationType === 'payment') {
+      return;
+    }
 
     await offlineStorage.addToSyncQueue({
       type: operationType,
@@ -136,7 +217,7 @@ class OfflineApiService {
   /**
    * Get operation type from endpoint
    */
-  private getOperationType(endpoint: string, method: string): 'order' | 'payment' | 'order_update' | 'payment_update' {
+  private getOperationType(endpoint: string, method: string): OperationType {
     if (endpoint.includes('/orders') && method === 'POST') {
       return 'order';
     }
@@ -149,7 +230,7 @@ class OfflineApiService {
     if (endpoint.includes('/payments') && (method === 'PUT' || method === 'PATCH')) {
       return 'payment_update';
     }
-    return 'order'; // Default
+    return 'order_update';
   }
 
   /**
@@ -157,8 +238,7 @@ class OfflineApiService {
    */
   private async cacheResponse(endpoint: string, data: unknown): Promise<void> {
     await offlineStorage.init();
-    
-    // Cache menu data
+
     if (endpoint.includes('/menu/full')) {
       const menuData = data as { categories?: unknown[]; items?: unknown[] };
       await offlineStorage.cacheMenu({
@@ -168,10 +248,9 @@ class OfflineApiService {
       });
     }
 
-    // Cache tables
     if (endpoint.includes('/tables')) {
-      const tablesData = Array.isArray(data) 
-        ? data 
+      const tablesData = Array.isArray(data)
+        ? data
         : (data as { tables?: unknown[] }).tables || [];
       await offlineStorage.cacheTables({
         tables: tablesData,
@@ -179,7 +258,6 @@ class OfflineApiService {
       });
     }
 
-    // Cache settings
     if (endpoint.includes('/settings')) {
       await offlineStorage.cacheSettings({
         orderingSettings: data as OrderingSettings,
@@ -194,7 +272,6 @@ class OfflineApiService {
   private async getCachedResponse(endpoint: string): Promise<unknown | null> {
     await offlineStorage.init();
 
-    // Get cached menu
     if (endpoint.includes('/menu/full')) {
       const cached = await offlineStorage.getCachedMenu();
       if (cached && (Date.now() - cached.lastUpdated) < 24 * 60 * 60 * 1000) {
@@ -202,7 +279,6 @@ class OfflineApiService {
       }
     }
 
-    // Get cached tables
     if (endpoint.includes('/tables')) {
       const cached = await offlineStorage.getCachedTables();
       if (cached && (Date.now() - cached.lastUpdated) < 60 * 60 * 1000) {
@@ -210,7 +286,6 @@ class OfflineApiService {
       }
     }
 
-    // Get cached settings
     if (endpoint.includes('/settings')) {
       const cached = await offlineStorage.getCachedSettings();
       if (cached && (Date.now() - cached.lastUpdated) < 60 * 60 * 1000) {
@@ -224,16 +299,15 @@ class OfflineApiService {
   /**
    * Create local order response for offline mode
    */
-  private async createLocalOrderResponse(orderData: string): Promise<unknown> {
-    const data = JSON.parse(orderData);
-    const localOrderId = `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  private async createLocalOrderResponse(orderData: unknown): Promise<unknown> {
+    const data = orderData as Record<string, unknown>;
+    const localOrderId = `local_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
     const orderNumber = `OFFLINE-${Date.now()}`;
 
-    // Save to offline storage
     await offlineStorage.init();
     await offlineStorage.saveOrder({
       id: localOrderId,
-      orderData: data,
+      orderData: data as any,
       status: 'pending',
       createdAt: Date.now(),
       retryCount: 0
@@ -274,7 +348,7 @@ class OfflineApiService {
    */
   private getTenantSubdomain(): string {
     if (typeof window === 'undefined') return 'dima';
-    
+
     const hostname = window.location.hostname;
     if (hostname.includes('localhost')) {
       const parts = hostname.split('.');
@@ -283,11 +357,10 @@ class OfflineApiService {
       }
       return 'dima';
     }
-    
+
     const parts = hostname.split('.');
     return parts.length >= 3 ? parts[0] : 'dima';
   }
 }
 
 export const offlineApiService = new OfflineApiService();
-

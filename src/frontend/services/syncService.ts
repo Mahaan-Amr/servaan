@@ -15,26 +15,19 @@ class SyncService {
   private syncListeners: Set<(status: SyncStatus) => void> = new Set();
 
   constructor() {
-    // Only initialize in browser environment
     if (typeof window !== 'undefined') {
       this.init();
     }
   }
 
-  /**
-   * Initialize sync service
-   */
   private init() {
-    // Listen to connection changes
     connectionMonitor.subscribe((state) => {
       if (state.isOnline && !this.isSyncing) {
-        // Connection restored, start syncing
-        console.log('🔄 [SYNC] Connection restored, starting sync...');
+        console.log('[SYNC] Connection restored, starting sync...');
         this.syncAll();
       }
     });
 
-    // Periodic sync check (every 30 seconds when online)
     this.syncInterval = setInterval(() => {
       if (connectionMonitor.isCurrentlyOnline() && !this.isSyncing) {
         this.syncAll();
@@ -42,17 +35,14 @@ class SyncService {
     }, 30000);
   }
 
-  /**
-   * Sync all pending data
-   */
   async syncAll(): Promise<SyncResult> {
     if (this.isSyncing) {
-      console.log('⏳ [SYNC] Sync already in progress');
+      console.log('[SYNC] Sync already in progress');
       return { success: false, message: 'Sync already in progress' };
     }
 
     if (!connectionMonitor.isCurrentlyOnline()) {
-      console.log('📴 [SYNC] Cannot sync - offline');
+      console.log('[SYNC] Cannot sync while offline');
       return { success: false, message: 'Offline' };
     }
 
@@ -60,24 +50,14 @@ class SyncService {
     this.notifyListeners({ status: 'syncing', progress: 0 });
 
     try {
-      // Check if we're in a browser environment
       if (typeof window === 'undefined' || typeof indexedDB === 'undefined') {
-        console.log('📴 [SYNC] Cannot sync - not in browser environment');
         return { success: false, message: 'Not in browser environment' };
       }
 
-      console.log('🔄 [SYNC] Starting full sync...');
-
-      // Initialize offline storage
       await offlineStorage.init();
 
-      // Sync orders
       const ordersResult = await this.syncOrders();
-      
-      // Sync payments
       const paymentsResult = await this.syncPayments();
-
-      // Sync queue operations
       const queueResult = await this.syncQueue();
 
       const result: SyncResult = {
@@ -87,21 +67,19 @@ class SyncService {
         paymentsSynced: paymentsResult.synced,
         paymentsFailed: paymentsResult.failed,
         queueSynced: queueResult.synced,
-        queueFailed: queueResult.failed
+        queueFailed: queueResult.failed,
       };
 
-      console.log('✅ [SYNC] Sync completed:', result);
+      console.log('[SYNC] Completed:', result);
       this.notifyListeners({ status: 'completed', result });
-
-      // Cleanup old sync operations
       await offlineStorage.clearOldSyncOperations();
 
       return result;
     } catch (error) {
-      console.error('❌ [SYNC] Sync failed:', error);
+      console.error('[SYNC] Failed:', error);
       const result: SyncResult = {
         success: false,
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
       };
       this.notifyListeners({ status: 'failed', error: result.message });
       return result;
@@ -110,53 +88,47 @@ class SyncService {
     }
   }
 
-  /**
-   * Sync pending orders
-   */
   private async syncOrders(): Promise<{ synced: number; failed: number }> {
     const pendingOrders = await offlineStorage.getPendingOrders();
     let synced = 0;
     let failed = 0;
 
-    console.log(`🔄 [SYNC] Syncing ${pendingOrders.length} pending orders...`);
+    console.log(`[SYNC] Syncing ${pendingOrders.length} pending orders...`);
 
     for (const order of pendingOrders) {
       try {
-        // Try to create order on server
         const response = await fetch(`${ORDERING_API_BASE}/orders`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`,
-            'X-Tenant-Subdomain': this.getTenantSubdomain()
+            'X-Tenant-Subdomain': this.getTenantSubdomain(),
           },
-          body: JSON.stringify(order.orderData)
+          body: JSON.stringify(order.orderData),
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          const serverOrderId = data.data?.order?.id || data.order?.id;
-
-          if (serverOrderId) {
-            // Update order with server ID and mark as synced
-            await offlineStorage.updateOrderStatus(order.id, 'synced', serverOrderId);
-            synced++;
-            console.log(`✅ [SYNC] Order ${order.id} synced as ${serverOrderId}`);
-          } else {
-            throw new Error('No server ID returned');
-          }
-        } else {
+        if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(errorData.message || `HTTP ${response.status}`);
         }
+
+        const data = await response.json();
+        const serverOrderId = data.data?.order?.id || data.order?.id;
+
+        if (!serverOrderId) {
+          throw new Error('No server order ID returned');
+        }
+
+        await offlineStorage.updateOrderStatus(order.id, 'synced', serverOrderId);
+        synced++;
+        console.log(`[SYNC] Order ${order.id} synced as ${serverOrderId}`);
       } catch (error) {
-        console.error(`❌ [SYNC] Failed to sync order ${order.id}:`, error);
+        console.error(`[SYNC] Failed to sync order ${order.id}:`, error);
         failed++;
 
-        // Update retry count
         const updatedOrder = await offlineStorage.getOrder(order.id);
         if (updatedOrder) {
-          updatedOrder.retryCount++;
+          updatedOrder.retryCount += 1;
           if (updatedOrder.retryCount >= 5) {
             await offlineStorage.updateOrderStatus(order.id, 'failed');
           } else {
@@ -169,63 +141,76 @@ class SyncService {
     return { synced, failed };
   }
 
-  /**
-   * Sync pending payments
-   */
   private async syncPayments(): Promise<{ synced: number; failed: number }> {
     const pendingPayments = await offlineStorage.getPendingPayments();
     let synced = 0;
     let failed = 0;
 
-    console.log(`🔄 [SYNC] Syncing ${pendingPayments.length} pending payments...`);
+    console.log(`[SYNC] Syncing ${pendingPayments.length} pending payments...`);
 
     for (const payment of pendingPayments) {
       try {
-        // Try to process payment on server
+        const resolvedOrderId = await this.resolveServerOrderId(payment.orderId);
+        if (!resolvedOrderId) {
+          console.log(`[SYNC] Deferring payment ${payment.id}; order ${payment.orderId} not synced yet`);
+          continue;
+        }
+
         const response = await fetch(`${ORDERING_API_BASE}/payments/process`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`,
-            'X-Tenant-Subdomain': this.getTenantSubdomain()
+            'X-Tenant-Subdomain': this.getTenantSubdomain(),
           },
-          body: JSON.stringify(payment.paymentData)
+          body: JSON.stringify({
+            ...payment.paymentData,
+            orderId: resolvedOrderId,
+          }),
         });
 
-        if (response.ok) {
-          // Mark payment as synced
-          payment.status = 'synced';
-          payment.syncedAt = Date.now();
-          await offlineStorage.savePayment(payment);
-          synced++;
-          console.log(`✅ [SYNC] Payment ${payment.id} synced`);
-        } else {
+        if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(errorData.message || `HTTP ${response.status}`);
         }
+
+        payment.status = 'synced';
+        payment.syncedAt = Date.now();
+        await offlineStorage.savePayment(payment);
+        synced++;
+        console.log(`[SYNC] Payment ${payment.id} synced for order ${resolvedOrderId}`);
       } catch (error) {
-        console.error(`❌ [SYNC] Failed to sync payment ${payment.id}:`, error);
+        console.error(`[SYNC] Failed to sync payment ${payment.id}:`, error);
         failed++;
+
+        payment.retryCount = (payment.retryCount || 0) + 1;
+        if (payment.retryCount >= 5) {
+          payment.status = 'failed';
+        }
+        await offlineStorage.savePayment(payment);
       }
     }
 
     return { synced, failed };
   }
 
-  /**
-   * Sync queue operations
-   */
   private async syncQueue(): Promise<{ synced: number; failed: number }> {
     const pendingOps = await offlineStorage.getPendingSyncOperations();
     let synced = 0;
     let failed = 0;
 
-    console.log(`🔄 [SYNC] Syncing ${pendingOps.length} queue operations...`);
+    console.log(`[SYNC] Syncing ${pendingOps.length} queue operations...`);
 
     for (const operation of pendingOps) {
-      // Skip operations without an ID
       if (operation.id === undefined) {
-        console.warn('⚠️ [SYNC] Skipping operation without ID:', operation);
+        console.warn('[SYNC] Skipping operation without ID:', operation);
+        continue;
+      }
+
+      // Orders and payments are synced through dedicated stores only.
+      if (operation.type === 'order' || operation.type === 'payment') {
+        await offlineStorage.markSyncCompleted(operation.id);
+        synced++;
         continue;
       }
 
@@ -235,21 +220,20 @@ class SyncService {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token')}`,
-            'X-Tenant-Subdomain': this.getTenantSubdomain()
+            'X-Tenant-Subdomain': this.getTenantSubdomain(),
           },
-          body: operation.method !== 'GET' ? JSON.stringify(operation.data) : undefined
+          body: operation.method !== 'GET' ? JSON.stringify(operation.data) : undefined,
         });
 
         if (response.ok) {
           await offlineStorage.markSyncCompleted(operation.id);
           synced++;
-          console.log(`✅ [SYNC] Queue operation ${operation.id} synced`);
         } else {
           await offlineStorage.incrementRetryCount(operation.id);
           failed++;
         }
       } catch (error) {
-        console.error(`❌ [SYNC] Failed to sync queue operation ${operation.id}:`, error);
+        console.error(`[SYNC] Failed to sync queue operation ${operation.id}:`, error);
         await offlineStorage.incrementRetryCount(operation.id);
         failed++;
       }
@@ -258,12 +242,22 @@ class SyncService {
     return { synced, failed };
   }
 
-  /**
-   * Get tenant subdomain
-   */
+  private async resolveServerOrderId(orderId: string): Promise<string | null> {
+    if (!orderId.startsWith('local_')) {
+      return orderId;
+    }
+
+    const localOrder = await offlineStorage.getOrder(orderId);
+    if (!localOrder?.serverId) {
+      return null;
+    }
+
+    return localOrder.serverId;
+  }
+
   private getTenantSubdomain(): string {
     if (typeof window === 'undefined') return 'dima';
-    
+
     const hostname = window.location.hostname;
     if (hostname.includes('localhost')) {
       const parts = hostname.split('.');
@@ -272,14 +266,11 @@ class SyncService {
       }
       return 'dima';
     }
-    
+
     const parts = hostname.split('.');
     return parts.length >= 3 ? parts[0] : 'dima';
   }
 
-  /**
-   * Subscribe to sync status updates
-   */
   subscribe(listener: (status: SyncStatus) => void): () => void {
     this.syncListeners.add(listener);
     return () => {
@@ -287,11 +278,8 @@ class SyncService {
     };
   }
 
-  /**
-   * Notify listeners
-   */
   private notifyListeners(status: SyncStatus) {
-    this.syncListeners.forEach(listener => {
+    this.syncListeners.forEach((listener) => {
       try {
         listener(status);
       } catch (error) {
@@ -300,19 +288,13 @@ class SyncService {
     });
   }
 
-  /**
-   * Get sync status
-   */
   getSyncStatus(): SyncStatus {
     return {
       status: this.isSyncing ? 'syncing' : 'idle',
-      progress: 0
+      progress: 0,
     };
   }
 
-  /**
-   * Cleanup
-   */
   destroy() {
     if (this.syncInterval) {
       clearInterval(this.syncInterval);
@@ -341,4 +323,3 @@ export interface SyncStatus {
 }
 
 export const syncService = new SyncService();
-

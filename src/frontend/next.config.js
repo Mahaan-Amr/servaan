@@ -86,7 +86,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data:",
-              `connect-src 'self' ${apiOrigin} https://api.servaan.com https://*.servaan.com`,
+              `connect-src 'self' ${apiOrigin} https://api.servaan.com https://*.servaan.com wss://api.servaan.com wss://*.servaan.com ws://localhost:*`,
               "frame-ancestors 'self'",
             ].join('; ')
           }

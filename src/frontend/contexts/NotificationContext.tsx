@@ -60,11 +60,13 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         auth: {
           token: token
         },
-        transports: ['websocket', 'polling']
+        transports: ['polling', 'websocket']
       });
 
       socket.on('connect', () => {
-        console.log('Connected to notification server');
+        console.log('Connected to notification server', {
+          transport: socket.io.engine.transport.name
+        });
         setIsConnected(true);
       });
 

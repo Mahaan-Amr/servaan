@@ -157,15 +157,21 @@ export default function TablesPage() {
 
     const socket = io(BASE_URL, {
       auth: { token },
-      transports: ['websocket', 'polling']
+      transports: ['polling', 'websocket']
     });
 
     socket.on('connect', () => {
-      console.log('Connected to table management real-time server');
+      console.log('Connected to table management real-time server', {
+        transport: socket.io.engine.transport.name
+      });
     });
 
     socket.on('disconnect', () => {
       console.log('Disconnected from table management real-time server');
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('Table management socket connect_error:', error?.message || error);
     });
 
     // Listen for table status updates

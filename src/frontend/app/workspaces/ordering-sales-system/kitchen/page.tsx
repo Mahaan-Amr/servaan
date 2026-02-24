@@ -280,7 +280,7 @@ export default function KitchenDisplayPage() {
     console.log('🔌 [KITCHEN_DISPLAY] Initializing WebSocket connection');
     const newSocket = io(BASE_URL, {
       auth: { token },
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
       timeout: 20000,
       forceNew: true
     });
