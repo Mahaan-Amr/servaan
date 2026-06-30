@@ -9,6 +9,7 @@ node_modules
 # next.js
 /.next/
 /out/
+src/admin/frontend/.next/
 
 # production
 /build
@@ -23,6 +24,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+backend-smoke-*.log
 
 # local env files
 .env*.local
@@ -38,6 +40,7 @@ next-env.d.ts
 # IDE
 .idea
 .vscode
+.codex/
 
 # Prisma
 /src/shared/generated/
@@ -45,6 +48,10 @@ next-env.d.ts
 # Docker build artifacts
 src/frontend/.next/
 src/backend/dist/
+src/desktop/src-tauri/target/
+src/desktop/src-tauri/gen/
+src/desktop/src-tauri/resources/
+graphify-out/
 
 # Additional build outputs
 *.tsbuildinfo
@@ -71,4 +78,9 @@ export-*.bat
 restore-database.bat
 
 # Database readable exports
-database_backup_readable.sql 
+database_backup_readable.sql
+
+# Local notes and scratch assets
+/assets/
+/servaandocs
+docs/graphify-usage.md

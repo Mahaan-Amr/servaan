@@ -7,6 +7,7 @@ import * as authService from '../../services/authService';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { isDesktopApp } from '../../services/desktopBridgeService';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -16,32 +17,28 @@ export default function LoginPage() {
   const { tenant, loading: tenantLoading, error: tenantError } = useTenant();
   const router = useRouter();
 
-  // Extract token from URL parameters on mount (for cross-domain redirects)
   useEffect(() => {
     authService.extractTokenFromUrl();
   }, []);
 
-  // Redirect if user is already logged in
+  useEffect(() => {
+    if (isDesktopApp() && !user) {
+      router.replace('/native');
+    }
+  }, [router, user]);
+
   useEffect(() => {
     if (user && authLoaded) {
-      router.push('/');
+      router.push(isDesktopApp() ? '/native' : '/');
     }
   }, [user, authLoaded, router]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
-    // Attempt login
     await login({ email, password }, rememberMe);
-    
-    // If login is successful, the authContext will update the user state
-    // which will trigger the useEffect above to redirect
-    
-    // Clear any redirect path
     sessionStorage.removeItem('redirectAfterLogin');
   };
 
-  // Show loading screen while tenant or auth is loading
   if (!authLoaded || tenantLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -53,7 +50,6 @@ export default function LoginPage() {
     );
   }
 
-  // Show tenant error if there's an issue loading tenant
   if (tenantError) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -65,30 +61,20 @@ export default function LoginPage() {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">خطا در بارگذاری</h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{tenantError}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="btn-primary"
-          >
-            تلاش مجدد
+          <button onClick={() => window.location.reload()} className="btn-primary">
+            تلاش دوباره
           </button>
         </div>
       </div>
     );
   }
 
-  // If already logged in, we'll redirect via useEffect
-  // If not logged in, show the login form
   return (
     <div className="min-h-[85vh] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="text-center">
           {tenant?.logo ? (
-            <Image 
-              src={tenant.logo} 
-              alt={tenant.name} 
-              width={48}
-              height={48}
-            />
+            <Image src={tenant.logo} alt={tenant.name} width={48} height={48} />
           ) : (
             <svg className="mx-auto h-12 w-12 text-primary-500" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
@@ -98,7 +84,7 @@ export default function LoginPage() {
             ورود به {tenant?.displayName || 'سیستم'}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            {tenant?.description || 'برای ورود به سِروان، اطلاعات حساب کاربری خود را وارد کنید'}
+            {tenant?.description || 'برای ورود به سروان، اطلاعات حساب کاربری خود را وارد کنید'}
           </p>
           {tenant && (
             <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
@@ -225,9 +211,7 @@ export default function LoginPage() {
                 <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-                  یا
-                </span>
+                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">یا</span>
               </div>
             </div>
 
@@ -244,4 +228,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
-} 
+}
