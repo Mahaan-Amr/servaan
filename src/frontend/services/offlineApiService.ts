@@ -5,7 +5,7 @@
 
 import { connectionMonitor } from './connectionMonitorService';
 import { offlineStorage } from './offlineStorageService';
-import { API_URL } from '../lib/apiUtils';
+import { API_URL, fetchWithTimeout } from '../lib/apiUtils';
 import type { OrderingSettings, ProcessPaymentRequest } from './orderingService';
 
 const ORDERING_API_BASE = `${API_URL}/ordering`;
@@ -71,7 +71,7 @@ class OfflineApiService {
 
     if (isOnline) {
       try {
-        const response = await fetch(url, config);
+        const response = await fetchWithTimeout(url, config);
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(errorData.message || `HTTP error! status: ${response.status}`);

@@ -4,9 +4,18 @@
  */
 
 import { CreateOrderRequest, ProcessPaymentRequest, OrderingSettings } from './orderingService';
+import { deleteDesktopStoreValue, getDesktopStoreValue, isDesktopApp, listDesktopStoreValues, setDesktopStoreValue } from './desktopBridgeService';
 
 const DB_NAME = 'servaan_ordering_offline';
 const DB_VERSION = 1;
+const DESKTOP_STORE = {
+  orders: 'ordering_offline.orders',
+  payments: 'ordering_offline.payments',
+  menu: 'ordering_offline.menu_cache',
+  tables: 'ordering_offline.tables_cache',
+  settings: 'ordering_offline.settings_cache',
+  syncQueue: 'ordering_offline.sync_queue'
+} as const;
 
 // Menu and table types (simplified for caching)
 // These are flexible types that accept the actual API types
@@ -72,10 +81,18 @@ class OfflineStorageService {
   private db: IDBDatabase | null = null;
   private initPromise: Promise<void> | null = null;
 
+  private isDesktop(): boolean {
+    return isDesktopApp();
+  }
+
   /**
    * Initialize IndexedDB
    */
   async init(): Promise<void> {
+    if (isDesktopApp()) {
+      return Promise.resolve();
+    }
+
     // Check if we're in a browser environment
     if (typeof window === 'undefined' || typeof indexedDB === 'undefined') {
       console.warn('⚠️ [OFFLINE_STORAGE] IndexedDB not available (SSR or unsupported browser)');
@@ -152,6 +169,10 @@ class OfflineStorageService {
    * Ensure DB is initialized
    */
   private async ensureDB(): Promise<IDBDatabase> {
+    if (isDesktopApp()) {
+      throw new Error('Desktop SQLite store is used instead of IndexedDB.');
+    }
+
     // Check if we're in a browser environment
     if (typeof window === 'undefined' || typeof indexedDB === 'undefined') {
       throw new Error('IndexedDB is not available (SSR or unsupported browser)');
@@ -172,6 +193,11 @@ class OfflineStorageService {
    * Save order offline
    */
   async saveOrder(order: OfflineOrder): Promise<void> {
+    if (this.isDesktop()) {
+      await setDesktopStoreValue(DESKTOP_STORE.orders, order.id, order);
+      return;
+    }
+
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(['orders'], 'readwrite');
@@ -194,6 +220,11 @@ class OfflineStorageService {
    * Get all pending orders
    */
   async getPendingOrders(): Promise<OfflineOrder[]> {
+    if (this.isDesktop()) {
+      const records = await listDesktopStoreValues<OfflineOrder>(DESKTOP_STORE.orders);
+      return records.map((record) => record.value).filter((order) => order.status === 'pending');
+    }
+
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(['orders'], 'readonly');
@@ -215,6 +246,10 @@ class OfflineStorageService {
    * Get order by ID
    */
   async getOrder(orderId: string): Promise<OfflineOrder | null> {
+    if (this.isDesktop()) {
+      return (await getDesktopStoreValue<OfflineOrder>(DESKTOP_STORE.orders, orderId)) || null;
+    }
+
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(['orders'], 'readonly');
@@ -235,6 +270,21 @@ class OfflineStorageService {
    * Update order status
    */
   async updateOrderStatus(orderId: string, status: OfflineOrder['status'], serverId?: string): Promise<void> {
+    if (this.isDesktop()) {
+      const order = await getDesktopStoreValue<OfflineOrder>(DESKTOP_STORE.orders, orderId);
+      if (!order) {
+        throw new Error('Order not found');
+      }
+
+      await setDesktopStoreValue(DESKTOP_STORE.orders, orderId, {
+        ...order,
+        status,
+        serverId: serverId || order.serverId,
+        syncedAt: status === 'synced' ? Date.now() : order.syncedAt
+      });
+      return;
+    }
+
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(['orders'], 'readwrite');
@@ -269,6 +319,11 @@ class OfflineStorageService {
    * Delete order
    */
   async deleteOrder(orderId: string): Promise<void> {
+    if (this.isDesktop()) {
+      await deleteDesktopStoreValue(DESKTOP_STORE.orders, orderId);
+      return;
+    }
+
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(['orders'], 'readwrite');
@@ -286,6 +341,11 @@ class OfflineStorageService {
    * Save payment offline
    */
   async savePayment(payment: OfflinePayment): Promise<void> {
+    if (this.isDesktop()) {
+      await setDesktopStoreValue(DESKTOP_STORE.payments, payment.id, payment);
+      return;
+    }
+
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(['payments'], 'readwrite');
@@ -301,6 +361,11 @@ class OfflineStorageService {
    * Get pending payments
    */
   async getPendingPayments(): Promise<OfflinePayment[]> {
+    if (this.isDesktop()) {
+      const records = await listDesktopStoreValues<OfflinePayment>(DESKTOP_STORE.payments);
+      return records.map((record) => record.value).filter((payment) => payment.status === 'pending');
+    }
+
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(['payments'], 'readonly');
@@ -324,6 +389,11 @@ class OfflineStorageService {
    * Cache menu data
    */
   async cacheMenu(menu: CachedMenu): Promise<void> {
+    if (this.isDesktop()) {
+      await setDesktopStoreValue(DESKTOP_STORE.menu, 'current', { id: 'current', ...menu });
+      return;
+    }
+
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(['menu_cache'], 'readwrite');
@@ -339,6 +409,13 @@ class OfflineStorageService {
    * Get cached menu
    */
   async getCachedMenu(): Promise<CachedMenu | null> {
+    if (this.isDesktop()) {
+      const cached = await getDesktopStoreValue<CachedMenu & { id?: string }>(DESKTOP_STORE.menu, 'current');
+      if (!cached) return null;
+      const { id: _ignored, ...rest } = cached;
+      return rest;
+    }
+
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(['menu_cache'], 'readonly');
@@ -361,6 +438,11 @@ class OfflineStorageService {
    * Cache tables data
    */
   async cacheTables(tables: CachedTables): Promise<void> {
+    if (this.isDesktop()) {
+      await setDesktopStoreValue(DESKTOP_STORE.tables, 'current', { id: 'current', ...tables });
+      return;
+    }
+
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(['tables_cache'], 'readwrite');
@@ -376,6 +458,13 @@ class OfflineStorageService {
    * Get cached tables
    */
   async getCachedTables(): Promise<CachedTables | null> {
+    if (this.isDesktop()) {
+      const cached = await getDesktopStoreValue<CachedTables & { id?: string }>(DESKTOP_STORE.tables, 'current');
+      if (!cached) return null;
+      const { id: _ignored, ...rest } = cached;
+      return rest;
+    }
+
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(['tables_cache'], 'readonly');
@@ -398,6 +487,11 @@ class OfflineStorageService {
    * Cache settings
    */
   async cacheSettings(settings: CachedSettings): Promise<void> {
+    if (this.isDesktop()) {
+      await setDesktopStoreValue(DESKTOP_STORE.settings, 'current', { id: 'current', ...settings });
+      return;
+    }
+
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(['settings_cache'], 'readwrite');
@@ -413,6 +507,13 @@ class OfflineStorageService {
    * Get cached settings
    */
   async getCachedSettings(): Promise<CachedSettings | null> {
+    if (this.isDesktop()) {
+      const cached = await getDesktopStoreValue<CachedSettings & { id?: string }>(DESKTOP_STORE.settings, 'current');
+      if (!cached) return null;
+      const { id: _ignored, ...rest } = cached;
+      return rest;
+    }
+
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(['settings_cache'], 'readonly');
@@ -442,6 +543,18 @@ class OfflineStorageService {
     endpoint: string;
     method: string;
   }): Promise<void> {
+    if (this.isDesktop()) {
+      const id = Date.now() * 1000 + Math.floor(Math.random() * 1000);
+      await setDesktopStoreValue(DESKTOP_STORE.syncQueue, id.toString(), {
+        ...operation,
+        id,
+        status: 'pending',
+        createdAt: Date.now(),
+        retryCount: 0
+      });
+      return;
+    }
+
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(['sync_queue'], 'readwrite');
@@ -462,6 +575,11 @@ class OfflineStorageService {
    * Get pending sync operations
    */
   async getPendingSyncOperations(): Promise<SyncQueueOperation[]> {
+    if (this.isDesktop()) {
+      const records = await listDesktopStoreValues<SyncQueueOperation>(DESKTOP_STORE.syncQueue);
+      return records.map((record) => record.value).filter((operation) => operation.status === 'pending');
+    }
+
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(['sync_queue'], 'readonly');
@@ -483,6 +601,18 @@ class OfflineStorageService {
    * Mark sync operation as completed
    */
   async markSyncCompleted(operationId: number): Promise<void> {
+    if (this.isDesktop()) {
+      const key = operationId.toString();
+      const operation = await getDesktopStoreValue<SyncQueueOperation>(DESKTOP_STORE.syncQueue, key);
+      if (!operation) return;
+
+      await setDesktopStoreValue(DESKTOP_STORE.syncQueue, key, {
+        ...operation,
+        status: 'completed'
+      });
+      return;
+    }
+
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(['sync_queue'], 'readwrite');
@@ -509,6 +639,20 @@ class OfflineStorageService {
    * Increment retry count for failed operation
    */
   async incrementRetryCount(operationId: number): Promise<void> {
+    if (this.isDesktop()) {
+      const key = operationId.toString();
+      const operation = await getDesktopStoreValue<SyncQueueOperation>(DESKTOP_STORE.syncQueue, key);
+      if (!operation) return;
+
+      const retryCount = (operation.retryCount || 0) + 1;
+      await setDesktopStoreValue(DESKTOP_STORE.syncQueue, key, {
+        ...operation,
+        retryCount,
+        status: retryCount >= 5 ? 'failed' : operation.status
+      });
+      return;
+    }
+
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(['sync_queue'], 'readwrite');
@@ -538,6 +682,17 @@ class OfflineStorageService {
    * Clear old completed operations (cleanup)
    */
   async clearOldSyncOperations(olderThan: number = 7 * 24 * 60 * 60 * 1000): Promise<void> {
+    if (this.isDesktop()) {
+      const cutoff = Date.now() - olderThan;
+      const records = await listDesktopStoreValues<SyncQueueOperation>(DESKTOP_STORE.syncQueue);
+      await Promise.all(
+        records
+          .filter((record) => record.value.status === 'completed' && record.value.createdAt < cutoff)
+          .map((record) => deleteDesktopStoreValue(DESKTOP_STORE.syncQueue, record.key))
+      );
+      return;
+    }
+
     const db = await this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction(['sync_queue'], 'readwrite');

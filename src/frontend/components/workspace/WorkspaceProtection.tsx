@@ -21,11 +21,21 @@ export const WorkspaceProtection: React.FC<WorkspaceProtectionProps> = ({
 }) => {
   const router = useRouter();
   const { user, authLoaded } = useAuth();
-  const { canAccessWorkspace, isLoading, workspaces } = useWorkspace();
+  const { canAccessWorkspace, isLoading } = useWorkspace();
   const [accessChecked, setAccessChecked] = useState(false);
 
   useEffect(() => {
-    if (authLoaded && !isLoading && workspaces.length > 0) {
+    if (!authLoaded || isLoading) {
+      return;
+    }
+
+    if (!user) {
+      setAccessChecked(true);
+      router.push('/login');
+      return;
+    }
+
+    if (authLoaded && !isLoading) {
       const hasAccess = canAccessWorkspace(workspaceId);
       
       if (!hasAccess) {
@@ -42,7 +52,7 @@ export const WorkspaceProtection: React.FC<WorkspaceProtectionProps> = ({
       
       setAccessChecked(true);
     }
-  }, [authLoaded, isLoading, workspaces, workspaceId, canAccessWorkspace, router, fallbackUrl, showError]);
+  }, [authLoaded, isLoading, user, workspaceId, canAccessWorkspace, router, fallbackUrl, showError]);
 
   // Loading state
   if (!authLoaded || isLoading || !accessChecked) {

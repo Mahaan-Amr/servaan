@@ -1,5 +1,6 @@
 import { apiClient } from '../lib/apiClient';
 import { Item as SharedItem } from '../../shared/types';
+import { readLocalFirst } from './localReadModelService';
 
 // Use the shared Item type for consistency
 export type Item = SharedItem;
@@ -18,7 +19,7 @@ export interface CreateItemData {
 // Get all items
 export const getItems = async (): Promise<Item[]> => {
   try {
-    return await apiClient.get<Item[]>('/items');
+    return await readLocalFirst('inventory.items', () => apiClient.get<Item[]>('/items'));
   } catch (error) {
     throw new Error('خطا در دریافت لیست کالاها');
   }
@@ -27,7 +28,7 @@ export const getItems = async (): Promise<Item[]> => {
 // Get all items with suppliers included
 export const getItemsWithSuppliers = async (): Promise<Item[]> => {
   try {
-    return await apiClient.get<Item[]>('/items', { includeSuppliers: true });
+    return await readLocalFirst('inventory.items', () => apiClient.get<Item[]>('/items', { includeSuppliers: true }));
   } catch (error) {
     throw new Error('خطا در دریافت لیست کالاها');
   }

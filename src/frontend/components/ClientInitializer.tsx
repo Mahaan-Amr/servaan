@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import axios from 'axios';
 import { getToken, logout } from '../services/authService';
+import { isNativeRoute } from '../services/nativeDeviceService';
 
 export function ClientInitializer() {
   useEffect(() => {
@@ -30,8 +31,10 @@ export function ClientInitializer() {
           if (axios.isAxiosError(error) && error.response?.status === 401) {
             // Clear auth data on 401 Unauthorized
             logout();
-            // Redirect to login page
-            window.location.href = '/login';
+            // Native apps own their login/offline-unlock screen.
+            if (!isNativeRoute()) {
+              window.location.href = '/login';
+            }
           }
           return Promise.reject(error);
         }

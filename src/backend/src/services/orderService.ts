@@ -647,7 +647,7 @@ export class OrderService extends BaseService {
   }
 
   // Generate unique payment number
-  private static async generatePaymentNumber(tenantId: string): Promise<string> {
+  static async generatePaymentNumber(tenantId: string): Promise<string> {
     const today = new Date();
     const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
     const tenantPrefix = getTenantPrefix(tenantId);

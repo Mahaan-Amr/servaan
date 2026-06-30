@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../../shared/generated/client';
+import { PrismaClient } from '../../shared/generated/client';
 import dotenv from 'dotenv';
 
 // Load test environment variables
@@ -151,7 +151,7 @@ export const createTestUser = async (role: 'ADMIN' | 'MANAGER' | 'STAFF' = 'STAF
     };
     
     const user = await testPrisma.user.create({
-      data: userData
+      data: userData as any
     });
     
     debugLog(`Created test user:`, { id: user.id, name: user.name, email: user.email, role: user.role });
@@ -179,7 +179,7 @@ export const createTestSupplier = async (customData?: Partial<any>) => {
     };
     
     const supplier = await testPrisma.supplier.create({
-      data: supplierData
+      data: supplierData as any
     });
     
     debugLog(`Created test supplier:`, { id: supplier.id, name: supplier.name });
@@ -207,7 +207,7 @@ export const createTestItem = async (customData?: Partial<any>) => {
     };
     
     const item = await testPrisma.item.create({
-      data: itemData
+      data: itemData as any
     });
     
     debugLog(`Created test item:`, { id: item.id, name: item.name, category: item.category, minStock: item.minStock });

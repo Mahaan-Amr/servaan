@@ -96,18 +96,23 @@ const nextConfig = {
   },
   
   async rewrites() {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+    const apiBase = apiUrl.endsWith('/api') ? apiUrl : `${apiUrl.replace(/\/$/, '')}/api`;
+
     return [
       {
         source: '/api/:path*',
-        destination: process.env.NODE_ENV === 'production' 
-          ? 'https://api.servaan.com/api/:path*'
-          : 'http://localhost:3000/api/:path*',
+        destination: `${apiBase}/:path*`,
       },
     ];
   },
   
   // Enable output for production
   output: 'standalone',
+
+  experimental: {
+    cpus: Number(process.env.NEXT_BUILD_CPUS || 1),
+  },
 };
 
 module.exports = nextConfig; 

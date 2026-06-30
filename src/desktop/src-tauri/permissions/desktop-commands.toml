@@ -1,0 +1,15 @@
+[[permission]]
+identifier = "desktop-commands"
+description = "Allows the main Servaan desktop window to use native app commands for secure storage, local printing, and encrypted SQLite state."
+commands.allow = [
+  "get_app_version",
+  "store_secret",
+  "get_secret",
+  "delete_secret",
+  "print_receipt_text",
+  "sqlite_set_value",
+  "sqlite_get_value",
+  "sqlite_list_values",
+  "sqlite_delete_value",
+  "sqlite_clear_store"
+]

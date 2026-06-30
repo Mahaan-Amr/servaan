@@ -1,11 +1,29 @@
 import { OrderStatus, OrderType, PaymentMethod, TableStatus } from '../types/ordering';
-import { API_URL } from '../lib/apiUtils';
+import { API_URL, fetchWithTimeout } from '../lib/apiUtils';
 import { formatCurrency } from '../../shared/utils/currencyUtils';
 import { offlineApiService, OfflineQueuedError } from './offlineApiService';
+import { localFirstSyncService } from './localFirstSyncService';
+import { readLocalFirst } from './localReadModelService';
 
 // API Configuration
 const ORDERING_API_BASE = `${API_URL}/ordering`;
 const INVENTORY_API_BASE = `${API_URL}/inventory`;
+
+function isOfflineOrNetworkFailure(error?: unknown): boolean {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) return true;
+  if (!error) return false;
+  const message = error instanceof Error ? error.message : String(error);
+  const lowered = message.toLowerCase();
+  return (
+    lowered.includes('failed to fetch') ||
+    lowered.includes('networkerror') ||
+    lowered.includes('network request failed') ||
+    lowered.includes('load failed') ||
+    lowered.includes('timeout') ||
+    lowered.includes('aborted') ||
+    lowered.includes('offline')
+  );
+}
 
 // Utility function for API requests with offline support
 async function apiRequest<T = unknown>(
@@ -88,7 +106,7 @@ async function apiRequest<T = unknown>(
 
   try {
     console.log('🔍 [API_REQUEST] Request config:', { url, headers: defaultHeaders });
-    const response = await fetch(url, config);
+    const response = await fetchWithTimeout(url, config);
     
     console.log('🔍 [API_REQUEST] Response status:', response.status);
     
@@ -165,7 +183,7 @@ async function inventoryApiRequest<T = unknown>(
   };
 
   try {
-    const response = await fetch(url, config);
+    const response = await fetchWithTimeout(url, config);
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -215,13 +233,47 @@ export interface OrderFilterOptions {
   limit?: number;
 }
 
+function createLocalOrderCreationResponse(operation: Awaited<ReturnType<typeof localFirstSyncService.enqueueSalesOrder>>, orderData: CreateOrderRequest) {
+  return {
+    order: {
+      id: operation.entityLocalId,
+      orderNumber: operation.localNumber,
+      status: 'SUBMITTED',
+      paymentStatus: 'PENDING',
+      printedOffline: false,
+      offlineRecordedAt: operation.createdOfflineAt,
+      ...orderData
+    },
+    stockValidation: {
+      hasWarnings: false,
+      warnings: [],
+      criticalWarnings: 0,
+      totalWarnings: 0,
+      overrideRequired: false
+    }
+  };
+}
+
 export class OrderService {
   // Create new order
   static async createOrder(orderData: CreateOrderRequest) {
-    return apiRequest('/orders', {
-      method: 'POST',
-      body: JSON.stringify(orderData),
-    });
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      const operation = await localFirstSyncService.enqueueSalesOrder(orderData);
+      return createLocalOrderCreationResponse(operation, orderData);
+    }
+
+    try {
+      return await apiRequest('/orders', {
+        method: 'POST',
+        body: JSON.stringify(orderData),
+      }, false);
+    } catch (error) {
+      if (isOfflineOrNetworkFailure(error)) {
+        const operation = await localFirstSyncService.enqueueSalesOrder(orderData);
+        return createLocalOrderCreationResponse(operation, orderData);
+      }
+      throw error;
+    }
   }
 
   // Get orders with filtering
@@ -297,6 +349,15 @@ export class OrderService {
 
   // Cancel order
   static async cancelOrder(orderId: string, reason: string, refundAmount?: number) {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return localFirstSyncService.enqueueDangerousAction({
+        workspaceId: 'ordering-sales-system',
+        entityType: 'order',
+        entityLocalId: orderId,
+        operationType: 'sales.order.cancel',
+        payload: { orderId, reason, refundAmount }
+      });
+    }
     return apiRequest(`/orders/${orderId}/cancel`, {
       method: 'POST',
       body: JSON.stringify({ reason, refundAmount }),
@@ -414,6 +475,14 @@ export interface CreateReservationRequest {
 export class TableService {
   // Create table
   static async createTable(tableData: CreateTableRequest) {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return localFirstSyncService.enqueueMasterDataDraft({
+        workspaceId: 'ordering-sales-system',
+        entityType: 'table',
+        entityLocalId: `local_table_${Date.now()}`,
+        payload: tableData
+      });
+    }
     return apiRequest('/tables', {
       method: 'POST',
       body: JSON.stringify(tableData),
@@ -439,6 +508,10 @@ export class TableService {
     const queryString = queryParams.toString();
     const endpoint = queryString ? `/tables?${queryString}` : '/tables';
     
+    if (Object.keys(options).length === 0) {
+      return readLocalFirst('sales.tables', () => apiRequest(endpoint));
+    }
+
     return apiRequest(endpoint);
   }
 
@@ -449,6 +522,14 @@ export class TableService {
 
   // Update table
   static async updateTable(tableId: string, updateData: Partial<CreateTableRequest>) {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return localFirstSyncService.enqueueMasterDataDraft({
+        workspaceId: 'ordering-sales-system',
+        entityType: 'table',
+        entityLocalId: tableId,
+        payload: updateData
+      });
+    }
     return apiRequest(`/tables/${tableId}`, {
       method: 'PUT',
       body: JSON.stringify(updateData),
@@ -457,6 +538,15 @@ export class TableService {
 
   // Delete table
   static async deleteTable(tableId: string) {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return localFirstSyncService.enqueueDangerousAction({
+        workspaceId: 'ordering-sales-system',
+        entityType: 'table',
+        entityLocalId: tableId,
+        operationType: 'table.delete',
+        payload: { tableId }
+      });
+    }
     return apiRequest(`/tables/${tableId}`, {
       method: 'DELETE',
     });
@@ -494,6 +584,14 @@ export class TableService {
 
   // Create reservation
   static async createReservation(reservationData: CreateReservationRequest) {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return localFirstSyncService.enqueueMasterDataDraft({
+        workspaceId: 'ordering-sales-system',
+        entityType: 'reservation',
+        entityLocalId: `local_reservation_${Date.now()}`,
+        payload: reservationData
+      });
+    }
     return apiRequest('/tables/reservations', {
       method: 'POST',
       body: JSON.stringify(reservationData),
@@ -528,6 +626,14 @@ export class TableService {
       notes?: string;
     }
   ) {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return localFirstSyncService.enqueueMasterDataDraft({
+        workspaceId: 'ordering-sales-system',
+        entityType: 'reservation',
+        entityLocalId: reservationId,
+        payload: updateData
+      });
+    }
     return apiRequest(`/tables/reservations/${reservationId}`, {
       method: 'PUT',
       body: JSON.stringify(updateData),
@@ -536,6 +642,15 @@ export class TableService {
 
   // Cancel reservation
   static async cancelReservation(reservationId: string, reason?: string) {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return localFirstSyncService.enqueueDangerousAction({
+        workspaceId: 'ordering-sales-system',
+        entityType: 'reservation',
+        entityLocalId: reservationId,
+        operationType: 'reservation.cancel',
+        payload: { reservationId, reason }
+      });
+    }
     return apiRequest(`/tables/reservations/${reservationId}/cancel`, {
       method: 'POST',
       body: JSON.stringify({ reason }),
@@ -667,14 +782,64 @@ export interface ProcessPaymentRequest {
 export class PaymentService {
   // Process payment
   static async processPayment(paymentData: ProcessPaymentRequest) {
-    return apiRequest('/payments/process', {
-      method: 'POST',
-      body: JSON.stringify(paymentData),
-    });
+    if (
+      typeof navigator !== 'undefined' &&
+      (!navigator.onLine || paymentData.orderId.startsWith('local_')) &&
+      (paymentData.paymentMethod === 'CASH' || paymentData.paymentMethod === 'CARD')
+    ) {
+      const operation = await localFirstSyncService.enqueueOfflinePayment(paymentData);
+      return {
+        success: true,
+        data: {
+          id: operation.entityLocalId,
+          paymentNumber: operation.localNumber,
+          paymentStatus: 'OFFLINE_RECORDED',
+          verificationStatus: 'OFFLINE_RECORDED',
+          isOfflineRecorded: true,
+          ...paymentData
+        }
+      };
+    }
+
+    try {
+      return await apiRequest('/payments/process', {
+        method: 'POST',
+        body: JSON.stringify(paymentData),
+      }, false);
+    } catch (error) {
+      if (
+        isOfflineOrNetworkFailure(error) &&
+        (paymentData.paymentMethod === 'CASH' || paymentData.paymentMethod === 'CARD')
+      ) {
+        const operation = await localFirstSyncService.enqueueOfflinePayment(paymentData);
+        return {
+          success: true,
+          data: {
+            id: operation.entityLocalId,
+            paymentNumber: operation.localNumber,
+            paymentStatus: 'OFFLINE_RECORDED',
+            verificationStatus: 'OFFLINE_RECORDED',
+            isOfflineRecorded: true,
+            ...paymentData
+          }
+        };
+      }
+
+      throw error;
+    }
   }
 
   // Process refund
   static async processRefund(paymentId: string, refundAmount: number, reason: string) {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return localFirstSyncService.enqueueDangerousAction({
+        workspaceId: 'ordering-sales-system',
+        entityType: 'payment',
+        entityLocalId: paymentId,
+        operationType: 'payment.refund',
+        payload: { paymentId, refundAmount, reason }
+      });
+    }
     return apiRequest('/payments/refund', {
       method: 'POST',
       body: JSON.stringify({ paymentId, refundAmount, reason }),
@@ -859,6 +1024,14 @@ export class MenuService {
 
   // Create menu category
   static async createCategory(categoryData: CreateCategoryRequest) {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return localFirstSyncService.enqueueMasterDataDraft({
+        workspaceId: 'ordering-sales-system',
+        entityType: 'menuCategory',
+        entityLocalId: `local_menu_category_${Date.now()}`,
+        payload: categoryData
+      });
+    }
     return apiRequest('/menu/categories', {
       method: 'POST',
       body: JSON.stringify(categoryData),
@@ -867,6 +1040,14 @@ export class MenuService {
 
   // Update menu category
   static async updateCategory(categoryId: string, updateData: Partial<CreateCategoryRequest>) {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return localFirstSyncService.enqueueMasterDataDraft({
+        workspaceId: 'ordering-sales-system',
+        entityType: 'menuCategory',
+        entityLocalId: categoryId,
+        payload: updateData
+      });
+    }
     return apiRequest(`/menu/categories/${categoryId}`, {
       method: 'PUT',
       body: JSON.stringify(updateData),
@@ -875,6 +1056,15 @@ export class MenuService {
 
   // Delete menu category
   static async deleteCategory(categoryId: string) {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return localFirstSyncService.enqueueDangerousAction({
+        workspaceId: 'ordering-sales-system',
+        entityType: 'menuCategory',
+        entityLocalId: categoryId,
+        operationType: 'menu.category.delete',
+        payload: { categoryId }
+      });
+    }
     return apiRequest(`/menu/categories/${categoryId}`, {
       method: 'DELETE',
     });
@@ -883,6 +1073,10 @@ export class MenuService {
   // Get full menu
   static async getFullMenu(onlyAvailable = true) {
     const queryParams = onlyAvailable ? '' : '?onlyAvailable=false';
+    if (onlyAvailable) {
+      return readLocalFirst('sales.menu', () => apiRequest(`/menu/full${queryParams}`));
+    }
+
     return apiRequest(`/menu/full${queryParams}`);
   }
 
@@ -904,6 +1098,14 @@ export class MenuService {
 
   // Create menu item
   static async createMenuItem(itemData: CreateMenuItemRequest) {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return localFirstSyncService.enqueueMasterDataDraft({
+        workspaceId: 'ordering-sales-system',
+        entityType: 'menuItem',
+        entityLocalId: `local_menu_item_${Date.now()}`,
+        payload: itemData
+      });
+    }
     return apiRequest('/menu/items', {
       method: 'POST',
       body: JSON.stringify(itemData),
@@ -912,6 +1114,14 @@ export class MenuService {
 
   // Update menu item
   static async updateMenuItem(itemId: string, updateData: Partial<CreateMenuItemRequest>) {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return localFirstSyncService.enqueueMasterDataDraft({
+        workspaceId: 'ordering-sales-system',
+        entityType: 'menuItem',
+        entityLocalId: itemId,
+        payload: updateData
+      });
+    }
     return apiRequest(`/menu/items/${itemId}`, {
       method: 'PUT',
       body: JSON.stringify(updateData),
@@ -920,6 +1130,15 @@ export class MenuService {
 
   // Delete menu item
   static async deleteMenuItem(itemId: string) {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return localFirstSyncService.enqueueDangerousAction({
+        workspaceId: 'ordering-sales-system',
+        entityType: 'menuItem',
+        entityLocalId: itemId,
+        operationType: 'menu.item.delete',
+        payload: { itemId }
+      });
+    }
     return apiRequest(`/menu/items/${itemId}`, {
       method: 'DELETE',
     });
@@ -1539,6 +1758,29 @@ export class InventoryIntegrationService {
     overriddenAt: string;
     notes?: string;
   }> {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return localFirstSyncService.enqueueDangerousAction({
+        workspaceId: 'ordering-sales-system',
+        entityType: 'inventoryOverride',
+        entityLocalId: overrideData.orderId,
+        operationType: 'inventory.stock.override',
+        payload: overrideData
+      }) as unknown as Promise<{
+        id: string;
+        tenantId: string;
+        orderId: string;
+        menuItemId: string;
+        itemId: string;
+        itemName: string;
+        requiredQuantity: number;
+        availableQuantity: number;
+        overrideReason: string;
+        overrideType: string;
+        overriddenBy: string;
+        overriddenAt: string;
+        notes?: string;
+      }>;
+    }
     return inventoryApiRequest('/stock-override', {
       method: 'POST',
       body: JSON.stringify(overrideData),
@@ -2279,7 +2521,7 @@ export class OrderingSettingsService {
    * Get ordering settings
    */
   static async getOrderingSettings(): Promise<OrderingSettings> {
-    return apiRequest<OrderingSettings>('/settings');
+    return readLocalFirst('sales.settings', () => apiRequest<OrderingSettings>('/settings'));
   }
 
   /**

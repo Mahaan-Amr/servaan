@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { API_URL } from '../lib/apiUtils';
 
 interface Tenant {
@@ -53,6 +53,27 @@ interface TenantContextType {
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
+function extractSubdomainFromLocation(): string | null {
+  if (typeof window === 'undefined') return null;
+  if (window.location.pathname.startsWith('/native')) return null;
+
+  const hostname = window.location.hostname.toLowerCase();
+
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') return null;
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) return null;
+
+  if (hostname.endsWith('.localhost')) {
+    return hostname.split('.')[0] || null;
+  }
+
+  const parts = hostname.split('.');
+  if (parts.length >= 3) {
+    return parts[0];
+  }
+
+  return null;
+}
+
 export function TenantProvider({ children }: { children: ReactNode }) {
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [features, setFeatures] = useState<TenantFeatures | null>(null);
@@ -60,60 +81,33 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Extract subdomain from current hostname
-  const extractSubdomain = () => {
-    if (typeof window !== 'undefined') {
-      const hostname = window.location.hostname;
-      
-      // For development: localhost:3000 -> no default tenant (allow universal login)
-      if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        // Check if we're on a subdomain
-        const parts = hostname.split('.');
-        if (parts.length > 1 && parts[0] !== 'localhost') {
-          return parts[0]; // Return subdomain if present
-        }
-        return null; // No subdomain, allow universal login
-      }
-      
-      // For production: subdomain.servaan.ir -> extract subdomain
-      const parts = hostname.split('.');
-      if (parts.length >= 2) {
-        return parts[0];
-      }
-    }
-    return null;
-  };
-
   const getTenantFromSubdomain = async (subdomainToFetch: string) => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch tenant information from backend
       const response = await fetch(`${API_URL}/tenants/${subdomainToFetch}`);
-      
+
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error('تنانت یافت نشد. لطفاً آدرس را بررسی کنید.');
+          throw new Error('مستاجر پیدا نشد. لطفا آدرس را بررسی کنید.');
         }
-        throw new Error('خطا در دریافت اطلاعات تنانت');
+        throw new Error('خطا در دریافت اطلاعات مستاجر');
       }
 
       const data = await response.json();
       setTenant(data.tenant);
       setFeatures(data.features);
       setSubdomain(subdomainToFetch);
-      
-      // Apply tenant branding if available
+
       if (data.tenant.primaryColor) {
         document.documentElement.style.setProperty('--primary-color', data.tenant.primaryColor);
       }
       if (data.tenant.secondaryColor) {
         document.documentElement.style.setProperty('--secondary-color', data.tenant.secondaryColor);
       }
-      
     } catch (err) {
-      console.error('Error fetching tenant:', err);
+      console.error('خطا در دریافت اطلاعات مستاجر:', err);
       setError(err instanceof Error ? err.message : 'خطای ناشناخته');
     } finally {
       setLoading(false);
@@ -124,29 +118,27 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     return features?.[feature] || false;
   };
 
-  // Initialize tenant on mount
   useEffect(() => {
-    const currentSubdomain = extractSubdomain();
+    const currentSubdomain = extractSubdomainFromLocation();
     if (currentSubdomain) {
       getTenantFromSubdomain(currentSubdomain);
     } else {
-      // No subdomain detected - this is OK for universal login
       setLoading(false);
-      // Don't set error, just allow the app to work without tenant context
-      // The user will be redirected to their tenant after login
     }
   }, []);
 
   return (
-    <TenantContext.Provider value={{
-      tenant,
-      features,
-      subdomain,
-      loading,
-      error,
-      hasFeature,
-      getTenantFromSubdomain
-    }}>
+    <TenantContext.Provider
+      value={{
+        tenant,
+        features,
+        subdomain,
+        loading,
+        error,
+        hasFeature,
+        getTenantFromSubdomain
+      }}
+    >
       {children}
     </TenantContext.Provider>
   );
@@ -155,7 +147,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 export function useTenant() {
   const context = useContext(TenantContext);
   if (context === undefined) {
-    throw new Error('useTenant must be used within a TenantProvider');
+    throw new Error('useTenant باید داخل TenantProvider استفاده شود');
   }
   return context;
-} 
+}
+

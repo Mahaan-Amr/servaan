@@ -36,3 +36,76 @@ export const getBaseUrl = (): string => {
 // Export commonly used URLs
 export const API_URL = getApiUrl();
 export const BASE_URL = getBaseUrl();
+
+export const DEFAULT_API_TIMEOUT_MS = 8000;
+
+export async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit = {},
+  timeoutMs: number = DEFAULT_API_TIMEOUT_MS
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: init.signal || controller.signal
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+const DEFAULT_LOCAL_TENANT = 'dima';
+
+function isLoopbackHost(hostname: string): boolean {
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '::1' ||
+    /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)
+  );
+}
+
+function getCachedTenantSubdomain(): string | null {
+  if (typeof window === 'undefined') return null;
+
+  const rawUser = localStorage.getItem('user') || sessionStorage.getItem('user');
+  if (!rawUser) return null;
+
+  try {
+    const user = JSON.parse(rawUser) as { tenantSubdomain?: string };
+    return user.tenantSubdomain || null;
+  } catch {
+    return null;
+  }
+}
+
+export function getTenantSubdomainHeader(): string {
+  if (typeof window === 'undefined') {
+    return DEFAULT_LOCAL_TENANT;
+  }
+
+  const cachedTenant = getCachedTenantSubdomain();
+  if (cachedTenant) {
+    return cachedTenant;
+  }
+
+  const hostname = window.location.hostname.toLowerCase();
+  if (hostname.endsWith('.localhost')) {
+    const candidate = hostname.split('.')[0];
+    return candidate || DEFAULT_LOCAL_TENANT;
+  }
+
+  if (isLoopbackHost(hostname)) {
+    return DEFAULT_LOCAL_TENANT;
+  }
+
+  const parts = hostname.split('.');
+  if (parts.length >= 3) {
+    return parts[0];
+  }
+
+  return DEFAULT_LOCAL_TENANT;
+}

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>سروان دسکتاپ</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #0f172a;
+        color: #e2e8f0;
+        font-family: Arial, sans-serif;
+      }
+      main {
+        max-width: 28rem;
+        padding: 2rem;
+        text-align: center;
+      }
+      img {
+        width: 88px;
+        height: 88px;
+        object-fit: contain;
+        animation: logo-breathe 1.35s ease-in-out infinite;
+      }
+      @keyframes logo-breathe {
+        0%,
+        100% {
+          transform: scale(0.98);
+          filter: saturate(0.95);
+        }
+        50% {
+          transform: scale(1.03);
+          filter: saturate(1.1);
+        }
+      }
+      p {
+        line-height: 1.8;
+        color: #cbd5e1;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="./brand/servaan-logo.png" alt="سروان" />
+      <h1>سروان دسکتاپ</h1>
+      <p>در حال آماده‌سازی فضای کاری محلی...</p>
+      <p id="status">در انتظار سرور محلی</p>
+    </main>
+    <script>
+      const statusEl = document.getElementById('status');
+      const target = 'http://127.0.0.1:3000/native';
+      const probeTarget = 'http://127.0.0.1:3000';
+      let attempts = 0;
+
+      async function probe() {
+        try {
+          const response = await fetch(probeTarget, { mode: 'no-cors', cache: 'no-store' });
+          if (response) {
+            window.location.replace(target);
+            return;
+          }
+        } catch (error) {
+          attempts += 1;
+          statusEl.textContent = attempts < 5 ? 'هنوز در حال راه‌اندازی است...' : 'اگر این صفحه ماند، سرور محلی هنوز آماده نشده است.';
+        }
+
+        setTimeout(probe, 1000);
+      }
+
+      probe();
+    </script>
+  </body>
+</html>

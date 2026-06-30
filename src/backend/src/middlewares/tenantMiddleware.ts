@@ -1,7 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
+﻿import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../services/dbService';
 
-// Extend Request type to include tenant information
 declare global {
   namespace Express {
     interface Request {
@@ -17,56 +16,69 @@ declare global {
   }
 }
 
+const RESERVED_SUBDOMAINS = new Set(['www', 'api', 'admin', 'app', 'mail', 'ftp', 'blog', 'shop', 'cdn']);
+
+const isLoopbackHost = (hostname: string) =>
+  hostname === 'localhost' ||
+  hostname === '127.0.0.1' ||
+  hostname === '::1' ||
+  /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
+
+const normalizeTenantSubdomain = (value: string | null, host: string): string | null => {
+  if (!value) return null;
+
+  const normalized = value.trim().toLowerCase();
+  const hostname = host.split(':')[0].trim().toLowerCase();
+
+  if (normalized === '127' || normalized === 'localhost' || isLoopbackHost(normalized)) {
+    return isLoopbackHost(hostname) ? 'dima' : null;
+  }
+
+  return normalized;
+};
+
 /**
  * Tenant Resolution Middleware
  * Resolves tenant from subdomain and adds tenant context to request
  */
 export const resolveTenant = async (req: Request, res: Response, next: NextFunction) => {
-  // Declare subdomain outside try block for error handling
   let subdomain: string | null = null;
-  
+
   try {
-    // Extract subdomain from request - try multiple sources
     const host = req.get('host') || '';
-    subdomain = extractSubdomain(host);
-    
-    console.log(`🔍 DEBUG - Host header: "${host}", extracted subdomain: "${subdomain}"`);
-    
-    // Always check X-Tenant-Subdomain header for API requests
     const customSubdomain = req.get('X-Tenant-Subdomain');
-    console.log(`🔍 DEBUG - X-Tenant-Subdomain header: "${customSubdomain}"`);
-    
-    // If we have a custom subdomain header, use it (this overrides Host header)
+    subdomain = extractSubdomain(host, req.path);
+
+    console.log('[مستاجر] هدر Host:', host, 'ساب‌دامین استخراج‌شده:', subdomain || 'ندارد');
+    console.log('[مستاجر] هدر X-Tenant-Subdomain:', customSubdomain || 'ندارد');
+
     if (customSubdomain) {
-      subdomain = customSubdomain;
-      console.log(`🔍 Tenant resolved from X-Tenant-Subdomain header: ${subdomain}`);
+      subdomain = normalizeTenantSubdomain(customSubdomain, host);
+      console.log('[مستاجر] مستاجر از هدر سفارشی شناسایی شد:', subdomain);
     } else if (subdomain) {
-      console.log(`🔍 Tenant resolved from Host header: ${subdomain}`);
+      console.log('[مستاجر] مستاجر از هدر Host شناسایی شد:', subdomain);
     }
-    
-    // Skip tenant resolution only if no subdomain is found at all
+
     if (!subdomain) {
-      console.log(`🔍 DEBUG - No subdomain found, skipping tenant resolution`);
-      return next();
-    }
-    
-    // Skip tenant resolution for main domain and API subdomain (but only if no X-Tenant-Subdomain header)
-    if (!customSubdomain && (subdomain === 'www' || subdomain === 'admin' || subdomain === 'api')) {
-      console.log(`🔍 DEBUG - Skipping tenant resolution for subdomain: ${subdomain}`);
+      console.log('[مستاجر] ساب‌دامین پیدا نشد، ادامه بدون شناسایی مستاجر');
       return next();
     }
 
-    // Test database connection before query
+    if (!customSubdomain && RESERVED_SUBDOMAINS.has(subdomain)) {
+      console.log('[مستاجر] ساب‌دامین رزرو شده است، ادامه بدون شناسایی مستاجر:', subdomain);
+      return next();
+    }
+
     try {
       await prisma.$connect();
     } catch (dbError) {
-      console.error('❌ Database connection error in resolveTenant:', dbError);
-      // If database is unavailable and we're trying to resolve a tenant, fail
-      // But if this is for a route that doesn't need tenant (like /api/tenants), allow it
+      console.error('[مستاجر] خطا در اتصال به پایگاه داده:', dbError);
+
       if (req.path && req.path.startsWith('/api/tenants')) {
-        console.log('⚠️ Database error but route is /api/tenants - allowing request to continue');
+        console.log('[مستاجر] مسیر /api/tenants است، ادامه درخواست');
         return next();
       }
+
       return res.status(503).json({
         error: 'خطا در اتصال به پایگاه داده',
         message: 'Database connection error',
@@ -74,39 +86,36 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
       });
     }
 
-    // Find tenant by subdomain
-    console.log(`🔍 DEBUG - Searching for tenant with subdomain: "${subdomain}"`);
-    const tenant = await prisma.tenant.findUnique({
-      where: { 
-        subdomain: subdomain,
-        isActive: true 
+    console.log('[مستاجر] جست‌وجوی مستاجر با ساب‌دامین:', subdomain);
+    const tenant = await prisma.tenant.findFirst({
+      where: {
+        subdomain,
+        isActive: true
       },
       include: {
         features: true
       }
     });
 
-    console.log(`🔍 DEBUG - Tenant found:`, tenant ? `ID: ${tenant.id}, Name: ${tenant.name}` : 'NOT FOUND');
+    console.log('[مستاجر] نتیجه جست‌وجو:', tenant ? `${tenant.id} - ${tenant.name}` : 'پیدا نشد');
 
     if (!tenant) {
-      console.log(`❌ Tenant not found for subdomain: ${subdomain}`);
+      console.log('[مستاجر] مستاجر پیدا نشد:', subdomain);
       return res.status(404).json({
-        error: 'مجموعه یافت نشد',
+        error: 'مستاجر پیدا نشد',
         message: `Tenant with subdomain '${subdomain}' not found`,
         code: 'TENANT_NOT_FOUND'
       });
     }
 
-    // Check if tenant plan is active
     if (tenant.planExpiresAt && tenant.planExpiresAt < new Date()) {
       return res.status(403).json({
-        error: 'اشتراک منقضی شده',
+        error: 'اشتراک منقضی شده است',
         message: 'Tenant subscription has expired',
         code: 'SUBSCRIPTION_EXPIRED'
       });
     }
 
-    // Add tenant context to request
     req.tenant = {
       id: tenant.id,
       subdomain: tenant.subdomain,
@@ -116,35 +125,29 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
       features: tenant.features
     };
 
-    console.log(`✅ Tenant context set: ${tenant.subdomain} (${tenant.name})`);
+    console.log('[مستاجر] زمینه مستاجر ثبت شد:', `${tenant.subdomain} (${tenant.name})`);
     next();
   } catch (error) {
-    console.error('❌ Tenant resolution error:', error);
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      name: error instanceof Error ? error.name : undefined
-    });
+    console.error('[مستاجر] خطا در شناسایی مستاجر:', error);
 
-    // Check if it's a database connection error
-    if (error instanceof Error && (
-      error.message.includes('connect') ||
-      error.message.includes('ECONNREFUSED') ||
-      error.message.includes('timeout') ||
-      error.message.includes('P1001') || // Prisma connection error code
-      error.name === 'PrismaClientInitializationError'
-    )) {
-      // For database errors, only fail if we actually tried to resolve a tenant
-      // If we're just skipping (no subdomain or reserved subdomain), allow the request to continue
-      if (!subdomain || subdomain === 'www' || subdomain === 'admin' || subdomain === 'api') {
-        console.log('⚠️ Database connection error during tenant resolution, but subdomain is skipped - allowing request to continue');
+    if (
+      error instanceof Error &&
+      (error.message.includes('connect') ||
+        error.message.includes('ECONNREFUSED') ||
+        error.message.includes('timeout') ||
+        error.message.includes('P1001') ||
+        error.name === 'PrismaClientInitializationError')
+    ) {
+      if (!subdomain || RESERVED_SUBDOMAINS.has(subdomain)) {
+        console.log('[مستاجر] خطای پایگاه داده، اما ساب‌دامین رزرو شده است؛ ادامه درخواست');
         return next();
       }
-      // Also allow if route is /api/tenants
+
       if (req.path && req.path.startsWith('/api/tenants')) {
-        console.log('⚠️ Database error but route is /api/tenants - allowing request to continue');
+        console.log('[مستاجر] مسیر /api/tenants است، ادامه درخواست');
         return next();
       }
+
       return res.status(503).json({
         error: 'خطا در اتصال به پایگاه داده',
         message: 'Database connection error',
@@ -152,23 +155,18 @@ export const resolveTenant = async (req: Request, res: Response, next: NextFunct
       });
     }
 
-    // For other errors, return 500
     res.status(500).json({
-      error: 'خطا در شناسایی مجموعه',
+      error: 'خطا در شناسایی مستاجر',
       message: error instanceof Error ? error.message : 'Error resolving tenant',
       code: 'TENANT_RESOLUTION_ERROR'
     });
   }
 };
 
-/**
- * Require Tenant Middleware
- * Ensures that a tenant context exists in the request
- */
 export const requireTenant = (req: Request, res: Response, next: NextFunction) => {
   if (!req.tenant) {
     return res.status(400).json({
-      error: 'نیاز به شناسایی مجموعه',
+      error: 'نیاز به شناسایی مستاجر',
       message: 'Tenant context required',
       code: 'TENANT_REQUIRED'
     });
@@ -176,15 +174,11 @@ export const requireTenant = (req: Request, res: Response, next: NextFunction) =
   next();
 };
 
-/**
- * Feature Gate Middleware Factory
- * Creates middleware that checks if tenant has specific feature enabled
- */
 export const requireFeature = (featureName: string) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.tenant) {
       return res.status(400).json({
-        error: 'نیاز به شناسایی مجموعه',
+        error: 'نیاز به شناسایی مستاجر',
         message: 'Tenant context required',
         code: 'TENANT_REQUIRED'
       });
@@ -192,7 +186,7 @@ export const requireFeature = (featureName: string) => {
 
     if (!req.tenant.features || !req.tenant.features[featureName]) {
       return res.status(403).json({
-        error: 'عدم دسترسی به این ویژگی',
+        error: 'دسترسی به این ویژگی مجاز نیست',
         message: `Feature '${featureName}' not available for this tenant`,
         code: 'FEATURE_NOT_AVAILABLE'
       });
@@ -202,17 +196,13 @@ export const requireFeature = (featureName: string) => {
   };
 };
 
-/**
- * Plan Gate Middleware Factory
- * Creates middleware that checks if tenant has required plan level or higher
- */
 export const requirePlan = (requiredPlan: 'STARTER' | 'BUSINESS' | 'ENTERPRISE') => {
   const planLevels = { STARTER: 1, BUSINESS: 2, ENTERPRISE: 3 };
-  
+
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.tenant) {
       return res.status(400).json({
-        error: 'نیاز به شناسایی مجموعه',
+        error: 'نیاز به شناسایی مستاجر',
         message: 'Tenant context required',
         code: 'TENANT_REQUIRED'
       });
@@ -235,58 +225,45 @@ export const requirePlan = (requiredPlan: 'STARTER' | 'BUSINESS' | 'ENTERPRISE')
   };
 };
 
-/**
- * Tenant-aware Prisma Client Factory
- * Creates a Prisma client instance with automatic tenant filtering
- */
-export const getTenantPrisma = (tenantId: string) => {
-  // This will be used to automatically filter all queries by tenantId
-  // For now, we'll return the base client and handle filtering manually
+export const getTenantPrisma = (_tenantId: string) => {
   return prisma;
 };
 
-/**
- * Extract subdomain from host header
- */
-function extractSubdomain(host: string): string | null {
-  // Remove port if present
-  const hostname = host.split(':')[0];
-  
-  // Split by dots
-  const parts = hostname.split('.');
-  
-  // For localhost development: handle subdomains like dima.localhost
-  if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
-    // If we have a subdomain before localhost (e.g., dima.localhost)
-    if (parts.length >= 2 && parts[parts.length - 1] === 'localhost') {
-      return parts[0]; // Return the subdomain (e.g., 'dima')
-    }
-    // If it's just localhost without subdomain
-    if (parts.length === 1 || (parts.length === 2 && parts[1] === 'localhost')) {
-      return null; // No subdomain
-    }
+function extractSubdomain(host: string, path = ''): string | null {
+  if (!host) return null;
+
+  const hostname = host.split(':')[0].trim().toLowerCase();
+
+  if (path.startsWith('/native')) {
+    return null;
   }
-  
-  // For production domains: require at least 3 parts (subdomain.domain.tld)
+
+  if (isLoopbackHost(hostname)) {
+    return null;
+  }
+
+  if (hostname.endsWith('.localhost')) {
+    const candidate = hostname.split('.')[0];
+    return RESERVED_SUBDOMAINS.has(candidate) ? null : candidate;
+  }
+
+  const parts = hostname.split('.');
   if (parts.length < 3) {
     return null;
   }
-  
-  // Return first part as subdomain
-  return parts[0];
+
+  const candidate = parts[0];
+  if (RESERVED_SUBDOMAINS.has(candidate)) {
+    return null;
+  }
+
+  return candidate;
 }
 
-/**
- * Validate subdomain format
- */
 export const validateSubdomain = (subdomain: string): boolean => {
-  // RFC 1123 subdomain validation
   const subdomainRegex = /^[a-z0-9]([a-z0-9\-]{0,61}[a-z0-9])?$/;
-  
-  // Reserved subdomains
-  const reserved = ['www', 'api', 'admin', 'app', 'mail', 'ftp', 'blog', 'shop', 'cdn'];
-  
-  return subdomainRegex.test(subdomain) && !reserved.includes(subdomain);
+  return subdomainRegex.test(subdomain) && !RESERVED_SUBDOMAINS.has(subdomain);
 };
 
-export { prisma }; 
+export { prisma };
+

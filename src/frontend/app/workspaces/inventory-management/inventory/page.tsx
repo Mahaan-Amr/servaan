@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { InventoryStatus, InventoryEntry, InventoryEntryType } from '../../../../../shared/types';
 import * as inventoryService from '../../../../services/inventoryService';
+import { LOCAL_READ_MODEL_REFRESHED, LocalReadModelKey } from '../../../../services/localReadModelService';
 import toast from 'react-hot-toast';
 
 export default function InventoryPage() {
@@ -12,18 +13,24 @@ export default function InventoryPage() {
   const [recentTransactions, setRecentTransactions] = useState<InventoryEntry[]>([]);
   const [lowStockItems, setLowStockItems] = useState<InventoryStatus[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const loadInFlightRef = useRef(false);
 
   useEffect(() => {
-    const loadInventoryData = async () => {
+    const loadInventoryData = async (showLoading = false, refresh = true) => {
+      if (loadInFlightRef.current) return;
+      loadInFlightRef.current = true;
+
       try {
-        setLoading(true);
+        if (showLoading) {
+          setLoading(true);
+        }
         setError(null);
         
         // Load all inventory data in parallel
         const [currentInventory, transactions, lowStock] = await Promise.all([
-          inventoryService.getCurrentInventory(),
-          inventoryService.getInventoryEntries(),
-          inventoryService.getLowStockItems()
+          inventoryService.getCurrentInventory({ refresh }),
+          inventoryService.getInventoryEntries({ refresh }),
+          inventoryService.getLowStockItems({ refresh })
         ]);
         
         setInventoryStatus(currentInventory);
@@ -35,11 +42,21 @@ export default function InventoryPage() {
         setError(errorMessage);
         toast.error(errorMessage);
       } finally {
+        loadInFlightRef.current = false;
         setLoading(false);
       }
     };
 
-    loadInventoryData();
+    const handleReadModelRefresh = (event: Event) => {
+      const key = (event as CustomEvent<{ key: LocalReadModelKey }>).detail?.key;
+      if (key?.startsWith('inventory.')) {
+        loadInventoryData(false, false);
+      }
+    };
+
+    loadInventoryData(true);
+    window.addEventListener(LOCAL_READ_MODEL_REFRESHED, handleReadModelRefresh);
+    return () => window.removeEventListener(LOCAL_READ_MODEL_REFRESHED, handleReadModelRefresh);
   }, []);
 
   const getTotalItems = () => inventoryStatus.length;

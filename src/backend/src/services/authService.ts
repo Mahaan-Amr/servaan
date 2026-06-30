@@ -1,4 +1,4 @@
-import { sign, verify } from 'jsonwebtoken';
+﻿import { sign, verify } from 'jsonwebtoken';
 import { compare, hash } from 'bcryptjs';
 import { prisma } from './dbService';
 import { AppError } from '../middlewares/errorHandler';
@@ -7,17 +7,16 @@ const JWT_SECRET = process.env.JWT_SECRET || 'servaan-super-secret-key';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 export const generateToken = (userId: string, expiresIn: string = JWT_EXPIRES_IN): string => {
-  // @ts-ignore - Ignoring TypeScript error with jwt.sign
-  const token = sign({ id: userId }, JWT_SECRET, { expiresIn });
-  return token;
+  // @ts-ignore - jsonwebtoken accepts string expiry values at runtime.
+  return sign({ id: userId }, JWT_SECRET, { expiresIn });
 };
 
 export const verifyToken = (token: string): { id: string } => {
   try {
-    // @ts-ignore - Ignoring TypeScript error with jwt.verify
+    // @ts-ignore - jsonwebtoken returns string | JwtPayload, but this app signs { id }.
     return verify(token, JWT_SECRET) as { id: string };
   } catch (_error) {
-    throw new AppError('ØªÙˆÚ©Ù† Ù†Ø§Ù…Ø¹ØªØ¨Ø± ÛŒØ§ Ù…Ù†Ù‚Ø¶ÛŒ Ø´Ø¯Ù‡', 401);
+    throw new AppError('توکن نامعتبر یا منقضی شده است', 401);
   }
 };
 
@@ -43,7 +42,12 @@ export const logout = () => {
   }
 };
 
-export const loginUser = async (email: string, password: string, tenantId?: string, rememberMe: boolean = false) => {
+export const loginUser = async (
+  email: string,
+  password: string,
+  tenantId?: string,
+  rememberMe: boolean = false
+) => {
   const requestId = `auth_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   console.info('[AUTH] Login attempt', {
     requestId,
@@ -51,34 +55,25 @@ export const loginUser = async (email: string, password: string, tenantId?: stri
     emailDomain: email.includes('@') ? email.split('@')[1] : 'unknown'
   });
 
-  let user;
-
-  if (tenantId) {
-    console.info('[AUTH] Tenant-scoped lookup', { requestId, tenantId });
-    user = await prisma.user.findFirst({
-      where: {
-        email,
-        tenantId
-      },
-      include: { tenant: true }
-    });
-  } else {
-    console.info('[AUTH] Universal lookup', { requestId });
-    user = await prisma.user.findFirst({
-      where: { email },
-      include: {
-        tenant: {
-          select: {
-            id: true,
-            subdomain: true,
-            name: true,
-            displayName: true,
-            isActive: true
+  const user = tenantId
+    ? await prisma.user.findFirst({
+        where: { email, tenantId },
+        include: { tenant: true }
+      })
+    : await prisma.user.findFirst({
+        where: { email },
+        include: {
+          tenant: {
+            select: {
+              id: true,
+              subdomain: true,
+              name: true,
+              displayName: true,
+              isActive: true
+            }
           }
         }
-      }
-    });
-  }
+      });
 
   const passwordMatch = user ? await compare(password, user.password) : false;
 
@@ -88,7 +83,7 @@ export const loginUser = async (email: string, password: string, tenantId?: stri
       tenantId: tenantId || 'universal',
       reason: 'INVALID_CREDENTIALS'
     });
-    throw new AppError('Ø§ÛŒÙ…ÛŒÙ„ ÛŒØ§ Ø±Ù…Ø² Ø¹Ø¨ÙˆØ± Ø§Ø´ØªØ¨Ø§Ù‡ Ø§Ø³Øª', 401);
+    throw new AppError('ایمیل یا رمز عبور اشتباه است', 401);
   }
 
   if (!user.active) {
@@ -97,7 +92,7 @@ export const loginUser = async (email: string, password: string, tenantId?: stri
       tenantId: user.tenantId,
       reason: 'USER_INACTIVE'
     });
-    throw new AppError('Ø­Ø³Ø§Ø¨ Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø´Ù…Ø§ ØºÛŒØ±ÙØ¹Ø§Ù„ Ø´Ø¯Ù‡ Ø§Ø³Øª', 403);
+    throw new AppError('حساب کاربری شما غیرفعال شده است', 403);
   }
 
   if (user.tenant && !user.tenant.isActive) {
@@ -106,7 +101,7 @@ export const loginUser = async (email: string, password: string, tenantId?: stri
       tenantId: user.tenantId,
       reason: 'TENANT_INACTIVE'
     });
-    throw new AppError('Ø­Ø³Ø§Ø¨ Ú©Ø§Ø±Ø¨Ø±ÛŒ Ø´Ù…Ø§ ØºÛŒØ±ÙØ¹Ø§Ù„ Ø´Ø¯Ù‡ Ø§Ø³Øª', 403);
+    throw new AppError('حساب مستاجر شما غیرفعال شده است', 403);
   }
 
   const expiresIn = rememberMe ? '30d' : JWT_EXPIRES_IN;
@@ -139,14 +134,11 @@ export const registerUser = async (
   phoneNumber?: string
 ) => {
   const existingUser = await prisma.user.findFirst({
-    where: {
-      email,
-      tenantId
-    }
+    where: { email, tenantId }
   });
 
   if (existingUser) {
-    throw new AppError('Ø§ÛŒÙ† Ø§ÛŒÙ…ÛŒÙ„ Ù‚Ø¨Ù„Ø§ Ø«Ø¨Øª Ø´Ø¯Ù‡ Ø§Ø³Øª', 400);
+    throw new AppError('این ایمیل قبلا ثبت شده است', 400);
   }
 
   const hashedPassword = await hash(password, 10);
@@ -194,3 +186,4 @@ export interface RegisterData {
   role?: 'ADMIN' | 'MANAGER' | 'STAFF';
   phoneNumber?: string;
 }
+

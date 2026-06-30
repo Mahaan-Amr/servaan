@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useTenant } from '../contexts/TenantContext';
 import NotificationBell from './NotificationBell';
+import { SyncIssuesBadge } from './sync/SyncIssuesBadge';
 
 export function Navbar() {
   const [darkMode, setDarkMode] = useState(false);
@@ -139,6 +140,7 @@ export function Navbar() {
             )}
           </button>
 
+          {user && <SyncIssuesBadge />}
           {user && <NotificationBell />}
 
           {user ? (

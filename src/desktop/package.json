@@ -1,0 +1,16 @@
+{
+  "name": "servaan-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "tauri dev",
+    "prepare-runtime": "node scripts/package-runtime.mjs",
+    "build": "tauri build --no-bundle",
+    "build:local": "set NEXT_PUBLIC_API_URL=http://localhost:3001/api&& tauri build --no-bundle",
+    "bundle": "tauri build",
+    "check": "cd src-tauri && cargo check"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.2.0"
+  }
+}

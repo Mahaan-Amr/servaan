@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Servaan Desktop",
+  "version": "0.1.0",
+  "identifier": "com.servaan.desktop",
+  "build": {
+    "beforeDevCommand": "cd ../.. && npm run dev:main",
+    "devUrl": "http://localhost:3000/native",
+    "beforeBuildCommand": "cd ../.. && npm run desktop:prepare-runtime",
+    "frontendDist": "../web"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "resources": [
+      "resources/runtime/"
+    ],
+    "category": "Business",
+    "shortDescription": "Servaan offline-first restaurant operations desktop app",
+    "longDescription": "Servaan desktop shell for offline-first Sales and Inventory workflows."
+  }
+}

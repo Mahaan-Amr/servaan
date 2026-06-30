@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { getToken } from '../services/authService';
-import { BASE_URL, API_URL } from '../lib/apiUtils';
+import { BASE_URL, API_URL, getTenantSubdomainHeader } from '../lib/apiUtils';
 import { type Notification, NotificationType, NotificationPriority } from '../../shared/types';
 
 interface NotificationContextType {
@@ -31,16 +31,14 @@ interface NotificationProviderProps {
   children: React.ReactNode;
 }
 
-// Helper function to get auth headers with Host header
+// Helper function to get auth headers with tenant context
 const getAuthHeaders = () => {
   const token = getToken();
-  const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-  const subdomain = hostname === 'localhost' ? 'dima' : hostname.split('.')[0];
   
   return {
     'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json',
-    'X-Tenant-Subdomain': subdomain
+    'X-Tenant-Subdomain': getTenantSubdomainHeader()
   };
 };
 

@@ -5,6 +5,11 @@ import { useRouter } from 'next/navigation';
 import * as authService from '../services/authService';
 import { User } from '../types';
 import { LoginCredentials, RegisterData } from '../services/authService';
+import { isDesktopApp } from '../services/desktopBridgeService';
+import {
+  getNativeOnlineLoginSnapshot,
+  isNativeSnapshotValid
+} from '../services/nativeAuthSnapshotService';
 
 interface AuthContextType {
   user: User | null;
@@ -32,8 +37,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Check if token is valid and fetch current user
   const checkTokenValidity = useCallback(async () => {
     try {
-      const token = authService.getToken();
-      if (token) {
+      let token = authService.getToken();
+      let storedUser = authService.getCurrentUser();
+
+      if ((!token || !storedUser) && isDesktopApp()) {
+        const snapshot = await getNativeOnlineLoginSnapshot();
+        if (snapshot && isNativeSnapshotValid(snapshot)) {
+          authService.persistAuthSession(snapshot.user, snapshot.token, true);
+          token = snapshot.token || null;
+          storedUser = snapshot.user;
+        }
+      }
+
+      if (token && storedUser) {
         // Check if token is expired
         const tokenData = JSON.parse(atob(token.split('.')[1]));
         const expiryTime = tokenData.exp * 1000; // Convert to milliseconds
@@ -41,6 +57,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Check if token expires in the next 5 minutes (300000ms)
         if (currentTime >= expiryTime - 300000) {
+          if (isDesktopApp()) {
+            console.warn('Desktop token is expiring soon or expired; keeping cached native session until online re-auth is required.');
+            setUser(storedUser);
+            setAuthLoaded(true);
+            return;
+          }
+
           console.log('Token is expiring soon or expired, attempting refresh...');
           
           try {
@@ -62,10 +85,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
         
-        // Token is valid, get current user
-        const user = authService.getCurrentUser();
-        if (user) {
-          setUser(user);
+        if (storedUser) {
+          try {
+            await authService.getCurrentUserProfile();
+          } catch (profileError) {
+            if (!isDesktopApp()) {
+              throw profileError;
+            }
+            console.warn('Desktop auth profile validation failed; using cached native/browser session:', profileError);
+          }
+          setUser(storedUser);
+        } else {
+          authService.logout();
+          setUser(null);
         }
       }
     } catch (error) {
@@ -99,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
       const user = await authService.login(credentials, rememberMe);
       setUser(user);
-      router.push('/'); // Redirect to dashboard after login
+      router.push(isDesktopApp() ? '/native' : '/'); // Redirect to dashboard after login
     } catch (err) {
       let errorMessage = 'خطا در ورود به سیستم';
       
@@ -119,7 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(null);
       const user = await authService.register(userData);
       setUser(user);
-      router.push('/'); // Redirect to dashboard after registration
+      router.push(isDesktopApp() ? '/native' : '/'); // Redirect to dashboard after registration
     } catch (err) {
       let errorMessage = 'خطا در ثبت‌نام';
       
@@ -136,7 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     authService.logout();
     setUser(null);
-    router.push('/login');
+    router.push(isDesktopApp() ? '/native' : '/login');
   };
 
   const clearError = () => {

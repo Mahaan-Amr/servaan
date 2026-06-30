@@ -1,5 +1,6 @@
 import { getToken } from '../services/authService';
-import { API_URL } from './apiUtils';
+import { API_URL, fetchWithTimeout, getTenantSubdomainHeader } from './apiUtils';
+import { getNativeOfflineSession } from '../services/nativeDeviceService';
 
 /**
  * Centralized API Client for consistent API calls across all services
@@ -17,18 +18,9 @@ export class ApiClient {
    * Automatically extracts subdomain from current hostname
    */
   private getHeaders(): HeadersInit {
-    const token = getToken();
-    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-    
-    // Handle localhost development vs production subdomains
-    let subdomain: string;
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      // For localhost development, default to 'dima' or extract from subdomain
-      subdomain = hostname.includes('.') ? hostname.split('.')[0] : 'dima';
-    } else {
-      // For production, extract subdomain from hostname
-      subdomain = hostname.split('.')[0];
-    }
+    const nativeSession = getNativeOfflineSession();
+    const token = getToken() || nativeSession?.token || null;
+    const subdomain = nativeSession?.tenantSubdomain || nativeSession?.user.tenantSubdomain || getTenantSubdomainHeader();
     
     return {
       'Authorization': `Bearer ${token}`,
@@ -92,9 +84,10 @@ export class ApiClient {
       }
       const url = `${this.baseUrl}${endpoint}${queryString}`;
       
-      const response = await fetch(url, {
+      const response = await fetchWithTimeout(url, {
         method: 'GET',
-        headers: this.getHeaders()
+        headers: this.getHeaders(),
+        cache: 'no-store'
       });
       
       return await this.handleResponse<T>(response, 'خطا در دریافت اطلاعات');
@@ -111,7 +104,7 @@ export class ApiClient {
    */
   async post<T>(endpoint: string, data?: unknown): Promise<T> {
     try {
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      const response = await fetchWithTimeout(`${this.baseUrl}${endpoint}`, {
         method: 'POST',
         headers: this.getHeaders(),
         body: data ? JSON.stringify(data) : undefined
@@ -131,7 +124,7 @@ export class ApiClient {
    */
   async put<T>(endpoint: string, data?: unknown): Promise<T> {
     try {
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      const response = await fetchWithTimeout(`${this.baseUrl}${endpoint}`, {
         method: 'PUT',
         headers: this.getHeaders(),
         body: data ? JSON.stringify(data) : undefined
@@ -151,7 +144,7 @@ export class ApiClient {
    */
   async patch<T>(endpoint: string, data?: unknown): Promise<T> {
     try {
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      const response = await fetchWithTimeout(`${this.baseUrl}${endpoint}`, {
         method: 'PATCH',
         headers: this.getHeaders(),
         body: data ? JSON.stringify(data) : undefined
@@ -171,7 +164,7 @@ export class ApiClient {
    */
   async delete<T>(endpoint: string): Promise<T> {
     try {
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      const response = await fetchWithTimeout(`${this.baseUrl}${endpoint}`, {
         method: 'DELETE',
         headers: this.getHeaders()
       });
@@ -190,17 +183,11 @@ export class ApiClient {
    */
   async upload<T>(endpoint: string, formData: FormData): Promise<T> {
     try {
-      const token = getToken();
-      const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-      let subdomain: string;
+      const nativeSession = getNativeOfflineSession();
+      const token = getToken() || nativeSession?.token || null;
+      const subdomain = nativeSession?.tenantSubdomain || nativeSession?.user.tenantSubdomain || getTenantSubdomainHeader();
       
-      if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        subdomain = hostname.includes('.') ? hostname.split('.')[0] : 'dima';
-      } else {
-        subdomain = hostname.split('.')[0];
-      }
-      
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      const response = await fetchWithTimeout(`${this.baseUrl}${endpoint}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -224,7 +211,7 @@ export class ApiClient {
    */
   async download(endpoint: string, filename?: string): Promise<void> {
     try {
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      const response = await fetchWithTimeout(`${this.baseUrl}${endpoint}`, {
         method: 'GET',
         headers: this.getHeaders()
       });
@@ -263,15 +250,9 @@ export const apiClient = new ApiClient();
  * Services can use this instead of the class instance
  */
 export const getAuthHeaders = () => {
-  const token = getToken();
-  const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-  
-  let subdomain: string;
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    subdomain = hostname.includes('.') ? hostname.split('.')[0] : 'dima';
-  } else {
-    subdomain = hostname.split('.')[0];
-  }
+  const nativeSession = getNativeOfflineSession();
+  const token = getToken() || nativeSession?.token || null;
+  const subdomain = nativeSession?.tenantSubdomain || nativeSession?.user.tenantSubdomain || getTenantSubdomainHeader();
   
   return {
     'Authorization': `Bearer ${token}`,

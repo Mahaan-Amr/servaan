@@ -1,0 +1,33 @@
+[package]
+name = "servaan-desktop"
+version = "0.1.0"
+description = "Servaan Windows desktop shell"
+authors = ["Servaan"]
+license = "MIT"
+repository = ""
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+aes-gcm = "0.10"
+base64 = "0.22"
+keyring = { version = "3", features = ["windows-native"] }
+rand = "0.8"
+rusqlite = { version = "0.32", features = ["bundled"] }
+semver = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ureq = { version = "2", features = ["json"] }
+url = "2"
+tauri = { version = "2", features = [] }
+time = { version = "0.3", features = ["formatting"] }
+
+[profile.release]
+codegen-units = 16
+debug = false
+incremental = true
+lto = false
+opt-level = 1
+strip = "debuginfo"

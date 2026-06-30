@@ -23,6 +23,9 @@ import PrinterSettingsModal from './components/PrinterSettingsModal';
 import OfflineStatusBar from '../../../../components/ordering/OfflineStatusBar';
 import { offlineStorage } from '../../../../services/offlineStorageService';
 import { connectionMonitor } from '../../../../services/connectionMonitorService';
+import { localFirstSyncService } from '../../../../services/localFirstSyncService';
+import { getCurrentUser } from '../../../../services/authService';
+import { isDesktopApp, printDesktopReceiptText } from '../../../../services/desktopBridgeService';
 
 // Simple toast function for now - we'll replace with proper toast library later
 const toast = {
@@ -145,6 +148,12 @@ interface MenuCategory {
 export default function POSInterface() {
   const router = useRouter();
   const { tenant } = useTenant();
+
+  useEffect(() => {
+    if (isDesktopApp()) {
+      router.replace('/native?panel=sales');
+    }
+  }, [router]);
   
   // State for order management
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
@@ -285,7 +294,19 @@ export default function POSInterface() {
   const [tables, setTables] = useState<Table[]>([]);
   const [showTableSelector, setShowTableSelector] = useState(false);
   const [isOfflineMode, setIsOfflineMode] = useState<boolean>(() => !connectionMonitor.isCurrentlyOnline());
-  const offlinePaymentMessage = 'این سفارش هنوز با سرور همگام نشده است؛ پرداخت فقط در حالت آنلاین ممکن است.';
+  const offlinePaymentMessage = 'پرداخت آفلاین فقط برای نقدی یا کارت دستی ثبت می‌شود و تایید درگاه بانکی نیست.';
+
+  const markReceiptPrintedOffline = useCallback(async (orderId: string | null) => {
+    if (!orderId) return;
+    const shouldAuditOfflinePrint =
+      orderId.startsWith('local_') ||
+      (typeof navigator !== 'undefined' && !navigator.onLine) ||
+      isOfflineMode;
+
+    if (shouldAuditOfflinePrint) {
+      await localFirstSyncService.enqueueOfflineReceiptPrinted(orderId);
+    }
+  }, [isOfflineMode]);
 
   // Initialize WebSocket connection for real-time updates
   const initializeWebSocket = useCallback(() => {
@@ -821,6 +842,23 @@ export default function POSInterface() {
       const isServerOrder = !normalized.order.id.startsWith('local_');
 
       if (!isServerOrder) {
+        if (data.paymentType === 'IMMEDIATE' && data.paymentMethod && data.amountReceived) {
+          await PaymentService.processPayment({
+            orderId: normalized.order.id,
+            amount: data.amountReceived,
+            paymentMethod: data.paymentMethod as PaymentMethod,
+            cashReceived: data.paymentMethod === 'CASH' ? data.amountReceived : undefined
+          });
+          setPaymentData({
+            paymentMethod: data.paymentMethod,
+            amountReceived: data.amountReceived,
+            notes: data.orderNotes
+          });
+          setReceiptOrderDate(new Date());
+          setShowReceipt(true);
+          return;
+        }
+
         toast.success('سفارش در حالت آفلاین ثبت شد و پس از اتصال به اینترنت همگام‌سازی می‌شود');
         setOrderItems([]);
         setCustomer({});
@@ -969,6 +1007,52 @@ export default function POSInterface() {
     setStockValidationData(null);
   };
 
+  const generateReceiptText = (nextPaymentData: {
+    paymentMethod: 'CASH' | 'CARD';
+    amountReceived: number;
+    notes?: string;
+  }): string => {
+    const now = new Date();
+    const user = getCurrentUser();
+    const orderNumber = currentOrderId || generateTempOrderNumber();
+    const offlineReceipt = isOfflineMode || orderNumber.startsWith('local_');
+    const orderTypeText = {
+      'DINE_IN': 'Dine in',
+      'TAKEAWAY': 'Takeaway',
+      'DELIVERY': 'Delivery',
+      'ONLINE': 'Online'
+    }[orderType] || 'Unknown';
+
+    const lines = [
+      tenant?.displayName || tenant?.name || 'Servaan',
+      '--------------------------------',
+      `Order: ${orderNumber}`,
+      `Date: ${now.toLocaleString('fa-IR')}`,
+      `Type: ${orderTypeText}`,
+      `Device: ${typeof window !== 'undefined' ? window.navigator.userAgent.slice(0, 60) : 'desktop'}`,
+      `Staff: ${user?.name || user?.email || 'Unknown'}`,
+      offlineReceipt ? 'OFFLINE RECEIPT - TEMPORARY NUMBER' : 'RECEIPT',
+      offlineReceipt ? 'Payment status: OFFLINE_RECORDED, not gateway-confirmed' : 'Payment status: recorded',
+      '--------------------------------',
+      ...orderItems.map((item) =>
+        `${item.quantity} x ${item.menuItem.name} - ${formatPrice(item.menuItem.price * item.quantity)}`
+      ),
+      '--------------------------------',
+      `Subtotal: ${formatPrice(calculation.subtotal)}`,
+      calculation.discountAmount > 0 ? `Discount: ${formatPrice(calculation.discountAmount)}` : null,
+      calculation.taxAmount > 0 ? `Tax: ${formatPrice(calculation.taxAmount)}` : null,
+      calculation.serviceAmount > 0 ? `Service: ${formatPrice(calculation.serviceAmount)}` : null,
+      `Total: ${formatPrice(calculation.totalAmount)}`,
+      `Payment: ${nextPaymentData.paymentMethod}`,
+      `Received: ${formatPrice(nextPaymentData.amountReceived)}`,
+      nextPaymentData.notes ? `Notes: ${nextPaymentData.notes}` : null,
+      '--------------------------------',
+      'Thank you'
+    ].filter(Boolean);
+
+    return lines.join('\n');
+  };
+
   // Generate receipt data URL for silent printing
   const generateReceiptDataUrl = async (): Promise<string | null> => {
     try {
@@ -1084,7 +1168,7 @@ export default function POSInterface() {
     amountReceived: number;
     notes?: string;
   }, showReceipt: boolean = true) => {
-    if (!currentOrderId || currentOrderId.startsWith('local_') || isOfflineMode) {
+    if (!currentOrderId) {
       toast.error(offlinePaymentMessage);
       return;
     }
@@ -1110,11 +1194,27 @@ export default function POSInterface() {
       if (canSilentPrint && showReceipt) {
         // Try silent printing first
         try {
+          silentPrintSuccess = await printDesktopReceiptText(
+            generateReceiptText(paymentData),
+            defaultPrinter || undefined
+          );
+          if (silentPrintSuccess) {
+            await markReceiptPrintedOffline(currentOrderId);
+            toast.success('پرداخت با موفقیت انجام شد و رسید چاپ شد');
+            setOrderItems([]);
+            setCurrentOrderId(null);
+            setCustomer({});
+            setSelectedTable(null);
+            setOrderNotes('');
+            return;
+          }
+
           // Generate receipt data URL directly
           const receiptDataUrl = await generateReceiptDataUrl();
           if (receiptDataUrl) {
             silentPrintSuccess = await printImageDataUrl(receiptDataUrl, defaultPrinter);
             if (silentPrintSuccess) {
+              await markReceiptPrintedOffline(currentOrderId);
               // Silent print successful - skip preview and clear order
               toast.success('پرداخت با موفقیت انجام شد و رسید چاپ شد');
               setOrderItems([]);
@@ -1144,6 +1244,7 @@ export default function POSInterface() {
                 const dataUrl = canvas.toDataURL('image/png');
                 const ok = await printImageDataUrl(dataUrl, defaultPrinter);
                 if (ok) {
+                  await markReceiptPrintedOffline(currentOrderId);
                   setShowReceipt(false);
                   setOrderItems([]);
                   setCurrentOrderId(null);
@@ -1987,6 +2088,9 @@ export default function POSInterface() {
               orderType={orderType}
               tableInfo={selectedTable ? { tableNumber: selectedTable.tableNumber, tableName: selectedTable.tableName } : undefined}
               onPrintComplete={() => {
+                markReceiptPrintedOffline(currentOrderId).catch((error) => {
+                  console.warn('Failed to queue offline receipt audit flag:', error);
+                });
                 // Clear order items after receipt is printed
                 setOrderItems([]);
                 setCurrentOrderId(null);

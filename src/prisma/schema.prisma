@@ -98,6 +98,9 @@ model Tenant {
 
   // Ordering System relations
   orderingSettings OrderingSettings?
+  offlineDevices   OfflineDevice[]
+  syncOperations   SyncOperation[]
+  syncConflicts    SyncConflict[]
 
   @@map("tenants")
 }
@@ -770,6 +773,8 @@ model User {
   auditCyclesCancelled        InventoryAuditCycle[] @relation("AuditCycleCancelledBy")
   auditEntriesCounted         InventoryAuditEntry[] @relation("AuditEntryCountedBy")
   auditEntriesCreated         InventoryAuditEntry[] @relation("AuditEntryCreatedBy")
+  assignedOfflineDevices      OfflineDevice[]       @relation("OfflineDeviceAssignedUser")
+  syncOperations              SyncOperation[]       @relation("SyncOperationActor")
 
   @@index([email])
 }
@@ -822,6 +827,9 @@ model InventoryEntry {
   unitPrice   Float?
   deletedAt   DateTime?
   deletedBy   String?
+  sourceDeviceId String?
+  sourceLocalOperationId String?
+  sourceLocalNumber String?
   item        Item               @relation(fields: [itemId], references: [id])
   user        User               @relation("InventoryEntryCreatedBy", fields: [userId], references: [id])
   deletedByUser User?            @relation("InventoryEntryDeletedBy", fields: [deletedBy], references: [id])
@@ -832,6 +840,8 @@ model InventoryEntry {
   @@index([tenantId])
   @@index([deletedAt])
   @@index([tenantId, deletedAt])
+  @@index([tenantId, sourceDeviceId])
+  @@index([tenantId, sourceLocalOperationId])
 }
 
 model ItemSupplier {
@@ -1009,6 +1019,11 @@ model Order {
   paymentNotes    String?
   paymentType     String?             @db.VarChar(50)
   remainingAmount Decimal             @default(0) @db.Decimal(12, 2)
+  sourceDeviceId  String?
+  sourceLocalOperationId String?
+  sourceLocalNumber String?
+  printedOffline  Boolean             @default(false)
+  offlineRecordedAt DateTime?
   kitchenDisplays KitchenDisplay[]
   items           OrderItem[]
   modifications   OrderModification[]
@@ -1028,6 +1043,8 @@ model Order {
   @@index([orderDate])
   @@index([customerId])
   @@index([tableId])
+  @@index([tenantId, sourceDeviceId])
+  @@index([tenantId, sourceLocalOperationId])
   @@map("orders")
 }
 
@@ -1154,6 +1171,11 @@ model OrderPayment {
   processedBy     String
   failureReason   String?
   retryCount      Int           @default(0)
+  isOfflineRecorded Boolean     @default(false)
+  verificationStatus String     @default("CANONICAL") @db.VarChar(40)
+  sourceDeviceId  String?
+  sourceLocalOperationId String?
+  sourceLocalNumber String?
   order           Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
   processedByUser User          @relation("PaymentProcessedBy", fields: [processedBy], references: [id])
   tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -1162,7 +1184,103 @@ model OrderPayment {
   @@index([orderId])
   @@index([paymentStatus])
   @@index([paymentDate])
+  @@index([tenantId, sourceDeviceId])
+  @@index([tenantId, sourceLocalOperationId])
   @@map("order_payments")
+}
+
+model OfflineDevice {
+  id                  String    @id @default(uuid())
+  tenantId            String
+  deviceId            String
+  name                String
+  platform            String    @default("web") @db.VarChar(40)
+  appVersion          String?   @db.VarChar(50)
+  syncProtocolVersion Int       @default(1)
+  localSchemaVersion  Int       @default(1)
+  mode                String    @default("personal") @db.VarChar(20)
+  assignedUserId      String?
+  lastOnlineAt        DateTime?
+  lastSyncAt          DateTime?
+  offlineAuthExpiresAt DateTime?
+  revokedAt           DateTime?
+  isActive            Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assignedUser        User?     @relation("OfflineDeviceAssignedUser", fields: [assignedUserId], references: [id])
+  syncOperations      SyncOperation[]
+  syncConflicts       SyncConflict[]
+
+  @@unique([tenantId, deviceId])
+  @@index([tenantId])
+  @@index([assignedUserId])
+  @@index([revokedAt])
+  @@map("offline_devices")
+}
+
+model SyncOperation {
+  id                  String    @id @default(uuid())
+  tenantId            String
+  deviceId            String
+  localOperationId    String
+  syncBatchId         String?
+  workspaceId         String    @db.VarChar(80)
+  entityType          String    @db.VarChar(80)
+  entityLocalId       String?
+  entityServerId      String?
+  operationType       String    @db.VarChar(80)
+  status              String    @default("accepted") @db.VarChar(40)
+  payload             Json
+  dependsOn           Json      @default("[]")
+  errorCode           String?
+  errorMessage        String?
+  createdOfflineAt    DateTime
+  syncedAt            DateTime?
+  actorUserId         String
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  device              OfflineDevice @relation(fields: [tenantId, deviceId], references: [tenantId, deviceId], onDelete: Cascade)
+  actor               User      @relation("SyncOperationActor", fields: [actorUserId], references: [id])
+
+  @@unique([tenantId, deviceId, localOperationId])
+  @@index([tenantId])
+  @@index([deviceId])
+  @@index([status])
+  @@index([syncBatchId])
+  @@map("sync_operations")
+}
+
+model SyncConflict {
+  id               String    @id @default(uuid())
+  tenantId         String
+  deviceId         String
+  localOperationId String?
+  syncBatchId      String?
+  workspaceId      String    @db.VarChar(80)
+  entityType       String    @db.VarChar(80)
+  entityLocalId    String?
+  entityServerId   String?
+  conflictType     String    @db.VarChar(80)
+  status           String    @default("open") @db.VarChar(40)
+  reason           String
+  localPayload     Json?
+  serverPayload    Json?
+  actorUserId      String?
+  createdOfflineAt DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  resolvedAt       DateTime?
+  resolvedBy       String?
+  tenant           Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  device           OfflineDevice @relation(fields: [tenantId, deviceId], references: [tenantId, deviceId], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([deviceId])
+  @@index([status])
+  @@index([syncBatchId])
+  @@map("sync_conflicts")
 }
 
 model OrderModification {

@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { InventoryPriceManager } from '../../../components/inventory/InventoryPriceManager';
 import { LowStockAlerts } from '../../../components/inventory/LowStockAlerts';
 import * as inventoryService from '../../../services/inventoryService';
+import { LOCAL_READ_MODEL_REFRESHED, LocalReadModelKey } from '../../../services/localReadModelService';
 import toast from 'react-hot-toast';
 
 interface InventoryDashboardStats {
@@ -39,16 +40,22 @@ export default function InventoryWorkspacePage() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<InventoryDashboardStats | null>(null);
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+  const loadInFlightRef = useRef(false);
 
   useEffect(() => {
-    const loadDashboardData = async () => {
+    const loadDashboardData = async (showLoading = false, refresh = true) => {
+      if (loadInFlightRef.current) return;
+      loadInFlightRef.current = true;
+
       try {
-        setLoading(true);
+        if (showLoading) {
+          setLoading(true);
+        }
 
         const [statsData, activitiesData, totalQuantityData] = await Promise.all([
-          inventoryService.getInventoryStats(),
-          inventoryService.getRecentActivities(),
-          inventoryService.getTotalInventoryQuantity().catch(() => ({ totalQuantity: 0, itemCount: 0 }))
+          inventoryService.getInventoryStats({ refresh }),
+          inventoryService.getRecentActivities({ refresh }),
+          inventoryService.getTotalInventoryQuantity({ refresh }).catch(() => ({ totalQuantity: 0, itemCount: 0 }))
         ]);
 
         setStats({
@@ -60,11 +67,21 @@ export default function InventoryWorkspacePage() {
         const errorMessage = err instanceof Error ? err.message : 'خطا در دریافت اطلاعات داشبورد';
         toast.error(errorMessage);
       } finally {
+        loadInFlightRef.current = false;
         setLoading(false);
       }
     };
 
-    loadDashboardData();
+    const handleReadModelRefresh = (event: Event) => {
+      const key = (event as CustomEvent<{ key: LocalReadModelKey }>).detail?.key;
+      if (key?.startsWith('inventory.')) {
+        loadDashboardData(false, false);
+      }
+    };
+
+    loadDashboardData(true);
+    window.addEventListener(LOCAL_READ_MODEL_REFRESHED, handleReadModelRefresh);
+    return () => window.removeEventListener(LOCAL_READ_MODEL_REFRESHED, handleReadModelRefresh);
   }, []);
 
   const formatPrice = (price: number): string => {

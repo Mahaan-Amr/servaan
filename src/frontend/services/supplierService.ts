@@ -1,5 +1,6 @@
 import { apiClient } from '../lib/apiClient';
 import { Supplier } from '../../shared/types';
+import { readLocalFirst } from './localReadModelService';
 
 export interface CreateSupplierData {
   name: string;
@@ -35,7 +36,7 @@ export const getSuppliers = async (activeOnly?: boolean): Promise<Supplier[]> =>
     if (activeOnly) {
       params.active = true;
     }
-    return await apiClient.get<Supplier[]>('/suppliers', params);
+    return await readLocalFirst('inventory.suppliers', () => apiClient.get<Supplier[]>('/suppliers', params));
   } catch {
     throw new Error('خطا در دریافت لیست تأمین‌کنندگان');
   }

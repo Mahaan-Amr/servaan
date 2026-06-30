@@ -7,6 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { WorkspaceProtection } from '@/components/workspace/WorkspaceProtection';
 import type { WorkspaceId } from '@/types/workspace';
+import { isDesktopApp } from '@/services/desktopBridgeService';
+import { isNativeSessionActive } from '@/services/nativeDeviceService';
 
 export interface WorkspaceNavItem {
   name: string;
@@ -89,6 +91,7 @@ export function WorkspaceShell({
   const { workspaces } = useWorkspace();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isDesktopOpen, setIsDesktopOpen] = useState(false);
+  const [isNativeDesktop, setIsNativeDesktop] = useState(false);
   const style = accentStyles[accent];
   const sidebarId = `workspace-sidebar-${workspaceId}`;
 
@@ -96,6 +99,10 @@ export function WorkspaceShell({
     () => workspaces.find((item) => item.id === workspaceId),
     [workspaces, workspaceId]
   );
+
+  useEffect(() => {
+    setIsNativeDesktop(isDesktopApp() || isNativeSessionActive());
+  }, []);
 
   useEffect(() => {
     setIsMobileOpen(false);
@@ -160,6 +167,11 @@ export function WorkspaceShell({
 
   return (
     <WorkspaceProtection workspaceId={workspaceId}>
+      {isNativeDesktop ? (
+        <section className="min-h-screen p-4 sm:p-6 lg:p-8" dir="rtl">
+          {children}
+        </section>
+      ) : (
       <div className="workspace-shell" dir="rtl">
         <button
           type="button"
@@ -290,6 +302,7 @@ export function WorkspaceShell({
           {children}
         </section>
       </div>
+      )}
     </WorkspaceProtection>
   );
 }

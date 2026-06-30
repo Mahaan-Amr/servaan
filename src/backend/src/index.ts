@@ -1,4 +1,4 @@
-// Load environment variables FIRST before any imports
+﻿// Load environment variables FIRST before any imports
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -42,6 +42,7 @@ import { smsRoutes } from './routes/smsRoutes';
 import customerJourneyRoutes from './routes/customerJourneyRoutes';
 import customerServiceRoutes from './routes/customerServiceRoutes';
 import orderingRoutes from './routes/orderingRoutes';
+import syncRoutes from './routes/syncRoutes';
 import performanceRoutes from './routes/performanceRoutes';
 import { errorHandler } from './middlewares/errorHandler';
 import { resolveTenant, requireTenant } from './middlewares/tenantMiddleware';
@@ -64,6 +65,9 @@ app.use(cors({
     ];
     if (!origin ||
         origin.includes('localhost') ||
+        origin.includes('127.0.0.1') ||
+        origin.startsWith('tauri://') ||
+        origin.startsWith('asset://') ||
         origin.endsWith('.servaan.com') ||
         allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -129,6 +133,7 @@ app.use('/api/sms', requireTenant, smsRoutes);
 app.use('/api/customer-journey', requireTenant, customerJourneyRoutes);
 app.use('/api/customer-service', requireTenant, customerServiceRoutes);
 app.use('/api/ordering', requireTenant, orderingRoutes);
+app.use('/api/sync', requireTenant, syncRoutes);
 
 // Performance monitoring routes (require tenant context)
 app.use('/api/performance', requireTenant, performanceRoutes);
@@ -212,3 +217,4 @@ server.on('error', (error: NodeJS.ErrnoException) => {
       throw error;
   }
 }); 
+

@@ -6,6 +6,7 @@
 import { offlineStorage } from './offlineStorageService';
 import { connectionMonitor } from './connectionMonitorService';
 import { API_URL } from '../lib/apiUtils';
+import { isDesktopApp } from './desktopBridgeService';
 
 const ORDERING_API_BASE = `${API_URL}/ordering`;
 
@@ -50,7 +51,7 @@ class SyncService {
     this.notifyListeners({ status: 'syncing', progress: 0 });
 
     try {
-      if (typeof window === 'undefined' || typeof indexedDB === 'undefined') {
+      if (typeof window === 'undefined' || (!isDesktopApp() && typeof indexedDB === 'undefined')) {
         return { success: false, message: 'Not in browser environment' };
       }
 

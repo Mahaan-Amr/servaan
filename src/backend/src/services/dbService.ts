@@ -1,19 +1,19 @@
-import { PrismaClient } from '../../../shared/generated/client';
+﻿import { PrismaClient } from '../../../shared/generated/client';
 
 // Validate and log DATABASE_URL before creating client
-console.log('DATABASE_URL:', process.env['DATABASE_URL']);
-console.log('🔧 Prisma Client Initialization:');
-console.log('📍 DATABASE_URL:', process.env['DATABASE_URL'] ? 'Found' : 'NOT FOUND');
+console.log('[پایگاه داده] مقدار DATABASE_URL:', process.env['DATABASE_URL']);
+console.log('[پایگاه داده] آماده‌سازی Prisma Client');
+console.log('[پایگاه داده] وضعیت DATABASE_URL:', process.env['DATABASE_URL'] ? 'پیدا شد' : 'پیدا نشد');
 
 if (!process.env['DATABASE_URL']) {
-  console.error('❌ DATABASE_URL is not defined in environment variables');
-  console.error('📍 Make sure .env file exists and contains DATABASE_URL');
-  console.error('🔧 Current working directory:', process.cwd());
-  console.error('🔧 Available env vars:', Object.keys(process.env).filter(key => key.includes('DATABASE')));
+  console.error('[پایگاه داده] DATABASE_URL در متغیرهای محیطی تعریف نشده است');
+  console.error('[پایگاه داده] مطمئن شوید فایل .env وجود دارد و DATABASE_URL داخل آن ثبت شده است');
+  console.error('[پایگاه داده] مسیر اجرای فعلی:', process.cwd());
+  console.error('[پایگاه داده] متغیرهای محیطی مرتبط:', Object.keys(process.env).filter(key => key.includes('DATABASE')));
   throw new Error('DATABASE_URL is not defined in environment variables');
 }
 
-console.log('✅ Creating Prisma client with DATABASE_URL...');
+console.log('[پایگاه داده] ساخت Prisma Client با DATABASE_URL');
 
 // Create a singleton Prisma client instance with robust configuration
 const prisma = new PrismaClient({
@@ -31,3 +31,4 @@ const prisma = new PrismaClient({
 });
 
 export { prisma }; 
+
