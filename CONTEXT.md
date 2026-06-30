@@ -19,3 +19,7 @@ _Avoid_: Fully offline workspace, offline dashboard, cached screen
 **Native Operational Surface**:
 A packaged-app screen built for repeated device-local work and offline continuity. It may share services and design language with the web app, but it is the accepted user surface for V1 offline business actions on desktop.
 _Avoid_: Wrapped web page, desktop skin, web workspace shortcut
+
+**Estimated Local Stock**:
+The device-local stock value shown after offline inventory IN/OUT entries are queued but before the Canonical Backend confirms them. It updates immediately for operator feedback, may go below zero, and must be visually distinguished from confirmed stock when pending inventory operations exist.
+_Avoid_: Confirmed stock, real stock, server stock

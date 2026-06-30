@@ -11,6 +11,7 @@ import { useSearchParams } from 'next/navigation';
 import { FarsiDatePicker } from '../../../../../components/ui/FarsiDatePicker';
 import { FormattedNumberInput } from '../../../../../components/ui/FormattedNumberInput';
 import { Button, Card, Section } from '../../../../../components/ui';
+import { isDesktopApp } from '../../../../../services/desktopBridgeService';
 
 export default function AddInventoryPage() {
   const [items, setItems] = useState<Item[]>([]);
@@ -26,6 +27,12 @@ export default function AddInventoryPage() {
   });
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (isDesktopApp()) {
+      router.replace('/native?panel=inventory');
+    }
+  }, [router]);
 
   useEffect(() => {
     const loadItems = async () => {

@@ -2,18 +2,27 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { InventoryStatus, InventoryEntry, InventoryEntryType } from '../../../../../shared/types';
 import * as inventoryService from '../../../../services/inventoryService';
 import { LOCAL_READ_MODEL_REFRESHED, LocalReadModelKey } from '../../../../services/localReadModelService';
+import { isDesktopApp } from '../../../../services/desktopBridgeService';
 import toast from 'react-hot-toast';
 
 export default function InventoryPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [inventoryStatus, setInventoryStatus] = useState<InventoryStatus[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<InventoryEntry[]>([]);
   const [lowStockItems, setLowStockItems] = useState<InventoryStatus[]>([]);
   const [error, setError] = useState<string | null>(null);
   const loadInFlightRef = useRef(false);
+
+  useEffect(() => {
+    if (isDesktopApp()) {
+      router.replace('/native?panel=inventory');
+    }
+  }, [router]);
 
   useEffect(() => {
     const loadInventoryData = async (showLoading = false, refresh = true) => {

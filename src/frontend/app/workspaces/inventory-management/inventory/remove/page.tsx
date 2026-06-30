@@ -8,6 +8,7 @@ import * as itemService from '../../../../../services/itemService';
 import toast from 'react-hot-toast';
 import { FormattedNumberInput } from '../../../../../components/ui/FormattedNumberInput';
 import { Button, Card, Section } from '../../../../../components/ui';
+import { isDesktopApp } from '../../../../../services/desktopBridgeService';
 
 export default function RemoveInventoryPage() {
   const [loading, setLoading] = useState(false);
@@ -22,6 +23,12 @@ export default function RemoveInventoryPage() {
   });
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (isDesktopApp()) {
+      router.replace('/native?panel=inventory');
+    }
+  }, [router]);
 
   useEffect(() => {
     const loadData = async () => {

@@ -17,6 +17,7 @@ import {
   Printer,
   RefreshCw,
   ScanSearch,
+  Search,
   Settings2,
   ShieldCheck,
   Sparkles,
@@ -79,6 +80,15 @@ import type {
   NativePosPaymentMethod,
   NativePosSnapshot
 } from '../../features/native-pos/nativePosTypes';
+import {
+  loadNativeInventorySnapshot,
+  submitNativeInventoryEntry
+} from '../../features/native-inventory/nativeInventoryService';
+import type {
+  NativeInventoryEntryResult,
+  NativeInventoryMovementType,
+  NativeInventorySnapshot
+} from '../../features/native-inventory/nativeInventoryTypes';
 
 type NativePanel = 'home' | 'sales' | 'inventory' | 'settings' | 'support' | 'sync';
 
@@ -107,6 +117,12 @@ function formatNativeError(error: unknown, fallback: string): string {
   } catch {
     return fallback;
   }
+}
+
+function formatNativeQuantity(value: number): string {
+  return value.toLocaleString('fa-IR', {
+    maximumFractionDigits: 3
+  });
 }
 
 function formatCacheSeedFailures(failed: Array<{ key: string; message: string }>): string {
@@ -732,7 +748,6 @@ export function NativeApp() {
                 <InventoryPanel
                   issues={issueSummary}
                   summary={inventorySummary}
-                  onNavigate={(path) => router.push(path)}
                   onOpenIssues={() => setActivePanel('sync')}
                 />
               )}
@@ -1310,30 +1325,281 @@ function SalesPanel({
 function InventoryPanel({
   issues,
   summary,
-  onNavigate,
   onOpenIssues
 }: {
   issues: NativeIssueSummary;
   summary: { totalItems: number; lowStockCount: number; todayTransactions: number };
-  onNavigate: (path: string) => void;
   onOpenIssues: () => void;
 }) {
+  const [snapshot, setSnapshot] = useState<NativeInventorySnapshot | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedItemId, setSelectedItemId] = useState('');
+  const [movementType, setMovementType] = useState<NativeInventoryMovementType>('IN');
+  const [quantity, setQuantity] = useState('');
+  const [note, setNote] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState<NativeInventoryEntryResult | null>(null);
+
+  const loadSnapshot = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const nextSnapshot = await loadNativeInventorySnapshot();
+      setSnapshot(nextSnapshot);
+      setSelectedItemId((current) => current || nextSnapshot.items[0]?.id || '');
+    } catch (loadError) {
+      setError(formatNativeError(loadError, 'خطا در آماده‌سازی انبار بومی'));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSnapshot();
+  }, [loadSnapshot]);
+
+  const selectedItem = snapshot?.items.find((item) => item.id === selectedItemId) || null;
+  const parsedQuantity = Number(quantity);
+  const validQuantity = Number.isFinite(parsedQuantity) && parsedQuantity > 0;
+  const nextEstimatedStock = selectedItem && validQuantity
+    ? movementType === 'IN'
+      ? selectedItem.current + parsedQuantity
+      : selectedItem.current - parsedQuantity
+    : selectedItem?.current ?? 0;
+  const makesNegative = Boolean(selectedItem && movementType === 'OUT' && validQuantity && parsedQuantity > selectedItem.current);
+  const filteredItems = (snapshot?.items || []).filter((item) => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return true;
+    return [item.name, item.category, item.unit].some((value) => value.toLowerCase().includes(query));
+  });
+
+  const submitEntry = async () => {
+    if (!selectedItem || !validQuantity) return;
+
+    setSubmitting(true);
+    setError('');
+    try {
+      const result = await submitNativeInventoryEntry({
+        itemId: selectedItem.id,
+        type: movementType,
+        quantity: parsedQuantity,
+        note
+      });
+      setSuccess(result);
+      setQuantity('');
+      setNote('');
+      await loadSnapshot();
+    } catch (submitError) {
+      setError(formatNativeError(submitError, 'ثبت سند انبار ناموفق بود'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <NativePanelSurface title="در حال آماده‌سازی" items={['خواندن کالاها و موجودی از کش بومی.']} />
+    );
+  }
+
+  if (error) {
+    return (
+      <NativePanelSurface
+        title="خطا در انبار بومی"
+        items={[error]}
+        action={
+          <button type="button" onClick={loadSnapshot} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-slate-900">
+            <RefreshCw className="h-4 w-4" />
+            تلاش دوباره
+          </button>
+        }
+      />
+    );
+  }
+
+  if (!snapshot || snapshot.readiness.kind !== 'ready') {
+    const readinessMessage = snapshot && snapshot.readiness.kind !== 'ready'
+      ? snapshot.readiness.message
+      : 'برای شروع کار آفلاین انبار، اتصال سرور و همگام‌سازی اولیه لازم است.';
+
+    return (
+      <NativePanelSurface
+        title="همگام‌سازی اولیه لازم است"
+        items={[
+          readinessMessage,
+          'بعد از همگام‌سازی، ورود و خروج کالا از همین صفحه انجام می‌شود.'
+        ]}
+        action={
+          <button type="button" onClick={loadSnapshot} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white dark:bg-white dark:text-slate-900">
+            <RefreshCw className="h-4 w-4" />
+            بررسی دوباره
+          </button>
+        }
+      />
+    );
+  }
+
   return (
     <section className="space-y-6">
-      <HeroBand title="انبار" subtitle="جابه‌جایی و اصلاح موجودی" actionLabel="دریافت کالا" onAction={() => onNavigate('/workspaces/inventory-management/inventory/add')} />
+      <HeroBand title="انبار بومی" subtitle="ورود و خروج کالا با صف همگام‌سازی" actionLabel="موارد همگام‌سازی" onAction={onOpenIssues} />
       <div className="grid gap-4 md:grid-cols-3">
-        <ActionTile icon={ScanSearch} title="اسکن کالا" text={`${summary.totalItems} کالای ثبت‌شده`} onClick={() => onNavigate('/workspaces/inventory-management/scanner')} />
-        <ActionTile icon={HardDriveDownload} title="صف همگام‌سازی" text={`${issues.pendingCount} عملیات در انتظار`} onClick={onOpenIssues} />
-        <ActionTile icon={TriangleAlert} title="کسری‌ها" text={`${summary.lowStockCount} کم‌موجودی، ${issues.conflictedCount} تعارض`} tone="warning" onClick={() => onNavigate('/workspaces/inventory-management/inventory')} />
+        <ActionTile icon={Box} title="کالاهای کش‌شده" text={`${snapshot.items.length || summary.totalItems} کالای فعال`} />
+        <ActionTile icon={HardDriveDownload} title="در انتظار" text={`${snapshot.pendingInventoryCount} سند انبار در صف`} onClick={onOpenIssues} />
+        <ActionTile icon={TriangleAlert} title="برآورد محلی" text={snapshot.pendingInventoryCount > 0 ? `موجودی تخمینی، ${issues.conflictedCount} تعارض` : `${summary.lowStockCount} کم‌موجودی`} tone={snapshot.pendingInventoryCount > 0 ? 'warning' : 'neutral'} />
       </div>
-      <NativePanelSurface
-        title="تمرکز انبار"
-        items={[
-          'موجودی محلی تخمینی باید از موجودی تاییدشده جدا بماند.',
-          'تعارض داده‌های اصلی با بررسی مدیر حل می‌شود.',
-          'اصلاح‌های حساس هنگام ریسک بالا در حالت انتظار می‌مانند.'
-        ]}
-      />
+
+      {snapshot.pendingInventoryCount > 0 && (
+        <div className="rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-medium text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
+          موجودی نمایش‌داده‌شده تخمینی است، چون {snapshot.pendingInventoryCount} سند انبار هنوز همگام‌سازی نشده است.
+        </div>
+      )}
+
+      {success && (
+        <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-6 text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-100">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-xl font-black">سند انبار در صف همگام‌سازی ثبت شد.</h3>
+              <p className="mt-2 text-sm">
+                {success.localNumber || success.operation.localOperationId}، {success.itemName}، {success.type === 'IN' ? 'ورود' : 'خروج'} {formatNativeQuantity(success.quantity)} {success.unit}
+              </p>
+            </div>
+            <span className="rounded-full bg-white/70 px-4 py-2 text-sm font-bold text-emerald-800 dark:bg-white/10 dark:text-emerald-100">
+              در صف همگام‌سازی
+            </span>
+          </div>
+        </div>
+      )}
+
+      <div className="grid gap-6 xl:grid-cols-[1fr_1.1fr]">
+        <div className="rounded-3xl border border-black/5 bg-white p-6 shadow-xl shadow-slate-200/60 dark:border-white/10 dark:bg-slate-950 dark:shadow-black/20">
+          <div className="mb-4">
+            <p className="text-sm font-bold text-slate-500">سند جاری</p>
+            <h2 className="text-2xl font-black text-slate-950 dark:text-white">ورود و خروج کالا</h2>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <SegmentButton active={movementType === 'IN'} onClick={() => setMovementType('IN')} label="ورود کالا" icon={HardDriveDownload} />
+            <SegmentButton active={movementType === 'OUT'} onClick={() => setMovementType('OUT')} label="خروج کالا" icon={ScanSearch} />
+          </div>
+
+          <div className="mt-5 space-y-4">
+            <label className="block">
+              <span className="mb-2 block text-sm font-bold text-slate-600 dark:text-slate-300">کالا</span>
+              <select
+                value={selectedItemId}
+                onChange={(event) => setSelectedItemId(event.target.value)}
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 dark:border-white/10 dark:bg-white/5 dark:text-white"
+              >
+                {filteredItems.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name} - {item.unit}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {selectedItem && (
+              <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-600 dark:bg-white/5 dark:text-slate-300">
+                <div className="flex items-center justify-between gap-3">
+                  <span>موجودی تخمینی فعلی</span>
+                  <strong className="text-lg text-slate-950 dark:text-white">{formatNativeQuantity(selectedItem.current)} {selectedItem.unit}</strong>
+                </div>
+                {validQuantity && (
+                  <div className="mt-2 flex items-center justify-between gap-3">
+                    <span>بعد از ثبت</span>
+                    <strong className={nextEstimatedStock < 0 ? 'text-lg text-red-600 dark:text-red-300' : 'text-lg text-slate-950 dark:text-white'}>
+                      {formatNativeQuantity(nextEstimatedStock)} {selectedItem.unit}
+                    </strong>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-bold text-slate-600 dark:text-slate-300">مقدار {selectedItem ? `(${selectedItem.unit})` : ''}</span>
+              <input
+                value={quantity}
+                onChange={(event) => setQuantity(event.target.value)}
+                inputMode="decimal"
+                type="number"
+                min="0"
+                step="any"
+                placeholder="مثلاً ۲.۵"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 dark:border-white/10 dark:bg-white/5 dark:text-white"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-bold text-slate-600 dark:text-slate-300">یادداشت اختیاری</span>
+              <input
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+                placeholder={movementType === 'IN' ? 'مثلاً خرید، برگشت کالا، اصلاح مثبت' : 'مثلاً مصرف، ضایعات، اصلاح منفی'}
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 outline-none focus:border-blue-500 dark:border-white/10 dark:bg-white/5 dark:text-white"
+              />
+            </label>
+
+            {makesNegative && (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
+                این خروجی موجودی تخمینی را منفی می‌کند و هنگام همگام‌سازی بررسی می‌شود.
+              </div>
+            )}
+
+            <button
+              type="button"
+              disabled={submitting || !selectedItem || !validQuantity}
+              onClick={submitEntry}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+            >
+              {submitting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+              ثبت سند انبار
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-black/5 bg-white p-6 shadow-xl shadow-slate-200/60 dark:border-white/10 dark:bg-slate-950 dark:shadow-black/20">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-bold text-slate-500">کالاهای فعال کش‌شده</p>
+              <h2 className="text-2xl font-black text-slate-950 dark:text-white">انتخاب کالا</h2>
+            </div>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold text-slate-500 dark:bg-white/10 dark:text-slate-300">
+              {filteredItems.length} کالا
+            </span>
+          </div>
+
+          <label className="mb-4 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 dark:border-white/10 dark:bg-white/5">
+            <Search className="h-4 w-4 text-slate-400" />
+            <input
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="جست‌وجو بر اساس نام، دسته یا واحد"
+              className="w-full bg-transparent text-sm font-bold text-slate-900 outline-none placeholder:text-slate-400 dark:text-white"
+            />
+          </label>
+
+          <div className="grid max-h-[34rem] gap-3 overflow-auto pr-1 md:grid-cols-2">
+            {filteredItems.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setSelectedItemId(item.id)}
+                className={`rounded-2xl border p-4 text-right transition ${
+                  selectedItemId === item.id
+                    ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-950'
+                    : 'border-slate-200 bg-slate-50 text-slate-800 hover:border-slate-300 dark:border-white/10 dark:bg-white/5 dark:text-slate-200'
+                }`}
+              >
+                <span className="block text-sm font-black">{item.name}</span>
+                <span className="mt-1 block text-xs opacity-70">{item.category}، {item.unit}</span>
+                <span className="mt-4 block text-lg font-black">{formatNativeQuantity(item.current)} {item.unit}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
     </section>
   );
 }

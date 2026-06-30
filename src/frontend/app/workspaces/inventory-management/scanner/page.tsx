@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Item, InventoryEntryType } from '../../../../../shared/types';
 import * as itemService from '../../../../services/itemService';
 import * as inventoryService from '../../../../services/inventoryService';
@@ -9,6 +10,7 @@ import UniversalScanner from '../../../../components/scanner/UniversalScanner';
 import toast from 'react-hot-toast';
 import { FormattedNumberInput } from '../../../../components/ui/FormattedNumberInput';
 import { Card, Section } from '../../../../components/ui';
+import { isDesktopApp } from '../../../../services/desktopBridgeService';
 
 interface UniversalScanResult {
   code: string;
@@ -18,6 +20,7 @@ interface UniversalScanResult {
 }
 
 export default function ScannerPage() {
+  const router = useRouter();
   const [foundItem, setFoundItem] = useState<Item | null>(null);
   const [currentStock, setCurrentStock] = useState<number>(0);
   const [loading, setLoading] = useState(false);
@@ -27,6 +30,12 @@ export default function ScannerPage() {
   const [lastScanResult, setLastScanResult] = useState<string>('');
   const [scanHistory, setScanHistory] = useState<string[]>([]);
   const [isLookingUp, setIsLookingUp] = useState(false);
+
+  React.useEffect(() => {
+    if (isDesktopApp()) {
+      router.replace('/native?panel=inventory');
+    }
+  }, [router]);
   
   // Explicitly type searchResults:
   type SearchResult = { item: Item; score: number; matchType: string };
