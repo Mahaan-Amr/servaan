@@ -73,6 +73,53 @@ Result:
 
 - Pass/Fail:
 
+## 2026-07-01 - Native Desktop V1 Offline Slice Smoke
+
+Build command:
+
+```powershell
+npm run desktop:build:local
+```
+
+Packaged executable:
+
+```text
+src/desktop/src-tauri/target/release/servaan-desktop.exe
+```
+
+Environment:
+
+- OS: Windows desktop
+- Backend state during seed: online via `npm run dev:backend`
+- Backend state during offline restart: stopped
+- Tester: user
+- Codex role: guide smoke sequence and record known-good checkpoint
+- Source checkpoint: `4df2742 Add native desktop inventory V1`
+
+Scenario:
+
+- Rebuilt the release desktop executable.
+- Started backend online.
+- Opened the rebuilt release executable.
+- Logged in online if needed.
+- Ran sync/refresh once and confirmed no missing-cache warning.
+- Stopped backend.
+- Reopened desktop offline.
+- Unlocked with PIN.
+- Created one Native POS order with cash/manual-card payment.
+- Created Native Inventory stock IN and stock OUT entries.
+- Confirmed pending count increased as expected.
+- Restarted backend.
+- Ran Sync Now.
+- Confirmed pending count went down.
+- Confirmed backend records existed for the POS order/payment and inventory entries.
+
+Result:
+
+- Pass.
+- Native desktop V1 offline slice is known-good for cached startup, POS order/payment queueing, Inventory IN/OUT queueing, and reconnect sync.
+- No blocker observed in this run.
+
 ## 2026-06-12 - Packaged Windows Smoke
 
 Build command:
