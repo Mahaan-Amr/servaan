@@ -32,6 +32,14 @@ _Avoid_: Wrapped web page, desktop skin, web workspace shortcut
 A commercially supportable packaged desktop app release that is ready for real tenant rollout beyond a controlled pilot, including operational workflows, support visibility, hardware validation, distribution, updates, and security review.
 _Avoid_: Pilot-ready desktop, smoke-tested desktop, desktop V1
 
+**Approved Pilot Printer**:
+The exact receipt printer model validated for the first controlled desktop pilot. For the first Production Desktop Release, this means the U80 receipt printer rather than a broad printer family.
+_Avoid_: Supported printers, ESC/POS compatibility, printer support
+
+**Canonical Receipt**:
+A receipt view or reprint produced after the Canonical Backend has accepted the local sale/payment and assigned the canonical server-side numbers. It differs from an offline receipt, which may be printed immediately with local numbers and a pending-sync marker.
+_Avoid_: Final receipt, synced receipt, official copy
+
 **Estimated Local Stock**:
 The device-local stock value shown after offline inventory IN/OUT entries are queued but before the Canonical Backend confirms them. It updates immediately for operator feedback, may go below zero, and must be visually distinguished from confirmed stock when pending inventory operations exist.
 _Avoid_: Confirmed stock, real stock, server stock

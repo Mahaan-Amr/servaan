@@ -1,12 +1,20 @@
 import { getLocalReadModel, getLocalReadModelMeta } from '../../services/localReadModelService';
 import { localFirstSyncService } from '../../services/localFirstSyncService';
 import { getNativeOnlineLoginSnapshot, isNativeSnapshotValid } from '../../services/nativeAuthSnapshotService';
-import { isDesktopApp } from '../../services/desktopBridgeService';
+import { isDesktopApp, printDesktopReceiptText } from '../../services/desktopBridgeService';
 import type { CreateOrderRequest, OrderingSettings, ProcessPaymentRequest } from '../../services/orderingService';
 import { OrderType, PaymentMethod, type MenuCategory, type MenuItem, type Table } from '../../types/ordering';
-import type { NativePosCacheKey, NativePosMenuCategory, NativePosPaidOrderInput, NativePosPaidOrderResult, NativePosSnapshot, NativePosTable } from './nativePosTypes';
+import type {
+  NativePosCacheKey,
+  NativePosMenuCategory,
+  NativePosPaidOrderInput,
+  NativePosPaidOrderResult,
+  NativePosSnapshot,
+  NativePosTable
+} from './nativePosTypes';
 
 const REQUIRED_KEYS: NativePosCacheKey[] = ['sales.menu', 'sales.tables', 'sales.settings'];
+const RECEIPT_WIDTH = 42;
 
 function parsePrice(value: unknown): number {
   if (typeof value === 'number') return value;
@@ -18,7 +26,7 @@ function parsePrice(value: unknown): number {
 }
 
 function getItemName(item: MenuItem): string {
-  return item.displayName || item.item?.name || 'آیتم بدون نام';
+  return item.displayName || item.item?.name || 'Unnamed item';
 }
 
 function normalizeMenu(categories: MenuCategory[] | null): NativePosMenuCategory[] {
@@ -47,7 +55,7 @@ function normalizeTables(tables: Table[] | null): NativePosTable[] {
     .filter((table) => table.isActive !== false)
     .map((table) => ({
       id: table.id,
-      label: table.tableName || `میز ${table.tableNumber}`,
+      label: table.tableName || `Table ${table.tableNumber}`,
       status: table.status
     }));
 }
@@ -76,7 +84,7 @@ export async function loadNativePosSnapshot(): Promise<NativePosSnapshot> {
     return {
       readiness: {
         kind: 'not-native',
-        message: 'این صفحه فقط در نسخه دسکتاپ بومی فعال است.'
+        message: 'Native POS is available only in the desktop app.'
       },
       categories: [],
       tables: [],
@@ -91,7 +99,7 @@ export async function loadNativePosSnapshot(): Promise<NativePosSnapshot> {
       readiness: {
         kind: 'offline-auth-expired',
         expiresAt: snapshot?.offlineAuthExpiresAt,
-        message: 'اعتبار ورود آفلاین تمام شده است. لطفاً آنلاین وارد شوید.'
+        message: 'Offline login has expired. Reconnect and sign in again.'
       },
       categories: [],
       tables: [],
@@ -106,7 +114,7 @@ export async function loadNativePosSnapshot(): Promise<NativePosSnapshot> {
       readiness: {
         kind: 'missing-cache',
         missing,
-        message: 'برای شروع فروش، همگام‌سازی اولیه لازم است.'
+        message: 'Initial sync is required before native POS can start.'
       },
       categories: [],
       tables: [],
@@ -138,15 +146,15 @@ export async function loadNativePosSnapshot(): Promise<NativePosSnapshot> {
 
 export async function submitNativePosPaidOrder(input: NativePosPaidOrderInput): Promise<NativePosPaidOrderResult> {
   if (input.orderType !== 'DINE_IN' && input.orderType !== 'TAKEAWAY') {
-    throw new Error('در نسخه فعلی فقط سفارش حضوری و بیرون‌بر پشتیبانی می‌شود.');
+    throw new Error('Native POS V1 supports only dine-in and takeaway orders.');
   }
 
   if (input.items.length === 0) {
-    throw new Error('سبد سفارش خالی است.');
+    throw new Error('Order cart is empty.');
   }
 
   if (input.payment.method !== 'cash' && input.payment.method !== 'manual-card') {
-    throw new Error('در نسخه فعلی فقط پرداخت نقدی و کارت دستی پشتیبانی می‌شود.');
+    throw new Error('Native POS V1 supports only cash and manual-card payments.');
   }
 
   const orderData: CreateOrderRequest = {
@@ -166,7 +174,7 @@ export async function submitNativePosPaidOrder(input: NativePosPaidOrderInput): 
   const orderOperation = await localFirstSyncService.enqueueSalesOrder(orderData);
   const orderLocalId = orderOperation.entityLocalId;
   if (!orderLocalId) {
-    throw new Error('شناسه محلی سفارش ساخته نشد.');
+    throw new Error('Order local id was not created.');
   }
 
   const paymentData: ProcessPaymentRequest = {
@@ -187,16 +195,154 @@ export async function submitNativePosPaidOrder(input: NativePosPaidOrderInput): 
   const paymentOperation = await localFirstSyncService.enqueueOfflinePayment(paymentData);
   const paymentLocalId = paymentOperation.entityLocalId;
   if (!paymentLocalId) {
-    throw new Error('شناسه محلی پرداخت ساخته نشد.');
+    throw new Error('Payment local id was not created.');
   }
 
-  return {
+  const result: NativePosPaidOrderResult = {
     orderOperation,
     paymentOperation,
     orderLocalId,
     paymentLocalId,
     orderNumber: orderOperation.localNumber,
     paymentNumber: paymentOperation.localNumber,
-    message: 'سفارش و پرداخت در صف همگام‌سازی ثبت شد.'
+    receipt: {
+      status: 'not_configured',
+      printerName: input.receipt?.printerName?.trim() || undefined,
+      receiptText: buildNativePosReceiptText(input, {
+        orderLocalId,
+        paymentLocalId,
+        orderNumber: orderOperation.localNumber,
+        paymentNumber: paymentOperation.localNumber,
+        businessName: input.receipt?.businessName,
+        printedAt: input.receipt?.printedAt
+      })
+    },
+    message: 'Sale and payment were queued for sync.'
   };
+
+  if (!input.receipt?.printerName?.trim()) {
+    return result;
+  }
+
+  return printNativePosQueuedReceipt(result, input.receipt.printerName);
+}
+
+export async function printNativePosQueuedReceipt(
+  result: NativePosPaidOrderResult,
+  printerName?: string
+): Promise<NativePosPaidOrderResult> {
+  const resolvedPrinterName = printerName?.trim() || result.receipt.printerName?.trim();
+
+  if (!resolvedPrinterName) {
+    return {
+      ...result,
+      receipt: {
+        ...result.receipt,
+        status: 'not_configured',
+        printerName: undefined,
+        errorMessage: undefined
+      }
+    };
+  }
+
+  try {
+    await printDesktopReceiptText(result.receipt.receiptText, resolvedPrinterName);
+    const printedAt = new Date().toISOString();
+    const auditOperation = await localFirstSyncService.enqueueOfflineReceiptPrinted(result.orderLocalId, new Date(printedAt));
+
+    return {
+      ...result,
+      receipt: {
+        ...result.receipt,
+        status: 'printed',
+        printerName: resolvedPrinterName,
+        printedAt,
+        auditOperation,
+        errorMessage: undefined
+      }
+    };
+  } catch (error) {
+    return {
+      ...result,
+      receipt: {
+        ...result.receipt,
+        status: 'failed',
+        printerName: resolvedPrinterName,
+        errorMessage: error instanceof Error ? error.message : String(error)
+      }
+    };
+  }
+}
+
+export function buildNativePosReceiptText(
+  input: NativePosPaidOrderInput,
+  numbers: {
+    orderLocalId: string;
+    paymentLocalId: string;
+    orderNumber?: string;
+    paymentNumber?: string;
+    businessName?: string;
+    printedAt?: string;
+  }
+): string {
+  const printedAt = numbers.printedAt || new Date().toISOString();
+  const orderType = input.orderType === 'DINE_IN' ? 'DINE IN' : 'TAKEAWAY';
+  const paymentMethod = input.payment.method === 'cash' ? 'Cash' : 'Manual card';
+  const total = input.items.reduce((sum, item) => sum + item.total, 0);
+  const lines = [
+    center(numbers.businessName?.trim() || 'Servaan POS'),
+    center('Pending Sync'),
+    repeat('-', RECEIPT_WIDTH),
+    `Order: ${numbers.orderNumber || numbers.orderLocalId}`,
+    `Payment: ${numbers.paymentNumber || numbers.paymentLocalId}`,
+    `Type: ${orderType}`,
+    input.tableId ? `Table: ${input.tableId}` : undefined,
+    input.customerName ? `Customer: ${input.customerName}` : undefined,
+    `Printed: ${printedAt}`,
+    repeat('-', RECEIPT_WIDTH),
+    ...input.items.flatMap((item) => formatReceiptItem(item.itemName, item.quantity, item.total)),
+    repeat('-', RECEIPT_WIDTH),
+    rightLabel('Total', formatMoney(total)),
+    rightLabel('Paid', formatMoney(input.payment.amount)),
+    `Method: ${paymentMethod}`,
+    input.payment.method === 'manual-card' && input.payment.manualCard?.transactionRef
+      ? `Card ref: ${input.payment.manualCard.transactionRef}`
+      : undefined,
+    input.notes ? `Notes: ${input.notes}` : undefined,
+    repeat('-', RECEIPT_WIDTH),
+    'Local receipt. Reprint canonical receipt after sync.',
+    ''
+  ].filter((line): line is string => Boolean(line));
+
+  return `${lines.join('\n')}\n`;
+}
+
+function formatReceiptItem(name: string, quantity: number, total: number): string[] {
+  return [
+    trimToWidth(name),
+    rightLabel(`x${quantity}`, formatMoney(total))
+  ];
+}
+
+function formatMoney(value: number): string {
+  return `${Math.round(value).toLocaleString('en-US')} Toman`;
+}
+
+function rightLabel(label: string, value: string): string {
+  const gap = RECEIPT_WIDTH - label.length - value.length;
+  return `${label}${repeat(' ', Math.max(1, gap))}${value}`;
+}
+
+function center(value: string): string {
+  const trimmed = trimToWidth(value);
+  const left = Math.floor((RECEIPT_WIDTH - trimmed.length) / 2);
+  return `${repeat(' ', left)}${trimmed}`;
+}
+
+function trimToWidth(value: string): string {
+  return value.length <= RECEIPT_WIDTH ? value : value.slice(0, Math.max(0, RECEIPT_WIDTH - 1));
+}
+
+function repeat(value: string, count: number): string {
+  return value.repeat(count);
 }

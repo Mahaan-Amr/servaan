@@ -1,14 +1,17 @@
 const isDesktopApp = jest.fn();
+const printDesktopReceiptText = jest.fn();
 const getLocalReadModel = jest.fn();
 const getLocalReadModelMeta = jest.fn();
 const getNativeOnlineLoginSnapshot = jest.fn();
 const isNativeSnapshotValid = jest.fn();
 const enqueueSalesOrder = jest.fn();
 const enqueueOfflinePayment = jest.fn();
+const enqueueOfflineReceiptPrinted = jest.fn();
 const getIssueSummary = jest.fn();
 
 jest.mock('../../services/desktopBridgeService', () => ({
-  isDesktopApp
+  isDesktopApp,
+  printDesktopReceiptText
 }));
 
 jest.mock('../../services/localReadModelService', () => ({
@@ -25,6 +28,7 @@ jest.mock('../../services/localFirstSyncService', () => ({
   localFirstSyncService: {
     enqueueSalesOrder,
     enqueueOfflinePayment,
+    enqueueOfflineReceiptPrinted,
     getIssueSummary
   }
 }));
@@ -115,6 +119,11 @@ describe('native POS service', () => {
     });
     isNativeSnapshotValid.mockReturnValue(true);
     getIssueSummary.mockResolvedValue(issueSummary);
+    printDesktopReceiptText.mockResolvedValue(true);
+    enqueueOfflineReceiptPrinted.mockResolvedValue({
+      localOperationId: 'local_receipt_1',
+      localNumber: 'RCPT-AUDIT-1'
+    });
     mockReadModels();
   });
 
@@ -173,7 +182,7 @@ describe('native POS service', () => {
     ]);
   });
 
-  it('queues one order plus one full manual-card payment', async () => {
+  it('queues one order plus one full manual-card payment without printing when no printer is configured', async () => {
     enqueueSalesOrder.mockResolvedValue({
       entityLocalId: 'local_order_1',
       localNumber: 'OFF-1'
@@ -236,8 +245,103 @@ describe('native POS service', () => {
       orderLocalId: 'local_order_1',
       paymentLocalId: 'local_payment_1',
       orderNumber: 'OFF-1',
-      paymentNumber: 'RCPT-1'
+      paymentNumber: 'RCPT-1',
+      receipt: {
+        status: 'not_configured'
+      }
     });
+    expect(printDesktopReceiptText).not.toHaveBeenCalled();
+    expect(enqueueOfflineReceiptPrinted).not.toHaveBeenCalled();
+  });
+
+  it('prints a native receipt and queues the receipt audit flag after sale/payment are queued', async () => {
+    enqueueSalesOrder.mockResolvedValue({
+      entityLocalId: 'local_order_1',
+      localNumber: 'OFF-1'
+    });
+    enqueueOfflinePayment.mockResolvedValue({
+      entityLocalId: 'local_payment_1',
+      localNumber: 'RCPT-1'
+    });
+
+    const { submitNativePosPaidOrder } = await import('../../features/native-pos/nativePosService');
+    const result = await submitNativePosPaidOrder({
+      orderType: 'TAKEAWAY',
+      items: [
+        {
+          itemId: 'menu-1',
+          itemName: 'Espresso',
+          unitPrice: 45000,
+          quantity: 1,
+          total: 45000
+        }
+      ],
+      payment: {
+        method: 'cash',
+        amount: 45000
+      },
+      receipt: {
+        printerName: 'U80 USB',
+        businessName: 'Pilot Cafe',
+        printedAt: '2026-07-04T10:00:00.000Z'
+      }
+    });
+
+    expect(printDesktopReceiptText).toHaveBeenCalledWith(expect.stringContaining('Pending Sync'), 'U80 USB');
+    expect(printDesktopReceiptText).toHaveBeenCalledWith(expect.stringContaining('OFF-1'), 'U80 USB');
+    expect(printDesktopReceiptText).toHaveBeenCalledWith(expect.stringContaining('RCPT-1'), 'U80 USB');
+    expect(enqueueOfflineReceiptPrinted).toHaveBeenCalledWith('local_order_1', expect.any(Date));
+    expect(result.receipt).toMatchObject({
+      status: 'printed',
+      printerName: 'U80 USB',
+      auditOperation: {
+        localOperationId: 'local_receipt_1'
+      }
+    });
+  });
+
+  it('keeps the queued sale/payment when receipt printing fails', async () => {
+    enqueueSalesOrder.mockResolvedValue({
+      entityLocalId: 'local_order_1',
+      localNumber: 'OFF-1'
+    });
+    enqueueOfflinePayment.mockResolvedValue({
+      entityLocalId: 'local_payment_1',
+      localNumber: 'RCPT-1'
+    });
+    printDesktopReceiptText.mockRejectedValue(new Error('USB printer offline'));
+
+    const { submitNativePosPaidOrder } = await import('../../features/native-pos/nativePosService');
+    const result = await submitNativePosPaidOrder({
+      orderType: 'TAKEAWAY',
+      items: [
+        {
+          itemId: 'menu-1',
+          itemName: 'Espresso',
+          unitPrice: 45000,
+          quantity: 1,
+          total: 45000
+        }
+      ],
+      payment: {
+        method: 'cash',
+        amount: 45000
+      },
+      receipt: {
+        printerName: 'U80 USB'
+      }
+    });
+
+    expect(result).toMatchObject({
+      orderLocalId: 'local_order_1',
+      paymentLocalId: 'local_payment_1',
+      receipt: {
+        status: 'failed',
+        printerName: 'U80 USB',
+        errorMessage: 'USB printer offline'
+      }
+    });
+    expect(enqueueOfflineReceiptPrinted).not.toHaveBeenCalled();
   });
 
   it('rejects empty carts and delivery orders in V1', async () => {
@@ -249,7 +353,7 @@ describe('native POS service', () => {
         items: [],
         payment: { method: 'cash', amount: 0 }
       })
-    ).rejects.toThrow('سبد سفارش خالی است.');
+    ).rejects.toThrow('Order cart is empty.');
 
     await expect(
       submitNativePosPaidOrder({
@@ -265,6 +369,6 @@ describe('native POS service', () => {
         ],
         payment: { method: 'cash', amount: 45000 }
       })
-    ).rejects.toThrow('در نسخه فعلی فقط سفارش حضوری و بیرون‌بر پشتیبانی می‌شود.');
+    ).rejects.toThrow('Native POS V1 supports only dine-in and takeaway orders.');
   });
 });

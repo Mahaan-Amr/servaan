@@ -83,6 +83,22 @@ export interface NativePosPaidOrderInput {
       cardMask?: string;
     };
   };
+  receipt?: {
+    printerName?: string;
+    businessName?: string;
+    printedAt?: string;
+  };
+}
+
+export type NativePosReceiptPrintStatus = 'printed' | 'failed' | 'not_configured';
+
+export interface NativePosReceiptPrintResult {
+  status: NativePosReceiptPrintStatus;
+  receiptText: string;
+  printerName?: string;
+  printedAt?: string;
+  auditOperation?: LocalOperation;
+  errorMessage?: string;
 }
 
 export interface NativePosPaidOrderResult {
@@ -92,5 +108,6 @@ export interface NativePosPaidOrderResult {
   paymentLocalId: string;
   orderNumber?: string;
   paymentNumber?: string;
+  receipt: NativePosReceiptPrintResult;
   message: string;
 }

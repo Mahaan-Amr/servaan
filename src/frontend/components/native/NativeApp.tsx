@@ -70,6 +70,7 @@ import {
 } from '../../services/nativeBusinessCacheService';
 import {
   loadNativePosSnapshot,
+  printNativePosQueuedReceipt,
   submitNativePosPaidOrder
 } from '../../features/native-pos/nativePosService';
 import type {
@@ -789,6 +790,8 @@ export function NativeApp() {
               {activePanel === 'sales' && (
                 <SalesPanel
                   issues={issueSummary}
+                  printerName={setup?.printerName}
+                  businessName={activeUser.tenantName}
                   onRefreshData={handleSyncNow}
                   onOpenIssues={() => setActivePanel('sync')}
                   onSaleQueued={refreshIssues}
@@ -1077,11 +1080,15 @@ function HomePanel({
 
 function SalesPanel({
   issues,
+  printerName,
+  businessName,
   onRefreshData,
   onOpenIssues,
   onSaleQueued
 }: {
   issues: NativeIssueSummary;
+  printerName?: string;
+  businessName?: string;
   onRefreshData: () => void;
   onOpenIssues: () => void;
   onSaleQueued: () => void;
@@ -1093,6 +1100,7 @@ function SalesPanel({
   const [cart, setCart] = useState<NativePosCartLine[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<NativePosPaymentMethod>('cash');
   const [submitting, setSubmitting] = useState(false);
+  const [retryingReceipt, setRetryingReceipt] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<NativePosPaidOrderResult | null>(null);
 
@@ -1178,6 +1186,10 @@ function SalesPanel({
           amount: total,
           cashReceived: paymentMethod === 'cash' ? total : undefined,
           manualCard: paymentMethod === 'manual-card' ? { terminalId: 'manual-card' } : undefined
+        },
+        receipt: {
+          printerName,
+          businessName
         }
       });
       setSuccess(result);
@@ -1189,6 +1201,22 @@ function SalesPanel({
       setError(formatNativeError(submitError, 'ثبت فروش ناموفق بود'));
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const retryReceiptPrint = async () => {
+    if (!success || success.receipt.status === 'printed') return;
+
+    setRetryingReceipt(true);
+    setError(null);
+    try {
+      const result = await printNativePosQueuedReceipt(success, printerName);
+      setSuccess(result);
+      await onSaleQueued();
+    } catch (retryError) {
+      setError(formatNativeError(retryError, 'چاپ دوباره رسید ناموفق بود'));
+    } finally {
+      setRetryingReceipt(false);
     }
   };
 
@@ -1240,7 +1268,31 @@ function SalesPanel({
           <div className="mt-3 grid gap-2 text-sm md:grid-cols-2">
             <div>شماره سفارش: {success.orderNumber || success.orderLocalId}</div>
             <div>شماره پرداخت: {success.paymentNumber || success.paymentLocalId}</div>
+            <div>چاپگر: {success.receipt.printerName || 'تنظیم نشده'}</div>
+            <div>
+              وضعیت رسید:{' '}
+              {success.receipt.status === 'printed'
+                ? 'چاپ شد'
+                : success.receipt.status === 'failed'
+                  ? 'چاپ ناموفق'
+                  : 'در انتظار تنظیم چاپگر'}
+            </div>
           </div>
+          {success.receipt.status !== 'printed' && (
+            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+              <div>فروش و پرداخت ذخیره شده‌اند؛ خطای چاپ باعث حذف یا تکرار فروش نمی‌شود.</div>
+              {success.receipt.errorMessage && <div className="mt-1 text-xs">{success.receipt.errorMessage}</div>}
+              <button
+                type="button"
+                disabled={retryingReceipt || !printerName}
+                onClick={retryReceiptPrint}
+                className="mt-3 inline-flex items-center gap-2 rounded-xl bg-amber-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-amber-700 disabled:opacity-50"
+              >
+                {retryingReceipt ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Printer className="h-3.5 w-3.5" />}
+                چاپ دوباره رسید
+              </button>
+            </div>
+          )}
         </div>
       )}
 

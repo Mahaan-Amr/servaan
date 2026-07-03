@@ -7,7 +7,9 @@ This checklist gates the first Production Desktop Release. It verifies one real 
 - [ ] Pilot tenant is selected and approved for controlled desktop rollout.
 - [ ] Pilot branch, devices, operators, managers, and support contacts are recorded.
 - [ ] Approved Windows device hardware is identified.
-- [ ] Approved receipt printer model is identified.
+- [ ] Approved receipt printer model is identified as U80 over USB.
+- [ ] Windows USB printer name for the U80 is recorded exactly as it appears on the pilot device.
+- [ ] Pilot receipt business identity is confirmed: business name, address, phone, tax/registration fields, and any required footer text.
 - [ ] Backend environment, tenant, and device registration are ready.
 - [ ] Support team has access to read-only admin support observability.
 - [ ] Rollback plan to the previous desktop app binary is documented.
@@ -72,14 +74,16 @@ Complete at least once during the pilot week:
 
 ## Receipt Printing
 
-- [ ] Approved pilot printer is configured.
+- [ ] Approved U80 USB pilot printer is configured by Windows printer name.
 - [ ] Printer setup survives app restart.
 - [ ] Online receipt prints for a completed POS sale.
 - [ ] Offline/local receipt prints immediately after local sale and payment are queued.
-- [ ] Offline receipt is clearly marked pending sync.
+- [ ] Offline receipt is marked pending sync with a small but visible marker.
 - [ ] Offline receipt includes local sale/payment numbers.
-- [ ] Receipt has a later verification or canonical backend numbering path after sync.
-- [ ] Printer failure surfaces a clear operator-facing error and does not lose the queued sale/payment.
+- [ ] Receipt print success queues the offline receipt audit flag for sync.
+- [ ] Printer failure surfaces a clear operator-facing error and does not lose, cancel, or delete the queued sale/payment.
+- [ ] Failed receipt printing can be retried without creating a duplicate sale/payment.
+- [ ] Receipt has a later Canonical Receipt reprint path after sync.
 
 ## Sync Status And Diagnostics
 
@@ -134,7 +138,7 @@ Complete at least once during the pilot week:
 - [ ] Pilot tenant completes one full operating week.
 - [ ] Daily POS/Inventory use succeeds.
 - [ ] At least one offline/reconnect event succeeds.
-- [ ] Receipt printing works on approved pilot hardware.
+- [ ] Receipt printing works on approved U80 pilot hardware.
 - [ ] Update check and confirmed install path are validated.
 - [ ] Redacted Diagnostic Export is generated and reviewed.
 - [ ] Admin support observability correlates with the diagnostic export.

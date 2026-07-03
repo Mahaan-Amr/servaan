@@ -1,6 +1,6 @@
 ﻿# Native App Production Plan
 
-Last updated: 2026-06-11
+Last updated: 2026-07-04
 
 ## Purpose
 
@@ -184,9 +184,15 @@ Pilot support observability records are retained for 90 days and do not include 
 
 The first production desktop release requires real receipt printing on selected approved pilot printers. This is a production-shell requirement, not an expansion of the POS business workflow: receipt printing must work for the approved hardware list, while broad printer compatibility remains outside the first production release promise.
 
-The first approved printer list contains one exact receipt printer model used by the pilot tenant. Servaan validates that model deeply before expanding to a small ESC/POS-compatible printer family after the first production desktop release.
+The first approved printer list contains one exact receipt printer model used by the pilot tenant: U80 over USB. The configured desktop printer identifier is the Windows USB printer name. Servaan validates U80 deeply before expanding to a small ESC/POS-compatible printer family after the first production desktop release.
 
-Production desktop receipt printing allows offline/local receipts immediately after the local POS sale and payment are queued. Offline receipts must be clearly marked as pending sync, include local sale/payment numbers, and preserve a path to later verification or canonical backend numbering after synchronization.
+Production desktop receipt printing allows offline/local receipts immediately after the local POS sale and payment are queued. The sale/payment queue is the business action of record; receipt print failure must not cancel, delete, or block the queued sale. Print failure becomes a retryable operator/support problem with a clear Persian error and retry path.
+
+Offline receipts must include local sale/payment numbers and a small but visible pending-sync marker. After synchronization, the operator/support path must preserve a later Canonical Receipt reprint option using canonical backend numbering or verification status.
+
+Pilot receipt content must use the tenant's confirmed receipt identity: business name, address, phone, tax/registration fields, and any required footer text. If those fields are incomplete, the production pilot checklist must block release until the business owner confirms the printable receipt content.
+
+The next implementation slice is Native POS receipt printing end to end: generate the receipt text/template from the native POS sale result, call the desktop print bridge after local order/payment queueing, queue `sales.receipt.mark_printed_offline` only after print success, keep the sale/payment queued if printing fails, and validate the flow against the U80 printer.
 
 The first production desktop release does not include a privileged recovery export with raw queue payloads. It relies on the operator-safe Redacted Diagnostic Export plus a documented manual recovery policy until encrypted raw recovery exports have explicit authorization, retention, and support-handling rules.
 
@@ -195,3 +201,5 @@ Production desktop release is blocked until one real pilot tenant completes a on
 Production desktop release approval requires engineering, support, and business owner sign-off. Engineering signs off local storage, update, migration, and security behavior; support signs off diagnostics, observability, and recovery readiness; the business owner signs off pilot risk and tenant communication.
 
 Broader operational workflows are explicitly blocked until after the one-week real-tenant production desktop pilot passes. Even small workflow additions create new receipt, sync, support, and offline edge cases, so the production desktop milestone stays focused on hardening the proven V1 offline slice.
+
+The reason for blocking desktop/web feature parity before the pilot is operational risk control. The first production desktop must prove installation/update/rollback, online login and cache seed, offline restart/unlock, POS sale/payment/receipt/sync, Inventory IN/OUT/sync, support diagnostics, and local-data preservation before adding broader web workflows. After one real pilot tenant completes a stable week, desktop can expand toward web parity from a trustworthy foundation instead of debugging packaging, local data, sync, hardware, and new business workflows at the same time.

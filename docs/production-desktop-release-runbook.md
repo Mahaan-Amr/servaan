@@ -46,10 +46,14 @@ This runbook is for the first controlled Production Desktop Release. It assumes 
 
 ## Pilot Hardware
 
-- Validate one exact receipt printer model for the first production desktop release.
+- Validate one exact receipt printer model for the first production desktop release: U80 over USB, configured by the Windows printer name on the pilot device.
 - Online receipts must print for completed POS sales.
 - Offline/local receipts must print immediately after local sale/payment queueing.
-- Offline/local receipts must be clearly marked pending sync and include local sale/payment numbers.
+- Offline/local receipts must include local sale/payment numbers and a small but visible pending-sync marker.
+- Receipt print failure must not lose, cancel, delete, or block the queued sale/payment.
+- Receipt print failure must be retryable without creating a duplicate sale/payment.
+- Successful offline receipt printing must queue the receipt audit flag for sync.
+- Synced sales must have a later Canonical Receipt reprint path using canonical backend numbering or verification status.
 - Broad ESC/POS printer compatibility follows after the first production desktop release.
 
 ## Support Readiness
