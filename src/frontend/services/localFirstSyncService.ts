@@ -213,6 +213,10 @@ class LocalFirstSyncService {
     return localFirstStorage.getIssueSummary();
   }
 
+  async getUnsyncedOperations() {
+    return localFirstStorage.getUnsyncedOperations();
+  }
+
   private async createOperation(input: {
     workspaceId: LocalOperation['workspaceId'];
     entityType: LocalOperation['entityType'];

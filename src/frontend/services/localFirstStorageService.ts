@@ -142,6 +142,18 @@ class LocalFirstStorageService {
     );
   }
 
+  async getUnsyncedOperations(): Promise<LocalOperation[]> {
+    const operations = await this.getAllOperations();
+    const operationsById = new Map(operations.map((operation) => [operation.localOperationId, operation]));
+
+    return markDependencyWaits(operations)
+      .map((operation) => {
+        const original = operationsById.get(operation.localOperationId);
+        return original?.status === 'syncing' ? original : operation;
+      })
+      .filter((operation) => operation.status !== 'synced');
+  }
+
   async updateOperation(operation: LocalOperation): Promise<void> {
     if (this.isDesktop()) {
       await setDesktopStoreValue(DESKTOP_STORE.localOperations, operation.localOperationId, operation);
@@ -359,7 +371,7 @@ class LocalFirstStorageService {
   }
 
   async getIssueSummary(): Promise<SyncIssueSummary> {
-    return summarizeSyncIssues(await this.getAllOperations());
+    return summarizeSyncIssues(markDependencyWaits(await this.getAllOperations()));
   }
 }
 

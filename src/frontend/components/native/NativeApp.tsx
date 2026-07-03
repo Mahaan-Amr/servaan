@@ -89,6 +89,12 @@ import type {
   NativeInventoryMovementType,
   NativeInventorySnapshot
 } from '../../features/native-inventory/nativeInventoryTypes';
+import {
+  loadNativeSyncIssueGroups,
+  type NativeSyncIssueGroup,
+  type NativeSyncIssueRow
+} from '../../features/native-sync/nativeSyncIssues';
+import { buildNativeDiagnosticsExport } from '../../features/native-sync/nativeDiagnosticsExport';
 
 type NativePanel = 'home' | 'sales' | 'inventory' | 'settings' | 'support' | 'sync';
 
@@ -108,6 +114,27 @@ const emptyIssueSummary: NativeIssueSummary = {
   waitingForDependencyCount: 0
 };
 
+const emptySyncIssueGroups: NativeSyncIssueGroup[] = [
+  {
+    key: 'attention',
+    title: 'نیازمند توجه',
+    description: 'ناموفق، دارای تعارض یا منتظر عملیات وابسته',
+    rows: []
+  },
+  {
+    key: 'pending',
+    title: 'در انتظار همگام‌سازی',
+    description: 'هنوز فقط روی این دستگاه ثبت شده است',
+    rows: []
+  },
+  {
+    key: 'syncing',
+    title: 'در حال همگام‌سازی',
+    description: 'در تلاش جاری برای ارسال به سرور',
+    rows: []
+  }
+];
+
 function formatNativeError(error: unknown, fallback: string): string {
   if (error instanceof Error) return error.message;
   if (typeof error === 'string') return error;
@@ -122,6 +149,16 @@ function formatNativeError(error: unknown, fallback: string): string {
 function formatNativeQuantity(value: number): string {
   return value.toLocaleString('fa-IR', {
     maximumFractionDigits: 3
+  });
+}
+
+function formatNativeDateTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleString('fa-IR', {
+    dateStyle: 'short',
+    timeStyle: 'short'
   });
 }
 
@@ -180,6 +217,7 @@ export function NativeApp() {
   const [session, setSession] = useState(getNativeOfflineSession());
   const [activePanel, setActivePanel] = useState<NativePanel>('home');
   const [issueSummary, setIssueSummary] = useState<NativeIssueSummary>(emptyIssueSummary);
+  const [syncIssueGroups, setSyncIssueGroups] = useState<NativeSyncIssueGroup[]>(emptySyncIssueGroups);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [locked, setLocked] = useState(false);
@@ -209,10 +247,15 @@ export function NativeApp() {
   );
   const refreshIssues = useCallback(async () => {
     try {
-      const summary = await localFirstSyncService.getIssueSummary();
+      const [summary, groups] = await Promise.all([
+        localFirstSyncService.getIssueSummary(),
+        loadNativeSyncIssueGroups()
+      ]);
       setIssueSummary(summary);
+      setSyncIssueGroups(groups);
     } catch {
       setIssueSummary(emptyIssueSummary);
+      setSyncIssueGroups(emptySyncIssueGroups);
     }
   }, []);
 
@@ -553,15 +596,22 @@ export function NativeApp() {
   const handleDiagnosticsExport = async () => {
     setProcessing(true);
     try {
-      const summary = await localFirstSyncService.getIssueSummary();
-      const payload = {
-        exportedAt: new Date().toISOString(),
-        app: 'سروان بومی',
-        version: '0.1.0',
+      const [summary, groups, readiness] = await Promise.all([
+        localFirstSyncService.getIssueSummary(),
+        loadNativeSyncIssueGroups(),
+        getNativeV1CacheReadiness().catch(() => cacheReadiness)
+      ]);
+      setIssueSummary(summary);
+      setSyncIssueGroups(groups);
+      setCacheReadiness(readiness);
+      const payload = buildNativeDiagnosticsExport({
+        appVersion: '0.1.0',
         device: setup,
-        user: activeUser ? { id: activeUser.id, name: activeUser.name, role: activeUser.role, tenantId: activeUser.tenantId } : null,
-        issueSummary: summary
-      };
+        user: activeUser ? { id: activeUser.id, role: activeUser.role, tenantId: activeUser.tenantId } : null,
+        cacheReadiness: readiness,
+        issueSummary: summary,
+        syncGroups: groups
+      });
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
@@ -749,6 +799,7 @@ export function NativeApp() {
                   issues={issueSummary}
                   summary={inventorySummary}
                   onOpenIssues={() => setActivePanel('sync')}
+                  onInventoryQueued={refreshIssues}
                 />
               )}
               {activePanel === 'settings' && (
@@ -765,6 +816,7 @@ export function NativeApp() {
               {activePanel === 'sync' && (
                 <SyncIssuesPanel
                   issues={issueSummary}
+                  groups={syncIssueGroups}
                   onRetry={handleSyncNow}
                   onExport={handleDiagnosticsExport}
                   onOpenSupport={() => setActivePanel('support')}
@@ -1325,11 +1377,13 @@ function SalesPanel({
 function InventoryPanel({
   issues,
   summary,
-  onOpenIssues
+  onOpenIssues,
+  onInventoryQueued
 }: {
   issues: NativeIssueSummary;
   summary: { totalItems: number; lowStockCount: number; todayTransactions: number };
   onOpenIssues: () => void;
+  onInventoryQueued: () => void;
 }) {
   const [snapshot, setSnapshot] = useState<NativeInventorySnapshot | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1391,6 +1445,7 @@ function InventoryPanel({
       setQuantity('');
       setNote('');
       await loadSnapshot();
+      await onInventoryQueued();
     } catch (submitError) {
       setError(formatNativeError(submitError, 'ثبت سند انبار ناموفق بود'));
     } finally {
@@ -1724,35 +1779,71 @@ function SupportPanel({
 
 function SyncIssuesPanel({
   issues,
+  groups,
   onRetry,
   onExport,
   onOpenSupport
 }: {
   issues: NativeIssueSummary;
+  groups: NativeSyncIssueGroup[];
   onRetry: () => void;
   onExport: () => void;
   onOpenSupport: () => void;
 }) {
   const problemCount = issues.failedCount + issues.conflictedCount + issues.waitingForDependencyCount;
+  const unsyncedCount = groups.reduce((total, group) => total + group.rows.length, 0);
 
   return (
     <section className="space-y-6">
       <HeroBand
-        title={problemCount > 0 ? 'موارد همگام‌سازی' : 'همگام‌سازی بدون مشکل'}
-        subtitle="فقط هنگام نیاز نمایش داده می‌شود"
+        title="وضعیت همگام‌سازی"
+        subtitle={unsyncedCount > 0 ? `${unsyncedCount} عملیات هنوز فقط روی این دستگاه است` : 'عملیات همگام‌نشده‌ای روی این دستگاه نیست'}
         actionLabel="تلاش دوباره"
         onAction={onRetry}
       />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <ActionTile icon={HardDriveDownload} title="در انتظار" text={`${issues.pendingCount} در صف`} />
+        <ActionTile icon={HardDriveDownload} title="عملیات همگام‌نشده" text={`${unsyncedCount} روی این دستگاه`} />
         <ActionTile icon={TriangleAlert} title="ناموفق" text={`${issues.failedCount} نیاز به تلاش دوباره`} tone="warning" />
         <ActionTile icon={BadgeAlert} title="دارای تعارض" text={`${issues.conflictedCount} نیازمند مدیر`} tone="warning" />
         <ActionTile icon={CircleGauge} title="منتظر" text={`${issues.waitingForDependencyCount} وابسته به عملیات والد`} />
       </div>
+
+      <section className="space-y-4">
+        <div>
+          <p className="text-sm font-bold text-slate-500 dark:text-slate-400">عملیات همگام‌نشده</p>
+          <h2 className="mt-1 text-2xl font-black text-slate-950 dark:text-white">آنچه هنوز فقط روی این دستگاه است</h2>
+        </div>
+
+        {unsyncedCount === 0 ? (
+          <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-100">
+            همه عملیات ثبت‌شده تا این لحظه همگام‌سازی شده‌اند.
+          </div>
+        ) : (
+          groups.map((group) => (
+            <div key={group.key} className={group.rows.length === 0 ? 'hidden' : 'space-y-3'}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-base font-black text-slate-950 dark:text-white">{group.title}</h3>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{group.description}</p>
+                </div>
+                <span className="rounded-full border border-black/5 bg-white px-3 py-1 text-xs font-bold text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
+                  {group.rows.length} مورد
+                </span>
+              </div>
+              <div className="grid gap-3">
+                {group.rows.map((row) => (
+                  <NativeSyncIssueRowCard key={row.id} row={row} />
+                ))}
+              </div>
+            </div>
+          ))
+        )}
+      </section>
+
       <NativePanelSurface
-        title="حل مسئله"
+        title={problemCount > 0 ? 'موارد نیازمند توجه' : 'راهنمای همگام‌سازی'}
         items={[
-          'اگر یک عملیات ناموفق شود، عملیات مستقل دیگر همچنان همگام می‌شوند.',
+          'دکمه تلاش دوباره کل صف آماده را بررسی می‌کند؛ تلاش جداگانه برای هر ردیف در V1 وجود ندارد.',
           'عملیات وابسته تا گرفتن شناسه سرور از والد صبر می‌کنند.',
           'حل تعارض داده‌های اصلی همچنان با مدیر انجام می‌شود.'
         ]}
@@ -1776,6 +1867,47 @@ function SyncIssuesPanel({
         }
       />
     </section>
+  );
+}
+
+function NativeSyncIssueRowCard({ row }: { row: NativeSyncIssueRow }) {
+  const attention = row.group === 'attention';
+
+  return (
+    <article className={`rounded-3xl border bg-white p-4 shadow-sm dark:bg-slate-950 ${
+      attention
+        ? 'border-amber-200 shadow-amber-100/60 dark:border-amber-900/40 dark:shadow-black/20'
+        : 'border-black/5 shadow-slate-200/60 dark:border-white/10 dark:shadow-black/20'
+    }`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-600 dark:bg-white/10 dark:text-slate-200">
+              {row.typeLabel}
+            </span>
+            <span className={`rounded-full px-3 py-1 text-[11px] font-bold ${
+              attention
+                ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-100'
+                : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-100'
+            }`}>
+              {row.statusLabel}
+            </span>
+          </div>
+          <h4 className="mt-3 text-base font-black text-slate-950 dark:text-white">{row.primaryText}</h4>
+          <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">{row.secondaryText}</p>
+        </div>
+        <div className="shrink-0 text-left text-xs text-slate-500 dark:text-slate-400">
+          <div>{formatNativeDateTime(row.createdAt)}</div>
+          <div className="mt-1 font-mono text-[11px]">{row.localNumber}</div>
+        </div>
+      </div>
+      {(row.errorText || row.helperText) && (
+        <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600 dark:bg-white/5 dark:text-slate-300">
+          {row.errorText && <div className="font-bold text-amber-700 dark:text-amber-200">{row.errorText}</div>}
+          {row.helperText && <div className={row.errorText ? 'mt-1' : ''}>{row.helperText}</div>}
+        </div>
+      )}
+    </article>
   );
 }
 

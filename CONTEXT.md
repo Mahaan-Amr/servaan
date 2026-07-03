@@ -16,6 +16,14 @@ _Avoid_: Server cache, desktop backend
 A deliberately small set of operational actions that can be completed while the backend is unavailable and later synchronized. In V1 this means offline POS order creation, offline cash/manual-card payment recording, offline inventory IN/OUT entries, and visible sync issue status.
 _Avoid_: Fully offline workspace, offline dashboard, cached screen
 
+**Unsynced Operation**:
+A locally recorded business action that has not yet been confirmed by the Canonical Backend. It may be pending normally, waiting on another operation, failed, or conflicted; it remains visible because it still exists only on the device.
+_Avoid_: Sync issue, failed item, local-only record
+
+**Redacted Diagnostic Export**:
+An operator-safe support file that summarizes device, cache, and Unsynced Operation status without raw operation payloads or authentication secrets. It is safe enough for pilot operators to send to support, unlike a privileged recovery export.
+_Avoid_: Raw queue export, backup, recovery dump
+
 **Native Operational Surface**:
 A packaged-app screen built for repeated device-local work and offline continuity. It may share services and design language with the web app, but it is the accepted user surface for V1 offline business actions on desktop.
 _Avoid_: Wrapped web page, desktop skin, web workspace shortcut
