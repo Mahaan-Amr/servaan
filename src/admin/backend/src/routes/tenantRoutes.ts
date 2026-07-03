@@ -1,6 +1,7 @@
 import express from 'express';
 import { authenticateAdmin, requireRole } from '../middlewares/authMiddleware';
 import { TenantService } from '../services/TenantService';
+import { TenantSyncSupportService } from '../services/TenantSyncSupportService';
 import { auditLog } from '../utils/auditLogger';
 import { prisma } from '../lib/prisma';
 
@@ -288,6 +289,53 @@ router.get('/:id/metrics', authenticateAdmin, async (req, res) => {
       success: false,
       error: 'خطا در دریافت متریک‌های مستأجر',
       message: 'Failed to fetch tenant metrics'
+    });
+  }
+});
+
+/**
+ * GET /api/admin/tenants/:id/sync-support
+ * Read-only local-first desktop support observability for a tenant.
+ */
+router.get('/:id/sync-support', authenticateAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'TENANT_ID_REQUIRED',
+        message: 'Tenant ID not provided'
+      });
+    }
+
+    const supportSummary = await TenantSyncSupportService.getTenantSyncSupport(id);
+
+    await auditLog({
+      adminUserId: req.adminUser!.id,
+      action: 'TENANT_SYNC_SUPPORT_VIEWED',
+      details: { tenantId: id },
+      ipAddress: req.ip || 'unknown'
+    });
+
+    return res.json({
+      success: true,
+      data: supportSummary
+    });
+  } catch (error: any) {
+    if (error?.message === 'TENANT_NOT_FOUND') {
+      return res.status(404).json({
+        success: false,
+        error: 'TENANT_NOT_FOUND',
+        message: 'Tenant not found'
+      });
+    }
+
+    console.error('Admin tenant sync support error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'TENANT_SYNC_SUPPORT_FAILED',
+      message: 'Failed to fetch tenant sync support summary'
     });
   }
 });

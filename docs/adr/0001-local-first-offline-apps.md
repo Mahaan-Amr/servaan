@@ -97,7 +97,7 @@ Retry-friendly REST calls help unstable connections but do not support complete 
 - Offline payments are recorded evidence only, not bank/gateway confirmation.
 - Offline payment records must remain distinguishable from gateway-confirmed payments.
 - Offline receipts may print from a local printer path, but must be clearly marked and audited.
-- Receipt printing is not required for V1 native POS acceptance. After a native sale is queued, the operator sees a Persian success state with local order/payment numbers and pending-sync status.
+- Receipt printing is not required for pilot V1 native POS acceptance. After a native sale is queued, the operator sees a Persian success state with local order/payment numbers and pending-sync status. The first Production Desktop Release requires real receipt printing for selected approved pilot printers. Offline/local receipts may print immediately after the local sale and payment are queued, but must be clearly marked pending sync and include local sale/payment numbers with a later verification or canonical backend numbering path after synchronization.
 - Desktop startup reopens the last operational route used on that device.
 - Existing Ordering & Sales and Inventory web routes may remain available for full online workspace workflows, but V1 offline business actions in packaged desktop use dedicated native operational surfaces instead of routing operators into wrapped web workspace pages.
 - Packaged desktop must not expose the old web POS as a normal desktop sales path. Desktop sales navigation opens the native POS surface; attempts to reach the old web POS from the desktop shell should be blocked or redirected to the native POS unless an explicit development/support-only escape hatch is introduced.

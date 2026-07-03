@@ -17,7 +17,8 @@ import {
   Phone,
   Globe,
   BarChart3,
-  RefreshCw
+  RefreshCw,
+  Monitor
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { getTenantById, getTenantMetrics, TenantDetail, TenantMetrics, activateTenant, deactivateTenant } from '@/services/admin/tenants/tenantService';
@@ -28,6 +29,9 @@ import { withAdminAuth } from '@/contexts/AdminAuthContext';
 import TenantMetricsDashboard from '@/components/admin/tenants/TenantMetricsDashboard';
 import TenantActivityTimeline from '@/components/admin/tenants/TenantActivityTimeline';
 import TenantUserManagement from '@/components/admin/tenants/TenantUserManagement';
+import TenantSyncSupportPanel from '@/components/admin/tenants/TenantSyncSupportPanel';
+
+type TenantDetailTab = 'overview' | 'metrics' | 'users' | 'activity' | 'syncSupport';
 
 function TenantDetailPage() {
   const params = useParams();
@@ -38,7 +42,7 @@ function TenantDetailPage() {
   const [metrics, setMetrics] = useState<TenantMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'metrics' | 'users' | 'activity'>('overview');
+  const [activeTab, setActiveTab] = useState<TenantDetailTab>('overview');
   const [statusLoading, setStatusLoading] = useState(false);
 
   // Load tenant data
@@ -230,12 +234,12 @@ function TenantDetailPage() {
               { id: 'metrics', label: 'متریک‌ها', icon: BarChart3 },
               { id: 'users', label: 'کاربران', icon: Users },
               { id: 'activity', label: 'فعالیت‌ها', icon: Activity }
-            ].map((tab) => {
+            ].concat([{ id: 'syncSupport', label: 'Sync support', icon: Monitor }]).map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as 'overview' | 'metrics' | 'users' | 'activity')}
+                  onClick={() => setActiveTab(tab.id as TenantDetailTab)}
                   className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab.id
                       ? 'border-admin-primary text-admin-primary'
@@ -411,6 +415,10 @@ function TenantDetailPage() {
 
           {activeTab === 'activity' && (
             <TenantActivityTimeline tenantId={tenantId} />
+          )}
+
+          {activeTab === 'syncSupport' && (
+            <TenantSyncSupportPanel tenantId={tenantId} />
           )}
         </div>
       </div>

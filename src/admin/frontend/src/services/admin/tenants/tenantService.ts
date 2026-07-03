@@ -166,6 +166,94 @@ export interface CreateTenantPayload {
   }>;
 }
 
+export interface TenantSyncSupportSummary {
+  tenantId: string;
+  generatedAt: string;
+  retentionDays: number;
+  rawPayloadsIncluded: false;
+  totals: {
+    devices: number;
+    activeDevices: number;
+    revokedDevices: number;
+    operations: Record<string, number>;
+    openConflicts: number;
+  };
+  devices: TenantSyncSupportDevice[];
+  recentOperations: TenantSyncSupportOperation[];
+  openConflicts: TenantSyncSupportConflict[];
+  recentSyncBatches: TenantSyncSupportBatch[];
+  diagnosticCorrelation: {
+    tenantId: string;
+    deviceIds: string[];
+    appVersions: string[];
+    recentSyncBatchIds: string[];
+    recentLocalOperationIds: string[];
+  };
+}
+
+export interface TenantSyncSupportDevice {
+  deviceId: string;
+  name: string;
+  platform: string;
+  mode: string;
+  appVersion: string | null;
+  syncProtocolVersion: number;
+  localSchemaVersion: number;
+  assignedUserEmail: string | null;
+  lastOnlineAt: string | null;
+  lastSyncAt: string | null;
+  offlineAuthExpiresAt: string | null;
+  revokedAt: string | null;
+  isActive: boolean;
+  counts: {
+    operations: Record<string, number>;
+    openConflicts: number;
+  };
+}
+
+export interface TenantSyncSupportOperation {
+  id: string;
+  deviceId: string;
+  localOperationId: string;
+  syncBatchId: string | null;
+  workspaceId: string;
+  entityType: string;
+  entityLocalId: string | null;
+  entityServerId: string | null;
+  operationType: string;
+  status: string;
+  dependencyCount: number;
+  errorCode: string | null;
+  errorMessagePreview: string | null;
+  createdOfflineAt: string;
+  syncedAt: string | null;
+  updatedAt: string;
+}
+
+export interface TenantSyncSupportConflict {
+  id: string;
+  deviceId: string;
+  localOperationId: string | null;
+  syncBatchId: string | null;
+  workspaceId: string;
+  entityType: string;
+  entityLocalId: string | null;
+  entityServerId: string | null;
+  conflictType: string;
+  status: string;
+  reasonPreview: string;
+  createdOfflineAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TenantSyncSupportBatch {
+  syncBatchId: string;
+  lastSeenAt: string;
+  statuses: Record<string, number>;
+  deviceIds: string[];
+}
+
 /**
  * Get list of all tenants with pagination and search
  */
@@ -230,6 +318,20 @@ export const getTenantMetrics = async (id: string): Promise<TenantMetrics> => {
   } catch (error: unknown) {
     console.error('Error fetching tenant metrics:', error);
     const errorMessage = error instanceof Error ? error.message : 'خطا در دریافت متریک‌های مستأجر';
+    throw new Error(errorMessage);
+  }
+};
+
+/**
+ * Get read-only sync support observability for a specific tenant
+ */
+export const getTenantSyncSupport = async (id: string): Promise<TenantSyncSupportSummary> => {
+  try {
+    const response = await adminApi.get(`/admin/tenants/${id}/sync-support`);
+    return response.data.data;
+  } catch (error: unknown) {
+    console.error('Error fetching tenant sync support summary:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch tenant sync support summary';
     throw new Error(errorMessage);
   }
 };

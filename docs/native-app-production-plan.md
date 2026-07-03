@@ -159,3 +159,39 @@ The first production pilot is ready when:
 - real printer hardware validation
 - pilot tenant acceptance testing
 - security review and backup policy approval
+
+## Production Desktop Release Sequencing
+
+After the pilot-ready native POS/Inventory offline slice is smoke-tested, the next desktop milestone keeps the business workflow scope narrow and hardens the production shell around that proven slice.
+
+This milestone includes installer, signing, updater, diagnostics/admin support visibility, printer hardware validation, security/backup review, and operational support readiness. It does not expand POS, Inventory, or other business workflows beyond the accepted V1 offline slice.
+
+The first production desktop distribution channel is internal/pilot Windows distribution. Servaan will produce a signed installer and update path that can be handed to selected tenant devices, with rollback and support diagnostics available before any public/customer self-serve download flow is introduced.
+
+Unsigned desktop builds are acceptable for early internal engineering tests. Production rollout and controlled tenant pilot installation require a signed Windows installer so the app has a verified publisher and does not present as an unknown executable.
+
+Signed desktop installers may only be produced by one release owner and one backup through the controlled release process. Developer machines may produce unsigned internal builds, but the signing certificate must be stored securely and not copied casually across machines.
+
+Controlled pilot releases use private release hosting, not public download pages. Signed installers and update artifacts may live in a private GitHub Release, private object storage bucket, or protected server path, and pilot devices check a signed update manifest from that private channel.
+
+Pilot desktop updates use both automatic signed-update checks and support-assisted installation. The app may detect and report available updates, but pilot updates require an explicit operator/support-confirmed install step rather than silent background installation.
+
+Rollback for the first production desktop release means returning to the previous app binary, not rolling back local SQLite data or sync schema. Local migrations must be forward-compatible for the pilot window, destructive migrations are blocked while Unsynced Operations exist, and an update that would make local data incompatible with the previous app version must wait for a later release policy.
+
+The first admin support console is read-only observability. It shows tenant/device sync status, app version, last sync, failure reasons, sync batch IDs, and correlation with Redacted Diagnostic Exports. It does not provide remote retry, force-resolve, quarantine, recovery export, or other mutation actions until those actions have clear operational meaning and authorization rules.
+
+Pilot support observability records are retained for 90 days and do not include raw operation payloads. Redacted Diagnostic Exports sent by operators are treated as support artifacts with the same retention window unless a specific case requires earlier deletion.
+
+The first production desktop release requires real receipt printing on selected approved pilot printers. This is a production-shell requirement, not an expansion of the POS business workflow: receipt printing must work for the approved hardware list, while broad printer compatibility remains outside the first production release promise.
+
+The first approved printer list contains one exact receipt printer model used by the pilot tenant. Servaan validates that model deeply before expanding to a small ESC/POS-compatible printer family after the first production desktop release.
+
+Production desktop receipt printing allows offline/local receipts immediately after the local POS sale and payment are queued. Offline receipts must be clearly marked as pending sync, include local sale/payment numbers, and preserve a path to later verification or canonical backend numbering after synchronization.
+
+The first production desktop release does not include a privileged recovery export with raw queue payloads. It relies on the operator-safe Redacted Diagnostic Export plus a documented manual recovery policy until encrypted raw recovery exports have explicit authorization, retention, and support-handling rules.
+
+Production desktop release is blocked until one real pilot tenant completes a one-week end-to-end desktop run. The week must include daily POS/Inventory use, at least one offline/reconnect event, receipt printing on approved hardware, update checking, Redacted Diagnostic Export generation, and admin support-console correlation.
+
+Production desktop release approval requires engineering, support, and business owner sign-off. Engineering signs off local storage, update, migration, and security behavior; support signs off diagnostics, observability, and recovery readiness; the business owner signs off pilot risk and tenant communication.
+
+Broader operational workflows are explicitly blocked until after the one-week real-tenant production desktop pilot passes. Even small workflow additions create new receipt, sync, support, and offline edge cases, so the production desktop milestone stays focused on hardening the proven V1 offline slice.
